@@ -59,7 +59,7 @@
     <link rel="prev" title="AcceleratedFailureTime" href="relife.lifetime_model.AcceleratedFailureTime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.3" />
+  <meta name="docsearch:version" content="2.2.4.dev6+g3552ec625" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.3</div>
+2.2.4.dev6+g3552ec625</div>
     
   </div>
   
@@ -372,10 +372,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-</ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
@@ -503,7 +499,7 @@
 <h1>LeftTruncatedModel<a class="headerlink" href="#lefttruncatedmodel" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">LeftTruncatedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">LeftTruncatedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel" title="Link to this definition">#</a></dt>
 <dd><p>Left truncated model.</p>
 <p>Lifetime model where the assets have already reached the age <span class="math notranslate nohighlight">\(a_0\)</span>.</p>
 <dl class="field-list simple">
@@ -587,7 +583,7 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.cdf">
-<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.cdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.cdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.cdf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -613,7 +609,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.chf">
-<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.chf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -639,7 +635,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.freeze">
-<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.freeze" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.freeze" title="Link to this definition">#</a></dt>
 <dd><p>Freeze conditional age values and other arguments into the object data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -661,7 +657,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.hf">
-<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.hf" title="Link to this definition">#</a></dt>
 <dd><p>The hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -687,7 +683,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ichf">
-<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ichf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ichf" title="Link to this definition">#</a></dt>
 <dd><p>Inverse cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -713,7 +709,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.isf">
-<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.isf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.isf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.isf" title="Link to this definition">#</a></dt>
 <dd><p>The inverse of the survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -739,7 +735,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ls_integrate">
-<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.ls_integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ls_integrate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ls_integrate" title="Link to this definition">#</a></dt>
 <dd><p>Lebesgue-Stieltjes integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -770,7 +766,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.mean">
-<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mean" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mean" title="Link to this definition">#</a></dt>
 <dd><p>The mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -792,7 +788,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.median">
-<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.median"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.median" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.median" title="Link to this definition">#</a></dt>
 <dd><p>The median.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -814,7 +810,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.moment">
-<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.moment" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.moment" title="Link to this definition">#</a></dt>
 <dd><p>n-th order moment</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -838,7 +834,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.mrl">
-<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.mrl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mrl" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.mrl" title="Link to this definition">#</a></dt>
 <dd><p>The mean residual life function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -910,7 +906,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.pdf">
-<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.pdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.pdf" title="Link to this definition">#</a></dt>
 <dd><p>The probability density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -942,7 +938,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.ppf">
-<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.ppf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ppf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.ppf" title="Link to this definition">#</a></dt>
 <dd><p>The percent point function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -970,7 +966,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.rvs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.rvs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1004,7 +1000,7 @@ the time values followed by event values, entry values or both.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.sf">
-<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.sf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.sf" title="Link to this definition">#</a></dt>
 <dd><p>The survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1030,7 +1026,7 @@ as only one age per asset can be given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.LeftTruncatedModel.var">
-<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/conditional_model.html#LeftTruncatedModel.var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.var" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.LeftTruncatedModel.var" title="Link to this definition">#</a></dt>
 <dd><p>The variance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1137,7 +1133,7 @@ as only one age per asset can be given</p>
 
   <p class="copyright">
     
-      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
+      © Copyright 2007 - 2026, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>

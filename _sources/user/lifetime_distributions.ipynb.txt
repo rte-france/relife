@@ -124,7 +124,7 @@
     {
      "data": {
       "text/plain": [
-       "<relife.lifetime_model.distribution.Gompertz at 0x79e83ba82fd0>"
+       "<relife.lifetime_model._distribution.Gompertz at 0x727aa2e01510>"
       ]
      },
      "execution_count": 5,

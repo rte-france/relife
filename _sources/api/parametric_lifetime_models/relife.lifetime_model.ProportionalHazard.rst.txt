@@ -40,6 +40,9 @@ ProportionalHazard
             ~ProportionalHazard.freeze
         
         
+            ~ProportionalHazard.get_initial_params
+        
+        
             ~ProportionalHazard.hf
         
         

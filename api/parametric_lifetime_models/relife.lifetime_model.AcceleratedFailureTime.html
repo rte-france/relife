@@ -59,7 +59,7 @@
     <link rel="prev" title="ProportionalHazard" href="relife.lifetime_model.ProportionalHazard.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.3" />
+  <meta name="docsearch:version" content="2.2.4.dev6+g3552ec625" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.3</div>
+2.2.4.dev6+g3552ec625</div>
     
   </div>
   
@@ -372,10 +372,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-</ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
@@ -503,7 +499,7 @@
 <h1>AcceleratedFailureTime<a class="headerlink" href="#acceleratedfailuretime" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">AcceleratedFailureTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">AcceleratedFailureTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime" title="Link to this definition">#</a></dt>
 <dd><p>Accelerated failure time regression.</p>
 <p>The cumulative hazard function <span class="math notranslate nohighlight">\(H\)</span> is linked to the multiplier
 function <span class="math notranslate nohighlight">\(g\)</span> by the relation:</p>
@@ -549,7 +545,7 @@ hazard function <a class="reference internal" href="#r21ad2c257af0-1" id="id1">[
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference internal" href="relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard" title="relife.lifetime_model.regression.ProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regression.ProportionalHazard</span></code></a></dt><dd><p>proportional hazard regression</p>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">regression.ProportionalHazard</span></code></dt><dd><p>proportional hazard regression</p>
 </dd>
 </dl>
 </div>
@@ -574,66 +570,69 @@ analysis of failure time data. John Wiley &amp; Sons.</p>
 <td><p>The derivative of the hazard function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="relife.lifetime_model.AcceleratedFailureTime.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Estimation of the regression parameters from lifetime data.</p></td>
+<td><p>Estimation of the distribution parameters from lifetime data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes" title="relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></a></p></td>
-<td><p>Estimation of the regression parameters from interval censored lifetime data.</p></td>
+<td><p>Estimation of the distribution parameters from interval censored lifetime data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.freeze" title="relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
 <td><p>Freeze regression covar.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="relife.lifetime_model.AcceleratedFailureTime.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.get_initial_params" title="relife.lifetime_model.AcceleratedFailureTime.get_initial_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_initial_params</span></code></a></p></td>
+<td><p>Get the inital params values used in 'fit'.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="relife.lifetime_model.AcceleratedFailureTime.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="relife.lifetime_model.AcceleratedFailureTime.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="relife.lifetime_model.AcceleratedFailureTime.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.isf" title="relife.lifetime_model.AcceleratedFailureTime.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.isf" title="relife.lifetime_model.AcceleratedFailureTime.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
 <td><p>The inverse survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="relife.lifetime_model.AcceleratedFailureTime.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="relife.lifetime_model.AcceleratedFailureTime.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="relife.lifetime_model.AcceleratedFailureTime.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="relife.lifetime_model.AcceleratedFailureTime.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="relife.lifetime_model.AcceleratedFailureTime.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="relife.lifetime_model.AcceleratedFailureTime.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
 <td><p>The jacobian of the hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="relife.lifetime_model.AcceleratedFailureTime.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="relife.lifetime_model.AcceleratedFailureTime.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
 <td><p>The jacobian of the probability density function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="relife.lifetime_model.AcceleratedFailureTime.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="relife.lifetime_model.AcceleratedFailureTime.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
 <td><p>The jacobian of the survival function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="relife.lifetime_model.AcceleratedFailureTime.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="relife.lifetime_model.AcceleratedFailureTime.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.mean" title="relife.lifetime_model.AcceleratedFailureTime.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.mean" title="relife.lifetime_model.AcceleratedFailureTime.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
 <td><p>The mean.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.median" title="relife.lifetime_model.AcceleratedFailureTime.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.median" title="relife.lifetime_model.AcceleratedFailureTime.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.moment" title="relife.lifetime_model.AcceleratedFailureTime.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.moment" title="relife.lifetime_model.AcceleratedFailureTime.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
 <td><p>n-th order moment</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.mrl" title="relife.lifetime_model.AcceleratedFailureTime.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.mrl" title="relife.lifetime_model.AcceleratedFailureTime.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.pdf" title="relife.lifetime_model.AcceleratedFailureTime.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.pdf" title="relife.lifetime_model.AcceleratedFailureTime.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
 <td><p>The probility density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ppf" title="relife.lifetime_model.AcceleratedFailureTime.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.ppf" title="relife.lifetime_model.AcceleratedFailureTime.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
 <td><p>The percent point function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="relife.lifetime_model.AcceleratedFailureTime.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="relife.lifetime_model.AcceleratedFailureTime.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
 <td><p>Random variable sampling.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.sf" title="relife.lifetime_model.AcceleratedFailureTime.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.sf" title="relife.lifetime_model.AcceleratedFailureTime.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.var" title="relife.lifetime_model.AcceleratedFailureTime.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AcceleratedFailureTime.var" title="relife.lifetime_model.AcceleratedFailureTime.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
 <td><p>The variance.</p></td>
 </tr>
 </tbody>
@@ -665,7 +664,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.chf">
-<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.chf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -702,7 +701,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.dhf">
-<span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.dhf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.dhf" title="Link to this definition">#</a></dt>
 <dd><p>The derivative of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -726,15 +725,14 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of the regression parameters from lifetime data.</p>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit" title="Link to this definition">#</a></dt>
+<dd><p>Estimation of the distribution parameters from lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
 </dd>
-<dt><strong>covar</strong><span class="classifier">1d or 2d array</span></dt><dd><p>Covariates values. 1d array is valid if the regression has one coefficient.
-Otherwise it must be an 2d array of shape <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
+<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
 </dd>
 <dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
 </dd>
@@ -766,8 +764,8 @@ Otherwise it must be an 2d array of shape <code class="docutils literal notransl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes">
-<span class="sig-name descname"><span class="pre">fit_from_interval_censored_lifetimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_sup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of the regression parameters from interval censored lifetime data.</p>
+<span class="sig-name descname"><span class="pre">fit_from_interval_censored_lifetimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_sup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes" title="Link to this definition">#</a></dt>
+<dd><p>Estimation of the distribution parameters from interval censored lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -775,8 +773,7 @@ Otherwise it must be an 2d array of shape <code class="docutils literal notransl
 </dd>
 <dt><strong>time_sup</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime upper bounds.</p>
 </dd>
-<dt><strong>covar</strong><span class="classifier">1d or 2d array</span></dt><dd><p>Covariates values. 1d array is valid if the regression has one coefficient.
-Otherwise it must be an 2d array of shape <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">nb_coef)</span></code>.</p>
+<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
 </dd>
 <dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
 </dd>
@@ -827,8 +824,15 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.get_initial_params">
+<span class="sig-name descname"><span class="pre">get_initial_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.get_initial_params" title="Link to this definition">#</a></dt>
+<dd><p>Get the inital params values used in ‘fit’.
+To change this value, pass ‘x0’ in ‘optimizer_options’ of ‘fit’.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.hf">
-<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.hf" title="Link to this definition">#</a></dt>
 <dd><p>The hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -852,7 +856,7 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.ichf">
-<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ichf" title="Link to this definition">#</a></dt>
 <dd><p>Inverse cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -900,7 +904,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_cdf">
-<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_cdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -928,7 +932,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_chf">
-<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_chf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -956,7 +960,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_hf">
-<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/regression.html#AcceleratedFailureTime.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#AcceleratedFailureTime.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_hf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -984,7 +988,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_pdf">
-<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_pdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the probability density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1012,7 +1016,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.jac_sf">
-<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.jac_sf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1040,7 +1044,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.ls_integrate">
-<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.ls_integrate" title="Link to this definition">#</a></dt>
 <dd><p>Lebesgue-Stieltjes integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1197,6 +1201,12 @@ Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.params_bounds">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_bounds</span></span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.params_bounds" title="Link to this definition">#</a></dt>
+<dd><p>Parameters bounds</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.params_names">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.params_names" title="Link to this definition">#</a></dt>
 <dd><p>Parameters names.</p>
@@ -1268,7 +1278,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AcceleratedFailureTime.rvs">
-<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_assets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.AcceleratedFailureTime.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1377,6 +1387,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.fit"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.fit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.fit_from_interval_censored_lifetimes"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.fit_from_interval_censored_lifetimes()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.freeze"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.freeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.get_initial_params"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.get_initial_params()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.hf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.hf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.ichf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.ichf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.isf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.isf()</span></code></a></li>
@@ -1393,6 +1404,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.nb_coef"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.nb_coef</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.nb_params"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.nb_params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.params"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.params_bounds"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.params_bounds</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.params_names"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.params_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.pdf"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.pdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.AcceleratedFailureTime.plot"><code class="docutils literal notranslate"><span class="pre">AcceleratedFailureTime.plot</span></code></a></li>
@@ -1439,7 +1451,7 @@ Otherwise it must be a ndarray of shape <code class="docutils literal notranslat
 
   <p class="copyright">
     
-      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
+      © Copyright 2007 - 2026, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>

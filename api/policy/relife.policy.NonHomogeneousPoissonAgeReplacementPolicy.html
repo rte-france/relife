@@ -59,7 +59,7 @@
     <link rel="prev" title="OneCycleRunToFailurePolicy" href="relife.policy.OneCycleRunToFailurePolicy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.3" />
+  <meta name="docsearch:version" content="2.2.4.dev6+g3552ec625" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.3</div>
+2.2.4.dev6+g3552ec625</div>
     
   </div>
   
@@ -372,10 +372,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
-</ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Weibull.html">Weibull</a></li>
@@ -503,7 +499,7 @@
 <h1>NonHomogeneousPoissonAgeReplacementPolicy<a class="headerlink" href="#nonhomogeneouspoissonagereplacementpolicy" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">NonHomogeneousPoissonAgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nhpp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.policy.</span></span><span class="sig-name descname"><span class="pre">NonHomogeneousPoissonAgeReplacementPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nhpp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounting_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy" title="Link to this definition">#</a></dt>
 <dd><p>Age replacement policy for non-Homogeneous Poisson process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -568,7 +564,7 @@ and access to the rest of the object interface.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} q(t)\]</div>
@@ -591,7 +587,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected net present value.</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
@@ -640,7 +636,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
@@ -673,7 +669,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value">
-<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The expected net present value.</p>
 <div class="math notranslate nohighlight">
 \[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
@@ -708,7 +704,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#NonHomogeneousPoissonAgeReplacementPolicy.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.optimize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.optimize" title="Link to this definition">#</a></dt>
 <dd><p>Optimize the policy according the costs, the discounting rate and the underlying non-homogeneous Poisson process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -795,7 +791,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
   <p class="copyright">
     
-      © Copyright 2007 - 2025, RTE-SAGA (Apache 2.0 License).
+      © Copyright 2007 - 2026, RTE-SAGA (Apache 2.0 License).
       <br/>
     
   </p>

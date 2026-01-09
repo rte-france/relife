@@ -37,6 +37,9 @@ LogLogistic
             ~LogLogistic.fit_from_interval_censored_lifetimes
         
         
+            ~LogLogistic.get_initial_params
+        
+        
             ~LogLogistic.hf
         
         
