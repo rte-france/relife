@@ -23,14 +23,6 @@ Parametric lifetime models
 
 .. currentmodule:: relife.lifetime_model
 
-.. autosummary::
-    :toctree: parametric_lifetime_models
-    :template: class_template.rst
-    :caption: Parametric lifetime models
-    :nosignatures:
-
-    ParametricLifetimeModel
-
 .. rubric:: Lifetime distributions
 
 .. autosummary::
