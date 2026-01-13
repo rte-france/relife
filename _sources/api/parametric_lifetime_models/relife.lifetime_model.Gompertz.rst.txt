@@ -37,9 +37,6 @@ Gompertz
             ~Gompertz.fit_from_interval_censored_lifetimes
         
         
-            ~Gompertz.get_initial_params
-        
-        
             ~Gompertz.hf
         
         

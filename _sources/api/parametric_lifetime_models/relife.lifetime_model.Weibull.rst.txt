@@ -37,9 +37,6 @@ Weibull
             ~Weibull.fit_from_interval_censored_lifetimes
         
         
-            ~Weibull.get_initial_params
-        
-        
             ~Weibull.hf
         
         

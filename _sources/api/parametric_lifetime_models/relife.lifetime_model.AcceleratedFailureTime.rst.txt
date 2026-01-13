@@ -40,9 +40,6 @@ AcceleratedFailureTime
             ~AcceleratedFailureTime.freeze
         
         
-            ~AcceleratedFailureTime.get_initial_params
-        
-        
             ~AcceleratedFailureTime.hf
         
         

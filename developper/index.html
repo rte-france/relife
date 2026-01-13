@@ -56,7 +56,7 @@
     <link rel="prev" title="unweighted_laguerre_quadrature" href="../api/routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.3.1" />
+  <meta name="docsearch:version" content="2.2.0" />
   </head>
   
   
@@ -129,7 +129,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.3.1</div>
+2.2.0</div>
     
   </div>
   
@@ -416,157 +416,44 @@
 <h1>For developpers<a class="headerlink" href="#for-developpers" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The content of this section is under continuous improvement as the project gathers
-more contributors. It is highly inspired by <a class="reference external" href="https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute">Scikit-Learn</a>
-and <a class="reference external" href="https://scipy.github.io/devdocs/dev/index.html">Scipy</a> contributing
-documentation. We highly encourage new comers to read these documentations if ours
-do not answer their questions.</p>
+<p>The content of this section is under continuous improvement as the project gathers more contributors. It is highly inspired by <a class="reference external" href="https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute">Scikit-Learn</a> and <a class="reference external" href="https://scipy.github.io/devdocs/dev/index.html">Scipy</a> contributing documentation.
+We highly encourage new comers to read these documentations if ours do not answer their questions.</p>
 </div>
-<section id="local-set-up">
-<h2>Local set up<a class="headerlink" href="#local-set-up" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Fork ReLife repository</p></li>
-</ol>
-<p>First, you need to <a class="reference external" href="https://github.com/join">create an account</a> on GitHub
-(if you do not already have one) and fork the project repository by clicking on the
-‘Fork’ button near the top of the page. This creates a copy of the code under your
-Github account. For more details on how to fork a repository see
-<a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">this guide</a>.
-It explains how to set up a local clone of your forked git repository.</p>
-<ol class="arabic simple" start="2">
-<li><p>Set up a local clone of your fork</p></li>
-</ol>
-<p>Clone your fork of the ReLife repo from your GitHub account to your
-local disk:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/&lt;YourLogin&gt;/relife.git  # add --depth 1 if your connection is slow
+<section id="local-repository-set-up">
+<h2>Local repository set up<a class="headerlink" href="#local-repository-set-up" title="Link to this heading">#</a></h2>
+<p>Clone ReLife repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:YourLogin/rte-france/relife.git
+$ cd relife
 </pre></div>
 </div>
-<p>and change into that directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd relife
+<p>We highly encourage you to use a python virtual environment. In your environment, intall ReLife in editable mode from the source with the developpers dependencies.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install -e &quot;.[dev]&quot;
 </pre></div>
 </div>
-<p id="upstream">Next, add the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> remote. This saves a reference to the main ReLife
-repository, which you can use to keep your repository synchronized with the latest
-changes (you’ll need this later in the <a class="reference internal" href="#development-workflow"><span class="std std-ref">Development workflow</span></a>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git remote add upstream https://github.com/scikit-learn/scikit-learn.git
+<p>Add the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> remote to synchronize your local repo to the ReLife repo.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git remote add upstream git@github.com:rte-france/relife.git
 </pre></div>
 </div>
-<p>Check that the <cite>upstream</cite> and <cite>origin</cite> remote aliases are configured correctly
-by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git remote -v
-</pre></div>
-</div>
-<p>This should display:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>origin    https://github.com/YourLogin/scikit-learn.git (fetch)
-origin    https://github.com/YourLogin/scikit-learn.git (push)
-upstream  https://github.com/scikit-learn/scikit-learn.git (fetch)
-upstream  https://github.com/scikit-learn/scikit-learn.git (push)
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li><p>ReLife local installation</p></li>
-</ol>
-<p>Make sure Python <code class="docutils literal notranslate"><span class="pre">3.11+</span></code> is installed on your machine. Using this Python, create
-a <a class="reference external" href="https://docs.python.org/3/library/venv.html">Python virtual environment</a> with
-the name of your choice. <strong>Activate your virtual environment</strong>. Intall ReLife in
-<a class="reference external" href="https://setuptools.pypa.io/en/latest/userguide/development_mode.html">editable mode</a>
-from the source code with the developpers dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd relife
-$ pip install -e &quot;.[dev]&quot;
-</pre></div>
-</div>
-</section>
-<section id="additional-python-installations">
-<h2>Additional Python installations<a class="headerlink" href="#additional-python-installations" title="Link to this heading">#</a></h2>
-<p>The last command above should have installed the following dependencies:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://github.com/psf/black">Black</a> and <a class="reference external" href="https://github.com/PyCQA/isort">Isort</a>.
-These tools allow you to automatically <a class="reference external" href="https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code">format your code</a>.
-Ensure that your IDE is configured to call them to format on save.</p></li>
-<li><p><a class="reference external" href="https://github.com/PyCQA/flake8">Flake8</a> and <a class="reference external" href="https://github.com/PyCQA/pylint">Pylint</a>.
-These programs are Python <a class="reference external" href="https://en.wikipedia.org/wiki/Lint_(software)">linters</a>.
-Ensure that your IDE captures diagnostics from these tools while you are coding.
-Although their default configurations can be quite aggressive, we refrain from
-providing generic configurations as it may overlook critical errors in some cases.
-Aim to resolve all warnings; if necessary, disable warnings locally by adding
-specific configurations for these tools on your machine. Do not commit these configurations,
-as they remain personal to your environment.</p></li>
-<li><p><a class="reference external" href="https://github.com/microsoft/pyright">Pyright</a>. This is a <a class="reference external" href="https://en.wikipedia.org/wiki/Type_system#Type_checking">static type checker</a>.
-Again, ensure that your IDE communicates with the Pyright language server (<a class="reference external" href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a>)
-to receive feedback on your type annotations. Type checking can be challenging and may
-not be desired at first, so consider flagging your modules with <code class="docutils literal notranslate"><span class="pre">#pyright:</span> <span class="pre">basic</span></code> to start.
-Once you feel comfortable, gradually enhance your type annotations by removing <code class="docutils literal notranslate"><span class="pre">#pyright:</span> <span class="pre">basic</span></code>
-and enabling strict mode in Pyright configurations.</p></li>
-<li><p>After successfully passing all Pyright analyses, use <a class="reference external" href="https://github.com/python/mypy">Mypy</a>
-to validate or supplement the diagnostics provided by Pyright.</p></li>
-</ul>
 </section>
 <section id="development-workflow">
-<span id="id1"></span><h2>Development workflow<a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h2>
-<p>The next steps describe the process of modifying code and submitting a PR:</p>
-<ol class="arabic simple">
-<li><p>Synchronize your <code class="docutils literal notranslate"><span class="pre">main</span></code> branch with the <code class="docutils literal notranslate"><span class="pre">upstream/main</span></code> branch,
-more details on <a class="reference external" href="https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork">GitHub Docs</a>:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>main
-$<span class="w"> </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream
-$<span class="w"> </span>git<span class="w"> </span>merge<span class="w"> </span>upstream/main
+<h2>Development workflow<a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h2>
+<p>The development is done a specific branch called <code class="docutils literal notranslate"><span class="pre">develop/&lt;relife-version&gt;</span></code>. From this development branch, open a new branch to develop your feature :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout develop/&lt;relife-version&gt;
+$ git checkout -b my-new-feature
 </pre></div>
 </div>
-<ol class="arabic simple" start="2">
-<li><p>Create a feature branch to hold your development changes:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my_feature
+<p>Modify, stag and commit changes. Where you’re done, push the changes to your forked repo</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git push origin my-new-feature
 </pre></div>
 </div>
-<p>and start making changes. Always use a feature branch. It’s good
-practice to never work on the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch!</p>
-<ol class="arabic simple" start="3">
-<li><p>Develop the feature on your feature branch on your computer, using Git to
-do the version control. When you’re done editing, add changed files using
-<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> and then <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>modified_files
-$<span class="w"> </span>git<span class="w"> </span>commit
+<p>To be sure that you didn’t miss any updates on <cite>develop/&lt;relife-version&gt;</cite>, regularly <code class="docutils literal notranslate"><span class="pre">merge</span></code> the <code class="docutils literal notranslate"><span class="pre">upstream</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout develop/&lt;relife-version&gt;
+$ git fetch upstream
+$ git merge upstream/develop/&lt;relife-version&gt;
+$ git checkout my-new-feature
+$ git merge develop/&lt;relife-version&gt;
 </pre></div>
 </div>
-<p>You will be prompted to enter a commit message. Please, as much as possible,
-start your message with the dedicated <a class="reference internal" href="#commit-markers"><span class="std std-ref">Commit message markers</span></a>. Your message must
-look like this</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;commit_marker&gt;: commit title
-
-commit description
-</pre></div>
-</div>
-<p>Then push the changes to your GitHub account with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>my_feature
-</pre></div>
-</div>
-<ol class="arabic simple" start="4">
-<li><p>Before opening a pull request, please verify that your work meets our <a class="reference internal" href="#pull-requests-checklist"><span class="std std-ref">Pull request checklist</span></a>.</p></li>
-<li><p>Follow <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request-from-a-fork">these</a>
-instructions to create a pull request from your fork. This will send a
-notification to potential reviewers.</p></li>
-</ol>
-<p>It is often helpful to keep your local feature branch synchronized with the
-latest changes of the main ReLife repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream
-$<span class="w"> </span>git<span class="w"> </span>merge<span class="w"> </span>upstream/main
-</pre></div>
-</div>
-<p>Subsequently, you might need to solve the conflicts. You can refer to the
-<a class="reference external" href="https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/">Git documentation related to resolving merge conflict using the command
-line</a>
-or the <a class="reference external" href="https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging">Git documentation itself (Basic Merge Conflicts)</a></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>One very helping tool to manage git command is <a class="reference external" href="https://github.com/jesseduffield/lazygit">Lazygit</a>.
-It comes with a very user-friendly TUI and preconfigured set of usefull commands to manage
-commits and branches.</p>
-</div>
-</section>
-<section id="commit-message-markers">
-<span id="commit-markers"></span><h2>Commit message markers<a class="headerlink" href="#commit-message-markers" title="Link to this heading">#</a></h2>
 <p>Please follow and use these standard acronyms to start your commit messages :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BUG</span><span class="p">:</span> <span class="n">bug</span> <span class="n">fix</span>
 <span class="n">DEP</span><span class="p">:</span> <span class="n">deprecate</span> <span class="n">something</span><span class="p">,</span> <span class="ow">or</span> <span class="n">remove</span> <span class="n">a</span> <span class="n">deprecated</span> <span class="nb">object</span>
@@ -576,16 +463,16 @@ commits and branches.</p>
 <span class="n">MAINT</span><span class="p">:</span> <span class="n">maintenance</span> <span class="n">commit</span> <span class="p">(</span><span class="n">refactoring</span><span class="p">,</span> <span class="n">typos</span><span class="p">,</span> <span class="n">etc</span><span class="o">.</span><span class="p">)</span>
 <span class="n">REV</span><span class="p">:</span> <span class="n">revert</span> <span class="n">an</span> <span class="n">earlier</span> <span class="n">commit</span>
 <span class="n">STY</span><span class="p">:</span> <span class="n">style</span> <span class="n">fix</span> <span class="p">(</span><span class="n">PEP8</span><span class="p">,</span> <span class="n">reformat</span><span class="p">,</span> <span class="n">etc</span><span class="o">.</span><span class="p">)</span>
-<span class="n">TYP</span><span class="p">:</span> <span class="n">typing</span>
+<span class="n">TYP</span> <span class="p">:</span> <span class="n">typing</span>
 <span class="n">TEST</span><span class="p">:</span> <span class="n">addition</span> <span class="ow">or</span> <span class="n">modification</span> <span class="n">of</span> <span class="n">tests</span>
 <span class="n">REL</span><span class="p">:</span> <span class="n">related</span> <span class="n">to</span> <span class="n">releasing</span> <span class="n">ReLife</span>
-<span class="n">CI</span><span class="p">:</span> <span class="n">related</span> <span class="n">to</span> <span class="n">CI</span>
 </pre></div>
 </div>
 </section>
-<section id="pull-request-checklist">
-<span id="pull-requests-checklist"></span><h2>Pull request checklist<a class="headerlink" href="#pull-request-checklist" title="Link to this heading">#</a></h2>
-<p>Before a pull request can be merged, it needs to be approved by 1 core developer.
+<section id="opening-a-pull-request">
+<h2>Opening a pull request<a class="headerlink" href="#opening-a-pull-request" title="Link to this heading">#</a></h2>
+<p>If you want to submit your work, open a pull request to merge your <code class="docutils literal notranslate"><span class="pre">origin/my-new-feature</span></code> branch to <code class="docutils literal notranslate"><span class="pre">upstream/develop/&lt;relife-version&gt;</span></code>.
+Before a PR can be merged, it needs to be approved by 1 core developer.
 An incomplete contribution – where you expect to do more work before receiving
 a full review – should be marked as a <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request">draft pull request</a>
 and changed to “ready for review” when it matures.</p>
@@ -600,47 +487,44 @@ good title.</p>
 <p>2. <strong>Do not include unecessary/unjustified commits</strong> that don’t have direct relations
 with the issue. Do not include unecessary lines rewrittings or modifications of code style
 unless it is clearly motivated. Also, remove personal comments in your code.</p>
-<p>3. <strong>Make sure to address the whole issue</strong>. Don’t propose code that resolves the issue partly.
-If case you have any doubt, discuss it directly in the corresponding issue post.</p>
+<p>3. <strong>Make sure to address the whole issue</strong>. Don’t propose code that resolves the issue partly. If case
+you have any doubt, discuss it directly in the corresponding issue post.</p>
 <p>4. <strong>Make sure your code passes the tests</strong>. The whole test suite can be run
 with <code class="docutils literal notranslate"><span class="pre">pytest</span></code>, but it is usually not recommended since it takes a long
-time. It is often enough to only run the tests related to your changes:
-for example, if you changed something in <code class="docutils literal notranslate"><span class="pre">relife/lifetime_model/_conditional_model.py</span></code>,
-running the following commands will usually be enough:</p>
-<ul class="simple">
+time. It is often enough to only run the test related to your changes:
+for example, if you changed something in <code class="docutils literal notranslate"><span class="pre">relife/lifetime_model/conditional_model.py</span></code>, running the following commands will usually be enough:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">relife/lifetime_model/tests/test_conditional_model.py</span></code> to run the tests specific to the file</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">relife/lifetime_model</span></code> to test the whole <code class="docutils literal notranslate"><span class="pre">relife.lifetime_model</span></code> module</p></li>
 </ul>
+</div></blockquote>
 <p>5. <strong>Make sure your code is properly commented and documented</strong>, and <strong>make
-sure the documentation renders properly</strong>. To build the documentation locally, please
-refer to <a class="reference internal" href="#build-the-doc"><span class="std std-ref">Build the documentation</span></a>.</p>
-<p>6. Typing your code is not necessary at first, but make sure it is logic. The typing can be handled by
-the core team of ReLife. It is still a work in progress.</p>
+sure the documentation renders properly</strong>. To build the documentation, please
+refer to our Documentation style guidelines. Run Sphinx locally before.</p>
+<p>6. Typing your code is not necessary but make sure it is clear enough. The typing is handled by
+the core team of ReLife. More specifically, it is a work in progress that will be done through
+stubfiles gradually.</p>
 </section>
 <section id="about-conception">
 <h2>About conception<a class="headerlink" href="#about-conception" title="Link to this heading">#</a></h2>
-<p>If you want to adress conception problem, you’re welcome.
-<strong>But these issues must be carefully motivated and well justified</strong>. More precisely, we
-won’t accept any modifications that would be too subjective,
-e.g. <em>only because you think it is more readable</em>.</p>
+<p>If you want to adress conception problem, you’re welcome. <strong>But these issues must be carefully motivated and well justified</strong>. More precisely, we
+won’t accept any modifications that would be too subjective, e.g. <em>because you think it is more readable</em>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>We are aware that overall ReLife code base <em>design</em> can be improved. Especially, we
-are currently having a special care on typing and are <em>stubifying</em> the code base.
-This work is done in addition to feature enhancements and progress at its own pace.
-It will be tested against mypy and it complements development principles that we study.
-At the end, we expect this static type checking will get the overall code base
-quality in the right direction.</p>
+<p>We are aware that overall ReLife code base <em>design</em> can be improved. Especially, we are currently having a special care on typing and are <em>stubifying</em> the code base.
+This work is done in addition to feature enhancements and progress at its own pace. It will be tested against mypy and it complements development principles that we study.
+At the end, we expect this static type checking will get the overall code base quality in the right direction.</p>
 </div>
 </section>
-<section id="build-the-documentation">
-<span id="build-the-doc"></span><h2>Build the documentation<a class="headerlink" href="#build-the-documentation" title="Link to this heading">#</a></h2>
+<section id="about-the-documentation">
+<h2>About the documentation<a class="headerlink" href="#about-the-documentation" title="Link to this heading">#</a></h2>
 <p>To build the documentation locally run the following commands :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
 $ make html
 </pre></div>
 </div>
-<p>To run a local documentation server and read your built documentation :</p>
+<p>To run a local documentation server and consult your documentation version :</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
 $ python -m http.server -d build/html/
 </pre></div>
@@ -648,28 +532,15 @@ $ python -m http.server -d build/html/
 <p>Then go to <a class="reference external" href="http://localhost:8000">http://localhost:8000</a></p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Using Sphinx for the first time is frustrating. It is easy to get tons of errors as
-they are cumulative. Read the Sphinx documentation and <strong>be carefull</strong> about
-unwanted blank lines or missing spaces in reST directives.</p>
+<p>Using Sphinx for the first time is frustrating. It is easy to get tons of errors as they are cumulative. Read the Sphinx
+documentation and <strong>be carefull</strong> about unwanted blank lines or missing spaces in reST directives.</p>
 </div>
 <p>The documentation is built with <a class="reference external" href="https://pydata-sphinx-theme.readthedocs.io/en/stable/">PyData Sphinx Theme</a> and uses the
 NumPy documentation style. Here are important points to have in mind if you want to <strong>contribute to the documentation</strong> :</p>
 <ul class="simple">
 <li><p>Read the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a></p></li>
-<li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine.
-The template is written in <code class="docutils literal notranslate"><span class="pre">class_template.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>.
-A guide to Jinja2 templating is given in
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>.
-Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary
-tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and
-comprehension interface documentation of the class.</p></li>
-<li><p>Take a special care to attributes class documentation. Sphinx does not handle
-attribute instances easily, especially when they are <strong>inherited</strong>. One must reference
-them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field of the docstring.
-As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>,
-property methods (getter and/or setter) can be listed there. Their attached docstring
-will be loaded automatically. One more thing, some IDE (like PyCharm) may raise
-warnings about unreferenced variables. It is a bug… ignore or disable it at the statement level.</p></li>
+<li><p>Classes documentation .rst files are generated using <a class="reference external" href="https://jinja.palletsprojects.com/en/stable/">Jinja2</a> template engine. The template is written in <code class="docutils literal notranslate"><span class="pre">class_template.rst</span></code> of the <code class="docutils literal notranslate"><span class="pre">doc/source/_templates</span></code>. A guide to Jinja2 templating is given in <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html">Sphinx autosummary documentation</a>. Basically, one can catch usefull variables like <code class="docutils literal notranslate"><span class="pre">methods</span></code> and create nice autosummary tables inside an <code class="docutils literal notranslate"><span class="pre">autoclass</span></code>. We chose this style because it creates very clean and comprehension interface documentation of the class.</p></li>
+<li><p>Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are <strong>inherited</strong>. One must reference them manually in the object class under the <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> field of the docstring.  As it is mentionned in <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">NumPy documentation style guide</a>, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug… ignore or disable it at the statement level.</p></li>
 </ul>
 </section>
 </section>
@@ -697,13 +568,11 @@ warnings about unreferenced variables. It is a bug… ignore or disable it at th
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-set-up">Local set up</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-python-installations">Additional Python installations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-repository-set-up">Local repository set up</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development workflow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#commit-message-markers">Commit message markers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-request-checklist">Pull request checklist</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-pull-request">Opening a pull request</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about-conception">About conception</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-documentation">Build the documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about-the-documentation">About the documentation</a></li>
 </ul>
   </nav></div>
 
