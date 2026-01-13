@@ -2,13 +2,11 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.stochastic_process._sample._data import IntArrayLike
-
 
 def select_from_struct(
-    struct_array: NDArray,
-    sample_id: Optional[IntArrayLike] = None,
-    asset_id: Optional[IntArrayLike] = None,
+    struct_array,
+    sample_id = None,
+    asset_id = None,
 ):
     """
     Method used for dev and tests

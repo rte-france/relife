@@ -1,8 +1,8 @@
-from ._data import StochasticDataSample
+from ._data import StochasticSampleMapping
 from ._iterables import NonHomogeneousPoissonProcessIterable, RenewalProcessIterable
 
 __all__ = [
-    "StochasticDataSample",
+    "StochasticSampleMapping",
     "NonHomogeneousPoissonProcessIterable",
     "RenewalProcessIterable",
 ]

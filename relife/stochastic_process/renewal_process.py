@@ -5,7 +5,7 @@ import numpy as np
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting
 from relife.lifetime_model import LeftTruncatedModel
-from relife.stochastic_process._sample._data import build_data_sample_from_iterable
+from relife.stochastic_process._sample._data import StochasticSampleMapping
 from relife.stochastic_process._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
@@ -152,7 +152,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, nb_samples, time_window, seed=None):
+    def sample(self, nb_samples, time_window, seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -171,7 +171,9 @@ class RenewalProcess(ParametricModel):
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
-        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticSampleMapping(nb_assets=get_model_nb_assets(self),nb_samples=nb_samples, struct_array=struct_array)
 
     def generate_failure_data(self, nb_samples, time_window, seed=None):
         """Generate lifetime data
@@ -450,8 +452,10 @@ class RenewalRewardProcess(RenewalProcess):
             )  # () or (m,)
         return np.squeeze(self.discounting_rate * self.asymptotic_expected_total_reward())  # () or (m,)
 
-    def sample(self, nb_samples, time_window, seed=None):
+    def sample(self, nb_samples, time_window, seed=None) -> StochasticSampleMapping:
         from ._sample import RenewalProcessIterable
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window=time_window, seed=seed)
-        return build_data_sample_from_iterable(iterable=iterable,nb_assets=get_model_nb_assets(self),nb_samples=nb_samples, is_reward=True)
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticSampleMapping(nb_assets=get_model_nb_assets(self),nb_samples=nb_samples, struct_array=struct_array)

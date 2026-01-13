@@ -1,33 +1,27 @@
 from collections.abc import Mapping
-from typing import Iterator, Optional, TypedDict
+from typing import Iterator, Optional, TypedDict, Self, Sequence
+from copy import deepcopy
 
 import numpy as np
 from numpy.typing import NDArray
 
-# this line goes in functions using the iterable and returning StochasticDataSample
-# struct_array = np.concatenate(tuple(iterable))
-
-# the symbols part of the public API of _data
 __all__ = ["StochasticSampleMapping"]
 
 
 # totality is True, all keys must be present
-# beginning with _ because it is assumed to be internal to the module
 class _StochasticSample(TypedDict):
     events: NDArray[np.bool_]
     preventive_renewals: NDArray[np.bool_]
     rewards: Optional[NDArray[np.float64]]
 
 
-# Mapping is generic : you must specify value for KT, VT TypeVar
+
 class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool_] | None]):
 
-    # exposed data, part of the public object interface
     nb_assets: int
     nb_samples: int
     timeline: NDArray[np.float64]
 
-    # hidden data for the internal object fonctionning
     _stochastic_data_sample: _StochasticSample
 
     def __init__(
@@ -40,7 +34,6 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
         self.nb_assets = nb_assets
         self.nb_samples = nb_samples
 
-        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
         # assets x samples are placed on axis 0
         index_in_rows = struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
         _, row_index = np.unique(index_in_rows, return_inverse=True)
@@ -76,35 +69,33 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
     def __len__(self) -> int:
         return len(self._stochastic_data_sample)
 
-    # if select only changes _stochastic_data_sample, then get a deepcopy and change _stochastic_data_sample internally.
+    def select(
+        self,
+        sample_id: int | Sequence[int]= None,
+        asset_id: int | Sequence[int] = None,
+    ) -> Self:
+        """
+        Focus on specific assets and samples. Return a subpart of StochasticDataSample.
+        """
 
-    # def select(
-    #     self,
-    #     sample_id: Optional[IntArrayLike] = None,
-    #     asset_id: Optional[IntArrayLike] = None,
-    # ) -> StochasticDataSample:
-    #     """
-    #     Focus on specific assets and samples. Return a subpart of StochasticDataSample.
-    #     """
+        if asset_id is None:
+            asset_id = np.arange(self.nb_assets)
+        if sample_id is None:
+            sample_id = np.arange(self.nb_samples)
 
-    #     if asset_id is None:
-    #         asset_id = np.arange(self.nb_assets)
-    #     if sample_id is None:
-    #         sample_id = np.arange(self.nb_samples)
+        asset_id = np.atleast_1d(asset_id)
+        sample_id = np.atleast_1d(sample_id)
 
-    #     asset_id = np.atleast_1d(asset_id)
-    #     sample_id = np.atleast_1d(sample_id)
+        new_nb_assets = asset_id.shape[0]
+        new_nb_samples = sample_id.shape[0]
 
-    #     new_nb_assets = asset_id.shape[0]
-    #     new_nb_samples = sample_id.shape[0]
+        mask = (asset_id[None, :] * self.nb_samples + sample_id[:, None]).flatten()
 
-    #     mask = (asset_id[None, :] * self.nb_samples + sample_id[:, None]).flatten()
+        new_stochastic_data_sample = {key: value[mask] for key, value in self._stochastic_data_sample.items()}
 
-    #     new_data = {key: value[mask] for key, value in self._data.items()}
+        select_sample = deepcopy(self)
+        select_sample._stochastic_data_sample = new_stochastic_data_sample
+        select_sample.nb_assets = new_nb_assets
+        select_sample.nb_samples = new_nb_samples
 
-    #     return StochasticDataSample(
-    #         timeline=self.timeline,
-    #         nb_assets=new_nb_assets,
-    #         nb_samples=new_nb_samples,
-    #         data=new_data,
-    #     )
+        return select_sample
