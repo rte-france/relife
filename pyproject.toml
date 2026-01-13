@@ -46,7 +46,6 @@ include = ["relife*"]  # ["*"] by default
 [project.optional-dependencies]
 dev = [
     "pytest >= 8.3.0",
-    "nox >= 2024.10.0",
     "isort >= 6.0.0",
     "black >= 25.1.0",
     "mypy >= 1.15.0",
