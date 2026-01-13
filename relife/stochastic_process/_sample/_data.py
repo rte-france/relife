@@ -47,7 +47,7 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
         preventive_renewals = np.zeros((self.nb_assets * self.nb_samples, self.timeline.size), dtype=bool)
         preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
         preventive_renewals[:, -1] = False
-        if "rewards" in struct_array:
+        if "rewards" in struct_array.dtype.fields:
             rewards = np.zeros((self.nb_assets * self.nb_samples, self.timeline.size), dtype=float)
             rewards[row_index, col_timeline] = struct_array["reward"]
         else:
