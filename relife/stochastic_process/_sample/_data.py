@@ -1,6 +1,5 @@
 from collections.abc import Mapping
 from typing import Iterator, Optional, TypedDict, Self, Sequence
-from copy import deepcopy
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,7 +12,6 @@ class _StochasticSample(TypedDict):
     events: NDArray[np.bool_]
     preventive_renewals: NDArray[np.bool_]
     rewards: Optional[NDArray[np.float64]]
-
 
 
 class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool_] | None]):
@@ -60,7 +58,7 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
 
     def __getitem__(self, key: str) -> NDArray[np.float64] | NDArray[np.bool_] | None:
         if key not in self._stochastic_data_sample:
-            raise KeyError(f"Key {key} does not exists. Allowed keys are 'events' or 'preventive_renewals'")
+            raise KeyError(f"Key {key} does not exists. Allowed keys are 'events', 'rewards' or 'preventive_renewals'")
         return self._stochastic_data_sample.get(key)
 
     def __iter__(self) -> Iterator[str]:
@@ -68,6 +66,13 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
 
     def __len__(self) -> int:
         return len(self._stochastic_data_sample)
+    
+    @classmethod
+    def _init_from_stochastic_sample(cls, nb_assets: int, nb_samples: int, stochastic_sample:_StochasticSample) -> Self:
+        new_mapping = StochasticSampleMapping.__new__(StochasticSampleMapping)
+        new_mapping.nb_assets = nb_assets
+        new_mapping.nb_samples = nb_samples
+        new_mapping._stochastic_data_sample = stochastic_sample
 
     def select(
         self,
@@ -93,9 +98,4 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
 
         new_stochastic_data_sample = {key: value[mask] for key, value in self._stochastic_data_sample.items()}
 
-        select_sample = deepcopy(self)
-        select_sample._stochastic_data_sample = new_stochastic_data_sample
-        select_sample.nb_assets = new_nb_assets
-        select_sample.nb_samples = new_nb_samples
-
-        return select_sample
+        return StochasticSampleMapping._init_from_stochastic_sample(new_nb_assets, new_nb_samples, new_stochastic_data_sample)
