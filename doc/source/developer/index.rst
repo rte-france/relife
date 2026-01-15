@@ -1,5 +1,5 @@
-For developpers
-===============
+For developers
+==============
 
 .. note::
 
@@ -24,11 +24,15 @@ It explains how to set up a local clone of your forked git repository.
 2. Set up a local clone of your fork
 
 Clone your fork of the ReLife repo from your GitHub account to your
-local disk:
+local disk. The url to use with the clone command can be found by clicking on the green
+'Code' button of the GitHub repo. When you clone a project, you get a local copy of an
+existing git repository that is uploaded on a server. The above command will create a 
+relife directory on your computer with the codebase and every version of every file for
+the history of the project:
 
 .. code-block::
 
-  $ git clone https://github.com/<YourLogin>/relife.git  # add --depth 1 if your connection is slow
+  $ git clone https://github.com/YourLogin/relife.git  # add --depth 1 if your connection is slow
 
 and change into that directory:
 
@@ -44,7 +48,7 @@ changes (you'll need this later in the :ref:`development_workflow`):
 
 .. code-block::
 
-  $ git remote add upstream https://github.com/scikit-learn/scikit-learn.git
+  $ git remote add upstream https://github.com/rte-france/relife.git
 
 Check that the `upstream` and `origin` remote aliases are configured correctly
 by running:
@@ -57,10 +61,10 @@ This should display:
 
 .. code-block:: text
 
-  origin    https://github.com/YourLogin/scikit-learn.git (fetch)
-  origin    https://github.com/YourLogin/scikit-learn.git (push)
-  upstream  https://github.com/scikit-learn/scikit-learn.git (fetch)
-  upstream  https://github.com/scikit-learn/scikit-learn.git (push)
+  origin    https://github.com/YourLogin/relife.git (fetch)
+  origin    https://github.com/YourLogin/relife.git (push)
+  upstream  https://github.com/rte-france/relife.git (fetch)
+  upstream  https://github.com/rte-france/relife.git (push)
 
 3. ReLife local installation
 
@@ -72,18 +76,19 @@ from the source code with the developpers dependencies.
 
 .. code-block::
 
-    $ cd relife
-    $ pip install -e ".[dev]"
+    $ (YourEnv) cd relife
+    $ (YourEnv) python -m pip install -e ".[dev]"
 
 
-Additional Python installations
--------------------------------
+4. Configure your IDE
 
 The last command above should have installed the following dependencies:
 
 - `Black <https://github.com/psf/black>`_ and `Isort <https://github.com/PyCQA/isort>`_.
-  These tools allow you to automatically `format your code <https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code>`_.
-  Ensure that your IDE is configured to call them to format on save.
+  These tools allow you to automatically `format your code 
+  <https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code>`_.
+  Ensure that your IDE is configured to call them to format on save so that you don't have
+  to call them manually.
 - `Flake8 <https://github.com/PyCQA/flake8>`_ and `Pylint <https://github.com/PyCQA/pylint>`_.
   These programs are Python `linters <https://en.wikipedia.org/wiki/Lint_(software)>`_.
   Ensure that your IDE captures diagnostics from these tools while you are coding.
@@ -92,7 +97,15 @@ The last command above should have installed the following dependencies:
   Aim to resolve all warnings; if necessary, disable warnings locally by adding
   specific configurations for these tools on your machine. Do not commit these configurations,
   as they remain personal to your environment.
-- `Pyright <https://github.com/microsoft/pyright>`_. This is a `static type checker <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
+
+
+Static type checking
+--------------------
+
+Addtionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
+have been installed:
+
+- `Pyright <https://github.com/microsoft/pyright>`_.
   Again, ensure that your IDE communicates with the Pyright language server (`LSP <https://en.wikipedia.org/wiki/Language_Server_Protocol>`_)
   to receive feedback on your type annotations. Type checking can be challenging and may
   not be desired at first, so consider flagging your modules with ``#pyright: basic`` to start.
@@ -114,8 +127,7 @@ The next steps describe the process of modifying code and submitting a PR:
 .. code-block:: bash
 
   $ git checkout main
-  $ git fetch upstream
-  $ git merge upstream/main
+  $ git pull upstream main
 
 2. Create a feature branch to hold your development changes:
 
@@ -158,12 +170,14 @@ Then push the changes to your GitHub account with:
    notification to potential reviewers.
 
 It is often helpful to keep your local feature branch synchronized with the
-latest changes of the main ReLife repository:
+latest changes of the main ReLife repository. To do that, regularly check the evolution
+of ReLife codebase, pull main changes and merge them in your feature branch.
 
 .. code-block:: bash
 
-    $ git fetch upstream
-    $ git merge upstream/main
+    $ git pull upstream main
+    $ git checkout my_feature
+    $ git merge main
 
 Subsequently, you might need to solve the conflicts. You can refer to the
 `Git documentation related to resolving merge conflict using the command
