@@ -62,7 +62,6 @@ dev = [
     "jupyterlab >= 4.3.5",
 	"setuptools-scm >= 8.0.0",
 	"pylint >= 4.0.4",
-	"flake8 >= 7.3.0",
 	"pyright >= 1.1.408",
 ]
 
@@ -70,7 +69,7 @@ dev = [
 line-length = 120
 
 [tool.isort]
-profile = 'black'
+profile = "black"
 
 # gradual typing : strict mode is activated for modules
 [tool.pyright]

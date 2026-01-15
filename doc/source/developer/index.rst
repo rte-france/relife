@@ -89,14 +89,14 @@ The last command above should have installed the following dependencies:
   <https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code>`_.
   Ensure that your IDE is configured to call them to format on save so that you don't have
   to call them manually.
-- `Flake8 <https://github.com/PyCQA/flake8>`_ and `Pylint <https://github.com/PyCQA/pylint>`_.
-  These programs are Python `linters <https://en.wikipedia.org/wiki/Lint_(software)>`_.
-  Ensure that your IDE captures diagnostics from these tools while you are coding.
+- `Pylint <https://github.com/PyCQA/pylint>`_.
+  This software is a Python `linter <https://en.wikipedia.org/wiki/Lint_(software)>`_.
+  Ensure that your IDE captures diagnostics from this tool while you are coding.
   Although their default configurations can be quite aggressive, we refrain from
   providing generic configurations as it may overlook critical errors in some cases.
   Aim to resolve all warnings; if necessary, disable warnings locally by adding
   specific configurations for these tools on your machine. Do not commit these configurations,
-  as they remain personal to your environment.
+  as they remain personal to your environment. The base configuration that you 
 
 
 Static type checking
