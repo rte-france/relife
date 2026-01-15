@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.optimize import Bounds
+from scipy.stats import norm
+from scipy import linalg
 
 from relife.lifetime_model.regression import _CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
@@ -14,16 +16,82 @@ SCIPY_MINIMIZE_ORDER_2_ALGO = [
     "trust-constr"
 ]
 
-class CoxBaseline:
+
+# TODO: recheck covar passing through Likelihood
+# TODO: check docstrings
+
+class BreslowBaseline:
     """
-    Class for Cox non-parametric baseline
+    Class for Cox non-parametric Breslow baseline
     """
 
-    def hf(self, *args, kwargs):
-        raise NotImplementedError
+    def __init__(
+            self,
+            covar_effect: _CovarEffect,
+            event_count: np.ndarray,
+            ordered_event_covar: np.ndarray,
+            psi: callable,
+    ):
+        self.covar_effect = covar_effect
+        self.event_count = event_count
+        self.ordered_event_covar = ordered_event_covar
+        self.psi = psi
 
-    def chf(self, *args, kwargs):
-        raise NotImplementedError
+    def chf(
+        self, conf_int: bool = False, kp: bool = False
+    ) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
+        """Knowing estimates of beta, computes the cumulative baseline hazard rate estimator and its confidence interval (optional)
+
+        Args:
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray] or np.ndarray: values of chf0 estimator and its confidence interval
+            at 95% level. Arrays are of size :math:`m`
+        """
+        if kp:
+            values = np.cumsum(
+                1
+                - (
+                    1
+                    - (
+                        self.covar_effect.g(self.ordered_event_covar)
+                        / self.psi()
+                    )
+                )
+                ** (self.covar_effect.g(self.ordered_event_covar))
+            )
+        else:
+            values = np.cumsum(self.event_count[:, None] / self.psi())
+        if conf_int:
+            var = np.cumsum(self.event_count[:, None] / self.psi() ** 2)
+            conf_int = np.hstack(
+                [
+                    values[:, None]
+                    + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                    values[:, None]
+                    - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                ]
+            )
+            return values, conf_int
+        else:
+            return values
+
+    def sf(self, conf_int: bool = False) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
+        """Knowing estimates of beta, computes the baseline survival function and its confidence interval (optional)
+
+        Args:
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray] or np.ndarray: values of chf0 estimator and its confidence interval
+            at 95% level. Arrays are of size :math:`m`
+        """
+        if conf_int:
+            chf, chf_conf_int = -self.chf(conf_int=True)
+            return np.exp(-chf), np.exp(-chf_conf_int)
+        else:
+            return np.exp(-self.chf())
 
 
 class Cox:
@@ -31,9 +99,12 @@ class Cox:
     Class for Cox, semi-parametric, Proportional Hazards, model
     """
 
-    def __init__(self, coefficients=(None,)):
+    def __init__(self, coefficients=(None,), baseline_estimator: str = "Breslow"):
         self.covar_effect = _CovarEffect(coefficients)
-        self.baseline = CoxBaseline()
+        assert baseline_estimator == "Breslow", "The only Cox baseline estimator available is Breslow"
+        self.baseline_estimator = baseline_estimator
+        self._baseline = None
+        self._hess = None
 
     @property
     def params(self):
@@ -47,43 +118,63 @@ class Cox:
     def nb_params(self):
         return self.covar_effect.nb_params
 
-    def hf(self, covar, *args, kwargs):
+    @property
+    def baseline(self):
+        if self._baseline is None:
+            raise ValueError("Cox baseline is not available before model fitting")
+        else:
+            return self._baseline
+
+    @baseline.setter
+    def baseline(self, value):
+        if not isinstance(value, BreslowBaseline):
+            raise TypeError("Cox baseline must be a BreslowBaseline object")
+        self._baseline = value
+
+    def sf(
+            self, covar: np.ndarray, conf_int: bool = False
+    ) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
+        """Knowing estimates of beta, computes the sf estimator and confidence interval (optional)
+
+        Args:
+            covar (np.ndarray): one vector of covariate values, shape p
+            conf_int (bool, optional): If true returns estimated confidence interval. Defaults to False.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray] or np.ndarray:  values of sf estimator and its confidence interval
+            at 95% level. Arrays are of size :math:`m`
         """
-        The hazard function.
+        values = self.baseline.sf() ** self.covar_effect.g(covar)
+        if conf_int:
+            psi = self.baseline.psi()
+            psi_order_1 = self.baseline.psi(order=1)
+            d_j_on_psi = self.baseline.event_count[:, None] / psi
+            information_matrix = self._hess
+            inverse_information_matrix = linalg.inv(information_matrix)
 
-        Parameters
-        ----------
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
+            q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
+            q2 = np.squeeze(
+                np.matmul(
+                    q3[:, None, :],
+                    np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+                )
+            )  # m
+            q1 = np.cumsum(d_j_on_psi * (1 / psi))
 
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
+            var = (values ** 2) * (q1 + q2)
 
-        TODO: update with CoxBaseline.hf args
-        """
-        return self.covar_effect.g(covar) * self.baseline.hf(*args, kwargs)
+            conf_int = np.hstack(
+                [
+                    values[:, None]
+                    + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                    values[:, None]
+                    - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
+                ]
+            )
 
-    def chf(self, covar, *args, kwargs):
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-
-        TODO: update with CoxBaseline.chf args
-        """
-        return self.covar_effect.g(covar) * self.baseline.chf(*args, kwargs)
+            return values, conf_int
+        else:
+            return values
 
     def _get_initial_params(
             self, time, covar, event=None, entry=None
@@ -121,4 +212,12 @@ class Cox:
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
+        likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
+        self.baseline = BreslowBaseline(
+            covar_effect=self.covar_effect,
+            event_count=likelihood._event_count,
+            ordered_event_covar=likelihood._ordered_event_covar,
+            psi=likelihood._psi,
+        )
+        self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
         return self

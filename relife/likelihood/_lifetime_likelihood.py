@@ -1,7 +1,9 @@
+from dataclasses import dataclass
+
 import numpy as np
 from numpy.typing import NDArray
 
-from ._base import Likelihood
+from ._base import Likelihood, FittingResults
 from relife.utils import reshape_1d_arg
 
 def _args_reshape(*args):
@@ -282,7 +284,7 @@ class IntervalLifetimeLikelihood(Likelihood):
 
 
 class PartialLifetimeLikelihood(Likelihood):
-    """TODO: Comment. Should I keep it here ?"""
+    """TODO: Check if any update of FittingResults is required"""
 
     def __init__(self, model, time, covar, event = None, entry = None):
         super().__init__(model)
@@ -401,7 +403,7 @@ class PartialLifetimeLikelihood(Likelihood):
 
         Args:
             on (str, optional): "risk" or "death". Defaults to "risk". If "death", sum is applied on death set.
-            order (int, optional): order derivatives with respect to beta. Defaults to 0.
+            order (int, optional): order derivatives with respect to params. Defaults to 0.
 
         Returns:
             np.ndarray: psi formulation
@@ -436,7 +438,7 @@ class PartialLifetimeLikelihood(Likelihood):
         """Psi formula for Efron method
 
         Args:
-            order (int, optional): order derivatives with respect to beta. Defaults to 0.
+            order (int, optional): order derivatives with respect to params. Defaults to 0.
 
         Returns:
             np.ndarray: psi formulation for Efron method
@@ -477,7 +479,7 @@ class PartialLifetimeLikelihood(Likelihood):
         """Compute negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
-            float : negative log partial likelihood at beta
+            float : negative log partial likelihood at params
         """
         self.params = params  # changes model params
 
