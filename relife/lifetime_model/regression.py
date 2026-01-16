@@ -96,6 +96,16 @@ class _CovarEffect(ParametricModel):
             )
         return np.array(self._params.all_values)
 
+    @params.setter
+    def params(self, new_params):
+        if not isinstance(new_params, np.ndarray):
+            raise ValueError(
+                f"Incorrect params values. It must be contained in a 1d array. Got type {type(new_params)}"
+            )
+        if new_params.ndim > 1:
+            raise ValueError(f"Expected params values to be 1d array. Got {new_params.ndim} ndim")
+        self._params.set_all_values(tuple(v.item() for v in new_params))
+
     @property
     def nb_params(self):
         """
