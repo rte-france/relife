@@ -8,6 +8,8 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -18,22 +20,29 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install ReLife in dev mode
+      - name: Install relife locally in dev mode
         run: | # dev version with sphinx 
-          pip install ".[dev]" 
+          python -m pip install ".[dev]" 
 
-      - name: Install Pandoc # needed by a sphinx extension used
-        uses: r-lib/actions/setup-pandoc@v2
-        with:
-          pandoc-version: '3.1.11'
+      - name: Extra installs
+        # pandoc is required by sphinx extensions
+        run: sudo apt-get update && sudo apt-get install -y pandoc
       
       - name: Build Sphinx Doc
         run: |
-          cd doc
-          make html
+          # prefer sphinx-build rather than make build (it allows more control)
+          sphinx-build -M html ./doc/source ./doc/build -Ea
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages # branch on which files are commited
           folder: ./doc/build/html # The folder the action should deploy.
+
+      - name: Save website as an artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: website
+          path: ./doc/build
+          retention-days: 14
+
