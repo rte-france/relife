@@ -55,11 +55,11 @@
     <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="For developpers" href="../../developper/index.html" />
+    <link rel="next" title="For developers" href="../../developer/index.html" />
     <link rel="prev" title="laguerre_quadrature" href="relife.utils.quadrature.laguerre_quadrature.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.3.2.dev2+g1f03ff8bb" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.3.2.dev2+g1f03ff8bb</div>
     
   </div>
   
@@ -173,8 +173,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -308,8 +308,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -371,10 +371,6 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
@@ -503,7 +499,7 @@
 <h1>unweighted_laguerre_quadrature<a class="headerlink" href="#unweighted-laguerre-quadrature" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="relife.utils.quadrature.unweighted_laguerre_quadrature">
-<span class="sig-prename descclassname"><span class="pre">relife.utils.quadrature.</span></span><span class="sig-name descname"><span class="pre">unweighted_laguerre_quadrature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/utils/quadrature.html#unweighted_laguerre_quadrature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.utils.quadrature.unweighted_laguerre_quadrature" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">relife.utils.quadrature.</span></span><span class="sig-name descname"><span class="pre">unweighted_laguerre_quadrature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/utils/quadrature.html#unweighted_laguerre_quadrature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.utils.quadrature.unweighted_laguerre_quadrature" title="Link to this definition">#</a></dt>
 <dd><p>Numerical integration of <span class="math notranslate nohighlight">\(f(x)\)</span> over the interval <span class="math notranslate nohighlight">\([a, \infty]\)</span></p>
 <p><cite>func</cite> must accept (deg,), (deg, n) or (deg, m, n) array shapes
 It must handle at least 3 dimensions.

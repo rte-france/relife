@@ -59,7 +59,7 @@
     <link rel="prev" title="OneCycleAgeReplacementPolicy" href="relife.policy.OneCycleAgeReplacementPolicy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.3.2.dev2+g1f03ff8bb" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.3.2.dev2+g1f03ff8bb</div>
     
   </div>
   
@@ -173,8 +173,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -308,8 +308,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -371,10 +371,6 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
@@ -699,7 +695,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.RunToFailurePolicy.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_run_to_failure.html#RunToFailurePolicy.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.RunToFailurePolicy.sample" title="Link to this definition">#</a></dt>
 <dd><p>Renewal data sampling.</p>
 <p>This function will sample data and encapsulate them in an object.</p>
 <dl class="field-list simple">
@@ -707,7 +703,9 @@ assets, this option allows to return the sum result on the flit rather than call
 <dd class="field-odd"><dl class="simple">
 <dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>The size of the desired sample.</p>
 </dd>
-<dt><strong>time_window</strong><span class="classifier">tuple of two floats</span></dt><dd><p>Time window in which data are sampled</p>
+<dt><strong>tf</strong><span class="classifier">float</span></dt><dd><p>Time at the end of the observation.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, default 0</span></dt><dd><p>Time at the beginning of the observation.</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of 2 int</span></dt><dd><p>Size of the sample</p>
 </dd>

@@ -59,7 +59,7 @@
     <link rel="prev" title="KaplanMeier" href="relife.lifetime_model.KaplanMeier.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.3.2.dev2+g1f03ff8bb" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.3.2.dev2+g1f03ff8bb</div>
     
   </div>
   
@@ -173,8 +173,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -308,8 +308,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -371,10 +371,6 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
@@ -503,7 +499,7 @@
 <h1>NelsonAalen<a class="headerlink" href="#nelsonaalen" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_model.NelsonAalen">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">NelsonAalen</span></span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#NelsonAalen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">NelsonAalen</span></span><a class="reference internal" href="../../_modules/relife/lifetime_model/_non_parametric.html#NelsonAalen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen" title="Link to this definition">#</a></dt>
 <dd><p>Nelson-Aalen estimator.</p>
 <p>Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
 function from lifetime data.</p>
@@ -543,7 +539,7 @@ data. John Wiley &amp; Sons.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.NelsonAalen.chf">
-<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">se</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#NelsonAalen.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen.chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">se</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_non_parametric.html#NelsonAalen.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen.chf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative hazard function estimation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -563,7 +559,7 @@ data. John Wiley &amp; Sons.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.NelsonAalen.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/non_parametric.html#NelsonAalen.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen.fit" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_non_parametric.html#NelsonAalen.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.NelsonAalen.fit" title="Link to this definition">#</a></dt>
 <dd><p>Compute the non-parametric estimations with respect to lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
