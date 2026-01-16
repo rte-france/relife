@@ -74,6 +74,49 @@ class _CovarEffect(ParametricModel):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
     @property
+    def params(self):
+        """
+        Parameters values.
+
+        Returns
+        -------
+        ndarray
+            Parameters values
+
+        Notes
+        -----
+        If parameter values are not set, they are encoded as `np.nan` value.
+        """
+        if (len(super().params) == 1) and np.isnan(super().params):
+            raise ValueError(
+                "Unless you voluntarily instantiated CovarEffect with 1 np.nan parameter (you should not!),\n"
+                "having 1 np.nan parameter in CovarEffect means the model has no information whatsoever\n"
+                "about the covariates (neither about their number, nor about their coefficient estimates),\n"
+                "and hasn't seen data yet to infer it from."
+            )
+        return np.array(self._params.all_values)
+
+    @property
+    def nb_params(self):
+        """
+        Number of parameters.
+
+        Returns
+        -------
+        int
+            Number of parameters.
+
+        """
+        if (len(super().params) == 1) and np.isnan(super().params):
+            raise ValueError(
+                "Unless you voluntarily instantiated CovarEffect with 1 np.nan parameter (you should not!),\n"
+                "having 1 np.nan parameter in CovarEffect means the model has no information whatsoever\n"
+                "about the covariates (neither about their number, nor about their coefficient estimates),\n"
+                "and hasn't seen data yet to infer it from."
+            )
+        return self._params.size
+
+    @property
     def nb_coef(self):
         """
         The number of coefficients
@@ -497,9 +540,6 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
     def _get_initial_params(
         self, time, covar, event=None, entry=None
     ):
-        self.covar_effect = _CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
-        )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline._get_initial_params(
             time, event=None, entry=None
@@ -558,6 +598,9 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         Self
             The current object with the estimated parameters setted inplace.
         """
+        self.covar_effect = _CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
+        )  # changes params structure depending on number of covar
         return super().fit(time, covar, event=event, entry=entry, optimizer_options=optimizer_options)
 
     def fit_from_interval_censored_lifetimes(
@@ -601,6 +644,9 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
         Self
             The current object with the estimated parameters setted inplace.
         """
+        self.covar_effect = _CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
+        )  # changes params structure depending on number of covar
         return super().fit_from_interval_censored_lifetimes(
             time_inf, time_sup, covar, entry=entry, optimizer_options=optimizer_options
         )
