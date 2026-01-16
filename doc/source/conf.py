@@ -85,7 +85,7 @@ html_css_files = ["css/custom.css"]  # custom css to change some colors
 html_sidebars = {
     "installation": [],  # removes navigation bar for installation.rst
     "basic/index": [],  # idem
-    "developper/index": [],  #  idem
+    "developer/index": [],  # idem
 }
 
 html_theme_options = {
