@@ -179,9 +179,6 @@ class Cox:
     def _get_initial_params(
             self, time, covar, event=None, entry=None
     ):
-        self.covar_effect = _CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
-        )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
         return param0
 
@@ -198,6 +195,9 @@ class Cox:
         entry=None,
         optimizer_options=None,
     ):
+        self.covar_effect = _CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
+        )  # changes params structure depending on number of covar
         likelihood = PartialLifetimeLikelihood(
             self, time, covar, event=event, entry=entry
         )
