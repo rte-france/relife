@@ -72,10 +72,6 @@ class _CovarEffect(ParametricModel):
 
     def __init__(self, coefficients=(None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
-        if (len(coefficients) == 1) and coefficients[0] is None:
-            self._nb_coef = None
-        else:
-            self._nb_coef = len(coefficients)
 
     @property
     def params(self):
@@ -129,7 +125,7 @@ class _CovarEffect(ParametricModel):
         -------
         int
         """
-        return self._nb_coef
+        return self.nb_params
 
     def g(self, covar):
         """
@@ -553,13 +549,13 @@ class LifetimeRegression(FittableParametricLifetimeModel, ABC):
     def _get_params_bounds(self):
         lb = np.concatenate(
             (
-                np.full(self.covar_effect.nb_coef, -np.inf),
+                np.full(self.covar_effect.nb_params, -np.inf),
                 self.baseline._get_params_bounds().lb,  # baseline has _params_bounds according to typing
             )
         )
         ub = np.concatenate(
             (
-                np.full(self.covar_effect.nb_coef, np.inf),
+                np.full(self.covar_effect.nb_params, np.inf),
                 self.baseline._get_params_bounds().ub,
             )
         )
