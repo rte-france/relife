@@ -312,21 +312,21 @@ class PartialLifetimeLikelihood(Likelihood):
         # left truncated & right censored
         self._risk_set = np.logical_and(
             (
-                    np.vstack([entry] * len(ordered_event_time))
+                    np.vstack([entry[:, 0]] * len(ordered_event_time))
                     < np.hstack([ordered_event_time[:, None]] * len(time))
             ),
             (
                     np.hstack([ordered_event_time[:, None]] * len(time))
-                    <= np.vstack([time] * len(ordered_event_time))
+                    <= np.vstack([time[:, 0]] * len(ordered_event_time))
             ),
         )
 
-        self._death_set = np.vstack([time * event] * len(ordered_event_time)) == np.hstack(
+        self._death_set = np.vstack([time[:, 0] * event[:, 0]] * len(ordered_event_time)) == np.hstack(
             [ordered_event_time[:, None]] * len(time)
         )
 
         self._covar = covar
-        self._ordered_event_covar = covar[event == 1][ordered_event_index]
+        self._ordered_event_covar = covar[event[:, 0] == 1][ordered_event_index]
 
         self._nb_observations = len(time)
 

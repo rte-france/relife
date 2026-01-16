@@ -183,8 +183,8 @@ class Cox:
         return param0
 
     def _get_params_bounds(self):
-        lb = np.full(self.nb_params, -np.inf),
-        ub = np.full(self.nb_params, np.inf),
+        lb = np.full(self.nb_params, -np.inf)
+        ub = np.full(self.nb_params, np.inf)
         return Bounds(lb, ub)
 
     def fit(
@@ -194,13 +194,16 @@ class Cox:
         event=None,
         entry=None,
         optimizer_options=None,
+        seed: int = 1
     ):
         self.covar_effect = _CovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
         )  # changes params structure depending on number of covar
+
         likelihood = PartialLifetimeLikelihood(
             self, time, covar, event=event, entry=entry
         )
+
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
@@ -209,7 +212,12 @@ class Cox:
             optimizer_options["method"] = "trust-exact"
         if optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO:
             optimizer_options["hess"] = likelihood.hess_negative_log
+        if "x0" not in optimizer_options:
+            np.random.seed(seed)
+            optimizer_options["x0"] = np.random.random(covar.shape[1])
+
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
@@ -220,4 +228,5 @@ class Cox:
             psi=likelihood._psi,
         )
         self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
+
         return self
