@@ -1,6 +1,12 @@
-from .utils import get_args_nb_assets, is_frozen
+from importlib.metadata import PackageNotFoundError, version
 
-# ParametricModel and FrozenParametricModel must be imported from relife.base explicitly
+try:
+    __version__ = version("relife")
+except PackageNotFoundError:
+    # package is not installed
+    pass
+
+__all__: list[str] = []
 
 _submodules = [
     "data",
@@ -10,10 +16,8 @@ _submodules = [
     "stochastic_process",
     "quadrature",
     "economic",
+    "typing",
+    "utils",
 ]
 
-__all__ = _submodules + [
-    # Non-modules:
-    "get_nb_assets",
-    "is_frozen",
-]
+__all__ += _submodules

@@ -8,15 +8,13 @@
 # theme used : https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/index.html
 
 import os
-from packaging import version
-from importlib import metadata
 from datetime import datetime
-
+from importlib.metadata import version as get_version
 
 project = "relife"
 author = "RTE-SAGA"
 copyright = f"2007 - {datetime.now().year}, {author} (Apache 2.0 License)"
-version = version.parse(metadata.version("relife")).base_version
+version = get_version("relife")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -87,7 +85,7 @@ html_css_files = ["css/custom.css"]  # custom css to change some colors
 html_sidebars = {
     "installation": [],  # removes navigation bar for installation.rst
     "basic/index": [],  # idem
-    "developper/index": [],  #  idem
+    "developer/index": [],  # idem
 }
 
 html_theme_options = {

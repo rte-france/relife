@@ -1,4 +1,7 @@
+# pyright: basic
+
 import numpy as np
+
 from relife.likelihood import DefaultLifetimeLikelihood
 
 
@@ -10,7 +13,7 @@ class TestLikelihoodDistribution:
             event=power_transformer_data["event"],
             entry=power_transformer_data["entry"],
         )
-        assert likelihood.negative_log(distribution.params).shape == ()
+        assert isinstance(likelihood.negative_log(distribution.params), float)
 
     def test_jac_negative_log(self, distribution, power_transformer_data):
         likelihood = DefaultLifetimeLikelihood(
@@ -19,9 +22,7 @@ class TestLikelihoodDistribution:
             event=power_transformer_data["event"],
             entry=power_transformer_data["entry"],
         )
-        assert likelihood.jac_negative_log(distribution.params).shape == (
-            distribution.nb_params,
-        )
+        assert likelihood.jac_negative_log(distribution.params).shape == (distribution.nb_params,)
 
 
 class TestLikelihoodRegression:
@@ -39,7 +40,7 @@ class TestLikelihoodRegression:
             event=insulator_string_data["event"],
             entry=insulator_string_data["entry"],
         )
-        assert likelihood.negative_log(regression.params).shape == ()
+        assert isinstance(likelihood.negative_log(regression.params), float)
 
     def test_jac_negative_log(self, regression, insulator_string_data):
         covar = np.column_stack(
@@ -55,6 +56,4 @@ class TestLikelihoodRegression:
             event=insulator_string_data["event"],
             entry=insulator_string_data["entry"],
         )
-        assert likelihood.jac_negative_log(regression.params).shape == (
-            regression.nb_params,
-        )
+        assert likelihood.jac_negative_log(regression.params).shape == (regression.nb_params,)

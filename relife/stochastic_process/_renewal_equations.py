@@ -1,7 +1,21 @@
+# pyright: basic
+from typing import Callable, Optional
+
 import numpy as np
+from numpy.typing import NDArray
+
+from relife.economic import ExponentialDiscounting
+from relife.typing import AnyFloat, AnyParametricLifetimeModel, NumpyFloat
+
+__all__ = ["renewal_equation_solver", "delayed_renewal_equation_solver"]
 
 
-def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discounting=None):
+def renewal_equation_solver(
+    timeline: NDArray[np.float64],
+    lifetime_model: AnyParametricLifetimeModel[()],
+    evaluated_func: Callable[[AnyFloat], NumpyFloat],
+    discounting: Optional[ExponentialDiscounting] = None,
+) -> NDArray[np.float64]:
 
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
@@ -29,7 +43,13 @@ def renewal_equation_solver(timeline, lifetime_model, evaluated_func, discountin
     return z
 
 
-def delayed_renewal_equation_solver(timeline, z, first_lifetime_model, evaluated_func, discounting=None):
+def delayed_renewal_equation_solver(
+    timeline: NDArray[np.float64],
+    z: NDArray[np.float64],
+    first_lifetime_model: AnyParametricLifetimeModel[()],
+    evaluated_func: Callable[[AnyFloat], NumpyFloat],
+    discounting: Optional[ExponentialDiscounting] = None,
+) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
     f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)

@@ -1,12 +1,27 @@
+"""Base classes for all parametric models."""
+
+from __future__ import annotations
+
 import inspect
 from itertools import chain
-from typing import Self
+from typing import (
+    Any,
+    Generic,
+    Iterator,
+    Self,
+    TypeVar,
+    TypeVarTuple,
+    final,
+)
 
 import numpy as np
+from numpy.typing import NDArray
+from typing_extensions import override
 
 __all__ = ["ParametricModel", "FrozenParametricModel"]
 
 
+@final
 class _Parameters:
     """
     Dict-like tree structured of parameters.
@@ -14,7 +29,13 @@ class _Parameters:
     Every ``ParametricModel`` are composed of a ``_Parameters`` instance.
     """
 
-    def __init__(self, **kwargs):
+    parent: Self | None
+    _leaves: dict[str, _Parameters]
+    _mapping: dict[str, float]
+    _all_values: tuple[float, ...]
+    _all_names: tuple[str, ...]
+
+    def __init__(self, **kwargs: float | None) -> None:
         self.parent = None
         self._leaves = {}
         self._mapping = {}
@@ -25,18 +46,18 @@ class _Parameters:
             self.update_tree()  # update _names and _values
 
     @property
-    def all_names(self):
+    def all_names(self) -> tuple[str, ...]:
         return self._all_names
 
     @property
-    def all_values(self):
+    def all_values(self) -> tuple[float, ...]:
         return self._all_values
 
     @property
-    def size(self):
+    def size(self) -> int:
         return len(self.all_values)
 
-    def set_leaf(self, leaf_name, leaf):
+    def set_leaf(self, leaf_name: str, leaf: Self) -> None:
         """
         set a leaf or new leaf
         """
@@ -45,11 +66,11 @@ class _Parameters:
         self._leaves[leaf_name] = leaf
         self.update_tree()  # update _names and _values
 
-    def set_all_values(self, values):
+    def set_all_values(self, values: tuple[float | None, ...]) -> None:
         """set values of all tree"""
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
-        pos = len(self._mapping)
+        pos = len(self._mapping.items())
         self._mapping.update(zip(self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])))
         self._all_values = tuple((np.nan if v is None else v for v in values))
         for leaf in self._leaves.values():
@@ -58,16 +79,16 @@ class _Parameters:
         if self.parent is not None:
             self.parent.update_tree()
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> float:
         try:
             return self._mapping[name]
         except KeyError:
             raise ValueError(f"Parameter {name} does not exist")
 
-    def update_tree(self):
+    def update_tree(self) -> None:
         """update names and values of current and parent nodes"""
 
-        def items_walk(parameters: Self):
+        def items_walk(parameters: _Parameters) -> Iterator[tuple[str, float]]:
             yield tuple(parameters._mapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
@@ -90,12 +111,15 @@ class ParametricModel:
     Base class of every parametric models in ReLife.
     """
 
-    def __init__(self, **kwparams):
+    _params: _Parameters
+    _baseline_models: dict[str, ParametricModel]
+
+    def __init__(self, **kwparams: float | None) -> None:
         self._params = _Parameters(**kwparams)
         self._baseline_models = {}
 
     @property
-    def params(self):
+    def params(self) -> NDArray[np.float64]:
         """
         Parameters values.
 
@@ -111,17 +135,13 @@ class ParametricModel:
         return np.array(self._params.all_values)
 
     @params.setter
-    def params(self, new_params):
-        if not isinstance(new_params, np.ndarray):
-            raise ValueError(
-                f"Incorrect params values. It must be contained in a 1d array. Got type {type(new_params)}"
-            )
+    def params(self, new_params: NDArray[np.float64]) -> None:
         if new_params.ndim > 1:
             raise ValueError(f"Expected params values to be 1d array. Got {new_params.ndim} ndim")
         self._params.set_all_values(tuple(v.item() for v in new_params))
 
     @property
-    def params_names(self):
+    def params_names(self) -> tuple[str, ...]:
         """
         Parameters names.
 
@@ -137,7 +157,7 @@ class ParametricModel:
         return self._params.all_names
 
     @property
-    def nb_params(self):
+    def nb_params(self) -> int:
         """
         Number of parameters.
 
@@ -149,14 +169,15 @@ class ParametricModel:
         """
         return self._params.size
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name in self.__dict__:
             return self.__dict__[name]
         if name in super().__getattribute__("_baseline_models"):
             return super().__getattribute__("_baseline_models").get(name)
         raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
 
-    def __setattr__(self, name, value):
+    @override
+    def __setattr__(self, name: str, value: Any):
         # automatically add params of new baseline model
         if isinstance(value, ParametricModel):
             self._baseline_models[name] = value
@@ -164,45 +185,53 @@ class ParametricModel:
         super().__setattr__(name, value)
 
 
-class FrozenParametricModel(ParametricModel):
+_ParametricModel_T = TypeVar("_ParametricModel_T", bound=ParametricModel)
+
+Ts = TypeVarTuple("Ts")
+
+
+class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     """
     Class of every frozen parametric models.
 
     Frozen models encapsulate additional arguments values allowing to request the object without
     giving them.
     """
-    def __init__(self, model, *args):
+
+    _args: tuple[*Ts]
+    _unfrozen_model: _ParametricModel_T
+
+    def __init__(self, model: _ParametricModel_T, *args: *Ts):
         super().__init__()
         if np.any(np.isnan(model.params)):
             raise ValueError("Can't freeze a model with NaN params. Set params first")
-        self.unfrozen_model = model  # setted as a baseline model
-        self._args = list(args)
+        self._unfrozen_model = model
+        self._args = args
 
     @property
-    def args(self):
+    def args(self) -> tuple[*Ts]:
         return self._args
 
     @args.setter
-    def args(self, value):
-        try:
-            value = list(value)
-        except TypeError:
+    def args(self, value: tuple[*Ts]) -> None:
+        if len(value) != len(self._args):
             raise ValueError
         self._args = value
 
-    def unfreeze(self):
-        return self.unfrozen_model
+    def unfreeze(self) -> _ParametricModel_T:
+        return self._unfrozen_model
 
-    def __getattr__(self, name):
-        frozen_type = self.unfrozen_model.__class__.__name__
-        if name == "fit":
+    @override
+    def __getattr__(self, key: str) -> Any:
+        frozen_type = self._unfrozen_model.__class__.__name__
+        if key == "fit":
             raise AttributeError(f"Frozen model can't be fit")
         try:
-            attr = getattr(self.unfrozen_model, name)
+            attr = getattr(self._unfrozen_model, key)
         except AttributeError:
-            raise AttributeError(f"Frozen {frozen_type} has no attribute {name}")
+            raise AttributeError(f"Frozen {frozen_type} has no attribute {key}")
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any):
             return attr(*(*args, *self.args), **kwargs)
 
         if inspect.ismethod(attr):
@@ -210,5 +239,49 @@ class FrozenParametricModel(ParametricModel):
         return attr
 
 
-# see sklearn/base.py : return unfitted ParametricModel
-# def clone(model: ParametricModel) -> ParametricModel: ...
+# class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
+#     """
+#     Class of every frozen parametric models.
+
+#     Frozen models encapsulate additional arguments values allowing to request the object without
+#     giving them.
+#     """
+
+#     _args: tuple[*Ts]
+#     _unfrozen_model: _ParametricModel_T
+
+#     def __init__(self, model: _ParametricModel_T, *args: *Ts):
+#         super().__init__()
+#         if np.any(np.isnan(model.params)):
+#             raise ValueError("Can't freeze a model with NaN params. Set params first")
+#         self._unfrozen_model = model
+#         self._args = args
+
+#     @property
+#     def args(self) -> tuple[*Ts]:
+#         return self._args
+
+#     @args.setter
+#     def args(self, value: tuple[*Ts]) -> None:
+#         if len(value) != len(self._args):
+#             raise ValueError
+#         self._args = value
+
+#     def unfreeze(self) -> _ParametricModel_T:
+#         return self._unfrozen_model
+
+#     def __getattr__(self, key: str) -> Any:
+#         frozen_type = self._unfrozen_model.__class__.__name__
+#         if key == "fit":
+#             raise AttributeError(f"Frozen model can't be fit")
+#         try:
+#             attr = getattr(self._unfrozen_model, key)
+#         except AttributeError:
+#             raise AttributeError(f"Frozen {frozen_type} has no attribute {key}")
+
+#         def wrapper(*args: Any, **kwargs: Any):
+#             return attr(*(*args, *self.args), **kwargs)
+
+#         if inspect.ismethod(attr):
+#             return wrapper
+#         return attr

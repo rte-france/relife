@@ -1,3 +1,5 @@
+# pyright: basic
+
 import numpy as np
 from pytest import approx
 
@@ -23,9 +25,6 @@ def test_laguerre_quadrature(integration_bound_a):
 
 
 def test_legendre_quadrature(integration_bound_a, integration_bound_b):
-    m = 2
-    n = 3
-
     # f : R -> R or R^n -> R^n or R^(m, n) -> R^(m, n), etc.
     f = lambda x: x
     # integral_a^b xdx = (1/2)*(b^2 - a^2)
