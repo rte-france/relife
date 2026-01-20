@@ -480,7 +480,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
+            optimizer_options["bounds"] = self.params_bounds
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

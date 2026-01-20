@@ -85,6 +85,45 @@ class CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[float | None, ...] = (None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
+    @ParametricModel.params.getter
+    def params(self):
+        """
+        Parameters values.
+        Returns
+        -------
+        ndarray
+            Parameters values
+        Notes
+        -----
+        If parameter values are not set, they are encoded as `np.nan` value.
+        """
+        if (len(super().params) == 1) and np.isnan(super().params):
+            raise ValueError(
+                "Unless you voluntarily instantiated CovarEffect with 1 np.nan parameter (you should not!),\n"
+                "having 1 np.nan parameter in CovarEffect means the model has no information whatsoever\n"
+                "about the covariates (neither about their number, nor about their coefficient estimates),\n"
+                "and hasn't seen data yet to infer it from."
+            )
+        return np.array(self._params.all_values)
+
+    @ParametricModel.nb_params.getter
+    def nb_params(self):
+        """
+        Number of parameters.
+        Returns
+        -------
+        int
+            Number of parameters.
+        """
+        if (len(super().params) == 1) and np.isnan(super().params):
+            raise ValueError(
+                "Unless you voluntarily instantiated CovarEffect with 1 np.nan parameter (you should not!),\n"
+                "having 1 np.nan parameter in CovarEffect means the model has no information whatsoever\n"
+                "about the covariates (neither about their number, nor about their coefficient estimates),\n"
+                "and hasn't seen data yet to infer it from."
+            )
+        return self._params.size
+
     def nb_coef(self) -> int:
         """
         The number of coefficients
