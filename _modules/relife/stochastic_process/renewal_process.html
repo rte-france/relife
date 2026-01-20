@@ -41,8 +41,8 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.3.3" />
+  <meta name="docsearch:version" content="2.2.0" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.3.3</div>
+2.2.0</div>
     
   </div>
   
@@ -168,8 +168,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developer/index.html">
-    For developers
+  <a class="nav-link nav-internal" href="../../../developper/index.html">
+    For developpers
   </a>
 </li>
 
@@ -301,8 +301,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developer/index.html">
-    For developers
+  <a class="nav-link nav-internal" href="../../../developper/index.html">
+    For developpers
   </a>
 </li>
 
@@ -412,40 +412,24 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.stochastic_process.renewal_process</h1><div class="highlight"><pre>
-<span></span><span class="c1"># pyright: basic</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.economic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExponentialDiscounting</span><span class="p">,</span> <span class="n">Reward</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">LeftTruncatedModel</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">,</span> <span class="n">Seed</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_frozen</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">._renewal_equations</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.economic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExponentialDiscounting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeftTruncatedModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process._sample._data</span><span class="w"> </span><span class="kn">import</span> <span class="n">StochasticSampleMapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process._renewal_equations</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">delayed_renewal_equation_solver</span><span class="p">,</span>
     <span class="n">renewal_equation_solver</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessSample</span><span class="p">,</span> <span class="n">RenewalRewardProcessSample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_nb_assets</span><span class="p">,</span> <span class="n">is_frozen</span><span class="p">,</span> <span class="n">reshape_1d_arg</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_make_timeline</span><span class="p">(</span><span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_timeline</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">):</span>
     <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>  <span class="c1"># (nb_steps,)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">timeline</span><span class="p">)</span>  <span class="c1"># (1, nb_steps) to ensure broadcasting</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">LifetimeFitArgs</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-    <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]</span>
-    <span class="n">event</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]</span>
-    <span class="n">entry</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]</span>
-    <span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="RenewalProcess">
@@ -474,21 +458,28 @@
 <span class="sd">    params_names</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span>
-    <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span> <span class="o">|</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()],</span>
-        <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">lifetime_model</span>
+        <span class="k">if</span> <span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lifetime_model_nb_assets</span> <span class="o">=</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span>
+            <span class="n">first_lifetime_model_nb_assets</span> <span class="o">=</span> <span class="n">get_model_nb_assets</span><span class="p">(</span><span class="n">first_lifetime_model</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">lifetime_model_nb_assets</span> <span class="o">!=</span> <span class="mi">1</span>
+                <span class="ow">and</span> <span class="n">first_lifetime_model_nb_assets</span> <span class="o">!=</span> <span class="mi">1</span>
+                <span class="ow">and</span> <span class="n">lifetime_model_nb_assets</span> <span class="o">!=</span> <span class="n">first_lifetime_model_nb_assets</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    Args of the first_lifetime_model and lifetime_model should have coherent shapes.</span>
+<span class="s2">                    Got </span><span class="si">{</span><span class="n">first_lifetime_model_nb_assets</span><span class="p">,</span><span class="w"> </span><span class="n">lifetime_model_nb_assets</span><span class="si">}</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="o">=</span> <span class="n">first_lifetime_model</span>
 
 <div class="viewcode-block" id="RenewalProcess.renewal_function">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.renewal_function">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">renewal_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">renewal_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The renewal function.</span>
 
 <span class="sd">        The renewal function gives the expected total number of renewals. It is computed  by solving the</span>
@@ -537,7 +528,7 @@
 
 <div class="viewcode-block" id="RenewalProcess.renewal_density">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.renewal_density">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">renewal_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">renewal_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The renewal density.</span>
 
 <span class="sd">        The renewal density corresponds to the derivative of the renewal function with</span>
@@ -585,21 +576,17 @@
 
 <div class="viewcode-block" id="RenewalProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalProcessSample</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticSampleMapping</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
 
 <span class="sd">        This function will sample data and encapsulate them in an object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
+<span class="sd">        nb_samples : int</span>
 <span class="sd">            The size of the desired sample</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            Time at the end of the observation.</span>
-<span class="sd">        t0 : float, default 0</span>
-<span class="sd">            Time at the beginning of the observation.</span>
-<span class="sd">        size : int or tuple of 2 int</span>
-<span class="sd">            Size of the sample</span>
+<span class="sd">        time_window : tuple of two floats</span>
+<span class="sd">            Time window in which data are sampled</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
@@ -607,29 +594,25 @@
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">RenewalProcessSample</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">StochasticSampleMapping</span><span class="o">.</span><span class="n">_init_from_struct_array</span><span class="p">(</span><span class="n">struct_array</span><span class="o">=</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">get_model_nb_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span><span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_samples</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RenewalProcess.generate_failure_data">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalProcess.html#relife.stochastic_process.RenewalProcess.generate_failure_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LifetimeFitArgs</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate lifetime data</span>
 
 <span class="sd">        This function will generate lifetime data that can be used to fit a lifetime model.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
+<span class="sd">        nb_samples : int</span>
 <span class="sd">            The size of the desired sample</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            Time at the end of the observation.</span>
-<span class="sd">        t0 : float, default 0</span>
-<span class="sd">            Time at the beginning of the observation.</span>
-<span class="sd">        nb_assets : int, optional</span>
-<span class="sd">            Number of assets.</span>
+<span class="sd">        time_window : tuple of two floats</span>
+<span class="sd">            Time window in which failure data are sampled</span>
 <span class="sd">        seed : int, optional</span>
 <span class="sd">            Random seed, by default None.</span>
 
@@ -651,13 +634,11 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous.&quot;</span>
                 <span class="p">)</span>
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
 
-        <span class="n">nb_assets</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;asset_id&quot;</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">args_2d</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())))</span>
-        <span class="c1"># broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))</span>
+        <span class="n">args_2d</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">,</span> <span class="p">())))</span>
         <span class="n">tuple_args_arr</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;asset_id&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args_2d</span><span class="p">))</span>
 
         <span class="n">returned_dict</span> <span class="o">=</span> <span class="p">{</span>
@@ -705,39 +686,27 @@
 <span class="sd">    params</span>
 <span class="sd">    params_names</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span>
-    <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">reward</span><span class="p">:</span> <span class="n">Reward</span>
-    <span class="n">first_reward</span><span class="p">:</span> <span class="n">Reward</span>
-    <span class="n">discounting</span><span class="p">:</span> <span class="n">ExponentialDiscounting</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()],</span>
-        <span class="n">reward</span><span class="p">:</span> <span class="n">Reward</span><span class="p">,</span>
-        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">first_lifetime_model</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[()]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">first_reward</span><span class="p">:</span> <span class="n">Reward</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lifetime_model</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">first_reward</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">first_lifetime_model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span> <span class="o">=</span> <span class="n">first_reward</span> <span class="k">if</span> <span class="n">first_reward</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span> <span class="o">=</span> <span class="n">ExponentialDiscounting</span><span class="p">(</span><span class="n">discounting_rate</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The discounting rate value</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">rate</span>
 
     <span class="nd">@discounting_rate</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">discounting_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">value</span>
 
 <div class="viewcode-block" id="RenewalRewardProcess.expected_total_reward">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.expected_total_reward">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_total_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The expected total reward.</span>
 
 <span class="sd">        The renewal equation solved to compute the expected reward is:</span>
@@ -792,7 +761,7 @@
             <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
+                <span class="n">t</span><span class="p">,</span>
                 <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
             <span class="p">),</span>  <span class="c1"># reward partial expectation</span>
             <span class="n">discounting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
@@ -805,7 +774,7 @@
                 <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
+                    <span class="n">t</span><span class="p">,</span>
                     <span class="n">deg</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
                 <span class="p">),</span>  <span class="c1"># reward partial expectation</span>
                 <span class="n">discounting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="p">,</span>
@@ -815,7 +784,7 @@
 
 <div class="viewcode-block" id="RenewalRewardProcess.asymptotic_expected_total_reward">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.asymptotic_expected_total_reward">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_total_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Asymptotic expected total reward.</span>
 
 <span class="sd">        The asymptotic expected total reward is:</span>
@@ -848,35 +817,29 @@
 <span class="sd">            The assymptotic expected total reward of the process.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">lf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
         <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">lf</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
         <span class="n">ly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
-        <span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">ly</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lf</span><span class="p">))</span>  <span class="c1"># () or (m,)</span>
+        <span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">ly</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lf</span><span class="p">)</span>  <span class="c1"># () or (m, 1)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lf1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-            <span class="p">)</span>  <span class="c1"># () or (m,)</span>
-            <span class="n">ly1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-                    <span class="mf">0.0</span><span class="p">,</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-                    <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>  <span class="c1"># () or (m,)</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="n">ly1</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="n">lf1</span>  <span class="c1"># () or (m,)</span>
-        <span class="k">return</span> <span class="n">z</span>  <span class="c1"># () or (m,)</span></div>
+            <span class="n">lf1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">ly1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">ly1</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="n">lf1</span>  <span class="c1"># () or (m, 1)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>  <span class="c1"># () or (m,)</span></div>
 
 
 <div class="viewcode-block" id="RenewalRewardProcess.expected_equivalent_annual_worth">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.expected_equivalent_annual_worth">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_worth</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_worth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Expected equivalent annual worth.</span>
 
 <span class="sd">        Gives the equivalent annual worth of the expected total reward of the</span>
@@ -905,9 +868,9 @@
             <span class="n">af</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">af</span><span class="p">,</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># (m, nb_steps)</span>
         <span class="n">q</span> <span class="o">=</span> <span class="n">z</span> <span class="o">/</span> <span class="p">(</span><span class="n">af</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>  <span class="c1"># # (nb_steps,) or (m, nb_steps) avoid zero division</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_lifetime_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">q0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="c1"># q0 : () or (m, 1)</span>
         <span class="n">q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">q0</span><span class="p">,</span> <span class="n">af</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (nb_steps,) or (m, nb_steps)</span>
         <span class="n">eeac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">af</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>  <span class="c1"># (nb_steps,) or (m, nb_steps)</span>
@@ -916,7 +879,7 @@
 
 <div class="viewcode-block" id="RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.asymptotic_expected_equivalent_annual_worth">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_worth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_worth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Asymptotic expected equivalent annual worth.</span>
 
 <span class="sd">        Returns</span>
@@ -926,27 +889,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span>
-                    <span class="p">),</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">conditional_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
                 <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
             <span class="p">)</span>  <span class="c1"># () or (m,)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">()</span>  <span class="c1"># () or (m,)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">())</span>  <span class="c1"># () or (m,)</span></div>
 
 
 <div class="viewcode-block" id="RenewalRewardProcess.sample">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.RenewalRewardProcess.html#relife.stochastic_process.RenewalRewardProcess.sample">[docs]</a>
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardProcessSample</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticSampleMapping</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalProcessIterable</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="n">RenewalProcessIterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;nb_renewal&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">RenewalRewardProcessSample</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">struct_array</span><span class="p">)</span></div>
+        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">StochasticSampleMapping</span><span class="o">.</span><span class="n">_init_from_struct_array</span><span class="p">(</span><span class="n">struct_array</span><span class="o">=</span><span class="n">struct_array</span><span class="p">,</span> <span class="n">nb_assets</span><span class="o">=</span><span class="n">get_model_nb_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span><span class="n">nb_samples</span><span class="o">=</span><span class="n">nb_samples</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
@@ -993,7 +950,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

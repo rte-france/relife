@@ -37,9 +37,6 @@ Gamma
             ~Gamma.fit_from_interval_censored_lifetimes
         
         
-            ~Gamma.get_initial_params
-        
-        
             ~Gamma.hf
         
         

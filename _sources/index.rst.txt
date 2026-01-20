@@ -6,6 +6,6 @@
     basic/index
     user/index
     api/index
-    developer/index
+    developper/index
 
 
