@@ -9,48 +9,21 @@ __all__ = ["StochasticSampleMapping"]
 
 # totality is True, all keys must be present
 class _StochasticSample(TypedDict):
+    """
+    Container for 2D matrixes of stochastic samples.
+    Assets x Samples on axis 0 and Timeline on axis 1.
+    Values are either booleans to indicate events and renewals, or floats for rewards.
+    """
     events: NDArray[np.bool_]
     preventive_renewals: NDArray[np.bool_]
     rewards: Optional[NDArray[np.float64]]
 
 
-def _build_stochastic_sample_from_struct(struct_array: NDArray[np.void], nb_assets:int, nb_samples: int) -> Tuple[_StochasticSample, NDArray[np.float64]]:
-    """
-    Helper function to build 2D matrixes from struct.
-    Assets x Samples on axis 0 and Timeline on axis 1.
-    Values are either booleans to indicate events, or floats for rewards.
-    """
-
-    # assets x samples are placed on axis 0
-    index_in_rows = struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
-    _, row_index = np.unique(index_in_rows, return_inverse=True)
-
-    # unique values of timeline on axis 1
-    timeline, col_timeline = np.unique(struct_array["timeline"], return_inverse=True)
-
-    # construction of matrixes
-    events = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
-    events[row_index, col_timeline] = struct_array["event"]
-    preventive_renewals = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
-    preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
-    preventive_renewals[:, -1] = False
-    if "rewards" in struct_array.dtype.fields:
-        rewards = np.zeros((nb_assets * nb_samples, timeline.size), dtype=float)
-        rewards[row_index, col_timeline] = struct_array["reward"]
-    else:
-        rewards = None
-
-    stochastic_data_sample = {
-        "events": events,
-        "preventive_renewals": preventive_renewals,
-        "rewards": rewards,
-    }
-
-    return stochastic_data_sample, timeline
-
-
-
 class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool_] | None]):
+    """
+    Mapping class to manipulate Stochastic samples.
+    Access to 2D matrixes of events, renewals and rewards and method for selecting sub-samples of the full data.
+    """
 
     nb_assets: int
     nb_samples: int
@@ -74,10 +47,34 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
     @classmethod
     def _init_from_struct_array(cls, struct_array: NDArray[np.void], nb_assets: int, nb_samples: int) -> Self:
         """
-        Class method to call _build_stochastic_sample_from_struct for building the _StochasticSample before initiating.
+        Class method to build the _StochasticSample and timeline from a struct_array before initiating.
         """
 
-        stochastic_data_sample, timeline = _build_stochastic_sample_from_struct(struct_array, nb_assets, nb_samples)
+        # assets x samples are placed on axis 0
+        index_in_rows = struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
+        _, row_index = np.unique(index_in_rows, return_inverse=True)
+
+        # unique values of timeline on axis 1
+        timeline, col_timeline = np.unique(struct_array["timeline"], return_inverse=True)
+
+        # construction of matrixes
+        events = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
+        events[row_index, col_timeline] = struct_array["event"]
+        preventive_renewals = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
+        preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
+        preventive_renewals[:, -1] = False
+        if "rewards" in struct_array.dtype.fields:
+            rewards = np.zeros((nb_assets * nb_samples, timeline.size), dtype=float)
+            rewards[row_index, col_timeline] = struct_array["reward"]
+        else:
+            rewards = None
+
+        stochastic_data_sample = {
+            "events": events,
+            "preventive_renewals": preventive_renewals,
+            "rewards": rewards,
+        }
+
         return StochasticSampleMapping(
             nb_assets=nb_assets,
             nb_samples=nb_samples,
@@ -102,7 +99,8 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
         asset_id: int | Sequence[int] = None,
     ) -> Self:
         """
-        Select a sub part of the sample based on assets and samples ids. Returns a truncated StochasticSampleMapping by selecting the corresponding rows in the 2D matrixes.
+        Select a sub part of the sample based on assets and samples ids.
+        Returns a truncated StochasticSampleMapping by selecting the corresponding rows in the 2D matrixes.
         """
         if asset_id is None:
             asset_id = np.arange(self.nb_assets)
