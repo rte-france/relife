@@ -94,7 +94,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticSampleMapping(nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples, struct_array=struct_array)
+        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
     def generate_failure_data(self, size, time_window, *args, seed=None):
         """Generate failure data
