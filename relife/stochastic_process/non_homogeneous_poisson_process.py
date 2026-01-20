@@ -1,7 +1,7 @@
 # pyright: basic
 from __future__ import annotations
 
-from typing import Any, Generic, Self, Sequence, TypeVarTuple
+from typing import Any, Generic, Self, Sequence, Tuple, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +12,7 @@ from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.likelihood import DefaultLifetimeLikelihood
 from relife.likelihood._base import FittingResults
 from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
+from relife.stochastic_process._sample import StochasticSampleMapping
 
 Ts = TypeVarTuple("Ts")
 
@@ -84,43 +85,32 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         """
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        *args: *Ts,
-        t0: float = 0.0,
-        seed: int | None = None,
-    ):
+    def sample(self, nb_samples: int, time_window:Tuple[float,float], *args, seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
-        This function will sample data and encapsulate them in an object.
+        This function will sample data and encapsulate them in a StochasticSampleMapping object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample
+        nb_samples : int
+            The number of samples
+        time_window : tuple of two floats
+            Time window in which data are sampled
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
         seed : int, optional
             Random seed, by default None.
 
         """
 
-        from ._sample import (
-            NonHomogeneousPoissonProcessIterable,
-            NonHomogeneousPoissonProcessSample,
-        )
+        from ._sample import NonHomogeneousPoissonProcessIterable
+        from relife.utils import get_model_nb_assets
 
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return NonHomogeneousPoissonProcessSample(t0, tf, struct_array)
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
     def generate_failure_data(
         self,

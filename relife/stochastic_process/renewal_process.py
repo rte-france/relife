@@ -1,7 +1,7 @@
 # pyright: basic
 
 import copy
-from typing import TypedDict
+from typing import Tuple, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,8 +19,8 @@ from ._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
-from ._sample import RenewalProcessSample, RenewalRewardProcessSample
 
+from relife.stochastic_process._sample import StochasticSampleMapping
 
 def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -161,32 +161,29 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> RenewalProcessSample:
+    def sample(self, nb_samples: int, time_window: Tuple[float,float], seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
+        nb_samples : int
             The size of the desired sample
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
+        time_window : tuple of two floats
+            Time window in which data are sampled
         seed : int, optional
             Random seed, by default None.
 
         """
 
         from ._sample import RenewalProcessIterable
+        from relife.utils import get_model_nb_assets
 
-        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
-        return RenewalProcessSample(t0, tf, struct_array)
+        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
+        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
 
     def generate_failure_data(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> LifetimeFitArgs:
         """Generate lifetime data
@@ -493,12 +490,3 @@ class RenewalRewardProcess(RenewalProcess):
                 / self.lifetime_model.mean()
             )  # () or (m,)
         return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m,)
-
-    @override
-    def sample(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> RenewalRewardProcessSample:
-        from ._sample import RenewalProcessIterable
-
-        iterable = RenewalProcessIterable(self, size, tf, t0=t0, seed=seed)
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("nb_renewal", "asset_id", "sample_id"))
-        return RenewalRewardProcessSample(t0, tf, struct_array)

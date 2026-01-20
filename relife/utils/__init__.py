@@ -7,6 +7,7 @@ from ._model_checks import (
     is_frozen,
     is_lifetime_model,
     is_non_homogeneous_poisson_process,
+    get_model_nb_assets
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "is_non_homogeneous_poisson_process",
     "reshape_1d_arg",
     "flatten_if_possible",
+    "get_model_nb_assets"
 ]
