@@ -5,16 +5,7 @@ from scipy import linalg
 
 from relife.lifetime_model.regression import _CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
-
-
-SCIPY_MINIMIZE_ORDER_2_ALGO = [
-    "Newton-CG",
-    "dogleg",
-    "trust-ncg",
-    "trust-krylov",
-    "trust-exact",
-    "trust-constr"
-]
+from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
 
 
 # TODO: recheck covar passing through Likelihood
@@ -210,7 +201,7 @@ class Cox:
             optimizer_options["bounds"] = self._get_params_bounds()
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
-        if optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO:
+        if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and ("hess" not in optimizer_options):
             optimizer_options["hess"] = likelihood.hess_negative_log
         if "x0" not in optimizer_options:
             np.random.seed(seed)

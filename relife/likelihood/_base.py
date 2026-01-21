@@ -8,6 +8,15 @@ from numpy.typing import NDArray
 from scipy import stats
 from scipy.optimize import approx_fprime, minimize
 
+SCIPY_MINIMIZE_ORDER_2_ALGO = [
+    "Newton-CG",
+    "dogleg",
+    "trust-ncg",
+    "trust-krylov",
+    "trust-exact",
+    "trust-constr"
+]
+
 
 def _hessian_cs(likelihood, params, eps):
     size = params.size
@@ -36,22 +45,15 @@ def _hessian_2point(likelihood, params, eps = 1e-6):
     return hess
 
 
-def _hessian_cox(likelihood, params, eps = 1e-6):
-    return likelihood.hess_negative_log(params)
-
-
 def approx_hessian(likelihood, params, eps= 1e-6):
     def hessian_scheme(model):
         from relife.lifetime_model import Gamma
         from relife.lifetime_model.regression import LifetimeRegression
-        from relife.lifetime_model.semi_parametric import Cox
 
         if isinstance(model, LifetimeRegression):
             return hessian_scheme(model.baseline)
         if isinstance(model, Gamma):
             return _hessian_2point
-        if isinstance(model, Cox):
-            return _hessian_cox
         return _hessian_cs
 
     return hessian_scheme(likelihood.model)(likelihood, params, eps=eps)
@@ -255,7 +257,14 @@ class Likelihood(ABC):
         neg_log_likelihood = np.copy(
             optimizer.fun
         )  # neg_log_likelihood value at optimal
-        hessian = approx_hessian(self, optimal_params)
+        if (
+                (minimize_kwargs["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO)
+                and ("hess" in minimize_kwargs)
+                and (minimize_kwargs["hess"] is not None)
+        ):
+            hessian = minimize_kwargs["hess"](optimal_params)
+        else:
+            hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.pinv(hessian)
         return FittingResults(
             self.nb_observations,
