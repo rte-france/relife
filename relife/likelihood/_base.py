@@ -87,21 +87,25 @@ class Likelihood(ABC):
         FittingResults
             The fitting results.
         """
-        x0: NDArray[np.float64] = optimizer_options.get("x0", self.params)
-        method: str = optimizer_options.get("method", "L-BFGS-B")
-        bounds: Bounds | None = optimizer_options.get("bounds", None)
+        x0: NDArray[np.float64] = optimizer_options.pop("x0", self.params)
+        method: str = optimizer_options.pop("method", "L-BFGS-B")
+        bounds: Bounds | None = optimizer_options.pop("bounds", None)
         if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
             optimizer = minimize(
                 self.negative_log,
                 x0,
+                method=method,
                 bounds=bounds,
+                **optimizer_options
             )
         else:
             optimizer = minimize(
                 self.negative_log,
                 x0,
                 jac=self.jac_negative_log,
+                method=method,
                 bounds=bounds,
+                **optimizer_options
             )
         optimal_params = np.copy(optimizer.x)
         neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
