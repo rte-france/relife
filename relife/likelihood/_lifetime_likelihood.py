@@ -484,12 +484,12 @@ class PartialLifetimeLikelihood(Likelihood):
         self.params = params  # changes model params
 
         if self.method == "cox":
-            return -(
+            neg_L = -(
                     np.log(self.model.covar_effect.g(self._ordered_event_covar)).sum()
                     - np.log(self._psi()).sum()
             )
         elif self.method == "breslow":
-            return -(
+            neg_L = -(
                     np.log(self.model.covar_effect.g(self._s_j)).sum()
                     - (self._event_count[:, None] * np.log(self._psi())).sum()
             )
@@ -498,13 +498,14 @@ class PartialLifetimeLikelihood(Likelihood):
             # .sum() --> sum on j
             # using where in np.log allows to avoid 0. masked elements
             m = self._psi_efron()
-            neg_L_efron = -(
+            neg_L = -(
                     np.log(self.model.covar_effect.g(self._s_j)).sum()
                     - np.log(m, out=np.zeros_like(m), where=(m != 0))
                     .sum(axis=1, keepdims=True)
                     .sum()
             )
-            return neg_L_efron
+        print(f"neg_L: {neg_L}")
+        return neg_L
 
     def jac_negative_log(
             self,

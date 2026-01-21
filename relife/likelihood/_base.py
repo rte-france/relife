@@ -241,6 +241,7 @@ class Likelihood(ABC):
             "bounds": optimizer_options.pop("bounds", None),
             "x0": optimizer_options.pop("x0", self.params),
         }
+        print(f"x0: {minimize_kwargs['x0']}")
         minimize_kwargs.update(optimizer_options)
         optimizer = minimize(
             self.negative_log,
@@ -254,13 +255,14 @@ class Likelihood(ABC):
             **minimize_kwargs,
         )
         optimal_params = np.copy(optimizer.x)
+        print(f"xend: {optimal_params}")
         neg_log_likelihood = np.copy(
             optimizer.fun
         )  # neg_log_likelihood value at optimal
         if (
                 (minimize_kwargs["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO)
                 and ("hess" in minimize_kwargs)
-                and (minimize_kwargs["hess"] is not None)
+                and callable(minimize_kwargs["hess"])
         ):
             hessian = minimize_kwargs["hess"](optimal_params)
         else:
