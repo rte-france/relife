@@ -1,7 +1,7 @@
 # pyright: basic
 
 import copy
-from typing import Tuple, TypedDict
+from typing import Any, Tuple, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -185,21 +185,17 @@ class RenewalProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
         return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
 
-    def generate_failure_data(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> LifetimeFitArgs:
+    def generate_failure_data(self, nb_samples: int, time_window: Tuple[float,float], seed=None) -> dict[str,Any]:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
 
         Parameters
         ----------
-        size : int
+        nb_samples : int
             The size of the desired sample
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        nb_assets : int, optional
-            Number of assets.
+        time_window : tuple of two floats
+            Time window in which data are sampled
         seed : int, optional
             Random seed, by default None.
 
@@ -209,19 +205,20 @@ class RenewalProcess(ParametricModel):
 
         """
         from ._sample import RenewalProcessIterable
+        from relife.base import FrozenParametricModel
 
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            if is_frozen(self.first_lifetime_model):
+            if isinstance(self.first_lifetime_model,FrozenParametricModel):
                 if (
-                    isinstance(self.first_lifetime_model.unfrozen_model, LeftTruncatedModel)
-                    and self.first_lifetime_model.unfrozen_model.baseline == self.lifetime_model
+                    isinstance(self.first_lifetime_model._unfrozen_model, LeftTruncatedModel)
+                    and self.first_lifetime_model._unfrozen_model.baseline == self.lifetime_model
                 ):
                     pass
             else:
                 raise ValueError(
                     f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-        iterable = RenewalProcessIterable(self, size, tf, t0=t0, nb_assets=nb_assets, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
