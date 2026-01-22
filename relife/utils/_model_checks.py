@@ -1,16 +1,15 @@
+# pyright: basic
+
 from __future__ import annotations
-import numpy as np
-
-from ._array_api import reshape_1d_arg, get_args_nb_assets
-
-__all__ = [
-    "is_frozen",
-    "is_lifetime_model",
-    "is_non_homogeneous_poisson_process",
-    "get_model_nb_assets"
-]
 
 from typing import TYPE_CHECKING, Any, Literal, TypeVarTuple, overload
+
+import numpy as np
+
+from ._array_api import get_args_nb_assets, reshape_1d_arg
+
+__all__ = ["is_frozen", "is_lifetime_model", "is_non_homogeneous_poisson_process", "get_model_nb_assets"]
+
 
 if TYPE_CHECKING:
     from relife.base import FrozenParametricModel, ParametricModel
@@ -77,8 +76,7 @@ def get_model_nb_assets(model):
     from relife.base import FrozenParametricModel
     from relife.lifetime_model import EquilibriumDistribution, MinimumDistribution
     from relife.lifetime_model._regression import LifetimeRegression
-    from relife.stochastic_process import NonHomogeneousPoissonProcess
-    from relife.stochastic_process import RenewalProcess
+    from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalProcess
 
     if isinstance(model, EquilibriumDistribution) or isinstance(model, MinimumDistribution):
         return get_model_nb_assets(model.baseline)

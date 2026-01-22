@@ -5,22 +5,21 @@ from typing import Tuple, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import override
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import (
     LeftTruncatedModel,
 )
+from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel, Seed
-from relife.utils import is_frozen
+from relife.utils import get_model_nb_assets, is_frozen
 
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
 
-from relife.stochastic_process._sample import StochasticSampleMapping
 
 def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -161,7 +160,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, nb_samples: int, time_window: Tuple[float,float], seed=None) -> StochasticSampleMapping:
+    def sample(self, nb_samples: int, time_window: Tuple[float, float], seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -178,12 +177,13 @@ class RenewalProcess(ParametricModel):
         """
 
         from ._sample import RenewalProcessIterable
-        from relife.utils import get_model_nb_assets
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
+        return StochasticSampleMapping._init_from_struct_array(
+            struct_array=struct_array, nb_assets=get_model_nb_assets(self), nb_samples=nb_samples
+        )
 
     def generate_failure_data(self, size: int, tf: float, t0: float = 0.0, seed: Seed | None = None) -> LifetimeFitArgs:
         """Generate lifetime data
