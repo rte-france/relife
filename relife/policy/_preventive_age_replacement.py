@@ -618,19 +618,17 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         self.ar = newton(eq, x0)  # () or (m, 1)  # pyright: ignore
         return self
 
-    def generate_failure_data(self, size, tf, t0=0.0, seed=None):
+    def generate_failure_data(self, nb_samples: int, time_window: tuple[float, float], seed=None):
         """Generate failure data
 
         This function will generate failure data that can be used to fit a lifetime model.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
+        nb_samples : int
+            The number of samples.
+        time_window : tuple of two floats
+            Time window in which data are sampled.
         seed : int, optional
             Random seed, by default None.
 
@@ -639,29 +637,25 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         A dict of time, event, entry and args (covariates)
 
         """
-        return self._stochastic_process.generate_failure_data(tf, t0, size, seed)
+        return self._stochastic_process.generate_failure_data(nb_samples, time_window, seed)
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(self, nb_samples: int, time_window: tuple[float, float], seed=None):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
+        nb_samples : int
+            The number of samples.
+        time_window : tuple of two floats
+            Time window in which data are sampled.
         seed : int, optional
             Random seed, by default None.
 
         """
 
-        return self._stochastic_process.sample(tf, t0, size, seed)
+        return self._stochastic_process.sample(nb_samples, time_window, seed)
 
 
 class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
