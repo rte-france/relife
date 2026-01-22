@@ -112,26 +112,19 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
         return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
 
-    def generate_failure_data(
-        self,
-        size: int,
-        tf: float,
-        *args: *Ts,
-        t0: float = 0.0,
-        seed: int | None = None,
-    ):
+    def generate_failure_data(self, nb_samples: int, time_window:Tuple[float,float], *args, seed=None) -> dict[str,Any]:
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
+        nb_samples : int
+            The number of samples
+        time_window : tuple of two floats
+            Time window in which data are sampled
+        *args : float or np.ndarray
+            Additional arguments needed by the model.
         seed : int, optional
             Random seed, by default None.
 
@@ -143,12 +136,12 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         frozen_nhpp = self.freeze(*args)
 
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, size, tf, t0=t0, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
-        first_ages_index = np.nonzero(struct_array["entry"] == t0)
-        last_ages_index = np.nonzero(struct_array["age"] == tf)
+        first_ages_index = np.nonzero(struct_array["entry"] == time_window[0])
+        last_ages_index = np.nonzero(struct_array["age"] == time_window[1])
 
         event_index = np.nonzero(struct_array["event"])
 
