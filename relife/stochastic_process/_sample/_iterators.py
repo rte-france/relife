@@ -78,8 +78,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             while struct_arr.size == 0:  # skip cycles while arrays are empty (if t0 != 0.)
                 time, event, entry = self.sample_time_event_entry()
                 struct_arr = self._collect_time_window_observations(time, event, entry)
-                if np.all(self._time_window_mask["crossed_tf"]):
-                    raise StopIteration
+                if np.all(self._time_window_mask["crossed_tf"]) and struct_arr.size > 0:
+                    return struct_arr
             return struct_arr
         raise StopIteration
 

@@ -271,9 +271,6 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
     Non-homogeneous Poisson process.
     """
 
-    _unfrozen_model: NonHomogeneousPoissonProcess[*Ts]
-    _args: tuple[*Ts]
-
     def intensity(self, time: AnyFloat) -> NumpyFloat:
         """
         The intensity function of the process.
@@ -289,7 +286,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.intensity(time, *self._args)
+        return self._unfrozen_model.intensity(time, *self.args)
 
     def cumulative_intensity(self, time: AnyFloat) -> NumpyFloat:
         """
@@ -308,7 +305,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.cumulative_intensity(time, *self._args)
+        return self._unfrozen_model.cumulative_intensity(time, *self.args)
 
     def sample(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
@@ -327,7 +324,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
             Random seed, by default None.
 
         """
-        return self._unfrozen_model.sample(nb_samples, time_window, *self._args, seed=seed)
+        return self._unfrozen_model.sample(nb_samples, time_window, *self.args, seed=seed)
 
     def generate_failure_data(self, nb_samples: int, time_window: tuple[float, float], seed=None):
         """Generate failure data
@@ -347,4 +344,4 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         -------
         A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
         """
-        return self._unfrozen_model.generate_failure_data(nb_samples, time_window, *self._args, seed=seed)
+        return self._unfrozen_model.generate_failure_data(nb_samples, time_window, *self.args, seed=seed)
