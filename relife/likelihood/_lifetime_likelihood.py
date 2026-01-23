@@ -504,7 +504,6 @@ class PartialLifetimeLikelihood(Likelihood):
                     .sum(axis=1, keepdims=True)
                     .sum()
             )
-        print(f"neg_L: {neg_L}")
         return neg_L
 
     def jac_negative_log(

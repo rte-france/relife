@@ -4,6 +4,7 @@ from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
 from relife.lifetime_model.regression import _CovarEffect
+from relife.lifetime_model.semi_parametric import Cox
 
 
 def expected_shape(**kwargs):
@@ -234,3 +235,19 @@ def test_aft_pph_weibull_eq(insulator_string_data):
         -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.params,
         rel=1e-3,
     )
+
+
+def test_cox_params_eq(insulator_string_data):
+    # From manual experiment and comparison to lifelines results
+    insulator_data_cox_params = np.array([5.08787802, -2.98553117, 4.51758019])
+
+    re_model = Cox()
+    re_model.fit(
+        time=insulator_string_data["time"],
+        covar=insulator_string_data.filter(regex="covar").values,
+        event=insulator_string_data["event"],
+    )
+
+    assert re_model.params == approx(insulator_data_cox_params, rel=1e-3)
+
+

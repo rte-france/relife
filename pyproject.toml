@@ -25,6 +25,7 @@ dependencies = [
     "scipy >= 1.15.0",
     "matplotlib >= 3.10.0",
     "typing_extensions >= 4.12.2",
+    "notebook>=7.5.2",
 ]
 [project.urls]
 Homepage = "https://github.com/rte-france/relife"
@@ -54,6 +55,7 @@ dev = [
     "nbsphinx >= 0.9.7",
     "myst-parser >= 4.0.1",
     "jupyterlab >= 4.3.5",
+    "lifelines>=0.30.0",
 ]
 
 [tool.black]
@@ -96,3 +98,6 @@ testpaths = [
     "relife/stochastic_process/tests",
     "relife/policy/tests",
 ]
+
+[dependency-groups]
+dev = []
