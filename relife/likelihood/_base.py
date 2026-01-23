@@ -1,12 +1,20 @@
+from __future__ import annotations
+
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import TYPE_CHECKING, Literal, Unpack, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
-from scipy.optimize import approx_fprime, minimize
+from scipy.optimize import Bounds, approx_fprime, minimize
+from typing_extensions import override
+
+from relife.base import ParametricModel
+
+if TYPE_CHECKING:
+    from relife.typing import ScipyMinimizeOptions
 
 SCIPY_MINIMIZE_ORDER_2_ALGO = [
     "Newton-CG",
@@ -17,96 +25,196 @@ SCIPY_MINIMIZE_ORDER_2_ALGO = [
     "trust-constr"
 ]
 
+class Likelihood(ABC):
+    model: ParametricModel
 
-def _hessian_cs(likelihood, params, eps):
+    def __init__(self, model: ParametricModel) -> None:
+        # deep copy model to have independent variation of params
+        self.model = copy.deepcopy(model)
+
+    @property
+    def params(self) -> NDArray[np.float64]:
+        return self.model.params
+
+    @params.setter
+    def params(self, value: NDArray[np.float64]) -> None:
+        self.model.params = value
+
+    @property
+    @abstractmethod
+    def nb_observations(self) -> int:
+        """
+        The number of observations.
+        """
+
+    @abstractmethod
+    def negative_log(self, params: NDArray[np.float64]) -> float:
+        """
+        Negative log likelihood.
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which likelihood is evaluated
+
+        Returns
+        -------
+        float
+            Negative log likelihood value
+        """
+
+    @abstractmethod
+    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Jacobian of the negative log likelihood.
+
+        The jacobian (here gradient) is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the jacobian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Jacobian of the negative log likelihood value
+        """
+
+    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
+        """
+        Finds the parameter values that maximize the likelihood.
+
+        Parameters
+        ----------
+        **optimizer_options
+            Extra arguments used by `scipy.minimize`
+
+        Returns
+        -------
+        FittingResults
+            The fitting results.
+        """
+        x0: NDArray[np.float64] = optimizer_options.pop("x0", self.params)
+        method: str = optimizer_options.pop("method", "L-BFGS-B")
+        bounds: Bounds | None = optimizer_options.pop("bounds", None)
+        if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
+            optimizer = minimize(
+                self.negative_log,
+                x0,
+                method=method,
+                bounds=bounds,
+                **optimizer_options
+            )
+        else:
+            optimizer = minimize(
+                self.negative_log,
+                x0,
+                jac=self.jac_negative_log,
+                method=method,
+                bounds=bounds,
+                **optimizer_options
+            )
+        optimal_params = np.copy(optimizer.x)
+        neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
+        if (
+                (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO)
+                and ("hess" in optimizer_options)
+                and callable(optimizer_options["hess"])
+        ):
+            hessian = optimizer_options["hess"](optimal_params)
+        else:
+            hessian = approx_hessian(self, optimal_params)
+        covariance_matrix = np.linalg.pinv(hessian)
+        return FittingResults(
+            self.nb_observations,
+            optimal_params,
+            neg_log_likelihood,
+            covariance_matrix=covariance_matrix,
+        )
+
+
+def _hessian_scheme(
+    likelihood: Likelihood,
+    params: NDArray[np.float64],
+    method: Literal["2point", "cs"] = "cs",
+    eps: float = 1e-6,
+) -> NDArray[np.float64]:
     size = params.size
     hess = np.empty((size, size))
+
+    # hessian 2 point
+    if method == "2point":
+        for i in range(size):
+            hess[i] = approx_fprime(
+                params,
+                lambda x: likelihood.jac_negative_log(x)[i],
+                eps,
+            )
+        return hess
+    # hessian cs
     u = eps * 1j * np.eye(size)
     complex_params = params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
-            hess[i, j] = (
-                np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
-            )
+            hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
             if i != j:
                 hess[j, i] = hess[i, j]
     return hess
 
 
-def _hessian_2point(likelihood, params, eps = 1e-6):
-    size = params.size
-    hess = np.empty((size, size))
-    for i in range(size):
-        hess[i] = approx_fprime(
-            params,
-            lambda x: likelihood.jac_negative_log(x)[i],
-            eps,
-        )
-    return hess
+def approx_hessian(
+    likelihood: Likelihood,
+    params: NDArray[np.float64],
+    eps: float = 1e-6,
+) -> NDArray[np.float64]:
+    from relife.lifetime_model import Gamma
+    from relife.lifetime_model._regression import LifetimeRegression
 
-
-def approx_hessian(likelihood, params, eps= 1e-6):
-    def hessian_scheme(model):
-        from relife.lifetime_model import Gamma
-        from relife.lifetime_model.regression import LifetimeRegression
-
-        if isinstance(model, LifetimeRegression):
-            return hessian_scheme(model.baseline)
-        if isinstance(model, Gamma):
-            return _hessian_2point
-        return _hessian_cs
-
-    return hessian_scheme(likelihood.model)(likelihood, params, eps=eps)
+    if isinstance(likelihood.model, LifetimeRegression):
+        if isinstance(likelihood.model.baseline, Gamma):
+            return _hessian_scheme(likelihood, params, method="2point", eps=eps)
+    if isinstance(likelihood.model, Gamma):
+        return _hessian_scheme(likelihood, params, method="2point", eps=eps)
+    return _hessian_scheme(likelihood, params, eps=eps)
 
 
 @dataclass
 class FittingResults:
     """Fitting results of the parametric_model core."""
 
-    nb_observations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64] = field(
-        repr=False
-    )  #: Optimal parameters values
-    neg_log_likelihood: np.float64 = field(
-        repr=False
-    )  #: Negative log likelihood value at optimal parameters values
+    nb_obversations: int  #: Number of observations (samples)
+    optimal_params: NDArray[np.float64] = field(repr=False)  #: Optimal parameters values
+    neg_log_likelihood: float = field(repr=False)  #: Negative log likelihood value at optimal parameters values
 
-    covariance_matrix: Optional[NDArray[np.float64]] = field(
+    covariance_matrix: NDArray[np.float64] | None = field(
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
 
     nb_params: int = field(init=False, repr=False)  #: Number of parameters.
-    AIC: float = field(init=False)  #: Akaike Information Criterion.
-    AICc: float = field(
-        init=False
-    )  #: Akaike Information Criterion with a correction for small sample sizes.
-    BIC: float = field(init=False)  #: Bayesian Information Criterion.
-    se: Optional[NDArray[np.float64]] = field(
+    aic: float = field(init=False)  #: Akaike Information Criterion.
+    aicc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
+    bic: float = field(init=False)  #: Bayesian Information Criterion.
+    se: NDArray[np.float64] | None = field(
         init=False, repr=False
     )  #: Standard error, square root of the diagonal of the covariance matrix
-    IC: Optional[NDArray[np.float64]] = field(init=False, repr=False)  #: 95% IC
+    ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
 
     def __post_init__(self):
         nb_params = self.optimal_params.size
-        self.AIC = float(2 * nb_params + 2 * self.neg_log_likelihood)
-        self.AICc = float(
-            self.AIC
-            + 2 * nb_params * (nb_params + 1) / (self.nb_observations - nb_params - 1)
-        )
-        self.BIC = float(
-            np.log(self.nb_observations) * nb_params + 2 * self.neg_log_likelihood
-        )
-
+        self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
+        self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
+        self.bic = np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
         self.se = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
-            self.IC = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
-                (0.05, 0.95)
-            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_observations)  # (p, 2)
+            self.ic = self.optimal_params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se.reshape(
+                -1, 1
+            ) / np.sqrt(
+                self.nb_obversations
+            )  # (p, 2)
 
-    def se_estimation_function(
-        self, jac_f: NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
+    def se_estimation_function(self, jac_f: NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
 
         Parameters
@@ -129,34 +237,27 @@ class FittingResults:
         # self.var : (p, p)
         if self.covariance_matrix is not None:
             if jac_f.ndim == 1:  # jac_f : (p,)
-                return np.sqrt(
-                    np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f)
-                )  # ()
+                return np.sqrt(np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f))  # ()
             if jac_f.ndim == 2:  # jac_f : (p, n)
-                return np.sqrt(
-                    np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f)
-                )  # (n,)
-            if (
-                jac_f.ndim == 3
-            ):  # jac_f : (p, m, n) if regression with more than one asset
-                return np.sqrt(
-                    np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)
-                )  # (m,n)
+                return np.sqrt(np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f))  # (n,)
+            if jac_f.ndim == 3:  # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f))  # (m,n)
             raise ValueError("Invalid jac_f ndim")
         raise ValueError("Can't compute if var is None")
 
+    @override
     def __str__(self) -> str:
         """Returns a string representation of FittingResults with fields in a single column."""
-        fields = [
-            ("fitted params", self.optimal_params),
-            ("AIC", self.AIC),
-            ("AICc", self.AICc),
-            ("BIC", self.BIC),
-        ]
+        fields = {
+            "fitted params": self.optimal_params,
+            "AIC": self.aic,
+            "AICc": self.aicc,
+            "BIC": self.bic,
+        }
         # Find the maximum field name length for alignment
-        max_name_length = max(len(name) for name, _ in fields)
-        lines = []
-        for name, value in fields:
+        max_name_length = max(len(name) for name, _ in fields.items())
+        lines: list[str] = []
+        for name, value in fields.items():
             # Format arrays to be more compact
             if isinstance(value, np.ndarray):
                 value_str = f"[{', '.join(f'{x:.6g}' for x in value)}]"
@@ -164,111 +265,3 @@ class FittingResults:
                 value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
             lines.append(f"{name:<{max_name_length}} : {value_str}")
         return "\n".join(lines)
-
-
-class Likelihood(ABC):
-
-    def __init__(self, model):
-        #  deep copy model to have independent variation of params
-        self.model = copy.deepcopy(model)
-
-    @property
-    def params(self):
-        return self.model.params
-
-    @params.setter
-    def params(self, value):
-        self.model.params = value
-
-    @property
-    @abstractmethod
-    def nb_observations(self):
-        """
-        Define the number of observations as attribute
-        """
-
-    @abstractmethod
-    def negative_log(self, params):
-        """
-        Negative log likelihood.
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which likelihood is evaluated
-
-        Returns
-        -------
-        float
-            Negative log likelihood value
-        """
-
-    @abstractmethod
-    def jac_negative_log(self, params):
-        """
-        Jacobian of the negative log likelihood.
-
-        The jacobian (here gradient) is computed with respect to parameters
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which the jacobian is evaluated
-
-        Returns
-        -------
-        ndarray
-            Jacobian of the negative log likelihood value
-        """
-
-    def maximum_likelihood_estimation(self, **optimizer_options) -> FittingResults:
-        """
-        Finds the parameter values that maximize the likelihood.
-
-        Parameters
-        ----------
-        **optimizer_options
-            Extra arguments used by `scipy.minimize`
-
-        Returns
-        -------
-        FittingResults
-            The fitting results.
-        """
-        minimize_kwargs = {
-            "method": optimizer_options.pop("method", "L-BFGS-B"),
-            "constraints": optimizer_options.pop("constraints", ()),
-            "bounds": optimizer_options.pop("bounds", None),
-            "x0": optimizer_options.pop("x0", self.params),
-        }
-        minimize_kwargs.update(optimizer_options)
-        optimizer = minimize(
-            self.negative_log,
-            minimize_kwargs.pop("x0"),
-            jac=(
-                self.jac_negative_log
-                if minimize_kwargs["method"]
-                not in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA")
-                else None
-            ),
-            **minimize_kwargs,
-        )
-        optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(
-            optimizer.fun
-        )  # neg_log_likelihood value at optimal
-        if (
-                (minimize_kwargs["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO)
-                and ("hess" in minimize_kwargs)
-                and callable(minimize_kwargs["hess"])
-        ):
-            hessian = minimize_kwargs["hess"](optimal_params)
-        else:
-            hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian)
-        return FittingResults(
-            self.nb_observations,
-            optimal_params,
-            neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )

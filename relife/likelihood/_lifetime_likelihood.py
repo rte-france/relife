@@ -1,39 +1,58 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
+from typing import Any, final
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import override
 
-from ._base import Likelihood, FittingResults
+from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
-def _args_reshape(*args):
-    args_list = [np.asarray(arg) for arg in args]
-    for i, arg in enumerate(args_list):
-        if arg.ndim > 2:
-            raise ValueError(
-                f"Invalid arg shape, got {arg.shape} shape at position {i}"
-            )
-        if arg.ndim < 2:
-            args_list[i] = arg.reshape(-1, 1)
-    return tuple(args_list)
+from ._base import Likelihood
+
+__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 
 
+@final
 class DefaultLifetimeLikelihood(Likelihood):
-    def __init__(self, model, time, *args, event = None, entry = None):
+
+    _nb_observations: int
+    _time: NDArray[np.float64]
+    _complete_time: NDArray[np.float64]
+    _nonzero_entry: NDArray[np.float64]
+    _args: tuple[NDArray[Any], ...]
+    _complete_time_args: tuple[NDArray[Any], ...]
+    _nonzero_entry_args: tuple[NDArray[Any], ...]
+
+    def __init__(
+        self,
+        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+    ):
         super().__init__(model)
-        self.params = self.model._get_initial_params(time, *args, event=event, entry=entry)
+        self.params = self.model.get_initial_params(time, model_args)
 
         time = reshape_1d_arg(time)
         event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
         entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
-        args = _args_reshape(*args)
-        sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+        if isinstance(model_args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in model_args))
+        elif isinstance(model_args, np.ndarray):
+            args = (reshape_1d_arg(model_args),)
+        elif model_args is None:
+            args = ()
+        sizes = [len(x) for x in (time, event, entry, *args)]
         if len(set(sizes)) != 1:
             raise ValueError(
                 f"All lifetime data must have the same number of values. Fields length are different. Got {tuple(sizes)}"
             )
 
         self._time = time
+        self._nb_observations = len(time)
         self._complete_time = time[np.flatnonzero(event)]
         self._nonzero_entry = entry[np.flatnonzero(entry)]
         self._args = args
@@ -42,23 +61,24 @@ class DefaultLifetimeLikelihood(Likelihood):
         self._nb_observations = len(time)
 
     @property
+    @override
     def nb_observations(self):
         return self._nb_observations
 
-    def _time_contrib(self):
+    def _time_contrib(self) -> np.float64:
         return np.sum(self.model.chf(self._time, *self._args))
 
-    def _event_contrib(self):
+    def _event_contrib(self) -> np.float64 | None:
         if len(self._complete_time) == 0:
             return None
         return np.sum(-np.log(self.model.hf(self._complete_time, *self._complete_time_args)))
 
-    def _entry_contrib(self):
+    def _entry_contrib(self) -> np.float64 | None:
         if len(self._nonzero_entry) == 0:
             return None
         return -np.sum(self.model.chf(self._nonzero_entry, *self._nonzero_entry_args))
 
-    def _jac_time_contrib(self):
+    def _jac_time_contrib(self) -> NDArray[np.float64]:
         jac = self.model.jac_chf(
             self._time,
             *self._args,
@@ -69,7 +89,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         # Axis 0 is the parameters
         return np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
-    def _jac_event_contrib(self):
+    def _jac_event_contrib(self) -> NDArray[np.float64] | None:
         if len(self._complete_time) == 0:
             return None
         jac = -self.model.jac_hf(
@@ -82,7 +102,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         # Axis 0 is the parameters
         return np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
-    def _jac_entry_contrib(self):
+    def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
         if len(self._nonzero_entry) == 0:
             return None
 
@@ -97,10 +117,11 @@ class DefaultLifetimeLikelihood(Likelihood):
         # Axis 0 is the parameters
         return np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
+    @override
     def negative_log(
         self,
-        params: NDArray[np.float64],  # (p,)
-    ) -> np.float64:
+        params: NDArray[np.float64],
+    ) -> float:
         self.params = params  # changes model params
         contributions = (
             self._time_contrib(),
@@ -109,10 +130,8 @@ class DefaultLifetimeLikelihood(Likelihood):
         )
         return sum(x for x in contributions if x is not None)  # ()
 
-    def jac_negative_log(
-        self,
-        params: NDArray[np.float64],  # (p,)
-    ) -> NDArray[np.float64]:
+    @override
+    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Jacobian of the negative log likelihood.
 
@@ -120,10 +139,7 @@ class DefaultLifetimeLikelihood(Likelihood):
 
         Parameters
         ----------
-        params : ndarray
-            Parameters values on which the jacobian is evaluated
-
-        Returns
+        params : ndarray Parameters values on which the jacobian is evaluated Returns
         -------
         ndarray
             Jacobian of the negative log likelihood value
@@ -134,25 +150,41 @@ class DefaultLifetimeLikelihood(Likelihood):
             self._jac_event_contrib(),
             self._jac_entry_contrib(),
         )
-        return sum(x for x in jac_contributions if x is not None)  # (p,)
+        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
 
+@final
 class IntervalLifetimeLikelihood(Likelihood):
+    _nb_observations: int
+    _complete_time: NDArray[np.float64]
+    _censored_time_lower_bound: NDArray[np.float64]
+    _censored_time_upper_bound: NDArray[np.float64]
+    _nonzero_entry: NDArray[np.float64]
+    _complete_time_args: tuple[NDArray[Any], ...]
+    _censored_time_args: tuple[NDArray[Any], ...]
+    _nonzero_entry_args: tuple[NDArray[Any], ...]
+
     def __init__(
         self,
-        model,
+        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
-        *args,
-        entry = None,
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model._get_initial_params(time_sup, *args, entry=entry)
+        self.params = self.model._get_initial_params(time_sup, model_args)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
         entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
-        args = _args_reshape(*args)
-        sizes = [len(x) for x in (time_inf, time_sup, entry, *args) if x is not None]
+        if isinstance(model_args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in model_args))
+        elif isinstance(model_args, np.ndarray):
+            args = (reshape_1d_arg(model_args),)
+        elif model_args is None:
+            args = ()
+
+        sizes = [len(x) for x in (time_inf, time_sup, entry, *args)]
         if len(set(sizes)) != 1:
             raise ValueError(
                 f"All lifetime data must have the same number of values. Fields length are different. Got {tuple(sizes)}"
@@ -168,21 +200,20 @@ class IntervalLifetimeLikelihood(Likelihood):
         self._nonzero_entry = entry[(entry > 0).squeeze()]
 
         self._complete_time_args = tuple(arg[complete_time_index] for arg in args)
-        self._censored_time_args = tuple(
-            arg[~complete_time_index] for arg in args
-        )
+        self._censored_time_args = tuple(arg[~complete_time_index] for arg in args)
         self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
 
     @property
+    @override
     def nb_observations(self):
         return self._nb_observations
 
-    def _complete_time_contrib(self):
+    def _complete_time_contrib(self) -> np.float64 | None:
         if len(self._complete_time == 0):
             return None
         return np.sum(-np.log(self.model.pdf(self._complete_time, *self._complete_time_args)))
 
-    def _interval_censored_time_contrib(self):
+    def _interval_censored_time_contrib(self) -> np.float64 | None:
         if len(self._censored_time_upper_bound) == 0:
             return None
         return np.sum(
@@ -193,12 +224,12 @@ class IntervalLifetimeLikelihood(Likelihood):
             ),
         )
 
-    def _entry_contrib(self):
+    def _entry_contrib(self) -> np.float64 | None:
         if len(self._nonzero_entry) == 0:
             return None
         return -np.sum(self.model.chf(self._nonzero_entry, *self._nonzero_entry_args))
 
-    def _jac_complete_time_contrib(self):
+    def _jac_complete_time_contrib(self) -> NDArray[np.float64] | None:
         if len(self._complete_time == 0):
             return None
         jac = -self.model.jac_pdf(
@@ -212,8 +243,7 @@ class IntervalLifetimeLikelihood(Likelihood):
 
         return np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
-
-    def _jac_interval_censored_time_contrib(self):
+    def _jac_interval_censored_time_contrib(self) -> NDArray[np.float64] | None:
         if len(self._censored_time_upper_bound) == 0:
             return None
 
@@ -236,8 +266,7 @@ class IntervalLifetimeLikelihood(Likelihood):
 
         return np.sum(jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim)))
 
-
-    def _jac_entry_contrib(self):
+    def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
         if len(self._nonzero_entry) == 0:
             return None
         # filter entry==0 to avoid numerical error in jac_chf
@@ -249,7 +278,8 @@ class IntervalLifetimeLikelihood(Likelihood):
 
         return -np.sum(jac, axis=tuple(range(1, jac.ndim)))
 
-    def negative_log(self, params):
+    @override
+    def negative_log(self, params: NDArray[np.float64]) -> float:
         self.params = params
         contributions = (
             self._complete_time_contrib(),
@@ -258,7 +288,8 @@ class IntervalLifetimeLikelihood(Likelihood):
         )
         return sum(x for x in contributions if x is not None)  # ()
 
-    def jac_negative_log(self, params):
+    @override
+    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Jacobian of the negative log likelihood.
 
@@ -280,7 +311,7 @@ class IntervalLifetimeLikelihood(Likelihood):
             self._jac_complete_time_contrib(),
             self._jac_entry_contrib(),
         )
-        return sum(x for x in jac_contributions if x is not None)  # (p,)
+        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
 
 class PartialLifetimeLikelihood(Likelihood):

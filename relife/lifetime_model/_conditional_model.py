@@ -1,13 +1,29 @@
-import numpy as np
+from __future__ import annotations
 
-from relife.base import FrozenParametricModel
-from relife.lifetime_model import ParametricLifetimeModel
+from typing import Callable, Literal, TypeVarTuple, overload
+
+import numpy as np
+from numpy.typing import NDArray
+from typing_extensions import override
+
+from relife.typing import (
+    AnyFloat,
+    AnyParametricLifetimeModel,
+    NumpyBool,
+    NumpyFloat,
+    Seed,
+)
 from relife.utils import get_args_nb_assets, is_frozen, reshape_1d_arg
 
-__all__ = ["AgeReplacementModel", "LeftTruncatedModel"]
+from ._base import ParametricLifetimeModel
+from ._frozen import FrozenParametricLifetimeModel
 
-class AgeReplacementModel(ParametricLifetimeModel):
-    # noinspection PyUnresolvedReferences
+__all__: list[str] = ["AgeReplacementModel", "LeftTruncatedModel"]
+
+Ts = TypeVarTuple("Ts")
+
+
+class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     r"""
     Age replacement model.
 
@@ -28,11 +44,14 @@ class AgeReplacementModel(ParametricLifetimeModel):
     plot
     """
 
-    def __init__(self, baseline):
+    baseline: AnyParametricLifetimeModel[*Ts]
+
+    def __init__(self, baseline: AnyParametricLifetimeModel[*Ts]):
         super().__init__()
         self.baseline = baseline
 
-    def sf(self, time, ar, *args):
+    @override
+    def sf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The survival function.
 
@@ -55,7 +74,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
-    def hf(self, time, ar, *args):
+    @override
+    def hf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The hazard function.
 
@@ -78,7 +98,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
-    def cdf(self, time, ar, *args):
+    @override
+    def cdf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The cumulative density function.
 
@@ -101,7 +122,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return super().cdf(time, *(ar, *args))
 
-    def chf(self, time, ar, *args):
+    @override
+    def chf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The cumulative hazard function.
 
@@ -124,7 +146,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
-    def isf(self, probability, ar, *args):
+    @override
+    def isf(self, probability: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The inverse of the survival function.
 
@@ -147,12 +170,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
-    def ichf(
-        self,
-        cumulative_hazard_rate,
-        ar,
-        *args,
-    ):
+    @override
+    def ichf(self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -176,7 +195,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
-    def pdf(self, time, ar, *args):
+    @override
+    def pdf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The probability density function.
 
@@ -199,7 +219,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
-    def mrl(self, time, ar, *args):
+    @override
+    def mrl(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The mean residual life function.
 
@@ -227,13 +248,14 @@ class AgeReplacementModel(ParametricLifetimeModel):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(
-            lambda x: x - time, time, ub, ar, *args, deg=10
-        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
+        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
+            time, ar, *args
+        )  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
-    def ppf(self, probability, ar, *args):
+    @override
+    def ppf(self, probability: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The percent point function.
 
@@ -260,7 +282,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
     #     ar = reshape_ar_or_a0("ar", ar)
     #     return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
 
-    def median(self, ar, *args):
+    @override
+    def median(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The median.
 
@@ -279,15 +302,81 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
+    @overload
     def rvs(
         self,
-        size,
-        ar,
-        *args,
-        nb_assets=None,
-        return_event=False,
-        return_entry=False,
-        seed=None,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[False],
+        return_entry: Literal[False],
+        seed: Seed | None = None,
+    ) -> NumpyFloat: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[True],
+        return_entry: Literal[False],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyBool]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[False],
+        return_entry: Literal[True],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[True],
+        return_entry: Literal[True],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
+    @override
+    def rvs(
+        self,
+        size: int,
+        ar: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         """
         Random variable sampling.
@@ -320,6 +409,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -----
         If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
         """
+
         ar = reshape_1d_arg(ar)
         if nb_assets is None:
             nb_assets = get_args_nb_assets(ar, *args)
@@ -351,7 +441,16 @@ class AgeReplacementModel(ParametricLifetimeModel):
             event = np.where(time != ar, event, ~event)
             return time, event, entry
 
-    def ls_integrate(self, func, a, b, ar, *args, deg=10):
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: AnyFloat,
+        b: AnyFloat,
+        ar: AnyFloat,
+        *args: *Ts,
+        deg: int = 10,
+    ) -> NumpyFloat:
         """
         Lebesgue-Stieltjes integration.
 
@@ -379,11 +478,12 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        return integration + np.where(
-            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
-        )
+        if func(ar).ndim == 2 and integration.ndim == 1:
+            integration = integration.reshape(-1, 1)
+        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
 
-    def moment(self, n, ar, *args):
+    @override
+    def moment(self, n: int, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         n-th order moment
 
@@ -403,14 +503,15 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return self.ls_integrate(
             lambda x: x**n,
-            0,
+            np.float64(0),
             np.inf,
             ar,
             *args,
             deg=100,
         )
 
-    def mean(self, ar, *args):
+    @override
+    def mean(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The mean.
 
@@ -429,7 +530,8 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return self.moment(1, ar, *args)
 
-    def var(self, ar, *args):
+    @override
+    def var(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The variance.
 
@@ -448,7 +550,7 @@ class AgeReplacementModel(ParametricLifetimeModel):
         ar = reshape_1d_arg(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    def freeze(self, ar, *args):
+    def freeze(self, ar: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -464,11 +566,10 @@ class AgeReplacementModel(ParametricLifetimeModel):
         -------
         FrozenParametricModel
         """
-        return FrozenParametricModel(self, ar, *args)
+        return FrozenParametricLifetimeModel(self, ar, *args)
 
 
-class LeftTruncatedModel(ParametricLifetimeModel):
-    # noinspection PyUnresolvedReferences
+class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     r"""Left truncated model.
 
     Lifetime model where the assets have already reached the age :math:`a_0`.
@@ -491,11 +592,14 @@ class LeftTruncatedModel(ParametricLifetimeModel):
     plot
     """
 
-    def __init__(self, baseline):
+    baseline: AnyParametricLifetimeModel[*Ts]
+
+    def __init__(self, baseline: AnyParametricLifetimeModel[*Ts]):
         super().__init__()
         self.baseline = baseline
 
-    def sf(self, time, a0, *args):
+    @override
+    def sf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The survival function.
 
@@ -518,7 +622,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().sf(time, a0, *args)
 
-    def pdf(self, time, a0, *args):
+    @override
+    def pdf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The probability density function.
 
@@ -541,7 +646,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().pdf(time, a0, *args)
 
-    def isf(self, probability, a0, *args):
+    @override
+    def isf(self, probability: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The inverse of the survival function.
 
@@ -565,7 +671,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
-    def chf(self, time, a0, *args):
+    @override
+    def chf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The cumulative hazard function.
 
@@ -588,7 +695,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
-    def cdf(self, time, a0, *args):
+    @override
+    def cdf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The cumulative density function.
 
@@ -611,7 +719,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().cdf(time, *(a0, *args))
 
-    def hf(self, time, a0, *args):
+    @override
+    def hf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The hazard function.
 
@@ -634,7 +743,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return self.baseline.hf(a0 + time, *args)
 
-    def ichf(self, cumulative_hazard_rate, a0, *args):
+    @override
+    def ichf(self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -658,15 +768,81 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
 
+    @overload
     def rvs(
         self,
-        size,
-        a0,
-        *args,
-        nb_assets=None,
-        return_event=False,
-        return_entry=False,
-        seed=None,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[False],
+        return_entry: Literal[False],
+        seed: Seed | None = None,
+    ) -> NumpyFloat: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[True],
+        return_entry: Literal[False],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyBool]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[False],
+        return_entry: Literal[True],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: Literal[True],
+        return_entry: Literal[True],
+        seed: Seed | None = None,
+    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
+    @override
+    def rvs(
+        self,
+        size: int,
+        a0: AnyFloat,
+        *args: *Ts,
+        nb_assets: int | None = None,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         """
         Random variable sampling.
@@ -732,7 +908,16 @@ class LeftTruncatedModel(ParametricLifetimeModel):
             return tuple(output)  # return tuple, not list
         return output[0]
 
-    def ls_integrate(self, func, a, b, a0, *args, deg=10):
+    @override
+    def ls_integrate(
+        self,
+        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
+        a: AnyFloat,
+        b: AnyFloat,
+        a0: AnyFloat,
+        *args: *Ts,
+        deg: int = 10,
+    ) -> NumpyFloat:
         """
         Lebesgue-Stieltjes integration.
 
@@ -760,7 +945,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
-    def mean(self, a0, *args):
+    @override
+    def mean(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The mean.
 
@@ -779,7 +965,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().mean(*(a0, *args))
 
-    def median(self, a0, *args):
+    @override
+    def median(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The median.
 
@@ -798,7 +985,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().median(*(a0, *args))
 
-    def var(self, a0, *args):
+    @override
+    def var(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The variance.
 
@@ -817,7 +1005,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().var(*(a0, *args))
 
-    def moment(self, n: int, a0, *args):
+    @override
+    def moment(self, n: int, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         n-th order moment
 
@@ -838,7 +1027,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().moment(n, *(a0, *args))
 
-    def mrl(self, time, a0, *args):
+    @override
+    def mrl(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The mean residual life function.
 
@@ -861,7 +1051,8 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().mrl(time, *(a0, *args))
 
-    def ppf(self, probability, a0, *args):
+    @override
+    def ppf(self, probability: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The percent point function.
 
@@ -889,7 +1080,7 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         a0 = reshape_1d_arg(a0)
         return super().ppf(probability, *(a0, *args))
 
-    def freeze(self, a0, *args):
+    def freeze(self, a0: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze conditional age values and other arguments into the object data.
 
@@ -905,4 +1096,4 @@ class LeftTruncatedModel(ParametricLifetimeModel):
         -------
         FrozenLeftTruncatedModel
         """
-        return FrozenParametricModel(self, a0, *args)
+        return FrozenParametricLifetimeModel(self, a0, *args)

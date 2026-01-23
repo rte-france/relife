@@ -1,3 +1,5 @@
+# pyright: basic
+
 from relife.economic import AgeReplacementReward, RunToFailureReward
 
 

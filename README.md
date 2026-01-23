@@ -1,43 +1,38 @@
-<p align="center">
+<h1 align="center">
   <img src="doc/source/_static/small_relife.gif" />
-</p>
+</h1></br>
 
-<h2 align="center">
 An open-source Python library for asset management
-<h2 align="center">
 
-<p align="center">
-  <img src="doc/source/_static/workflow.png" />
-</p>
+- **Documentation:** http://opensource.rte-france.com/relife/
+- **Source code:** https://github.com/rte-france/relife
+- **Contributing:** http://opensource.rte-france.com/relife/developper/index.html
+- **Bug reports:** https://github.com/rte-france/relife/issues
 
+Some explanations might be missing until we finish the documentation properly, so do not hesitate to open an issue.
 
-## Documentation
+## Installation
 
-It is available at https://rte-france.github.io/relife/.
-Some explanations might be missing until we finish it properly, so do not hesitate to open an issue.
-
-## Installation (PyPi)
+**From PyPi**
 
 ```bash
 $ pip install relife
 ```
-**Developer installation**
+
+**From source**
 
 ```bash
-$ pip install ".[dev]"
+$ git clone https://github.com/rte-france/relife.git
+$ cd relife
+$ pip install .
 ```
-Optionally, use the editable mode :
+
+**For developpers**
 
 ```bash
+$ git clone https://github.com/rte-france/relife.git
+$ cd relife
 $ pip install -e ".[dev]"
-```
-
-## Installation (from source)
-
-```bash
-git clone https://github.com/rte-france/relife.git
-cd relife
-pip install .
 ```
 
 ## Citing
@@ -55,5 +50,5 @@ pip install .
 ## Credits
 
 - The documentation uses [pydata-sphinx-theme](https://github.com/pydata/pydata-sphinx-theme) project. Original license
-is [here](doc/LICENSE.txt)
+  is [here](doc/LICENSE.txt)
 - Some parts of the documentation are highly inspired by [Scikit-learn](https://scikit-learn.org/stable/), [Scipy](https://scipy.org/) and [NumPy](https://numpy.org/)

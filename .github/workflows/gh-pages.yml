@@ -1,30 +1,36 @@
 name: Build and deploy Github pages
-on: [push]
+on:
+  push:
+    branches:
+      - main
 permissions:
   contents: write
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # fetch all history for all tags and branches
 
-      - name: Install Python
-        uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
-      - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
-        with:
-          pandoc-version: '3.1.11'
-
-      - name : Install Python dependencies
+      - name: Install relife locally in dev mode
         run: | # dev version with sphinx 
-          pip install ".[dev]" 
+          python -m pip install ".[dev]" 
 
+      - name: Extra installs
+        # pandoc is required by sphinx extensions
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+      
       - name: Build Sphinx Doc
         run: |
+          # prefer sphinx-build rather than make build (it allows more control)
           sphinx-build -M html ./doc/source ./doc/build -Ea
 
       - name: Deploy
@@ -32,3 +38,11 @@ jobs:
         with:
           branch: gh-pages # branch on which files are commited
           folder: ./doc/build/html # The folder the action should deploy.
+
+      - name: Save website as an artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: website
+          path: ./doc/build
+          retention-days: 14
+
