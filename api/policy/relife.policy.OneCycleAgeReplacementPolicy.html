@@ -59,7 +59,7 @@
     <link rel="prev" title="AgeReplacementPolicy" href="relife.policy.AgeReplacementPolicy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.3.4.dev1+g2ca0e6cf2" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.3.4.dev1+g2ca0e6cf2</div>
     
   </div>
   
@@ -173,8 +173,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -308,8 +308,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -371,10 +371,6 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricLifetimeModel.html">ParametricLifetimeModel</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
@@ -603,7 +599,7 @@ Mechanical Engineers, Part O: Journal of Risk and Reliability,
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} q(t)\]</div>
@@ -626,7 +622,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value">
-<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">asymptotic_expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The asymtotic expected net present value.</p>
 <div class="math notranslate nohighlight">
 \[\lim_{t\to\infty} z(t)\]</div>
@@ -675,7 +671,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">
-<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_equivalent_annual_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost" title="Link to this definition">#</a></dt>
 <dd><p>The expected equivalent annual cost.</p>
 <div class="math notranslate nohighlight">
 \[q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}\]</div>
@@ -708,7 +704,7 @@ assets, this option allows to return the sum result on the flit rather than call
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value">
-<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_net_present_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/policy/_preventive_age_replacement.html#OneCycleAgeReplacementPolicy.expected_net_present_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value" title="Link to this definition">#</a></dt>
 <dd><p>The expected net present value.</p>
 <div class="math notranslate nohighlight">
 \[z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)\]</div>
@@ -756,9 +752,9 @@ assets, this option allows to return the sum result on the flit rather than call
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.tr">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tr</span></span><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.tr" title="Link to this definition">#</a></dt>
-<dd><p>Times before the replacement.</p>
+<dt class="sig sig-object py" id="relife.policy.OneCycleAgeReplacementPolicy.tr1">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tr1</span></span><a class="headerlink" href="#relife.policy.OneCycleAgeReplacementPolicy.tr1" title="Link to this definition">#</a></dt>
+<dd><p>Times before the first replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -805,7 +801,7 @@ assets, this option allows to return the sum result on the flit rather than call
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost"><code class="docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleAgeReplacementPolicy.expected_net_present_value"><code class="docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy.expected_net_present_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleAgeReplacementPolicy.optimize"><code class="docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy.optimize()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleAgeReplacementPolicy.tr"><code class="docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy.tr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.policy.OneCycleAgeReplacementPolicy.tr1"><code class="docutils literal notranslate"><span class="pre">OneCycleAgeReplacementPolicy.tr1</span></code></a></li>
 </ul>
 </li>
 </ul>

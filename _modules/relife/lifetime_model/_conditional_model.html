@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>relife.lifetime_model.conditional_model &#8212; ReLife documentation</title>
+    <title>relife.lifetime_model._conditional_model &#8212; ReLife documentation</title>
   
   
   
@@ -47,14 +47,14 @@
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/lifetime_model/conditional_model';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/lifetime_model/_conditional_model';</script>
     <script src="../../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="icon" href="../../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.3.4.dev1+g2ca0e6cf2" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.2.0</div>
+2.3.4.dev1+g2ca0e6cf2</div>
     
   </div>
   
@@ -168,8 +168,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -301,8 +301,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../developper/index.html">
-    For developpers
+  <a class="nav-link nav-internal" href="../../../developer/index.html">
+    For developers
   </a>
 </li>
 
@@ -394,7 +394,7 @@
     
     <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">relife.lifetime_model.conditional_model</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">relife.lifetime_model._conditional_model</span></li>
   </ul>
 </nav>
 </div>
@@ -411,19 +411,35 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for relife.lifetime_model.conditional_model</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+  <h1>Source code for relife.lifetime_model._conditional_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeVarTuple</span><span class="p">,</span> <span class="n">overload</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AnyFloat</span><span class="p">,</span>
+    <span class="n">AnyParametricLifetimeModel</span><span class="p">,</span>
+    <span class="n">NumpyBool</span><span class="p">,</span>
+    <span class="n">NumpyFloat</span><span class="p">,</span>
+    <span class="n">Seed</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_args_nb_assets</span><span class="p">,</span> <span class="n">is_frozen</span><span class="p">,</span> <span class="n">reshape_1d_arg</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AgeReplacementModel&quot;</span><span class="p">,</span> <span class="s2">&quot;LeftTruncatedModel&quot;</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._frozen</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span>
+
+<span class="n">__all__</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AgeReplacementModel&quot;</span><span class="p">,</span> <span class="s2">&quot;LeftTruncatedModel&quot;</span><span class="p">]</span>
+
+<span class="n">Ts</span> <span class="o">=</span> <span class="n">TypeVarTuple</span><span class="p">(</span><span class="s2">&quot;Ts&quot;</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="AgeReplacementModel">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementModel</span><span class="p">(</span><span class="n">ParametricLifetimeModel</span><span class="p">):</span>
-    <span class="c1"># noinspection PyUnresolvedReferences</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementModel</span><span class="p">(</span><span class="n">ParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">Ts</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Age replacement model.</span>
 
@@ -444,13 +460,16 @@
 <span class="sd">    plot</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">):</span>
+    <span class="n">baseline</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
 
 <div class="viewcode-block" id="AgeReplacementModel.sf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.sf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The survival function.</span>
 
@@ -476,7 +495,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The hazard function.</span>
 
@@ -502,7 +522,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.cdf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.cdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative density function.</span>
 
@@ -528,7 +549,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative hazard function.</span>
 
@@ -554,7 +576,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.isf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.isf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The inverse of the survival function.</span>
 
@@ -580,12 +603,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.ichf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.ichf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">cumulative_hazard_rate</span><span class="p">,</span>
-        <span class="n">ar</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inverse cumulative hazard function.</span>
 
@@ -612,7 +631,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.pdf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.pdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The probability density function.</span>
 
@@ -638,7 +658,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.mrl">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.mrl">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean residual life function.</span>
 
@@ -666,16 +687,17 @@
             <span class="n">time</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
             <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># (m, 1) or (m, n)</span>
             <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">ub</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># (m, 1) or (m, n)</span>
-        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span>
-        <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">ub</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span>
+        <span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AgeReplacementModel.ppf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.ppf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The percent point function.</span>
 
@@ -705,7 +727,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.median">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.median">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The median.</span>
 
@@ -725,17 +748,83 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AgeReplacementModel.rvs">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.rvs">[docs]</a>
+    <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">,</span>
-        <span class="n">ar</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">NumpyFloat</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+    <span class="p">):</span> <span class="o">...</span>
+<div class="viewcode-block" id="AgeReplacementModel.rvs">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.rvs">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">NumpyFloat</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
@@ -768,6 +857,7 @@
 <span class="sd">        -----</span>
 <span class="sd">        If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nb_assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">nb_assets</span> <span class="o">=</span> <span class="n">get_args_nb_assets</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
@@ -802,7 +892,16 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.ls_integrate">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.ls_integrate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+        <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Lebesgue-Stieltjes integration.</span>
 
@@ -830,14 +929,15 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-            <span class="n">b</span> <span class="o">==</span> <span class="n">ar</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span>
-        <span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">integration</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">integration</span> <span class="o">=</span> <span class="n">integration</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">integration</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="n">ar</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AgeReplacementModel.moment">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.moment">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        n-th order moment</span>
 
@@ -857,7 +957,7 @@
         <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls_integrate</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="p">,</span>
-            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
             <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
             <span class="n">ar</span><span class="p">,</span>
             <span class="o">*</span><span class="n">args</span><span class="p">,</span>
@@ -867,7 +967,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.mean">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.mean">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean.</span>
 
@@ -889,7 +990,8 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.var">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.var">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The variance.</span>
 
@@ -911,7 +1013,7 @@
 
 <div class="viewcode-block" id="AgeReplacementModel.freeze">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.freeze">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">Ts</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Freeze age replacement values and other arguments into the object data.</span>
 
@@ -927,15 +1029,14 @@
 <span class="sd">        -------</span>
 <span class="sd">        FrozenParametricModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="LeftTruncatedModel">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LeftTruncatedModel</span><span class="p">(</span><span class="n">ParametricLifetimeModel</span><span class="p">):</span>
-    <span class="c1"># noinspection PyUnresolvedReferences</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LeftTruncatedModel</span><span class="p">(</span><span class="n">ParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">Ts</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Left truncated model.</span>
 
 <span class="sd">    Lifetime model where the assets have already reached the age :math:`a_0`.</span>
@@ -958,13 +1059,16 @@
 <span class="sd">    plot</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">):</span>
+    <span class="n">baseline</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">:</span> <span class="n">AnyParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
 
 <div class="viewcode-block" id="LeftTruncatedModel.sf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.sf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The survival function.</span>
 
@@ -990,7 +1094,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.pdf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.pdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The probability density function.</span>
 
@@ -1016,7 +1121,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.isf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.isf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The inverse of the survival function.</span>
 
@@ -1043,7 +1149,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.chf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.chf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative hazard function.</span>
 
@@ -1069,7 +1176,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.cdf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.cdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative density function.</span>
 
@@ -1095,7 +1203,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.hf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.hf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The hazard function.</span>
 
@@ -1121,7 +1230,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.ichf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.ichf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inverse cumulative hazard function.</span>
 
@@ -1146,17 +1256,83 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="n">a0</span></div>
 
 
-<div class="viewcode-block" id="LeftTruncatedModel.rvs">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.rvs">[docs]</a>
+    <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">NumpyFloat</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+    <span class="p">):</span> <span class="o">...</span>
+<div class="viewcode-block" id="LeftTruncatedModel.rvs">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.rvs">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">NumpyFloat</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Random variable sampling.</span>
@@ -1209,7 +1385,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
                 <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">(),</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">):</span>
                 <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
             <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
@@ -1225,7 +1401,16 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.ls_integrate">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.ls_integrate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ls_integrate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+        <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
+        <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Lebesgue-Stieltjes integration.</span>
 
@@ -1256,7 +1441,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.mean">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.mean">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean.</span>
 
@@ -1278,7 +1464,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.median">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.median">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The median.</span>
 
@@ -1300,7 +1487,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.var">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.var">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The variance.</span>
 
@@ -1322,7 +1510,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.moment">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.moment">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        n-th order moment</span>
 
@@ -1346,7 +1535,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.mrl">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.mrl">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The mean residual life function.</span>
 
@@ -1372,7 +1562,8 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.ppf">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.ppf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ppf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The percent point function.</span>
 
@@ -1403,7 +1594,7 @@
 
 <div class="viewcode-block" id="LeftTruncatedModel.freeze">
 <a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.freeze">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">,</span> <span class="o">*</span><span class="n">Ts</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Freeze conditional age values and other arguments into the object data.</span>
 
@@ -1419,7 +1610,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        FrozenLeftTruncatedModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FrozenParametricModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
