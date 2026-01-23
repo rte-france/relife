@@ -1,15 +1,15 @@
+from typing import Any, Callable
+
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.stats import norm
 from scipy import linalg
 
-from relife.lifetime_model.regression import _CovarEffect
+from relife.lifetime_model._regression import CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
 from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
 
-
-# TODO: recheck covar passing through Likelihood
-# TODO: check docstrings
 
 class BreslowBaseline:
     """
@@ -18,10 +18,10 @@ class BreslowBaseline:
 
     def __init__(
             self,
-            covar_effect: _CovarEffect,
+            covar_effect: CovarEffect,
             event_count: np.ndarray,
             ordered_event_covar: np.ndarray,
-            psi: callable,
+            psi: Callable,
     ):
         self.covar_effect = covar_effect
         self.event_count = event_count
@@ -91,7 +91,7 @@ class Cox:
     """
 
     def __init__(self, coefficients=(None,), baseline_estimator: str = "Breslow"):
-        self.covar_effect = _CovarEffect(coefficients)
+        self.covar_effect = CovarEffect(coefficients)
         assert baseline_estimator == "Breslow", "The only Cox baseline estimator available is Breslow"
         self.baseline_estimator = baseline_estimator
         self._baseline = None
@@ -167,9 +167,11 @@ class Cox:
         else:
             return values
 
-    def _get_initial_params(
-            self, time, covar, event=None, entry=None
-    ):
+    def get_initial_params(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         param0 = np.zeros_like(self.params, dtype=np.float64)
         return param0
 
@@ -187,7 +189,7 @@ class Cox:
         optimizer_options=None,
         seed: int = 1
     ):
-        self.covar_effect = _CovarEffect(
+        self.covar_effect = CovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
         )  # changes params structure depending on number of covar
 

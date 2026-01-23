@@ -11,7 +11,7 @@ from relife.utils import reshape_1d_arg
 
 from ._base import Likelihood
 
-__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
+__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "PartialLifetimeLikelihood"]
 
 
 @final
@@ -315,11 +315,17 @@ class IntervalLifetimeLikelihood(Likelihood):
 
 
 class PartialLifetimeLikelihood(Likelihood):
-    """TODO: Check if any update of FittingResults is required"""
 
-    def __init__(self, model, time, covar, event = None, entry = None):
+    def __init__(
+            self,
+            model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+            time: NDArray[np.float64],
+            covar: NDArray[np.float64],
+            event: NDArray[np.bool_] | None = None,
+            entry: NDArray[np.float64] | None = None,
+    ):
         super().__init__(model)
-        self.params = self.model._get_initial_params(time, covar, event=event, entry=entry)
+        self.params = self.model.get_initial_params(time, covar)
 
         time = reshape_1d_arg(time)
         event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)

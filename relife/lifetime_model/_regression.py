@@ -791,7 +791,7 @@ class ProportionalHazard(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : _CovarEffect
+    covar_effect : CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
@@ -1087,7 +1087,7 @@ class AcceleratedFailureTime(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : _CovarEffect
+    covar_effect : CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.

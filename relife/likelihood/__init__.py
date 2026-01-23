@@ -1,3 +1,3 @@
-from ._lifetime_likelihood import DefaultLifetimeLikelihood, IntervalLifetimeLikelihood
+from ._lifetime_likelihood import DefaultLifetimeLikelihood, IntervalLifetimeLikelihood, PartialLifetimeLikelihood
 
-__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
+__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "PartialLifetimeLikelihood"]
