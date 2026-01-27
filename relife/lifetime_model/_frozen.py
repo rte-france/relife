@@ -103,7 +103,7 @@ class FrozenParametricLifetimeModel(
     ): ...
     def rvs(
         self,
-        size: int,
+        size: Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,

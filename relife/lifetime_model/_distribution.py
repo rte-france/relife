@@ -8,6 +8,7 @@ from typing import (
     Callable,
     Literal,
     Self,
+    Sequence,
     TypeAlias,
     TypeVarTuple,
     final,
@@ -361,7 +362,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @override
     def rvs(
         self,
-        size: int,
+        size: Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,
@@ -377,7 +378,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
         Parameters
         ----------
-        size : int
+        size : Sequence[int]
             Size of the generated sample.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.

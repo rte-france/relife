@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Literal, TypeVarTuple, overload
+from typing import Callable, Literal, Sequence, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -826,7 +826,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @override
     def rvs(
         self,
-        size: int,
+        size: Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -843,7 +843,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 
         Parameters
         ----------
-        size : int
+        size : Sequence[int]
             Size of the generated sample.
         a0 : float or np.ndarray
             Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
