@@ -23,10 +23,8 @@ def expected_shape(**kwargs):
     return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
 
 
-def rvs_expected_shape(size, nb_assets=None, **kwargs):
+def rvs_expected_shape(size,**kwargs):
     out_shape = expected_shape(**kwargs)
-    # if nb_assets is not None:
-    #     return np.broadcast_shapes(out_shape, (nb_assets, size))
     if size != 1:
         return np.broadcast_shapes(out_shape, (size,))
     return out_shape
@@ -60,24 +58,23 @@ def test_covar_effect():
     assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef)), asarray=True).shape == (covar_effect.nb_coef, 10, 1)
 
 
-def test_rvs(regression, covar, rvs_size, rvs_nb_assets):
-    assert regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-        rvs_size, nb_assets=rvs_nb_assets, covar=covar
+def test_rvs(regression, covar, rvs_size):
+    assert regression.rvs(rvs_size, covar).shape == rvs_expected_shape(
+        rvs_size, covar=covar
     )
     assert all(
-        arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets, return_event=True)
+        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
+        for arr in regression.rvs(rvs_size, covar, return_event=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, nb_assets=rvs_nb_assets, return_entry=True)
+        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
+        for arr in regression.rvs(rvs_size, covar, return_entry=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, covar=covar)
+        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
         for arr in regression.rvs(
             rvs_size,
             covar,
-            nb_assets=rvs_nb_assets,
             return_event=True,
             return_entry=True,
         )

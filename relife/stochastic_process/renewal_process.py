@@ -222,7 +222,6 @@ class RenewalProcess(ParametricModel):
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
         args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
-        # broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"], axis=0) for arg in args_2d))
 
         returned_dict = {

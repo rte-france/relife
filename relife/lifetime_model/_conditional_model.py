@@ -13,7 +13,7 @@ from relife.typing import (
     NumpyFloat,
     Seed,
 )
-from relife.utils import get_args_nb_assets, is_frozen, reshape_1d_arg
+from relife.utils import is_frozen, reshape_1d_arg
 
 from ._base import ParametricLifetimeModel
 from ._frozen import FrozenParametricLifetimeModel
@@ -308,7 +308,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -319,7 +318,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -330,7 +328,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -341,7 +338,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -352,7 +348,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -368,7 +363,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -390,8 +384,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             as only one age of replacement per asset can be given
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -411,14 +403,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         """
 
         ar = reshape_1d_arg(ar)
-        # if nb_assets is None:
-        #     nb_assets = get_args_nb_assets(ar, *args)
-        #     if nb_assets == 1:
-        #         nb_assets = None
         baseline_rvs = self.baseline.rvs(
             size,
             *args,
-            # nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,
@@ -774,7 +761,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -785,7 +771,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -796,7 +781,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -807,7 +791,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -818,7 +801,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -834,7 +816,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int,
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -856,8 +837,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             as only one age per asset can be given
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -872,14 +851,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_1d_arg(a0)
-        # if nb_assets is None:
-        #     nb_assets = get_args_nb_assets(a0, *args)
-        #     if nb_assets == 1:
-        #         nb_assets = None
         super_rvs = super().rvs(
             size,
             *(a0, *args),
-            # nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,

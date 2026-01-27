@@ -219,14 +219,6 @@ def rvs_size(request):
     return request.param
 
 
-@pytest.fixture(
-    params=[None, M],
-    ids=lambda nb_assets: f"nb_assets:{nb_assets}",
-)
-def rvs_nb_assets(request):
-    return request.param
-
-
 ########################################################################################################################
 # ECONOMIC FIXTURES
 ########################################################################################################################

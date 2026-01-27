@@ -55,7 +55,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -65,7 +64,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -75,7 +73,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -85,7 +82,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -95,7 +91,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -109,7 +104,6 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -120,7 +114,7 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         return self._unfrozen_model.rvs(
-            size, *self._args, nb_assets=nb_assets, return_event=return_event, return_entry=return_entry, seed=seed
+            size, *self._args, return_event=return_event, return_entry=return_entry, seed=seed
         )
 
     def ls_integrate(

@@ -25,34 +25,31 @@ def expected_shape(**kwargs):
     return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
 
 
-def rvs_expected_shape(size, nb_assets=None, **kwargs):
+def rvs_expected_shape(size, **kwargs):
     out_shape = expected_shape(**kwargs)
-    # if nb_assets is not None:
-    #     return np.broadcast_shapes(out_shape, (nb_assets, size))
     if size != 1:
         return np.broadcast_shapes(out_shape, (size,))
     return out_shape
 
 
 class TestAgeReplacementDistribution:
-    def test_rvs(self, distribution, ar, rvs_size, rvs_nb_assets):
-        assert AgeReplacementModel(distribution).rvs(rvs_size, ar, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-            rvs_size, nb_assets=rvs_nb_assets, ar=ar
+    def test_rvs(self, distribution, ar, rvs_size):
+        assert AgeReplacementModel(distribution).rvs(rvs_size, ar).shape == rvs_expected_shape(
+            rvs_size, ar=ar
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar)
-            for arr in AgeReplacementModel(distribution).rvs(rvs_size, ar, nb_assets=rvs_nb_assets, return_event=True)
+            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
+            for arr in AgeReplacementModel(distribution).rvs(rvs_size, ar,return_event=True)
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar)
-            for arr in AgeReplacementModel(distribution).rvs(rvs_size, ar, nb_assets=rvs_nb_assets, return_entry=True)
+            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
+            for arr in AgeReplacementModel(distribution).rvs(rvs_size, ar, return_entry=True)
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar)
+            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
             for arr in AgeReplacementModel(distribution).rvs(
                 rvs_size,
                 ar,
-                nb_assets=rvs_nb_assets,
                 return_event=True,
                 return_entry=True,
             )
@@ -133,29 +130,28 @@ class TestAgeReplacementDistribution:
 
 
 class TestAgeReplacementRegression:
-    def test_rvs(self, regression, ar, covar, rvs_size, rvs_nb_assets):
+    def test_rvs(self, regression, ar, covar, rvs_size):
         assert AgeReplacementModel(regression).rvs(
-            rvs_size, ar, covar, nb_assets=rvs_nb_assets
-        ).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
+            rvs_size, ar, covar,
+        ).shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
             for arr in AgeReplacementModel(regression).rvs(
-                rvs_size, ar, covar, nb_assets=rvs_nb_assets, return_event=True
+                rvs_size, ar, covar, return_event=True
             )
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size,ar=ar, covar=covar)
             for arr in AgeReplacementModel(regression).rvs(
-                rvs_size, ar, covar, nb_assets=rvs_nb_assets, return_entry=True
+                rvs_size, ar, covar, return_entry=True
             )
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, ar=ar, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
             for arr in AgeReplacementModel(regression).rvs(
                 rvs_size,
                 ar,
                 covar,
-                nb_assets=rvs_nb_assets,
                 return_event=True,
                 return_entry=True,
             )
@@ -250,24 +246,23 @@ class TestAgeReplacementRegression:
 
 
 class TestLeftTruncatedDistribution:
-    def test_rvs(self, distribution, a0, rvs_size, rvs_nb_assets):
-        assert LeftTruncatedModel(distribution).rvs(rvs_size, a0, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-            rvs_size, nb_assets=rvs_nb_assets, a0=a0
+    def test_rvs(self, distribution, a0, rvs_size):
+        assert LeftTruncatedModel(distribution).rvs(rvs_size, a0,).shape == rvs_expected_shape(
+            rvs_size, a0=a0
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0)
-            for arr in LeftTruncatedModel(distribution).rvs(rvs_size, a0, nb_assets=rvs_nb_assets, return_event=True)
+            arr.shape == rvs_expected_shape(rvs_size,a0=a0)
+            for arr in LeftTruncatedModel(distribution).rvs(rvs_size, a0,return_event=True)
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0)
-            for arr in LeftTruncatedModel(distribution).rvs(rvs_size, a0, nb_assets=rvs_nb_assets, return_entry=True)
+            arr.shape == rvs_expected_shape(rvs_size,a0=a0)
+            for arr in LeftTruncatedModel(distribution).rvs(rvs_size, a0,return_entry=True)
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0)
+            arr.shape == rvs_expected_shape(rvs_size, a0=a0)
             for arr in LeftTruncatedModel(distribution).rvs(
                 rvs_size,
                 a0,
-                nb_assets=rvs_nb_assets,
                 return_event=True,
                 return_entry=True,
             )
@@ -346,29 +341,28 @@ class TestLeftTruncatedDistribution:
 
 
 class TestLeftTruncatedRegression:
-    def test_rvs(self, regression, a0, covar, rvs_size, rvs_nb_assets):
+    def test_rvs(self, regression, a0, covar, rvs_size):
         assert LeftTruncatedModel(regression).rvs(
-            rvs_size, a0, covar, nb_assets=rvs_nb_assets
-        ).shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
+            rvs_size, a0, covar
+        ).shape == rvs_expected_shape(rvs_size,a0=a0, covar=covar)
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size,a0=a0, covar=covar)
             for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, nb_assets=rvs_nb_assets, return_event=True
+                rvs_size, a0, covar, return_event=True
             )
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
             for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, nb_assets=rvs_nb_assets, return_entry=True
+                rvs_size, a0, covar,return_entry=True
             )
         )
         assert all(
-            arr.shape == rvs_expected_shape(rvs_size, nb_assets=rvs_nb_assets, a0=a0, covar=covar)
+            arr.shape == rvs_expected_shape(rvs_size,a0=a0, covar=covar)
             for arr in LeftTruncatedModel(regression).rvs(
                 rvs_size,
                 a0,
                 covar,
-                nb_assets=rvs_nb_assets,
                 return_event=True,
                 return_entry=True,
             )

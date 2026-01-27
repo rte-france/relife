@@ -151,7 +151,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: int | None = None,
@@ -161,7 +160,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -171,7 +169,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -181,7 +178,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -191,7 +187,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -205,7 +200,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -216,13 +210,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         rng = np.random.default_rng(seed)
-        # if nb_assets is not None:
-        #     np_size = (nb_assets, size)
-        # else:
-        #     np_size = size
-        np_size = size
-        probability = rng.uniform(size=np_size)
-        if np_size == 1:
+        probability = rng.uniform(size=size)
+        if size == 1:
             probability = np.squeeze(probability)
         time = self.isf(probability, *args)
         event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)

@@ -5,29 +5,27 @@ import pytest
 from pytest import approx
 
 
-def rvs_expected_shape(size, nb_assets=None):
-    # if nb_assets is not None:
-    #     return nb_assets, size
+def rvs_expected_shape(size):
     if size != 1:
         return (size,)
     return ()
 
 
-def test_rvs(distribution, rvs_size, rvs_nb_assets):
-    assert distribution.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-        size=rvs_size, nb_assets=rvs_nb_assets
+def test_rvs(distribution, rvs_size):
+    assert distribution.rvs(rvs_size,).shape == rvs_expected_shape(
+        size=rvs_size,
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
+        arr.shape == rvs_expected_shape(size=rvs_size,)
+        for arr in distribution.rvs(rvs_size, return_event=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_entry=True)
+        arr.shape == rvs_expected_shape(size=rvs_size,)
+        for arr in distribution.rvs(rvs_size, return_entry=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True, return_entry=True)
+        arr.shape == rvs_expected_shape(size=rvs_size,)
+        for arr in distribution.rvs(rvs_size, return_event=True, return_entry=True)
     )
 
 

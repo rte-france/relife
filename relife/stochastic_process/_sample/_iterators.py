@@ -264,9 +264,6 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         """
         model_nb_assets = get_model_nb_assets(self._truncated_lifetime_model)
         return (model_nb_assets,1)
-        # if model_nb_assets == 1:
-        #     return self.nb_samples
-        # return 1
 
     def sample_time_event_entry(self):
         # Sample using truncated lifetime model truncation

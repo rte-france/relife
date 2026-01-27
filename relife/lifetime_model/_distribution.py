@@ -307,7 +307,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -317,7 +316,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -327,7 +325,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -337,7 +334,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -347,7 +343,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -362,7 +357,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         self,
         size: int,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -379,8 +373,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         ----------
         size : int
             Size of the generated sample.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -396,7 +388,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         """
         return super().rvs(
             size,
-            nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,

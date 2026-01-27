@@ -579,7 +579,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -590,7 +589,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -601,7 +599,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -612,7 +609,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -623,7 +619,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -639,7 +634,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         size: int,
         covar: AnyFloat,
         *,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -659,8 +653,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         covar : float or np.ndarray
             Covariates values. float can only be valid if the regression has one coefficients.
             Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -677,7 +669,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         return super().rvs(
             size,
             covar,
-            nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,
