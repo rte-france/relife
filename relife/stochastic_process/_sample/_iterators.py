@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import Tuple
+from typing import Sequence, Tuple
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -38,22 +38,38 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         self.process = process
         self.nb_samples = nb_samples
         self.nb_assets = nb_assets
+
+        self.sample_size = self.nb_assets * self.nb_samples
+
+        if is_frozen(self.process.lifetime_model):
+            broadcasted_args = list(
+                np.repeat(arg, self.nb_samples, axis=0)
+                for arg in self.process.lifetime_model.args
+            )
+            self._expanded_lifetime_model = (
+                self.process.lifetime_model.unfreeze().freeze(*broadcasted_args)
+            )  # TODO: use a copy method of parametric models
+        else:
+            self._expanded_lifetime_model = self.process.lifetime_model
+
         self.t0, self.tf = time_window  # t0, tf are checked in iterable
+
         self.seed = np.random.default_rng(seed)
-        sample_size = (self.nb_assets * self.nb_samples,)
+
         # Assets ages restart at 0 when replacements are done.
         # Used to identify the current ages of the assets in the process
-        self.ages = np.zeros(sample_size, dtype=np.float64)
+        self.ages = np.zeros(self.sample_size, dtype=np.float64)
         # Full timeline never restarts, sums at each iteration
         # Used to identify current time for the observer
-        self.timeline = np.zeros(sample_size, dtype=np.float64)
+        self.timeline = np.zeros(self.sample_size, dtype=np.float64)
+
         self.replacement_cycle = 0
 
-        self._crossed_t0_counter = np.zeros(sample_size, dtype=np.uint32)
-        self._crossed_tf_counter = np.zeros(sample_size, dtype=np.uint32)
+        self._crossed_t0_counter = np.zeros(self.sample_size, dtype=np.uint32)
+        self._crossed_tf_counter = np.zeros(self.sample_size, dtype=np.uint32)
 
         self._time_window_mask = np.zeros(
-            sample_size,
+            self.sample_size,
             dtype=np.dtype(
                 [
                     ("observed_step", np.bool_),
@@ -64,7 +80,19 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             ),
         )
 
+    @property
     @abstractmethod
+    def _expanded_dynamic_lifetime_model(self):
+        """
+        Use the lifetime model modified at each iteration according to each stochastic process specific properties
+        """
+
+    @abstractmethod
+    def update_ages(self, time, event, entry) -> None:
+        """
+        Update ages at each iteration according to each stochastic process specific properties
+        """
+
     def sample_time_event_entry(
         self,
     ) -> tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]:
@@ -73,16 +101,31 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         IMPORTANT: time, event, entry must be 1D.
         """
 
+        time, event, entry = self._expanded_dynamic_lifetime_model.rvs(
+            (self.sample_size, 1),
+            return_event=True,
+            return_entry=True,
+            seed=self.seed,
+        )
+
+        time = time.flatten()
+        event = event.flatten()
+        entry = entry.flatten()
+
+        return time, event, entry
+
     def __next__(self) -> NDArray[np.void]:
         """function to iterate"""
         if not np.all(self._time_window_mask["crossed_tf"]):
             time, event, entry = self.sample_time_event_entry()
             struct_arr = self._collect_time_window_observations(time, event, entry)
+            self.update_ages(time, event, entry)
             while (
                 struct_arr.size == 0
             ):  # skip cycles while arrays are empty (if t0 != 0.)
                 time, event, entry = self.sample_time_event_entry()
                 struct_arr = self._collect_time_window_observations(time, event, entry)
+                self.update_ages(time, event, entry)
                 if np.all(self._time_window_mask["crossed_tf"]) and struct_arr.size > 0:
                     return struct_arr
             return struct_arr
@@ -179,40 +222,52 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
 
 class RenewalProcessIterator(StochasticDataIterator):
+    def __init__(
+        self,
+        process,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        nb_assets: int = 1,
+        seed=None,
+    ) -> None:
+        super().__init__(
+            process=process,
+            nb_samples=nb_samples,
+            time_window=time_window,
+            nb_assets=nb_assets,
+            seed=seed,
+        )
+
+        self._expanded_first_lifetime_model = None
+
+        if self.process.first_lifetime_model is not None:
+            if is_frozen(self.process.first_lifetime_model):
+                broadcasted_args = list(
+                    np.repeat(arg, self.nb_samples, axis=0)
+                    for arg in self.process.first_lifetime_model.args
+                )
+                self._expanded_first_lifetime_model = (
+                    self.process.first_lifetime_model.unfreeze().freeze(
+                        *broadcasted_args
+                    )
+                )  # TODO: use a copy method of parametric models
+            else:
+                self._expanded_first_lifetime_model = self.process.first_lifetime_model
+
     @property
-    def lifetime_model(self):
+    def _expanded_dynamic_lifetime_model(self):
         if (
             self.replacement_cycle == 0
-            and self.process.first_lifetime_model is not None
+            and self._expanded_first_lifetime_model is not None
         ):
-            return self.process.first_lifetime_model
-        return self.process.lifetime_model
+            return self._expanded_first_lifetime_model
+        return self._expanded_lifetime_model
 
-    @property
-    def _rvs_size(self) -> Tuple[int, int]:
+    def update_ages(self, time, event, entry):
         """
-        Property to get the size that we should pass to rvs function depending on the args of the model used to sample.
+        In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
         """
-        model_nb_assets = get_model_nb_assets(self.lifetime_model)
-        if model_nb_assets == 1:
-            return (self.nb_assets * self.nb_samples, 1)
-        if model_nb_assets == self.nb_assets:
-            return (model_nb_assets, self.nb_samples)
-        raise ValueError
-
-    def sample_time_event_entry(self):
-        time, event, entry = self.lifetime_model.rvs(
-            self._rvs_size,
-            return_event=True,
-            return_entry=True,
-            seed=self.seed,
-        )
-        # flatten to return 1d
-        time = time.flatten()
-        event = event.flatten()
-        entry = entry.flatten()
-
-        return time, event, entry
+        pass
 
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
@@ -249,61 +304,18 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
 
 
 class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        nb_assets: int = 1,
-        seed=None,
-    ):
-        super().__init__(
-            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
-        )
-        # Here, all samples for each assets are considered individually because of the usage of LeftTruncatedModel
-        # We need all samples and assets in 1D so we must broadcast the original lifetime model to repeat its args
-        if is_frozen(self.process.lifetime_model):
-            broadcasted_args = list(
-                np.repeat(arg, self.nb_samples, axis=0)
-                for arg in self.process.lifetime_model.args
-            )
-            self._expanded_lifetime_model = (
-                self.process.lifetime_model.unfreeze().freeze(*broadcasted_args)
-            )  # TODO: use a copy method of parametric models
-        else:
-            self._expanded_lifetime_model = self.process.lifetime_model
-
     @property
-    def _truncated_lifetime_model(self):
+    def _expanded_dynamic_lifetime_model(self):
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
         ages = self.ages.copy()
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
 
-    @property
-    def _rvs_size(self) -> Tuple[int, int]:
+    def update_ages(self, time, event, entry):
         """
-        Helper property, get the size that we should pass to rvs function depending on the args of the model used to sample.
+        In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
         """
-        model_nb_assets = get_model_nb_assets(self._truncated_lifetime_model)
-        return (model_nb_assets, 1)
-
-    def sample_time_event_entry(self):
-        # Sample using truncated lifetime model truncation
-        time, event, entry = self._truncated_lifetime_model.rvs(
-            self._rvs_size,
-            return_event=True,
-            return_entry=True,
-            seed=self.seed,
-        )
-
-        time = time.flatten()
-        event = event.flatten()
-        entry = entry.flatten()
-
         # Update asset ages
         self.ages += time - entry
-        # If no events (replacement), restarts asset timeline for next step
+        # If no events (replacement), restarts age for next step
         self.ages[~event] = 0
-
-        return time, event, entry
