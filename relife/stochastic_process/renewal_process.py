@@ -1,26 +1,25 @@
 # pyright: basic
 
 import copy
-from typing import Any, Tuple, TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import override
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import (
     LeftTruncatedModel,
 )
-from relife.typing import AnyParametricLifetimeModel, Seed
-from relife.utils import is_frozen
+from relife.stochastic_process._sample import StochasticSampleMapping
+from relife.typing import AnyParametricLifetimeModel
+from relife.utils import get_model_nb_assets
 
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
 )
 
-from relife.stochastic_process._sample import StochasticSampleMapping
 
 def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
@@ -161,7 +160,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, nb_samples: int, time_window: Tuple[float,float], seed=None) -> StochasticSampleMapping:
+    def sample(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -178,14 +177,13 @@ class RenewalProcess(ParametricModel):
         """
 
         from ._sample import RenewalProcessIterable
-        from relife.utils import get_model_nb_assets
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(self),nb_samples=nb_samples)
+        return StochasticSampleMapping.from_struct_array(struct_array, get_model_nb_assets(self), nb_samples)
 
-    def generate_failure_data(self, nb_samples: int, time_window: Tuple[float,float], seed=None) -> dict[str,Any]:
+    def generate_failure_data(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> dict[str, Any]:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -204,11 +202,12 @@ class RenewalProcess(ParametricModel):
         A dict of time, event, entry and args (covariates)
 
         """
-        from ._sample import RenewalProcessIterable
         from relife.base import FrozenParametricModel
 
+        from ._sample import RenewalProcessIterable
+
         if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
-            if isinstance(self.first_lifetime_model,FrozenParametricModel):
+            if isinstance(self.first_lifetime_model, FrozenParametricModel):
                 if (
                     isinstance(self.first_lifetime_model._unfrozen_model, LeftTruncatedModel)
                     and self.first_lifetime_model._unfrozen_model.baseline == self.lifetime_model
@@ -222,7 +221,6 @@ class RenewalProcess(ParametricModel):
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
-        nb_assets = int(np.max(struct_array["asset_id"])) + 1
         args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
         # broadcasted_args = tuple((np.broadcast_to(arg, (nb_assets, arg.shape[-1])) for arg in args_2d))
         tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"], axis=0) for arg in args_2d))

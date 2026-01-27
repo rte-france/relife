@@ -1,4 +1,5 @@
 # pyright: basic
+
 from __future__ import annotations
 
 from typing import Any, Generic, Self, Sequence, Tuple, TypeVarTuple
@@ -11,8 +12,8 @@ from relife.data import NHPPData
 from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.likelihood import DefaultLifetimeLikelihood
 from relife.likelihood._base import FittingResults
-from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 from relife.stochastic_process._sample import StochasticSampleMapping
+from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 
 Ts = TypeVarTuple("Ts")
 
@@ -85,7 +86,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         """
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
-    def sample(self, nb_samples: int, time_window:Tuple[float,float], *args, seed=None) -> StochasticSampleMapping:
+    def sample(self, nb_samples: int, time_window: tuple[float, float], *args, seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in a StochasticSampleMapping object.
@@ -103,16 +104,19 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         """
 
-        from ._sample import NonHomogeneousPoissonProcessIterable
         from relife.utils import get_model_nb_assets
 
+        from ._sample import NonHomogeneousPoissonProcessIterable
+
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples, time_window=time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticSampleMapping._init_from_struct_array(struct_array=struct_array, nb_assets=get_model_nb_assets(frozen_nhpp),nb_samples=nb_samples)
+        return StochasticSampleMapping.from_struct_array(struct_array, get_model_nb_assets(frozen_nhpp), nb_samples)
 
-    def generate_failure_data(self, nb_samples: int, time_window:Tuple[float,float], *args, seed=None) -> dict[str,Any]:
+    def generate_failure_data(
+        self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
+    ) -> dict[str, Any]:
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
@@ -120,9 +124,9 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         Parameters
         ----------
         nb_samples : int
-            The number of samples
+            The number of samples.
         time_window : tuple of two floats
-            Time window in which data are sampled
+            Time window in which data are sampled.
         *args : float or np.ndarray
             Additional arguments needed by the model.
         seed : int, optional
@@ -136,7 +140,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         frozen_nhpp = self.freeze(*args)
 
-        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples,time_window=time_window, seed=seed)
+        iterable = NonHomogeneousPoissonProcessIterable(frozen_nhpp, nb_samples, time_window=time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
 
@@ -252,7 +256,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
-        self.lifetime_model._get_initial_params(time, *args, event=event, entry=entry)
+        self.lifetime_model.get_initial_params(time, *args)
         likelihood = DefaultLifetimeLikelihood(self.lifetime_model, time, event=event, entry=entry)
         if optimizer_options is None:
             optimizer_options = {}
@@ -266,12 +270,6 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
     """
     Non-homogeneous Poisson process.
     """
-
-    _unfrozen_model: NonHomogeneousPoissonProcess[*Ts]
-    _args: tuple[*Ts]
-
-    def __init__(self, model: NonHomogeneousPoissonProcess[*Ts], *args: *Ts) -> None:
-        super().__init__(model, *args)
 
     def intensity(self, time: AnyFloat) -> NumpyFloat:
         """
@@ -288,7 +286,7 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.intensity(time, *self._args)
+        return self._unfrozen_model.intensity(time, *self.args)
 
     def cumulative_intensity(self, time: AnyFloat) -> NumpyFloat:
         """
@@ -307,24 +305,17 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.cumulative_intensity(time, *self._args)
+        return self._unfrozen_model.cumulative_intensity(time, *self.args)
 
-    def sample(
-        self,
-        size: int,
-        tf: float,
-        *,
-        t0: float = 0.0,
-        seed: int | None = None,
-    ):
+    def sample(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample
+        nb_samples : int
+            The number of samples.
         tf : float
             Time at the end of the observation.
         t0 : float, default 0
@@ -333,28 +324,19 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
             Random seed, by default None.
 
         """
-        return self._unfrozen_model.sample(size, tf, *self._args, t0=t0, seed=seed)
+        return self._unfrozen_model.sample(nb_samples, time_window, *self.args, seed=seed)
 
-    def generate_failure_data(
-        self,
-        size: int,
-        tf: float,
-        *,
-        t0: float = 0.0,
-        seed: int | None = None,
-    ):
+    def generate_failure_data(self, nb_samples: int, time_window: tuple[float, float], seed=None):
         """Generate failure data
 
         This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
+        nb_samples : int
+            The number of samples.
+        time_window : tuple of two floats
+            Time window in which data are sampled
         seed : int, optional
             Random seed, by default None.
 
@@ -362,4 +344,4 @@ class FrozenNonHomogeneousPoissonProcess(FrozenParametricModel[NonHomogeneousPoi
         -------
         A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
         """
-        return self._unfrozen_model.generate_failure_data(size, tf, *self._args, t0=t0, seed=seed)
+        return self._unfrozen_model.generate_failure_data(nb_samples, time_window, *self.args, seed=seed)

@@ -1,7 +1,9 @@
+# pyright: basic
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,11 +12,17 @@ from typing_extensions import override
 from relife.utils import get_model_nb_assets
 
 from ._iterators import (
-    _NonHomogeneousPoissonProcessIterator,
-    _RenewalProcessIterator,
-    _RenewalRewardProcessIterator,
-    _StochasticDataIterator,
+    NonHomogeneousPoissonProcessIterator,
+    RenewalProcessIterator,
+    RenewalRewardProcessIterator,
+    StochasticDataIterator,
 )
+
+__all__ = [
+    "StochasticDataIterable",
+    "RenewalProcessIterable",
+    "NonHomogeneousPoissonProcessIterable",
+]
 
 
 class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
@@ -22,7 +30,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         t0, tf = time_window
         if t0 < 0 or tf < 0 or t0 > tf:
@@ -41,9 +49,9 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def tf(self) -> float:
         return self.time_window[1]
 
-    @abstractmethod
     @override
-    def __iter__(self) -> _StochasticDataIterator: ...
+    @abstractmethod
+    def __iter__(self) -> StochasticDataIterator: ...
 
 
 class RenewalProcessIterable(StochasticDataIterable):
@@ -52,16 +60,16 @@ class RenewalProcessIterable(StochasticDataIterable):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         super().__init__(nb_samples, time_window, seed=seed)
         self.process = process
 
-    def __iter__(self) -> _RenewalProcessIterator:
+    def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
         if isinstance(self.process, RenewalProcess):
-            return _RenewalProcessIterator(
+            return RenewalProcessIterator(
                 self.process,
                 self.nb_samples,
                 self.time_window,
@@ -69,7 +77,7 @@ class RenewalProcessIterable(StochasticDataIterable):
                 seed=self.seed,
             )
         if isinstance(self.process, RenewalRewardProcess):
-            return _RenewalRewardProcessIterator(
+            return RenewalRewardProcessIterator(
                 self.process,
                 self.nb_samples,
                 self.time_window,
@@ -85,13 +93,13 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         super().__init__(nb_samples, time_window, seed=seed)
         self.process = process
 
-    def __iter__(self) -> _NonHomogeneousPoissonProcessIterator:
-        return _NonHomogeneousPoissonProcessIterator(
+    def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
+        return NonHomogeneousPoissonProcessIterator(
             self.process,
             self.nb_samples,
             self.time_window,
