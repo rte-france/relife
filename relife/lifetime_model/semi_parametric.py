@@ -175,7 +175,8 @@ class Cox:
         param0 = np.zeros_like(self.params, dtype=np.float64)
         return param0
 
-    def _get_params_bounds(self):
+    @property
+    def params_bounds(self):
         lb = np.full(self.nb_params, -np.inf)
         ub = np.full(self.nb_params, np.inf)
         return Bounds(lb, ub)
@@ -190,7 +191,7 @@ class Cox:
         seed: int = 1
     ):
         self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar)).shape[-1]
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
 
         likelihood = PartialLifetimeLikelihood(
@@ -200,7 +201,7 @@ class Cox:
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self._get_params_bounds()
+            optimizer_options["bounds"] = self.params_bounds
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
         if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and ("hess" not in optimizer_options):
@@ -223,3 +224,30 @@ class Cox:
         self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
 
         return self
+
+
+if __name__ == "__main__":
+
+    from pathlib import Path
+    import pandas as pd
+
+    # Données chaines d'isolateur
+    relife_csv_datapath = Path(r"D:\Projets\RTE\ReLife\relife\relife\data\csv")
+    time, event, entry, *args = np.loadtxt(relife_csv_datapath / "insulator_string.csv", delimiter=",", skiprows=1,
+                                           unpack=True)
+    covar = np.column_stack(args)
+
+    # Into df
+    data = pd.DataFrame({"time": time, "event": event, "entry": entry})
+    covar = pd.DataFrame(covar)
+    covar.columns = [f"covar_{i}" for i in range(covar.shape[1])]
+    data = pd.concat([data, covar], axis=1)
+
+    # Relife model fit
+    re_model = Cox()
+    re_model.fit(
+        time=data["time"],
+        covar=data.filter(regex="covar").values,
+        event=data["event"],
+    )
+    print(re_model.params)

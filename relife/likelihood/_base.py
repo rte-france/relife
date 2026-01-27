@@ -118,7 +118,7 @@ class Likelihood(ABC):
         optimal_params = np.copy(optimizer.x)
         neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
         if (
-                (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO)
+                (method in SCIPY_MINIMIZE_ORDER_2_ALGO)
                 and ("hess" in optimizer_options)
                 and callable(optimizer_options["hess"])
         ):

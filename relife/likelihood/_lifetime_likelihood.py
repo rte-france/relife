@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.lifetime_model._base import FittableParametricLifetimeModel
+#from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
 from ._base import Likelihood
@@ -27,7 +27,7 @@ class DefaultLifetimeLikelihood(Likelihood):
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+        model, #: FittableParametricLifetimeModel[*tuple[Any, ...]],
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
@@ -166,7 +166,7 @@ class IntervalLifetimeLikelihood(Likelihood):
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+        model, #: FittableParametricLifetimeModel[*tuple[Any, ...]],
         time_inf: NDArray[np.float64],
         time_sup: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
@@ -318,7 +318,7 @@ class PartialLifetimeLikelihood(Likelihood):
 
     def __init__(
             self,
-            model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+            model,
             time: NDArray[np.float64],
             covar: NDArray[np.float64],
             event: NDArray[np.bool_] | None = None,
