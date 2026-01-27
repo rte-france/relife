@@ -11,7 +11,11 @@ from typing_extensions import override
 
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import LeftTruncatedModel
-from relife.utils import get_model_nb_assets, is_frozen
+from relife.lifetime_model._distribution import (
+    EquilibriumDistribution,
+    MinimumDistribution,
+)
+from relife.utils import is_frozen
 
 __all__ = [
     "StochasticDataIterator",
@@ -19,6 +23,30 @@ __all__ = [
     "RenewalRewardProcessIterator",
     "NonHomogeneousPoissonProcessIterator",
 ]
+
+
+def _expand_lifetime_model(lifetime_model, nb_samples):
+    if isinstance(lifetime_model, EquilibriumDistribution):
+        return EquilibriumDistribution(
+            _expand_lifetime_model(lifetime_model.baseline, nb_samples)
+        )
+
+    if isinstance(lifetime_model, MinimumDistribution):
+        return MinimumDistribution(
+            _expand_lifetime_model(lifetime_model.baseline, nb_samples)
+        )
+
+    expanded_lifetime_model = lifetime_model
+
+    if is_frozen(lifetime_model):
+        broadcasted_args = list(
+            np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
+        )
+        expanded_lifetime_model = lifetime_model.unfreeze().freeze(
+            *broadcasted_args
+        )  # TODO: use a copy method of parametric models
+
+    return expanded_lifetime_model
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -41,16 +69,9 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         self.sample_size = self.nb_assets * self.nb_samples
 
-        if is_frozen(self.process.lifetime_model):
-            broadcasted_args = list(
-                np.repeat(arg, self.nb_samples, axis=0)
-                for arg in self.process.lifetime_model.args
-            )
-            self._expanded_lifetime_model = (
-                self.process.lifetime_model.unfreeze().freeze(*broadcasted_args)
-            )  # TODO: use a copy method of parametric models
-        else:
-            self._expanded_lifetime_model = self.process.lifetime_model
+        self._expanded_lifetime_model = _expand_lifetime_model(
+            self.process.lifetime_model, self.nb_samples
+        )
 
         self.t0, self.tf = time_window  # t0, tf are checked in iterable
 
@@ -239,20 +260,10 @@ class RenewalProcessIterator(StochasticDataIterator):
         )
 
         self._expanded_first_lifetime_model = None
-
         if self.process.first_lifetime_model is not None:
-            if is_frozen(self.process.first_lifetime_model):
-                broadcasted_args = list(
-                    np.repeat(arg, self.nb_samples, axis=0)
-                    for arg in self.process.first_lifetime_model.args
-                )
-                self._expanded_first_lifetime_model = (
-                    self.process.first_lifetime_model.unfreeze().freeze(
-                        *broadcasted_args
-                    )
-                )  # TODO: use a copy method of parametric models
-            else:
-                self._expanded_first_lifetime_model = self.process.first_lifetime_model
+            self._expanded_first_lifetime_model = _expand_lifetime_model(
+                self.process.first_lifetime_model, self.nb_samples
+            )
 
     @property
     def _expanded_dynamic_lifetime_model(self):
