@@ -4,8 +4,8 @@ from numpy.typing import NDArray
 
 def select_from_struct(
     struct_array,
-    sample_id = None,
-    asset_id = None,
+    sample_id=None,
+    asset_id=None,
 ):
     """
     Method used for dev and tests

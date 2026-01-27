@@ -65,7 +65,9 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         )
 
     @abstractmethod
-    def sample_time_event_entry(self) -> tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]:
+    def sample_time_event_entry(
+        self,
+    ) -> tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]:
         """
         Routine that samples time, event, entry at each step
         IMPORTANT: time, event, entry must be 1D.
@@ -76,7 +78,9 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         if not np.all(self._time_window_mask["crossed_tf"]):
             time, event, entry = self.sample_time_event_entry()
             struct_arr = self._collect_time_window_observations(time, event, entry)
-            while struct_arr.size == 0:  # skip cycles while arrays are empty (if t0 != 0.)
+            while (
+                struct_arr.size == 0
+            ):  # skip cycles while arrays are empty (if t0 != 0.)
                 time, event, entry = self.sample_time_event_entry()
                 struct_arr = self._collect_time_window_observations(time, event, entry)
                 if np.all(self._time_window_mask["crossed_tf"]) and struct_arr.size > 0:
@@ -87,11 +91,17 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     def _collect_time_window_observations(self, time, event, entry) -> NDArray[np.void]:
         """Collect observed time, event, entry inside during the time window"""
         if time.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {time.ndim} dim for time")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {time.ndim} dim for time"
+            )
         if event.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {event.ndim} dim for event")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {event.ndim} dim for event"
+            )
         if entry.ndim > 1:
-            raise ValueError(f"sample_time_event_entry must return 1d entry. Got {entry.ndim} dim for entry")
+            raise ValueError(
+                f"sample_time_event_entry must return 1d entry. Got {entry.ndim} dim for entry"
+            )
 
         residual_time = time - entry
 
@@ -162,27 +172,32 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
         struct_array["asset_id"] = asset_id.astype(np.uint32)
         struct_array["sample_id"] = sample_id.astype(np.uint32)
-        struct_array["timeline"] = self.timeline[self._time_window_mask["observed_step"]]
+        struct_array["timeline"] = self.timeline[
+            self._time_window_mask["observed_step"]
+        ]
         return struct_array
 
 
 class RenewalProcessIterator(StochasticDataIterator):
     @property
     def lifetime_model(self):
-        if self.replacement_cycle == 0 and self.process.first_lifetime_model is not None:
+        if (
+            self.replacement_cycle == 0
+            and self.process.first_lifetime_model is not None
+        ):
             return self.process.first_lifetime_model
         return self.process.lifetime_model
 
     @property
-    def _rvs_size(self) -> Tuple[int,int]:
+    def _rvs_size(self) -> Tuple[int, int]:
         """
         Property to get the size that we should pass to rvs function depending on the args of the model used to sample.
         """
         model_nb_assets = get_model_nb_assets(self.lifetime_model)
         if model_nb_assets == 1:
-            return (self.nb_assets * self.nb_samples,1)
+            return (self.nb_assets * self.nb_samples, 1)
         if model_nb_assets == self.nb_assets:
-            return (model_nb_assets,self.nb_samples)
+            return (model_nb_assets, self.nb_samples)
         raise ValueError
 
     def sample_time_event_entry(self):
@@ -212,7 +227,9 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         nb_assets: int = 1,
         seed: int | None = None,
     ) -> None:
-        super().__init__(process, nb_samples, time_window, nb_assets=nb_assets, seed=seed)
+        super().__init__(
+            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
+        )
         self.reward = self.process.reward
         self.discounting = self.process.discounting
 
@@ -223,7 +240,8 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         return rfn.append_fields(
             struct_array,
             "reward",
-            self.reward.sample(struct_array["time"]) * self.discounting.factor(struct_array["timeline"]),
+            self.reward.sample(struct_array["time"])
+            * self.discounting.factor(struct_array["timeline"]),
             np.float64,
             usemask=False,
             asrecarray=False,
@@ -239,13 +257,18 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         nb_assets: int = 1,
         seed=None,
     ):
-        super().__init__(process, nb_samples, time_window, nb_assets=nb_assets, seed=seed)
+        super().__init__(
+            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
+        )
         # Here, all samples for each assets are considered individually because of the usage of LeftTruncatedModel
         # We need all samples and assets in 1D so we must broadcast the original lifetime model to repeat its args
         if is_frozen(self.process.lifetime_model):
-            broadcasted_args = list(np.repeat(arg, self.nb_samples, axis=0) for arg in self.process.lifetime_model.args)
-            self._expanded_lifetime_model = self.process.lifetime_model.unfreeze().freeze(
-                *broadcasted_args
+            broadcasted_args = list(
+                np.repeat(arg, self.nb_samples, axis=0)
+                for arg in self.process.lifetime_model.args
+            )
+            self._expanded_lifetime_model = (
+                self.process.lifetime_model.unfreeze().freeze(*broadcasted_args)
             )  # TODO: use a copy method of parametric models
         else:
             self._expanded_lifetime_model = self.process.lifetime_model
@@ -258,12 +281,12 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
 
     @property
-    def _rvs_size(self) -> Tuple[int,int]:
+    def _rvs_size(self) -> Tuple[int, int]:
         """
         Helper property, get the size that we should pass to rvs function depending on the args of the model used to sample.
         """
         model_nb_assets = get_model_nb_assets(self._truncated_lifetime_model)
-        return (model_nb_assets,1)
+        return (model_nb_assets, 1)
 
     def sample_time_event_entry(self):
         # Sample using truncated lifetime model truncation

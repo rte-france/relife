@@ -39,7 +39,9 @@ class ECDF:
         timeline, counts = np.unique(time, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
 
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
         self._sf = np.empty((timeline.size,), dtype=dtype)
         self._cdf = np.empty((timeline.size,), dtype=dtype)
 
@@ -54,9 +56,15 @@ class ECDF:
         return self
 
     @overload
-    def sf(self, se: Literal[False]) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def sf(
+        self, se: Literal[False]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
     @overload
-    def sf(self, se: Literal[True]) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def sf(
+        self, se: Literal[True]
+    ) -> (
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
+    ): ...
     @overload
     def sf(
         self, se: bool
@@ -93,9 +101,15 @@ class ECDF:
         return self._sf["timeline"], self._sf["estimation"]
 
     @overload
-    def cdf(self, se: Literal[False]) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def cdf(
+        self, se: Literal[False]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
     @overload
-    def cdf(self, se: Literal[True]) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def cdf(
+        self, se: Literal[True]
+    ) -> (
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
+    ): ...
     @overload
     def cdf(
         self, se: bool
@@ -207,7 +221,9 @@ class KaplanMeier:
 
         timeline = np.unique(time)
 
-        n = ((timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))).sum(axis=0)
+        n = (
+            (timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))
+        ).sum(axis=0)
 
         d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
         sf = (1 - d / n).cumprod()
@@ -216,7 +232,9 @@ class KaplanMeier:
             var = (sf**2) * (d / (n * (n - d))).cumsum()
             var = np.where(n > d, var, 0)
 
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
         self._sf = np.empty((timeline.size + 1,), dtype=dtype)
         self._sf["timeline"] = np.insert(timeline, 0, 0)
         self._sf["estimation"] = np.insert(sf, 0, 1)
@@ -224,9 +242,15 @@ class KaplanMeier:
         return self
 
     @overload
-    def sf(self, se: Literal[False]) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def sf(
+        self, se: Literal[False]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
     @overload
-    def sf(self, se: Literal[True]) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def sf(
+        self, se: Literal[True]
+    ) -> (
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
+    ): ...
     @overload
     def sf(
         self, se: bool
@@ -338,7 +362,9 @@ class NelsonAalen:
 
         timeline = np.unique(time)
 
-        n = ((timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))).sum(axis=0)
+        n = (
+            (timeline <= time.reshape(-1, 1)) * (timeline >= entry.reshape(-1, 1))
+        ).sum(axis=0)
 
         d = ((time.reshape(-1, 1) == timeline) * event.reshape(-1, 1)).sum(axis=0)
 
@@ -347,7 +373,9 @@ class NelsonAalen:
         with np.errstate(divide="ignore"):
             var = (d / n**2).cumsum()
 
-        dtype = np.dtype([("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)])
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
         self._chf = np.empty((timeline.size + 1,), dtype=dtype)
         self._chf["timeline"] = np.insert(timeline, 0, 0)
         self._chf["estimation"] = np.insert(chf, 0, 0)
@@ -355,9 +383,15 @@ class NelsonAalen:
         return self
 
     @overload
-    def chf(self, se: Literal[False]) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def chf(
+        self, se: Literal[False]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
     @overload
-    def chf(self, se: Literal[True]) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None: ...
+    def chf(
+        self, se: Literal[True]
+    ) -> (
+        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
+    ): ...
     @overload
     def chf(
         self, se: bool

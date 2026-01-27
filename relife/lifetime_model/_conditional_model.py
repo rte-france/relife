@@ -171,7 +171,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
-    def ichf(self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ichf(
+        self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts
+    ) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -248,9 +250,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
-            time, ar, *args
-        )  # () or (n,) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -467,7 +469,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         if func(ar).ndim == 2 and integration.ndim == 1:
             integration = integration.reshape(-1, 1)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     @override
     def moment(self, n: int, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
@@ -537,7 +541,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         ar = reshape_1d_arg(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    def freeze(self, ar: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
+    def freeze(
+        self, ar: AnyFloat, *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -731,7 +737,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return self.baseline.hf(a0 + time, *args)
 
     @override
-    def ichf(self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ichf(
+        self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts
+    ) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -753,7 +761,12 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             Function values at each given cumulative hazard rate(s).
         """
         a0 = reshape_1d_arg(a0)
-        return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
+        return (
+            self.baseline.ichf(
+                cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
+            )
+            - a0
+        )
 
     @overload
     def rvs(
@@ -869,7 +882,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             if isinstance(self.baseline, AgeReplacementModel):
                 ar = reshape_1d_arg(args[0])
                 event = np.where(complete_ages < ar, event, ~event)
-            if is_frozen(self.baseline) and isinstance(self.baseline.unfreeze(),AgeReplacementModel):
+            if is_frozen(self.baseline) and isinstance(
+                self.baseline.unfreeze(), AgeReplacementModel
+            ):
                 ar = reshape_1d_arg(self.baseline.args[0])
                 event = np.where(complete_ages < ar, event, ~event)
             output.append(event)
@@ -1054,7 +1069,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         a0 = reshape_1d_arg(a0)
         return super().ppf(probability, *(a0, *args))
 
-    def freeze(self, a0: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
+    def freeze(
+        self, a0: AnyFloat, *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze conditional age values and other arguments into the object data.
 

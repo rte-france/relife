@@ -15,8 +15,9 @@ __all__ = ["FrozenParametricLifetimeModel"]
 Ts = TypeVarTuple("Ts")
 
 
-class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeModel[*Ts], *Ts]):
-
+class FrozenParametricLifetimeModel(
+    FrozenParametricModel[ParametricLifetimeModel[*Ts], *Ts]
+):
     _args: tuple[*Ts]
     _unfrozen_model: ParametricLifetimeModel[*Ts]
 
@@ -114,7 +115,11 @@ class FrozenParametricLifetimeModel(FrozenParametricModel[ParametricLifetimeMode
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         return self._unfrozen_model.rvs(
-            size, *self._args, return_event=return_event, return_entry=return_entry, seed=seed
+            size,
+            *self._args,
+            return_event=return_event,
+            return_entry=return_entry,
+            seed=seed,
         )
 
     def ls_integrate(

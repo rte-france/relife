@@ -124,7 +124,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return self.ppf(0.5, *args)
 
     def isf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
-
         def func(x: NDArray[np.float64]) -> NumpyFloat:
             return self.sf(x, *args) - probability
 
@@ -136,7 +135,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         )
 
     def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat:
-
         def func(x: NDArray[np.float64]) -> NumpyFloat:
             return self.chf(x, *args) - cumulative_hazard_rate
 
@@ -214,8 +212,16 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if size == 1:
             probability = np.squeeze(probability)
         time = self.isf(probability, *args)
-        event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
-        entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
+        event = (
+            np.ones_like(time, dtype=np.bool_)
+            if isinstance(time, np.ndarray)
+            else np.bool_(True)
+        )
+        entry = (
+            np.zeros_like(time, dtype=np.float64)
+            if isinstance(time, np.ndarray)
+            else np.float64(0)
+        )
         if not return_event and not return_entry:
             return time
         elif return_event and not return_entry:
@@ -255,10 +261,14 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """
                 )
-            if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
+            if (
+                x.ndim == 3
+            ):  # reshape because model.pdf is tested only for input ndim <= 2
                 x_shape: tuple[int, int, int] = x.shape
                 xdeg, m, n = x_shape
-                x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
+                x = np.rollaxis(x, 1).reshape(
+                    m, -1
+                )  # (m, deg*n), roll on m because axis 0 must align with m of args
                 pdf = self.pdf(x, *args)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, xdeg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
@@ -273,11 +283,19 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 
-        bound_b = self.isf(1e-4, *args)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        bound_b = self.isf(
+            1e-4, *args
+        )  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
         broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
-        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_a = broadcasted_arrs[
+            0
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[
+            1
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[
+            2
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
         is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
         arr_b = np.where(is_inf, bound_b, arr_b)
         integration = legendre_quadrature(
@@ -507,7 +525,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             optimizer_options = {}
         if "bounds" not in optimizer_options:
             optimizer_options["bounds"] = self.params_bounds
-        likelihood = DefaultLifetimeLikelihood(self, time, model_args=model_args, event=event, entry=entry)
+        likelihood = DefaultLifetimeLikelihood(
+            self, time, model_args=model_args, event=event, entry=entry
+        )
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results

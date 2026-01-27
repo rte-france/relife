@@ -23,7 +23,9 @@ class StochasticSample(TypedDict):
     rewards: NDArray[np.float64] | None
 
 
-class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool_] | None]):
+class StochasticSampleMapping(
+    Mapping[str, NDArray[np.float64] | NDArray[np.bool_] | None]
+):
     """
     Mapping class to manipulate Stochastic samples.
     Access to 2D matrixes of events, renewals and rewards and method for selecting sub-samples of the full data.
@@ -36,9 +38,12 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
     _stochastic_data_sample: StochasticSample
 
     def __init__(
-        self, nb_assets: int, nb_samples: int, timeline: NDArray[np.float64], stochastic_data_sample: StochasticSample
+        self,
+        nb_assets: int,
+        nb_samples: int,
+        timeline: NDArray[np.float64],
+        stochastic_data_sample: StochasticSample,
     ) -> None:
-
         self.nb_assets = nb_assets
         self.nb_samples = nb_samples
         self.timeline = timeline
@@ -53,16 +58,22 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
         """
 
         # assets x samples are placed on axis 0
-        index_in_rows = struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
+        index_in_rows = (
+            struct_array["asset_id"] * nb_samples + struct_array["sample_id"]
+        )
         _, row_index = np.unique(index_in_rows, return_inverse=True)
 
         # unique values of timeline on axis 1
-        timeline, col_timeline = np.unique(struct_array["timeline"], return_inverse=True)
+        timeline, col_timeline = np.unique(
+            struct_array["timeline"], return_inverse=True
+        )
 
         # construction of matrixes
         events = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
         events[row_index, col_timeline] = struct_array["event"]
-        preventive_renewals = np.zeros((nb_assets * nb_samples, timeline.size), dtype=bool)
+        preventive_renewals = np.zeros(
+            (nb_assets * nb_samples, timeline.size), dtype=bool
+        )
         preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
         preventive_renewals[:, -1] = False
 
@@ -87,7 +98,9 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
 
     def __getitem__(self, key: str) -> NDArray[np.float64] | NDArray[np.bool_] | None:
         if key not in self._stochastic_data_sample:
-            raise KeyError(f"Key {key} does not exists. Allowed keys are 'events', 'preventive_renewals' or 'rewards'")
+            raise KeyError(
+                f"Key {key} does not exists. Allowed keys are 'events', 'preventive_renewals' or 'rewards'"
+            )
         return self._stochastic_data_sample.get(key)
 
     def __iter__(self) -> Iterator[str]:
@@ -118,7 +131,9 @@ class StochasticSampleMapping(Mapping[str, NDArray[np.float64] | NDArray[np.bool
 
         mask = (asset_id[None, :] * self.nb_samples + sample_id[:, None]).flatten()
 
-        new_stochastic_data_sample = {key: value[mask] for key, value in self._stochastic_data_sample.items()}
+        new_stochastic_data_sample = {
+            key: value[mask] for key, value in self._stochastic_data_sample.items()
+        }
 
         return StochasticSampleMapping(
             nb_assets=new_nb_assets,
