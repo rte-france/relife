@@ -224,30 +224,3 @@ class Cox:
         self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
 
         return self
-
-
-if __name__ == "__main__":
-
-    from pathlib import Path
-    import pandas as pd
-
-    # Données chaines d'isolateur
-    relife_csv_datapath = Path(r"D:\Projets\RTE\ReLife\relife\relife\data\csv")
-    time, event, entry, *args = np.loadtxt(relife_csv_datapath / "insulator_string.csv", delimiter=",", skiprows=1,
-                                           unpack=True)
-    covar = np.column_stack(args)
-
-    # Into df
-    data = pd.DataFrame({"time": time, "event": event, "entry": entry})
-    covar = pd.DataFrame(covar)
-    covar.columns = [f"covar_{i}" for i in range(covar.shape[1])]
-    data = pd.concat([data, covar], axis=1)
-
-    # Relife model fit
-    re_model = Cox()
-    re_model.fit(
-        time=data["time"],
-        covar=data.filter(regex="covar").values,
-        event=data["event"],
-    )
-    print(re_model.params)
