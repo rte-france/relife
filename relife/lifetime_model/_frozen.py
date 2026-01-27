@@ -1,4 +1,4 @@
-from typing import Callable, Literal, TypeVarTuple, overload
+from typing import Callable, Literal, Sequence, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
