@@ -411,14 +411,14 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         """
 
         ar = reshape_1d_arg(ar)
-        if nb_assets is None:
-            nb_assets = get_args_nb_assets(ar, *args)
-            if nb_assets == 1:
-                nb_assets = None
+        # if nb_assets is None:
+        #     nb_assets = get_args_nb_assets(ar, *args)
+        #     if nb_assets == 1:
+        #         nb_assets = None
         baseline_rvs = self.baseline.rvs(
             size,
             *args,
-            nb_assets=nb_assets,
+            # nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,
@@ -872,14 +872,14 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_1d_arg(a0)
-        if nb_assets is None:
-            nb_assets = get_args_nb_assets(a0, *args)
-            if nb_assets == 1:
-                nb_assets = None
+        # if nb_assets is None:
+        #     nb_assets = get_args_nb_assets(a0, *args)
+        #     if nb_assets == 1:
+        #         nb_assets = None
         super_rvs = super().rvs(
             size,
             *(a0, *args),
-            nb_assets=nb_assets,
+            # nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,

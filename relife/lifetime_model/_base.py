@@ -216,10 +216,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
         rng = np.random.default_rng(seed)
-        if nb_assets is not None:
-            np_size = (nb_assets, size)
-        else:
-            np_size = size
+        # if nb_assets is not None:
+        #     np_size = (nb_assets, size)
+        # else:
+        #     np_size = size
+        np_size = size
         probability = rng.uniform(size=np_size)
         if np_size == 1:
             probability = np.squeeze(probability)

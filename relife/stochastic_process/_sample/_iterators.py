@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Tuple
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -177,16 +177,15 @@ class _RenewalProcessIterator(_StochasticDataIterator):
         return self.process.lifetime_model
 
     @property
-    def _rvs_size(self) -> int:
+    def _rvs_size(self) -> Tuple[int,int]:
         """
         Property to get the size that we should pass to rvs function depending on the args of the model used to sample.
-        A lifetime_model.rvs called with size=n will sample n values for each asset in its args.
         """
         model_nb_assets = get_model_nb_assets(self.lifetime_model)
         if model_nb_assets == 1:
-            return self.nb_assets * self.nb_samples
+            return (self.nb_assets * self.nb_samples,1)
         if model_nb_assets == self.nb_assets:
-            return self.nb_samples
+            return (model_nb_assets,self.nb_samples)
         raise ValueError
 
     def sample_time_event_entry(self):
@@ -270,14 +269,15 @@ class _NonHomogeneousPoissonProcessIterator(_StochasticDataIterator):
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
 
     @property
-    def _rvs_size(self) -> int:
-        """Helper property, get the size that we should pass to rvs function depending on the args of the model used to sample.
-        Here, when a NHPP is created from a lifetime model with m assets, a th
+    def _rvs_size(self) -> Tuple[int,int]:
+        """
+        Helper property, get the size that we should pass to rvs function depending on the args of the model used to sample.
         """
         model_nb_assets = get_model_nb_assets(self._truncated_lifetime_model)
-        if model_nb_assets == 1:
-            return self.nb_samples
-        return 1
+        return (model_nb_assets,1)
+        # if model_nb_assets == 1:
+        #     return self.nb_samples
+        # return 1
 
     def sample_time_event_entry(self):
         # Sample using truncated lifetime model truncation

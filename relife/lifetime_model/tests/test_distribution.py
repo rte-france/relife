@@ -6,8 +6,8 @@ from pytest import approx
 
 
 def rvs_expected_shape(size, nb_assets=None):
-    if nb_assets is not None:
-        return nb_assets, size
+    # if nb_assets is not None:
+    #     return nb_assets, size
     if size != 1:
         return (size,)
     return ()

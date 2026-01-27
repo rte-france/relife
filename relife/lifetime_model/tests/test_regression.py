@@ -25,8 +25,8 @@ def expected_shape(**kwargs):
 
 def rvs_expected_shape(size, nb_assets=None, **kwargs):
     out_shape = expected_shape(**kwargs)
-    if nb_assets is not None:
-        return np.broadcast_shapes(out_shape, (nb_assets, size))
+    # if nb_assets is not None:
+    #     return np.broadcast_shapes(out_shape, (nb_assets, size))
     if size != 1:
         return np.broadcast_shapes(out_shape, (size,))
     return out_shape
