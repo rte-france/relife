@@ -1,7 +1,8 @@
 # pyright: basic
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Tuple
+from collections.abc import Iterator
+from typing import Tuple
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
