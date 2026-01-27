@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import Sequence, Tuple
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -11,10 +10,11 @@ from typing_extensions import override
 
 from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import LeftTruncatedModel
+from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.lifetime_model._distribution import (
     EquilibriumDistribution,
-    MinimumDistribution,
 )
+from relife.stochastic_process.renewal_process import RenewalProcess
 from relife.utils import is_frozen
 
 __all__ = [
@@ -25,14 +25,14 @@ __all__ = [
 ]
 
 
-def _expand_lifetime_model(lifetime_model, nb_samples):
+def _expand_lifetime_model(
+    lifetime_model: ParametricLifetimeModel, nb_samples: int
+) -> ParametricLifetimeModel:
+    """
+    Expand a lifetime model by duplicating its arguments. A regression with n_assets assets will result in a new regression with n_assets * n_samples assets.
+    """
     if isinstance(lifetime_model, EquilibriumDistribution):
         return EquilibriumDistribution(
-            _expand_lifetime_model(lifetime_model.baseline, nb_samples)
-        )
-
-    if isinstance(lifetime_model, MinimumDistribution):
-        return MinimumDistribution(
             _expand_lifetime_model(lifetime_model.baseline, nb_samples)
         )
 
@@ -103,13 +103,18 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
     @property
     @abstractmethod
-    def _expanded_dynamic_lifetime_model(self):
+    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         """
         Use the lifetime model modified at each iteration according to each stochastic process specific properties
         """
 
     @abstractmethod
-    def update_ages(self, time, event, entry) -> None:
+    def update_ages(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ) -> None:
         """
         Update ages at each iteration according to each stochastic process specific properties
         """
@@ -152,7 +157,12 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             return struct_arr
         raise StopIteration
 
-    def _collect_time_window_observations(self, time, event, entry) -> NDArray[np.void]:
+    def _collect_time_window_observations(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ) -> NDArray[np.void]:
         """Collect observed time, event, entry inside during the time window"""
         if time.ndim > 1:
             raise ValueError(
@@ -266,7 +276,7 @@ class RenewalProcessIterator(StochasticDataIterator):
             )
 
     @property
-    def _expanded_dynamic_lifetime_model(self):
+    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         if (
             self.replacement_cycle == 0
             and self._expanded_first_lifetime_model is not None
@@ -274,7 +284,12 @@ class RenewalProcessIterator(StochasticDataIterator):
             return self._expanded_first_lifetime_model
         return self._expanded_lifetime_model
 
-    def update_ages(self, time, event, entry):
+    def update_ages(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ):
         """
         In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
         """
@@ -316,13 +331,18 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
 
 class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     @property
-    def _expanded_dynamic_lifetime_model(self):
+    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
         ages = self.ages.copy()
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
 
-    def update_ages(self, time, event, entry):
+    def update_ages(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ):
         """
         In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
         """
