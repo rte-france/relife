@@ -78,7 +78,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         np.float64 or np.ndarray
             Function values at each given probability value(s).
         """
-        cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
+        # avoid division by zero
+        cumulative_hazard_rate = -np.log(np.clip(probability, 0, 1 - np.finfo(float).resolution))
         return self.ichf(cumulative_hazard_rate)
 
     @override
