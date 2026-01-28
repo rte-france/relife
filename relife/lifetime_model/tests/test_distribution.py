@@ -5,35 +5,46 @@ import pytest
 from pytest import approx
 
 
-def rvs_expected_shape(size, nb_assets=None):
-    if nb_assets is not None:
-        return nb_assets, size
+def rvs_expected_shape(size):
     if size != 1:
         return (size,)
     return ()
 
 
-def test_rvs(distribution, rvs_size, rvs_nb_assets):
-    assert distribution.rvs(rvs_size, nb_assets=rvs_nb_assets).shape == rvs_expected_shape(
-        size=rvs_size, nb_assets=rvs_nb_assets
+def test_rvs(distribution, rvs_size):
+    assert distribution.rvs(
+        rvs_size,
+    ).shape == rvs_expected_shape(
+        size=rvs_size,
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True)
+        arr.shape
+        == rvs_expected_shape(
+            size=rvs_size,
+        )
+        for arr in distribution.rvs(rvs_size, return_event=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_entry=True)
+        arr.shape
+        == rvs_expected_shape(
+            size=rvs_size,
+        )
+        for arr in distribution.rvs(rvs_size, return_entry=True)
     )
     assert all(
-        arr.shape == rvs_expected_shape(size=rvs_size, nb_assets=rvs_nb_assets)
-        for arr in distribution.rvs(rvs_size, nb_assets=rvs_nb_assets, return_event=True, return_entry=True)
+        arr.shape
+        == rvs_expected_shape(
+            size=rvs_size,
+        )
+        for arr in distribution.rvs(rvs_size, return_event=True, return_entry=True)
     )
 
 
 def test_sf(distribution, time):
     assert distribution.sf(time).shape == time.shape
-    assert distribution.sf(np.full(time.shape, distribution.median())) == approx(np.full(time.shape, 0.5), rel=1e-3)
+    assert distribution.sf(np.full(time.shape, distribution.median())) == approx(
+        np.full(time.shape, 0.5), rel=1e-3
+    )
 
 
 def test_hf(distribution, time):
@@ -89,31 +100,52 @@ def test_dhf(distribution, time):
 
 
 def test_jac_sf(distribution, time):
-    assert distribution.jac_sf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+    assert (
+        distribution.jac_sf(time, asarray=True).shape
+        == (distribution.nb_params,) + time.shape
+    )
 
 
 def test_jac_hf(distribution, time):
-    assert distribution.jac_hf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+    assert (
+        distribution.jac_hf(time, asarray=True).shape
+        == (distribution.nb_params,) + time.shape
+    )
 
 
 def test_jac_chf(distribution, time):
-    assert distribution.jac_chf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+    assert (
+        distribution.jac_chf(time, asarray=True).shape
+        == (distribution.nb_params,) + time.shape
+    )
 
 
 def test_jac_cdf(distribution, time):
-    assert distribution.jac_cdf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+    assert (
+        distribution.jac_cdf(time, asarray=True).shape
+        == (distribution.nb_params,) + time.shape
+    )
 
 
 def test_jac_pdf(distribution, time):
-    assert distribution.jac_pdf(time, asarray=True).shape == (distribution.nb_params,) + time.shape
+    assert (
+        distribution.jac_pdf(time, asarray=True).shape
+        == (distribution.nb_params,) + time.shape
+    )
 
 
 def test_ls_integrate(distribution, integration_bound_a, integration_bound_b):
     # integral_a^b dF(x)
-    expected_shape = np.broadcast_shapes(integration_bound_a.shape, integration_bound_b.shape)
-    integration = distribution.ls_integrate(np.ones_like, integration_bound_a, integration_bound_b, deg=100)
+    expected_shape = np.broadcast_shapes(
+        integration_bound_a.shape, integration_bound_b.shape
+    )
+    integration = distribution.ls_integrate(
+        np.ones_like, integration_bound_a, integration_bound_b, deg=100
+    )
     assert integration.shape == expected_shape
-    assert integration == approx(distribution.cdf(integration_bound_b) - distribution.cdf(integration_bound_a))
+    assert integration == approx(
+        distribution.cdf(integration_bound_b) - distribution.cdf(integration_bound_a)
+    )
     # integral_0^inf x*dF(x)
     integration = distribution.ls_integrate(
         lambda x: x,

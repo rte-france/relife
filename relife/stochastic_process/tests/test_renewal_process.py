@@ -10,7 +10,9 @@ from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
 class TestDistribution:
     def test_renewal_density(self, distribution):
-        renewal_process = RenewalProcess(distribution, first_lifetime_model=EquilibriumDistribution(distribution))
+        renewal_process = RenewalProcess(
+            distribution, first_lifetime_model=EquilibriumDistribution(distribution)
+        )
         timeline, renewal_density = renewal_process.renewal_density(100, 200)
         assert timeline.shape == (200,)
         assert renewal_density.shape == (200,)
@@ -80,12 +82,15 @@ class TestDistribution:
 class TestAgeReplacementDistribution:
     def test_renewal_density(self, frozen_ar_distribution):
         renewal_process = RenewalProcess(
-            frozen_ar_distribution, first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution)
+            frozen_ar_distribution,
+            first_lifetime_model=EquilibriumDistribution(frozen_ar_distribution),
         )
         timeline, renewal_density = renewal_process.renewal_density(100, 200)
         assert timeline.shape == (200,)
         assert renewal_density.shape == (200,)
-        assert renewal_density[..., -1:] == approx(1 / frozen_ar_distribution.mean(), rel=1e-4)
+        assert renewal_density[..., -1:] == approx(
+            1 / frozen_ar_distribution.mean(), rel=1e-4
+        )
 
     def test_expected_total_reward(self, frozen_ar_distribution):
         reward = RunToFailureReward(cf=1.0)
@@ -126,12 +131,15 @@ class TestAgeReplacementDistribution:
 class TestRegression:
     def test_renewal_density(self, frozen_regression):
         renewal_process = RenewalProcess(
-            frozen_regression, first_lifetime_model=EquilibriumDistribution(frozen_regression)
+            frozen_regression,
+            first_lifetime_model=EquilibriumDistribution(frozen_regression),
         )
         timeline, renewal_density = renewal_process.renewal_density(100, 200)
         assert timeline.shape == (200,)
         assert renewal_density.shape == (3, 200)
-        assert renewal_density[..., -1:] == approx(1 / frozen_regression.mean(), rel=1e-4)
+        assert renewal_density[..., -1:] == approx(
+            1 / frozen_regression.mean(), rel=1e-4
+        )
 
     def test_expected_total_reward(self, frozen_regression):
         reward = RunToFailureReward(cf=1.0)
@@ -175,12 +183,15 @@ class TestRegression:
 class TestAgeReplacementRegression:
     def test_renewal_density(self, frozen_ar_regression):
         renewal_process = RenewalProcess(
-            frozen_ar_regression, first_lifetime_model=EquilibriumDistribution(frozen_ar_regression)
+            frozen_ar_regression,
+            first_lifetime_model=EquilibriumDistribution(frozen_ar_regression),
         )
         timeline, renewal_density = renewal_process.renewal_density(100, 200)
         assert timeline.shape == (200,)
         assert renewal_density.shape == (3, 200)
-        assert renewal_density[..., -1:] == approx(1 / frozen_ar_regression.mean(), rel=1e-4)
+        assert renewal_density[..., -1:] == approx(
+            1 / frozen_ar_regression.mean(), rel=1e-4
+        )
 
     def test_expected_total_reward(self, frozen_ar_regression):
         reward = RunToFailureReward(cf=1.0)

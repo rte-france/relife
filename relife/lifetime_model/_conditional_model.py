@@ -13,7 +13,7 @@ from relife.typing import (
     NumpyFloat,
     Seed,
 )
-from relife.utils import get_args_nb_assets, is_frozen, reshape_1d_arg
+from relife.utils import is_frozen, reshape_1d_arg
 
 from ._base import ParametricLifetimeModel
 from ._frozen import FrozenParametricLifetimeModel
@@ -171,7 +171,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
-    def ichf(self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ichf(
+        self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts
+    ) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -248,9 +250,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             time, ub = np.broadcast_arrays(time, ub)
             time = np.ma.MaskedArray(time, mask)  # (m, 1) or (m, n)
             ub = np.ma.MaskedArray(ub, mask)  # (m, 1) or (m, n)
-        mu = self.ls_integrate(lambda x: x - time, time, ub, ar, *args, deg=10) / self.sf(
-            time, ar, *args
-        )  # () or (n,) or (m, n)
+        mu = self.ls_integrate(
+            lambda x: x - time, time, ub, ar, *args, deg=10
+        ) / self.sf(time, ar, *args)  # () or (n,) or (m, n)
         np.ma.filled(mu, 0)
         return np.ma.getdata(mu)
 
@@ -305,10 +307,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -316,10 +317,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -327,10 +327,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -338,37 +337,19 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        ar: AnyFloat,
-        *args: *Ts,
-        nb_assets: int | None = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -383,15 +364,13 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 
         Parameters
         ----------
-        size : int
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         ar : float or np.ndarray
             Age of replacement values. If ndarray, shape can only be (m,)
             as only one age of replacement per asset can be given
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -411,14 +390,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         """
 
         ar = reshape_1d_arg(ar)
-        if nb_assets is None:
-            nb_assets = get_args_nb_assets(ar, *args)
-            if nb_assets == 1:
-                nb_assets = None
         baseline_rvs = self.baseline.rvs(
             size,
             *args,
-            nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,
@@ -480,7 +454,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         if func(ar).ndim == 2 and integration.ndim == 1:
             integration = integration.reshape(-1, 1)
-        return integration + np.where(b == ar, func(ar) * self.baseline.sf(ar, *args), 0)
+        return integration + np.where(
+            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+        )
 
     @override
     def moment(self, n: int, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
@@ -550,7 +526,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         ar = reshape_1d_arg(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
-    def freeze(self, ar: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
+    def freeze(
+        self, ar: AnyFloat, *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -744,7 +722,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return self.baseline.hf(a0 + time, *args)
 
     @override
-    def ichf(self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ichf(
+        self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts
+    ) -> NumpyFloat:
         """
         Inverse cumulative hazard function.
 
@@ -766,15 +746,19 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             Function values at each given cumulative hazard rate(s).
         """
         a0 = reshape_1d_arg(a0)
-        return self.baseline.ichf(cumulative_hazard_rate + self.baseline.chf(a0, *args), *args) - a0
+        return (
+            self.baseline.ichf(
+                cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
+            )
+            - a0
+        )
 
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -782,10 +766,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -793,10 +776,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -804,37 +786,19 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int,
-        a0: AnyFloat,
-        *args: *Ts,
-        nb_assets: int | None = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -849,15 +813,13 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 
         Parameters
         ----------
-        size : int
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         a0 : float or np.ndarray
             Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
             as only one age per asset can be given
         *args : float or np.ndarray
             Additional arguments needed by the model.
-        nb_assets : int, optional
-            If nb_assets is not None, 2d arrays of samples are generated.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -872,14 +834,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             the time values followed by event values, entry values or both.
         """
         a0 = reshape_1d_arg(a0)
-        if nb_assets is None:
-            nb_assets = get_args_nb_assets(a0, *args)
-            if nb_assets == 1:
-                nb_assets = None
         super_rvs = super().rvs(
             size,
             *(a0, *args),
-            nb_assets=nb_assets,
             return_event=return_event,
             return_entry=return_entry,
             seed=seed,
@@ -895,7 +852,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             if isinstance(self.baseline, AgeReplacementModel):
                 ar = reshape_1d_arg(args[0])
                 event = np.where(complete_ages < ar, event, ~event)
-            if is_frozen(self.baseline):
+            if is_frozen(self.baseline) and isinstance(
+                self.baseline.unfreeze(), AgeReplacementModel
+            ):
                 ar = reshape_1d_arg(self.baseline.args[0])
                 event = np.where(complete_ages < ar, event, ~event)
             output.append(event)
@@ -1080,7 +1039,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         a0 = reshape_1d_arg(a0)
         return super().ppf(probability, *(a0, *args))
 
-    def freeze(self, a0: AnyFloat, *args: *Ts) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
+    def freeze(
+        self, a0: AnyFloat, *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[AnyFloat, *Ts]]:
         """
         Freeze conditional age values and other arguments into the object data.
 
