@@ -312,7 +312,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[False],
         return_entry: Literal[False],
@@ -321,7 +321,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -330,7 +330,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -339,7 +339,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[True],
         return_entry: Literal[True],
@@ -348,7 +348,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,
@@ -362,7 +362,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @override
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,

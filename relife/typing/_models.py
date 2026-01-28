@@ -4,6 +4,7 @@ from typing import (
     Callable,
     Literal,
     Protocol,
+    Sequence,
     TypeVarTuple,
     overload,
 )
@@ -40,7 +41,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[False],
@@ -49,7 +50,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -58,7 +59,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -67,7 +68,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[True],
@@ -76,7 +77,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: bool = False,
         return_entry: bool = False,
@@ -89,7 +90,7 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     ): ...
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: bool = False,
         return_entry: bool = False,

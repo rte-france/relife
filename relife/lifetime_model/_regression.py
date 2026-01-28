@@ -598,7 +598,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: Literal[False],
@@ -608,7 +608,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: Literal[True],
@@ -618,7 +618,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: Literal[False],
@@ -628,7 +628,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: Literal[True],
@@ -638,7 +638,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: bool = False,
@@ -653,7 +653,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @override
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         covar: AnyFloat,
         *,
         return_event: bool = False,

@@ -307,7 +307,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -317,7 +317,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -327,7 +327,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -337,7 +337,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -347,7 +347,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -362,7 +362,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @override
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -771,7 +771,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -781,7 +781,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -791,7 +791,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -801,7 +801,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -811,7 +811,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -826,7 +826,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @override
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: bool = False,

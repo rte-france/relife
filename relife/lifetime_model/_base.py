@@ -148,7 +148,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[False],
@@ -157,7 +157,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -166,7 +166,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -175,7 +175,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[True],
@@ -184,7 +184,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: bool = False,
         return_entry: bool = False,
@@ -197,7 +197,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     ): ...
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *args: *Ts,
         return_event: bool = False,
         return_entry: bool = False,

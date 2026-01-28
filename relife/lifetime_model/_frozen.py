@@ -54,7 +54,7 @@ class FrozenParametricLifetimeModel(
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[False],
         return_entry: Literal[False],
@@ -63,7 +63,7 @@ class FrozenParametricLifetimeModel(
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -72,7 +72,7 @@ class FrozenParametricLifetimeModel(
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -81,7 +81,7 @@ class FrozenParametricLifetimeModel(
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: Literal[True],
         return_entry: Literal[True],
@@ -90,7 +90,7 @@ class FrozenParametricLifetimeModel(
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,
@@ -103,7 +103,7 @@ class FrozenParametricLifetimeModel(
     ): ...
     def rvs(
         self,
-        size: Sequence[int],
+        size: int | Sequence[int],
         *,
         return_event: bool = False,
         return_entry: bool = False,
