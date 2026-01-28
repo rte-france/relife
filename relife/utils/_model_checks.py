@@ -8,7 +8,12 @@ import numpy as np
 
 from ._array_api import get_args_nb_assets, reshape_1d_arg
 
-__all__ = ["is_frozen", "is_lifetime_model", "is_non_homogeneous_poisson_process", "get_model_nb_assets"]
+__all__ = [
+    "is_frozen",
+    "is_lifetime_model",
+    "is_non_homogeneous_poisson_process",
+    "get_model_nb_assets",
+]
 
 
 if TYPE_CHECKING:
@@ -23,8 +28,12 @@ Ts = TypeVarTuple("Ts")
 @overload
 def is_frozen(model: FrozenParametricModel[ParametricModel, *Ts]) -> Literal[True]: ...
 @overload
-def is_frozen(model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts]) -> bool: ...
-def is_frozen(model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts]) -> bool:
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool: ...
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool:
     """
     Checks if model is frozen
     """
@@ -37,14 +46,19 @@ def is_frozen(model: ParametricModel | FrozenParametricModel[ParametricModel, *T
 def is_lifetime_model(model: FrozenParametricLifetimeModel[*Ts]) -> Literal[True]: ...
 @overload
 def is_lifetime_model(
-    model: ParametricLifetimeModel[*Ts] | FrozenParametricLifetimeModel[ParametricModel, *Ts],
+    model: ParametricLifetimeModel[*Ts]
+    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
 ) -> Literal[True]: ...
 @overload
 def is_lifetime_model(
-    model: Any | ParametricLifetimeModel[*Ts] | FrozenParametricLifetimeModel[ParametricModel, *Ts],
+    model: Any
+    | ParametricLifetimeModel[*Ts]
+    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
 ) -> bool: ...
 def is_lifetime_model(
-    model: Any | ParametricLifetimeModel[*Ts] | FrozenParametricLifetimeModel[ParametricModel, *Ts],
+    model: Any
+    | ParametricLifetimeModel[*Ts]
+    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
 ) -> bool:
     """
     Checks if model is a lifetime model.
@@ -78,7 +92,9 @@ def get_model_nb_assets(model):
     from relife.lifetime_model._regression import LifetimeRegression
     from relife.stochastic_process import NonHomogeneousPoissonProcess, RenewalProcess
 
-    if isinstance(model, EquilibriumDistribution) or isinstance(model, MinimumDistribution):
+    if isinstance(model, EquilibriumDistribution) or isinstance(
+        model, MinimumDistribution
+    ):
         return get_model_nb_assets(model.baseline)
 
     if isinstance(model, NonHomogeneousPoissonProcess):
@@ -87,7 +103,9 @@ def get_model_nb_assets(model):
     if isinstance(model, RenewalProcess):
         lifetime_model_nb_assets = get_model_nb_assets(model.lifetime_model)
         if model.first_lifetime_model is not None:
-            first_lifetime_model_nb_assets = get_model_nb_assets(model.first_lifetime_model)
+            first_lifetime_model_nb_assets = get_model_nb_assets(
+                model.first_lifetime_model
+            )
             return max(lifetime_model_nb_assets, first_lifetime_model_nb_assets)
         return lifetime_model_nb_assets
 

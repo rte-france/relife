@@ -8,7 +8,6 @@ from typing import (
     Callable,
     Literal,
     Self,
-    Sequence,
     TypeAlias,
     TypeVarTuple,
     final,
@@ -312,7 +311,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *,
         return_event: Literal[False],
         return_entry: Literal[False],
@@ -321,7 +320,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -330,7 +329,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -339,30 +338,16 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *,
         return_event: bool = False,
         return_entry: bool = False,
@@ -378,7 +363,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
         Parameters
         ----------
-        size : Sequence[int]
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.

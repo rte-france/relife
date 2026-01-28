@@ -14,7 +14,6 @@ from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.lifetime_model._distribution import (
     EquilibriumDistribution,
 )
-from relife.stochastic_process.renewal_process import RenewalProcess
 from relife.utils import is_frozen
 
 __all__ = [

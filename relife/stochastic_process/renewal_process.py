@@ -69,7 +69,9 @@ class RenewalProcess(ParametricModel):
         self.lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
-    def renewal_function(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def renewal_function(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal function.
 
         The renewal function gives the expected total number of renewals. It is computed  by solving the
@@ -111,11 +113,15 @@ class RenewalProcess(ParametricModel):
         renewal_function = renewal_equation_solver(
             timeline,
             self.lifetime_model,
-            self.lifetime_model.cdf if self.first_lifetime_model is None else self.first_lifetime_model.cdf,
+            self.lifetime_model.cdf
+            if self.first_lifetime_model is None
+            else self.first_lifetime_model.cdf,
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
-    def renewal_density(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def renewal_density(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal density.
 
         The renewal density corresponds to the derivative of the renewal function with
@@ -156,11 +162,15 @@ class RenewalProcess(ParametricModel):
         renewal_density = renewal_equation_solver(
             timeline,
             self.lifetime_model,
-            self.lifetime_model.pdf if self.first_lifetime_model is None else self.first_lifetime_model.pdf,
+            self.lifetime_model.pdf
+            if self.first_lifetime_model is None
+            else self.first_lifetime_model.pdf,
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
-    def sample(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> StochasticSampleMapping:
+    def sample(
+        self, nb_samples: int, time_window: tuple[float, float], seed=None
+    ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -180,10 +190,16 @@ class RenewalProcess(ParametricModel):
 
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
-        return StochasticSampleMapping.from_struct_array(struct_array, get_model_nb_assets(self), nb_samples)
+        struct_array = np.sort(
+            struct_array, order=("asset_id", "sample_id", "timeline")
+        )
+        return StochasticSampleMapping.from_struct_array(
+            struct_array, get_model_nb_assets(self), nb_samples
+        )
 
-    def generate_failure_data(self, nb_samples: int, time_window: tuple[float, float], seed=None) -> dict[str, Any]:
+    def generate_failure_data(
+        self, nb_samples: int, time_window: tuple[float, float], seed=None
+    ) -> dict[str, Any]:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -206,23 +222,38 @@ class RenewalProcess(ParametricModel):
 
         from ._sample import RenewalProcessIterable
 
-        if self.first_lifetime_model is not None and self.first_lifetime_model != self.lifetime_model:
+        if (
+            self.first_lifetime_model is not None
+            and self.first_lifetime_model != self.lifetime_model
+        ):
             if isinstance(self.first_lifetime_model, FrozenParametricModel):
                 if (
-                    isinstance(self.first_lifetime_model._unfrozen_model, LeftTruncatedModel)
-                    and self.first_lifetime_model._unfrozen_model.baseline == self.lifetime_model
+                    isinstance(
+                        self.first_lifetime_model._unfrozen_model, LeftTruncatedModel
+                    )
+                    and self.first_lifetime_model._unfrozen_model.baseline
+                    == self.lifetime_model
                 ):
                     pass
             else:
                 raise ValueError(
-                    f"Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
+                    "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
         iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(struct_array, order=("sample_id", "asset_id", "timeline"))
+        struct_array = np.sort(
+            struct_array, order=("sample_id", "asset_id", "timeline")
+        )
 
-        args_2d = tuple((np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())))
-        tuple_args_arr = tuple((np.take(np.asarray(arg), struct_array["asset_id"], axis=0) for arg in args_2d))
+        args_2d = tuple(
+            (np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ()))
+        )
+        tuple_args_arr = tuple(
+            (
+                np.take(np.asarray(arg), struct_array["asset_id"], axis=0)
+                for arg in args_2d
+            )
+        )
 
         returned_dict = {
             "time": struct_array["time"].copy(),
@@ -265,6 +296,7 @@ class RenewalRewardProcess(RenewalProcess):
     params
     params_names
     """
+
     lifetime_model: AnyParametricLifetimeModel[()]
     first_lifetime_model: AnyParametricLifetimeModel[()] | None
     reward: Reward
@@ -281,7 +313,9 @@ class RenewalRewardProcess(RenewalProcess):
     ) -> None:
         super().__init__(lifetime_model, first_lifetime_model)
         self.reward = reward
-        self.first_reward = first_reward if first_reward is not None else copy.deepcopy(reward)
+        self.first_reward = (
+            first_reward if first_reward is not None else copy.deepcopy(reward)
+        )
         self.discounting = ExponentialDiscounting(discounting_rate)
 
     @property
@@ -295,7 +329,9 @@ class RenewalRewardProcess(RenewalProcess):
     def discounting_rate(self, value: float) -> None:
         self.discounting.rate = value
 
-    def expected_total_reward(self, tf: float, nb_steps: int) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    def expected_total_reward(
+        self, tf: float, nb_steps: int
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The expected total reward.
 
         The renewal equation solved to compute the expected reward is:
@@ -348,7 +384,8 @@ class RenewalRewardProcess(RenewalProcess):
             timeline,
             self.lifetime_model,
             lambda t: self.lifetime_model.ls_integrate(
-                lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
+                lambda x: self.reward.conditional_expectation(x)
+                * self.discounting.factor(x),
                 np.zeros_like(t),
                 np.asarray(t),
                 deg=15,
@@ -361,14 +398,17 @@ class RenewalRewardProcess(RenewalProcess):
                 z,
                 self.first_lifetime_model,
                 lambda t: self.first_lifetime_model.ls_integrate(
-                    lambda x: self.first_reward.conditional_expectation(x) * self.discounting.factor(x),
+                    lambda x: self.first_reward.conditional_expectation(x)
+                    * self.discounting.factor(x),
                     np.zeros_like(t),
                     np.asarray(t),
                     deg=15,
                 ),  # reward partial expectation
                 discounting=self.discounting,
             )
-        return np.squeeze(timeline), np.squeeze(z)  # (nb_steps,), (nb_steps,) or (m, nb_steps)
+        return np.squeeze(timeline), np.squeeze(
+            z
+        )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
     def asymptotic_expected_total_reward(self) -> np.float64 | NDArray[np.float64]:
         r"""Asymptotic expected total reward.
@@ -403,21 +443,31 @@ class RenewalRewardProcess(RenewalProcess):
             The assymptotic expected total reward of the process.
         """
         lf = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x), np.float64(0.0), np.asarray(np.inf), deg=100
+            lambda x: self.discounting.factor(x),
+            np.float64(0.0),
+            np.asarray(np.inf),
+            deg=100,
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x) * self.reward.conditional_expectation(x), 0.0, np.inf, deg=100
+            lambda x: self.discounting.factor(x)
+            * self.reward.conditional_expectation(x),
+            0.0,
+            np.inf,
+            deg=100,
         )  # () or (m, 1)
         z = np.squeeze(ly / (1 - lf))  # () or (m,)
         if self.first_lifetime_model is not None:
             lf1 = np.squeeze(
-                self.first_lifetime_model.ls_integrate(lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100)
+                self.first_lifetime_model.ls_integrate(
+                    lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
+                )
             )  # () or (m,)
             ly1 = np.squeeze(
                 self.first_lifetime_model.ls_integrate(
-                    lambda x: self.discounting.factor(x) * self.first_reward.conditional_expectation(x),
+                    lambda x: self.discounting.factor(x)
+                    * self.first_reward.conditional_expectation(x),
                     0.0,
                     np.inf,
                     deg=100,
@@ -457,15 +507,23 @@ class RenewalRewardProcess(RenewalProcess):
             af = np.tile(af, (z.shape[0], 1))  # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
         if self.first_lifetime_model is not None:
-            q0 = self.first_reward.conditional_expectation(np.asarray(0.0)) * self.first_lifetime_model.pdf(0.0)
+            q0 = self.first_reward.conditional_expectation(
+                np.asarray(0.0)
+            ) * self.first_lifetime_model.pdf(0.0)
         else:
-            q0 = self.reward.conditional_expectation(np.asarray(0.0)) * self.lifetime_model.pdf(0.0)
+            q0 = self.reward.conditional_expectation(
+                np.asarray(0.0)
+            ) * self.lifetime_model.pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
-        return np.squeeze(timeline), np.squeeze(eeac)  # (nb_steps,) and (nb_steps) or (m, nb_steps)
+        return np.squeeze(timeline), np.squeeze(
+            eeac
+        )  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
-    def asymptotic_expected_equivalent_annual_worth(self) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_worth(
+        self,
+    ) -> np.float64 | NDArray[np.float64]:
         """Asymptotic expected equivalent annual worth.
 
         Returns
@@ -477,10 +535,15 @@ class RenewalRewardProcess(RenewalProcess):
             return np.squeeze(
                 np.asarray(
                     self.lifetime_model.ls_integrate(
-                        lambda x: self.reward.conditional_expectation(x), np.float64(0.0), np.asarray(np.inf), deg=100
+                        lambda x: self.reward.conditional_expectation(x),
+                        np.float64(0.0),
+                        np.asarray(np.inf),
+                        deg=100,
                     ),
                     dtype=float,
                 )
                 / self.lifetime_model.mean()
             )  # () or (m,)
-        return self.discounting_rate * self.asymptotic_expected_total_reward()  # () or (m,)
+        return (
+            self.discounting_rate * self.asymptotic_expected_total_reward()
+        )  # () or (m,)

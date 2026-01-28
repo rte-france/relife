@@ -9,7 +9,7 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Callable, Literal, Self, Sequence, final
+from typing import Any, Callable, Literal, Self, final
 
 import numpy as np
 from numpy.typing import NDArray
@@ -598,7 +598,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         covar: AnyFloat,
         *,
         return_event: Literal[False],
@@ -608,7 +608,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         covar: AnyFloat,
         *,
         return_event: Literal[True],
@@ -618,7 +618,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         covar: AnyFloat,
         *,
         return_event: Literal[False],
@@ -628,32 +628,17 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         covar: AnyFloat,
         *,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        covar: AnyFloat,
-        *,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         covar: AnyFloat,
         *,
         return_event: bool = False,
@@ -670,7 +655,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
 
         Parameters
         ----------
-        size : Sequence[int]
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         covar : float or np.ndarray
             Covariates values. float can only be valid if the regression has one coefficients.

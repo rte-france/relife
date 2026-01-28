@@ -23,7 +23,9 @@ def reshape_1d_arg(arg: float) -> np.float64: ...
 def reshape_1d_arg(arg: bool | np.bool_) -> np.bool: ...
 @overload
 def reshape_1d_arg(arg: NDArray[E]) -> NDArray[E]: ...
-def reshape_1d_arg(arg: int | float | bool | np.bool | NDArray[E]) -> np.float64 | np.bool | NDArray[E]:
+def reshape_1d_arg(
+    arg: int | float | bool | np.bool | NDArray[E],
+) -> np.float64 | np.bool | NDArray[E]:
     """
     Reshapes ReLife arguments that are expected to be 0d or 1d.
 

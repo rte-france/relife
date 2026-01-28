@@ -1,8 +1,10 @@
+# pyright: basic
+
 import numpy as np
 
 from relife.lifetime_model import EquilibriumDistribution, LeftTruncatedModel
-from relife.stochastic_process._sample._iterables import RenewalProcessIterable
 from relife.stochastic_process import RenewalProcess
+from relife.stochastic_process._sample._iterables import RenewalProcessIterable
 from relife.stochastic_process._sample.tests.utils import select_from_struct
 
 

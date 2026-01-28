@@ -1,10 +1,12 @@
+# pyright: basic
+
 import numpy as np
 
-from relife.stochastic_process._sample.tests.utils import select_from_struct
+from relife.stochastic_process import NonHomogeneousPoissonProcess
 from relife.stochastic_process._sample._iterables import (
     NonHomogeneousPoissonProcessIterable,
 )
-from relife.stochastic_process import NonHomogeneousPoissonProcess
+from relife.stochastic_process._sample.tests.utils import select_from_struct
 
 
 def test_basic_sampling(distribution):

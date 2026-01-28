@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Literal, Sequence, TypeVarTuple, overload
+from typing import Callable, Literal, TypeVarTuple, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -307,7 +307,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -317,7 +317,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -327,7 +327,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -337,32 +337,17 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -379,7 +364,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 
         Parameters
         ----------
-        size : int
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         ar : float or np.ndarray
             Age of replacement values. If ndarray, shape can only be (m,)
@@ -771,7 +756,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -781,7 +766,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
@@ -791,7 +776,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[False],
@@ -801,32 +786,17 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
         return_event: bool = False,
@@ -843,7 +813,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 
         Parameters
         ----------
-        size : Sequence[int]
+        size : int or tuple (m, n) of int
             Size of the generated sample.
         a0 : float or np.ndarray
             Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)

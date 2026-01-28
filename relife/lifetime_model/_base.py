@@ -10,7 +10,6 @@ from typing import (
     Generic,
     Literal,
     Self,
-    Sequence,
     TypeVarTuple,
     overload,
 )
@@ -148,16 +147,16 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[False],
-        seed: int | None = None,
+        seed: Seed | None = None,
     ) -> NumpyFloat: ...
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[False],
@@ -166,7 +165,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *args: *Ts,
         return_event: Literal[False],
         return_entry: Literal[True],
@@ -175,29 +174,15 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *args: *Ts,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
     def rvs(
         self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
-    def rvs(
-        self,
-        size: int | Sequence[int],
+        size: int | tuple[int, int],
         *args: *Ts,
         return_event: bool = False,
         return_entry: bool = False,
@@ -257,7 +242,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
                 _ = np.broadcast_shapes(fx.shape[-len(x.shape) :], x.shape)
             except ValueError:
                 raise ValueError(
-                    f"""
+                    """
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """

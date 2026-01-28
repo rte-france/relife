@@ -26,15 +26,33 @@ NB_COEF = 2
 
 REGRESSION_INSTANCES = [
     ProportionalHazard(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
+    ProportionalHazard(
+        Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))
+    ),
+    ProportionalHazard(
+        Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))
+    ),
+    ProportionalHazard(
+        Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))
+    ),
+    ProportionalHazard(
+        LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))
+    ),
+    AcceleratedFailureTime(
+        Exponential(0.00795203), coefficients=(np.log(2), np.log(2))
+    ),
+    AcceleratedFailureTime(
+        Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))
+    ),
+    AcceleratedFailureTime(
+        Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))
+    ),
+    AcceleratedFailureTime(
+        Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))
+    ),
+    AcceleratedFailureTime(
+        LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))
+    ),
 ]
 
 ########################################################################################################################
@@ -50,6 +68,7 @@ def power_transformer_data():
 @pytest.fixture
 def insulator_string_data():
     return load_insulator_string()
+
 
 ########################################################################################################################
 # LIFETIME MODEL FIXTURES
@@ -100,7 +119,9 @@ def frozen_ar_distribution(request):
 )
 def frozen_ar_regression(request):
     covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75, covar), covar)
+    return AgeReplacementModel(request.param).freeze(
+        request.param.isf(0.75, covar), covar
+    )
 
 
 ########################################################################################################################

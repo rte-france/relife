@@ -22,7 +22,9 @@ class TestLikelihoodDistribution:
             event=power_transformer_data["event"],
             entry=power_transformer_data["entry"],
         )
-        assert likelihood.jac_negative_log(distribution.params).shape == (distribution.nb_params,)
+        assert likelihood.jac_negative_log(distribution.params).shape == (
+            distribution.nb_params,
+        )
 
 
 class TestLikelihoodRegression:
@@ -56,4 +58,6 @@ class TestLikelihoodRegression:
             event=insulator_string_data["event"],
             entry=insulator_string_data["entry"],
         )
-        assert likelihood.jac_negative_log(regression.params).shape == (regression.nb_params,)
+        assert likelihood.jac_negative_log(regression.params).shape == (
+            regression.nb_params,
+        )

@@ -21,7 +21,6 @@ __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 
 @final
 class DefaultLifetimeLikelihood(DifferentiableLikelihood):
-
     _nb_observations: int
     _time: NDArray[np.float64]
     _complete_time: NDArray[np.float64]
@@ -40,8 +39,16 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
     ):
         super().__init__(model)
         time = reshape_1d_arg(time)
-        event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
+        event = (
+            reshape_1d_arg(event)
+            if event is not None
+            else np.ones_like(time, dtype=np.bool_)
+        )
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -68,7 +75,9 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
     def _event_contrib(self) -> np.float64 | None:
         if len(self._complete_time) == 0:
             return None
-        return np.sum(-np.log(self.model.hf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.hf(self._complete_time, *self._complete_time_args))
+        )
 
     def _entry_contrib(self) -> np.float64 | None:
         if len(self._nonzero_entry) == 0:
@@ -150,7 +159,9 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
     @override
-    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
+    def maximum_likelihood_estimation(
+        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+    ) -> FittingResults:
         x0: NDArray[np.float64] = optimizer_options.get("x0", self.params)
         method: str = optimizer_options.get("method", "L-BFGS-B")
         bounds: Bounds | None = optimizer_options.get("bounds", None)
@@ -202,7 +213,11 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         super().__init__(model)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time_inf, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -232,7 +247,9 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
     def _complete_time_contrib(self) -> np.float64 | None:
         if len(self._complete_time == 0):
             return None
-        return np.sum(-np.log(self.model.pdf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.pdf(self._complete_time, *self._complete_time_args))
+        )
 
     def _interval_censored_time_contrib(self) -> np.float64 | None:
         if len(self._censored_time_upper_bound) == 0:
@@ -240,8 +257,12 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         return np.sum(
             -np.log(
                 10**-10
-                + self.model.cdf(self._censored_time_upper_bound, *self._censored_time_args)
-                - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
+                + self.model.cdf(
+                    self._censored_time_upper_bound, *self._censored_time_args
+                )
+                - self.model.cdf(
+                    self._censored_time_lower_bound, *self._censored_time_args
+                )
             ),
         )
 
@@ -285,7 +306,9 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
             - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
         )
 
-        return np.sum(jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim)))
+        return np.sum(
+            jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim))
+        )
 
     def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
         if len(self._nonzero_entry) == 0:
@@ -335,7 +358,9 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
     @override
-    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
+    def maximum_likelihood_estimation(
+        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+    ) -> FittingResults:
         x0: NDArray[np.float64] = optimizer_options.get("x0", self.params)
         method: str = optimizer_options.get("method", "L-BFGS-B")
         bounds: Bounds | None = optimizer_options.get("bounds", None)
