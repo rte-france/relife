@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.3.4" />
+  <meta name="docsearch:version" content="2.3.5.dev1+ga16ef99fa" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.3.4</div>
+2.3.5.dev1+ga16ef99fa</div>
     
   </div>
   
@@ -446,7 +446,9 @@
 <span class="n">__all__</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AcceleratedFailureTime&quot;</span><span class="p">,</span> <span class="s2">&quot;ProportionalHazard&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar</span><span class="p">(</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>  <span class="c1">#  (m, n)</span>
     <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">))</span>  <span class="c1">#  (m, nb_coef)</span>
     <span class="k">match</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
@@ -455,13 +457,17 @@
         <span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">case</span> <span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span> <span class="k">if</span> <span class="n">m1</span> <span class="o">!=</span> <span class="n">m2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incompatible time and covar. time has </span><span class="si">{</span><span class="n">m1</span><span class="si">}</span><span class="s2"> nb_assets but covar has </span><span class="si">{</span><span class="n">m2</span><span class="si">}</span><span class="s2"> nb_assets&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Incompatible time and covar. time has </span><span class="si">{</span><span class="n">m1</span><span class="si">}</span><span class="s2"> nb_assets but covar has </span><span class="si">{</span><span class="n">m2</span><span class="si">}</span><span class="s2"> nb_assets&quot;</span>
+            <span class="p">)</span>
         <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
             <span class="k">pass</span>
     <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">covar_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar_shapes</span><span class="p">(</span>
+    <span class="n">time_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">covar_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    time_shape : (), (n,) or (m, n)</span>
 <span class="sd">    covar_shape : (), (nb_coef,) or (m, nb_coef)</span>
@@ -477,12 +483,16 @@
             <span class="k">return</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span>
         <span class="k">case</span><span class="w"> </span><span class="p">[(</span><span class="n">mt</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="k">_</span><span class="p">)]</span> <span class="k">if</span> <span class="n">mt</span> <span class="o">!=</span> <span class="n">mc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">mt</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mc</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time and covar : time got </span><span class="si">{</span><span class="n">mt</span><span class="si">}</span><span class="s2"> nb assets but covar got </span><span class="si">{</span><span class="n">mc</span><span class="si">}</span><span class="s2"> nb assets&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid time and covar : time got </span><span class="si">{</span><span class="n">mt</span><span class="si">}</span><span class="s2"> nb assets but covar got </span><span class="si">{</span><span class="n">mc</span><span class="si">}</span><span class="s2"> nb assets&quot;</span>
+                <span class="p">)</span>
             <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">mc</span><span class="p">),</span> <span class="n">n</span>
         <span class="k">case</span><span class="w"> </span><span class="p">[(</span><span class="n">mt</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="k">_</span><span class="p">)]</span> <span class="k">if</span> <span class="n">mt</span> <span class="o">==</span> <span class="n">mc</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">mt</span><span class="p">,</span> <span class="n">n</span>
         <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time or covar shape. Got </span><span class="si">{</span><span class="n">time_shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">covar_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid time or covar shape. Got </span><span class="si">{</span><span class="n">time_shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">covar_shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
 
 <span class="nd">@final</span>
@@ -518,7 +528,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">arr_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
         <span class="k">if</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="n">covar_nb_coef</span> <span class="o">=</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">size</span> <span class="k">if</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">covar_nb_coef</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_coef</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -530,12 +542,18 @@
         <span class="k">return</span> <span class="n">g</span>
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span> <span class="o">...</span>
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">NumpyFloat</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jac_g</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">asarray</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Jacobian of the covariates effect.</span>
 <span class="sd">        If covar.shape : () or (nb_coef,) =&gt; out.shape : (nb_coef,)</span>
@@ -559,7 +577,11 @@
     <span class="n">baseline</span><span class="p">:</span> <span class="n">LifetimeDistribution</span>
     <span class="n">covar_effect</span><span class="p">:</span> <span class="n">CovarEffect</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span><span class="p">:</span> <span class="n">LifetimeDistribution</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="n">LifetimeDistribution</span><span class="p">,</span>
+        <span class="n">coefficients</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,),</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
@@ -625,7 +647,9 @@
 <span class="sd">            Function values at each given probability value(s).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># avoid division by zero</span>
-        <span class="n">cumulative_hazard_rate</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span><span class="p">))</span>
+        <span class="n">cumulative_hazard_rate</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">probability</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
     <span class="nd">@override</span>
@@ -981,9 +1005,9 @@
 <span class="sd">            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output</span>
 <span class="sd">            tuple when ``asarray`` is False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span> <span class="n">covar</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">jac_sf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">asarray</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">jac</span>
@@ -991,10 +1015,9 @@
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
         <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1002,10 +1025,9 @@
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1013,10 +1035,9 @@
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
         <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1024,37 +1045,19 @@
     <span class="nd">@overload</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
-        <span class="n">NumpyFloat</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-    <span class="p">):</span> <span class="o">...</span>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">nb_assets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1069,13 +1072,11 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        size : int</span>
+<span class="sd">        size : int or tuple (m, n) of int</span>
 <span class="sd">            Size of the generated sample.</span>
 <span class="sd">        covar : float or np.ndarray</span>
 <span class="sd">            Covariates values. float can only be valid if the regression has one coefficients.</span>
 <span class="sd">            Otherwise it must be a ndarray of shape (nb_coef,) or (m, nb_coef)</span>
-<span class="sd">        nb_assets : int, optional</span>
-<span class="sd">            If nb_assets is not None, 2d arrays of samples are generated.</span>
 <span class="sd">        return_event : bool, default is False</span>
 <span class="sd">            If True, returns event indicators along with the sample time values.</span>
 <span class="sd">        return_entry : bool, default is False</span>
@@ -1092,7 +1093,6 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span>
             <span class="n">covar</span><span class="p">,</span>
-            <span class="n">nb_assets</span><span class="o">=</span><span class="n">nb_assets</span><span class="p">,</span>
             <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
             <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
@@ -1158,7 +1158,13 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">model_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LifetimeRegression expects covar but model_args is None&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span>
+            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
@@ -1176,7 +1182,11 @@
             <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">)</span>  <span class="c1"># changes params structure depending on number of covar</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
-            <span class="n">time_inf</span><span class="p">,</span> <span class="n">time_sup</span><span class="p">,</span> <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span> <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span>
+            <span class="n">time_inf</span><span class="p">,</span>
+            <span class="n">time_sup</span><span class="p">,</span>
+            <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span>
+            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
+            <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">,</span>
         <span class="p">)</span>
 
 
@@ -1387,7 +1397,9 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
@@ -1396,7 +1408,9 @@
         <span class="n">baseline_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
         <span class="c1"># p == baseline.nb_params</span>
         <span class="n">baseline_jac_hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_hf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
-        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
+        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
 
         <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">(</span>
@@ -1469,7 +1483,9 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
@@ -1477,7 +1493,9 @@
         <span class="n">baseline_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (m, n)</span>
         <span class="c1">#  p == baseline.nb_params</span>
         <span class="n">baseline_jac_chf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
-        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_chf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
+        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_chf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
 
         <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">(</span>
@@ -1705,7 +1723,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
@@ -1719,7 +1739,11 @@
 
         <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">(</span>
-                <span class="o">-</span><span class="n">jac_g</span> <span class="o">/</span> <span class="n">g</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">baseline_hf_t0</span> <span class="o">+</span> <span class="n">t0</span> <span class="o">*</span> <span class="n">baseline_dhf_t0</span><span class="p">),</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
+                <span class="o">-</span><span class="n">jac_g</span>
+                <span class="o">/</span> <span class="n">g</span><span class="o">**</span><span class="mi">2</span>
+                <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">baseline_hf_t0</span> <span class="o">+</span> <span class="n">t0</span> <span class="o">*</span> <span class="n">baseline_dhf_t0</span>
+                <span class="p">),</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
                 <span class="n">baseline_jac_hf_t0</span> <span class="o">/</span> <span class="n">g</span><span class="p">,</span>  <span class="c1"># (p, m, n)</span>
             <span class="p">),</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -1788,7 +1812,9 @@
 
         <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
-        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="n">_broadcast_time_covar_shapes</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">covar</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>  <span class="c1"># (), (n,) or (m, n)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">covar</span> <span class="o">=</span> <span class="n">_broadcast_time_covar</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, n) and (m, nb_coef)</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (m, 1)</span>
@@ -1797,7 +1823,9 @@
         <span class="c1"># p == baseline.nb_params</span>
         <span class="n">baseline_jac_chf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">jac_chf</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">asarray</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># (p, m, n)</span>
         <span class="n">baseline_hf_t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>  <span class="c1">#  (m, n)</span>
-        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf_t0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
+        <span class="n">jac_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">jac_g</span><span class="p">,</span> <span class="n">baseline_hf_t0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="p">)</span>  <span class="c1"># (nb_coef, m, n) necessary to concatenate</span>
 
         <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">(</span>

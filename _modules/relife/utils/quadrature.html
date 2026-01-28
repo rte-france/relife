@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.3.4" />
+  <meta name="docsearch:version" content="2.3.5.dev1+ga16ef99fa" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.3.4</div>
+2.3.5.dev1+ga16ef99fa</div>
     
   </div>
   
@@ -419,7 +419,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;legendre_quadrature&quot;</span><span class="p">,</span> <span class="s2">&quot;laguerre_quadrature&quot;</span><span class="p">,</span> <span class="s2">&quot;unweighted_laguerre_quadrature&quot;</span><span class="p">,</span> <span class="s2">&quot;broadcast_bounds&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;legendre_quadrature&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;laguerre_quadrature&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;unweighted_laguerre_quadrature&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;broadcast_bounds&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_control_shape</span><span class="p">(</span><span class="n">bound</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
@@ -434,7 +439,9 @@
 <span class="nd">@overload</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span> <span class="o">...</span>
 <span class="nd">@overload</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">broadcast_bounds</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span> <span class="o">...</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_bounds</span><span class="p">(</span>
     <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
@@ -445,14 +452,19 @@
             <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incompatible a, b shapes. Got a.shape, b.shape : </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Incompatible a, b shapes. Got a.shape, b.shape : </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
     <span class="k">return</span> <span class="n">a</span>
 
 
 <div class="viewcode-block" id="legendre_quadrature">
 <a class="viewcode-back" href="../../../api/routines/relife.utils.quadrature.legendre_quadrature.html#relife.utils.quadrature.legendre_quadrature">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">legendre_quadrature</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+    <span class="n">b</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+    <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`</span>
 
@@ -465,8 +477,12 @@
     <span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span> <span class="o">=</span> <span class="n">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
     <span class="n">quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span>  <span class="c1"># (deg,)</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">quad</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">arr_b</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bound values of Legendre quadrature must be finite&quot;</span><span class="p">)</span>
@@ -477,7 +493,9 @@
     <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_a</span> <span class="o">+</span> <span class="n">arr_b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>  <span class="c1"># () or (n,) or (m, n)</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">m</span>  <span class="c1"># (deg,) or (deg, n) or (deg, m, n)</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">w</span>  <span class="c1"># (deg,) or (deg, n) or (deg, m, n)</span>
-    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
+    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span>
+        <span class="n">u</span>
+    <span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="n">fvalues</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">:],</span> <span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -488,14 +506,18 @@
 <span class="s2">            &quot;&quot;&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">fvalues</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>  <span class="c1"># (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">v</span> <span class="o">*</span> <span class="n">fvalues</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="p">)</span>  <span class="c1"># (d_1, ..., d_i) or (d_1, ..., d_i, n) or (d_1, ..., d_i, m, n)</span></div>
 
 
 
 <div class="viewcode-block" id="laguerre_quadrature">
 <a class="viewcode-back" href="../../../api/routines/relife.utils.quadrature.laguerre_quadrature.html#relife.utils.quadrature.laguerre_quadrature">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">laguerre_quadrature</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+    <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`</span>
 
@@ -506,11 +528,17 @@
     <span class="n">arr_a</span> <span class="o">=</span> <span class="n">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
     <span class="n">quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">laguerre</span><span class="o">.</span><span class="n">laggauss</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span>  <span class="c1"># (deg,)</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">quad</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
 
     <span class="n">shifted_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">arr_a</span>  <span class="c1"># (deg,) or (deg, n) or (deg, m, n)</span>
-    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">shifted_x</span><span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
+    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span>
+        <span class="n">shifted_x</span>
+    <span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="n">fvalues</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">shifted_x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">:],</span> <span class="n">shifted_x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -532,7 +560,9 @@
 <div class="viewcode-block" id="unweighted_laguerre_quadrature">
 <a class="viewcode-back" href="../../../api/routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html#relife.utils.quadrature.unweighted_laguerre_quadrature">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">unweighted_laguerre_quadrature</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+    <span class="n">deg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`</span>
 
@@ -544,11 +574,17 @@
     <span class="n">arr_a</span> <span class="o">=</span> <span class="n">broadcast_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>  <span class="c1"># () or (n,) or (m, n)</span>
     <span class="n">quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">laguerre</span><span class="o">.</span><span class="n">laggauss</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span>  <span class="c1"># (deg,)</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">quad</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr_a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># (deg,), (deg, 1) or (deg, 1, 1)</span>
 
     <span class="n">shifted_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">arr_a</span>  <span class="c1"># (deg,) or (deg, n) or (deg, m, n)</span>
-    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">shifted_x</span><span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
+    <span class="n">fvalues</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span>
+        <span class="n">shifted_x</span>
+    <span class="p">)</span>  <span class="c1"># (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="n">fvalues</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">shifted_x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">:],</span> <span class="n">shifted_x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
