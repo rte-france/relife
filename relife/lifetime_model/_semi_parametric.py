@@ -95,7 +95,6 @@ class Cox:
         assert baseline_estimator == "Breslow", "The only Cox baseline estimator available is Breslow"
         self.baseline_estimator = baseline_estimator
         self._baseline = None
-        self._hess = None
 
     @property
     def params(self):
@@ -140,14 +139,12 @@ class Cox:
             psi = self.baseline.psi()
             psi_order_1 = self.baseline.psi(order=1)
             d_j_on_psi = self.baseline.event_count[:, None] / psi
-            information_matrix = self._hess
-            inverse_information_matrix = linalg.inv(information_matrix)
 
             q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
             q2 = np.squeeze(
                 np.matmul(
                     q3[:, None, :],
-                    np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+                    np.matmul(self.fitting_results.covariance_matrix[None, :, :], q3[:, :, None]),
                 )
             )  # m
             q1 = np.cumsum(d_j_on_psi * (1 / psi))
@@ -214,13 +211,12 @@ class Cox:
 
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
-        likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
+        #likelihood.params = fitting_results.optimal_params # now done in likelihood.mle
         self.baseline = BreslowBaseline(
             covar_effect=self.covar_effect,
             event_count=likelihood._event_count,
             ordered_event_covar=likelihood._ordered_event_covar,
             psi=likelihood._psi,
         )
-        self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
 
         return self

@@ -122,15 +122,17 @@ class Likelihood(ABC):
                 and ("hess" in optimizer_options)
                 and callable(optimizer_options["hess"])
         ):
-            hessian = optimizer_options["hess"](optimal_params)
+            information_matrix = optimizer_options["hess"](optimal_params)
         else:
-            hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian)
+            information_matrix = approx_hessian(self, optimal_params)
+
+        self.params = optimal_params # required ?
         return FittingResults(
             self.nb_observations,
             optimal_params,
             neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
+            information_matrix=information_matrix,
+            likelihood=self
         )
 
 
@@ -187,9 +189,15 @@ class FittingResults:
     optimal_params: NDArray[np.float64] = field(repr=False)  #: Optimal parameters values
     neg_log_likelihood: float = field(repr=False)  #: Negative log likelihood value at optimal parameters values
 
-    covariance_matrix: NDArray[np.float64] | None = field(
+    information_matrix: NDArray[np.float64] | None = field(
         repr=False, default=None
-    )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
+    ) # from which we derive the covariance_matrix in __post_init__
+
+    # Access to likelihood object may be required for further KPI (e.g. statistical tests) computation
+    # Those tests have not been integrated in FittingResults yet (TODO ?)
+    likelihood: Likelihood | None = field(
+        repr=False, default=None
+    )
 
     nb_params: int = field(init=False, repr=False)  #: Number of parameters.
     aic: float = field(init=False)  #: Akaike Information Criterion.
@@ -202,6 +210,7 @@ class FittingResults:
 
     def __post_init__(self):
         nb_params = self.optimal_params.size
+        self.covariance_matrix = np.linalg.pinv(self.information_matrix) #: Covariance matrix (computed as the inverse of the Hessian matrix).
         self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
         self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
         self.bic = np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
