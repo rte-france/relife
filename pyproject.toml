@@ -63,6 +63,8 @@ dev = [
 	"setuptools-scm >= 8.0.0",
 	"pylint >= 4.0.4",
 	"pyright >= 1.1.408",
+    "lifelines>=0.30.0",
+    "notebook>=7.5.2",
 ]
 
 [tool.black]
@@ -113,3 +115,6 @@ testpaths = [
     "relife/stochastic_process/tests",
     "relife/policy/tests",
 ]
+
+[dependency-groups]
+dev = []

@@ -445,11 +445,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
     @property
     @override
-    def params_bounds(self) -> Bounds:
-        return Bounds(
-            np.full(self.nb_params, np.finfo(float).resolution),
-            np.full(self.nb_params, np.inf),
-        )
+    def params_bounds(self):
+        return super().params_bounds
 
     @override
     def fit(

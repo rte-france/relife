@@ -19,6 +19,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, newton
 
 from relife.base import ParametricModel
+from relife.likelihood._base import Likelihood
 from relife.typing import (
     AnyFloat,
     NumpyBool,
@@ -470,8 +471,21 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     @abstractmethod
     def params_bounds(self) -> Bounds:
         """Parameters bounds"""
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
 
-    @abstractmethod
+    def _fit(self, likelihood: Likelihood, optimizer_options: ScipyMinimizeOptions | None = None):
+        if optimizer_options is None:
+            optimizer_options = {}
+        if "bounds" not in optimizer_options:
+            optimizer_options["bounds"] = self.params_bounds
+        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.params = fitting_results.optimal_params
+        self.fitting_results = fitting_results
+        return self
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -510,20 +524,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
         from relife.likelihood import DefaultLifetimeLikelihood
 
-        self.params = self.get_initial_params(  # pyright: ignore[reportUnannotatedClassAttribute]
-            time, model_args=model_args
-        )
-        if optimizer_options is None:
-            optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self.params_bounds
-        likelihood = DefaultLifetimeLikelihood(self, time, model_args=model_args, event=event, entry=entry)
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        likelihood = DefaultLifetimeLikelihood(self, time, model_args, event=event, entry=entry)
+        return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)
 
-    @abstractmethod
     def fit_from_interval_censored_lifetimes(
         self,
         time_inf: NDArray[np.float64],
@@ -566,13 +569,5 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
         from relife.likelihood import IntervalLifetimeLikelihood
 
-        self.params = self.get_initial_params(time_sup, model_args=model_args)
-        if optimizer_options is None:
-            optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self.params_bounds
-        likelihood = IntervalLifetimeLikelihood(self, time_inf, time_sup, entry=entry)
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
-        self.params = fitting_results.optimal_params
-        self.fitting_results = fitting_results
-        return self
+        likelihood = IntervalLifetimeLikelihood(self, time_inf, time_sup, model_args, entry=entry)
+        return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)

@@ -3,12 +3,12 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Unpack
+from typing import TYPE_CHECKING, Literal, Unpack, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
-from scipy.optimize import approx_fprime
+from scipy.optimize import Bounds, approx_fprime, minimize
 from typing_extensions import override
 
 from relife.base import ParametricModel
@@ -16,6 +16,14 @@ from relife.base import ParametricModel
 if TYPE_CHECKING:
     from relife.typing import ScipyMinimizeOptions
 
+SCIPY_MINIMIZE_ORDER_2_ALGO = [
+    "Newton-CG",
+    "dogleg",
+    "trust-ncg",
+    "trust-krylov",
+    "trust-exact",
+    "trust-constr"
+]
 
 class Likelihood(ABC):
     model: ParametricModel
@@ -31,6 +39,13 @@ class Likelihood(ABC):
     @params.setter
     def params(self, value: NDArray[np.float64]) -> None:
         self.model.params = value
+
+    @property
+    @abstractmethod
+    def nb_observations(self) -> int:
+        """
+        The number of observations.
+        """
 
     @abstractmethod
     def negative_log(self, params: NDArray[np.float64]) -> float:
@@ -49,24 +64,6 @@ class Likelihood(ABC):
         """
 
     @abstractmethod
-    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
-        """
-        Finds the parameter values that maximize the likelihood.
-
-        Parameters
-        ----------
-        **optimizer_options
-            Extra arguments used by `scipy.minimize`
-
-        Returns
-        -------
-        FittingResults
-            The fitting results.
-        """
-
-
-class DifferentiableLikelihood(Likelihood, ABC):
-    @abstractmethod
     def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
         """
         Jacobian of the negative log likelihood.
@@ -84,9 +81,61 @@ class DifferentiableLikelihood(Likelihood, ABC):
             Jacobian of the negative log likelihood value
         """
 
+    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
+        """
+        Finds the parameter values that maximize the likelihood.
+
+        Parameters
+        ----------
+        **optimizer_options
+            Extra arguments used by `scipy.minimize`
+
+        Returns
+        -------
+        FittingResults
+            The fitting results.
+        """
+        x0: NDArray[np.float64] = optimizer_options.pop("x0", self.params)
+        method: str = optimizer_options.pop("method", "L-BFGS-B")
+        bounds: Bounds | None = optimizer_options.pop("bounds", None)
+        if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
+            optimizer = minimize(
+                self.negative_log,
+                x0,
+                method=method,
+                bounds=bounds,
+                **optimizer_options
+            )
+        else:
+            optimizer = minimize(
+                self.negative_log,
+                x0,
+                jac=self.jac_negative_log,
+                method=method,
+                bounds=bounds,
+                **optimizer_options
+            )
+        optimal_params = np.copy(optimizer.x)
+        neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
+        if (
+                (method in SCIPY_MINIMIZE_ORDER_2_ALGO)
+                and ("hess" in optimizer_options)
+                and callable(optimizer_options["hess"])
+        ):
+            hessian = optimizer_options["hess"](optimal_params)
+        else:
+            hessian = approx_hessian(self, optimal_params)
+        covariance_matrix = np.linalg.pinv(hessian)
+        return FittingResults(
+            self.nb_observations,
+            optimal_params,
+            neg_log_likelihood,
+            covariance_matrix=covariance_matrix,
+        )
+
 
 def _hessian_scheme(
-    likelihood: DifferentiableLikelihood,
+    likelihood: Likelihood,
     params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,
@@ -115,7 +164,7 @@ def _hessian_scheme(
 
 
 def approx_hessian(
-    likelihood: DifferentiableLikelihood,
+    likelihood: Likelihood,
     params: NDArray[np.float64],
     eps: float = 1e-6,
 ) -> NDArray[np.float64]:
@@ -156,7 +205,6 @@ class FittingResults:
         self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
         self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
         self.bic = np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
-
         self.se = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))

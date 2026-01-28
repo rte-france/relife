@@ -723,14 +723,8 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
-        if model_args is None:
-            raise ValueError
-        covar = model_args[0]
-        self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
         param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline.get_initial_params(time)
+        param0[-self.baseline.params.size :] = self.baseline._get_initial_params(time, event=None, entry=None)
         return param0
 
     @override
@@ -744,6 +738,10 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     ) -> Self:
         if model_args is None:
             raise ValueError("LifetimeRegression expects covar but model_args is None")
+        covar = model_args[0]
+        self.covar_effect = CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
         return super().fit(time, model_args=model_args, event=event, entry=entry, optimizer_options=optimizer_options)
 
     @override
@@ -795,7 +793,7 @@ class ProportionalHazard(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : _CovarEffect
+    covar_effect : CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
@@ -1091,7 +1089,7 @@ class AcceleratedFailureTime(LifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : _CovarEffect
+    covar_effect : CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
