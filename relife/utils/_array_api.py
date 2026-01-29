@@ -47,6 +47,15 @@ def reshape_1d_arg(arg: int | float | bool | np.bool | NDArray[E]) -> np.float64
     return arg
 
 
+def is_2d_np_array(arr) -> bool:
+    """
+    Boolean test for 2d numpy array
+    """
+    if not isinstance(arr, np.ndarray):
+        return False
+    return arr.ndim == 2
+
+
 def flatten_if_possible(value: NumpyFloat) -> NumpyFloat:
     """
     Flatten array-like object when possible.

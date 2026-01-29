@@ -8,7 +8,7 @@ from scipy import linalg
 
 from relife.lifetime_model._regression import CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
-from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
+from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO, SCIPY_MINIMIZE_BOUND_ALGO
 
 
 class BreslowBaseline:
@@ -197,10 +197,10 @@ class Cox:
 
         if optimizer_options is None:
             optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self.params_bounds
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
+        if (optimizer_options["method"] in SCIPY_MINIMIZE_BOUND_ALGO) and ("bounds" not in optimizer_options):
+            optimizer_options["bounds"] = self.params_bounds
         if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and ("hess" not in optimizer_options):
             optimizer_options["hess"] = likelihood.hess_negative_log
         if "x0" not in optimizer_options:

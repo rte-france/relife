@@ -12,7 +12,6 @@ from scipy.optimize import Bounds, approx_fprime, minimize
 from typing_extensions import override
 
 from relife.base import ParametricModel
-from relife.statistical_tests import wald_test
 
 if TYPE_CHECKING:
     from relife.typing import ScipyMinimizeOptions
@@ -24,6 +23,17 @@ SCIPY_MINIMIZE_ORDER_2_ALGO = [
     "trust-krylov",
     "trust-exact",
     "trust-constr"
+]
+
+SCIPY_MINIMIZE_BOUND_ALGO = [
+    "Nelder-Mead",
+    "L-BFGS-B",
+    "TNC",
+    "SLSQP",
+    "Powell",
+    "trust-constr",
+    "COBYLA",
+    "COBYQA"
 ]
 
 class Likelihood(ABC):
@@ -241,6 +251,8 @@ class FittingResults:
     ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
 
     def __post_init__(self):
+        from relife.statistical_tests import wald_test
+
         self.nb_params = self.optimal_params.size
         self.covariance_matrix = np.linalg.pinv(self.information_matrix) #: Covariance matrix (computed as the inverse of the Hessian matrix).
         self.aic = 2 * self.nb_params + 2 * self.neg_log_likelihood
