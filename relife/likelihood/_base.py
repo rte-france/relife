@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Unpack, Tuple
+from typing import TYPE_CHECKING, Literal, Unpack, Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -87,6 +87,26 @@ class Likelihood(ABC):
             Jacobian of the negative log likelihood value
         """
 
+    @abstractmethod
+    def hess_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Hessian of the negative log likelihood.
+
+        The hessian is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the hessian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Hessian of the negative log likelihood value
+        """
+        self.params = params # actually useless considering it is done in approx_hessian (call to self.jac_negative_log)
+        return approx_hessian(self)(params)
+
     def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
         """
         Finds the parameter values that maximize the likelihood.
@@ -130,7 +150,7 @@ class Likelihood(ABC):
         ):
             information_matrix = optimizer_options["hess"](optimal_params)
         else:
-            information_matrix = approx_hessian(self, optimal_params)
+            information_matrix = self.hess_negative_log(optimal_params)
 
         self.params = optimal_params # don't know if last optimization iteration did it, but just in case ...
         return FittingResults(
@@ -144,47 +164,54 @@ class Likelihood(ABC):
 
 def _hessian_scheme(
     likelihood: Likelihood,
-    params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,
-) -> NDArray[np.float64]:
-    size = params.size
-    hess = np.empty((size, size))
+) -> Callable:
 
     # hessian 2 point
     if method == "2point":
-        for i in range(size):
-            hess[i] = approx_fprime(
-                params,
-                lambda x: likelihood.jac_negative_log(x)[i],
-                eps,
-            )
-        return hess
+        def _hessian_fun(params):
+            size = params.size
+            hess = np.empty((size, size))
+            for i in range(size):
+                hess[i] = approx_fprime(
+                    params,
+                    lambda x: likelihood.jac_negative_log(x)[i],
+                    eps,
+                )
+            return hess
+
+        return _hessian_fun
+
     # hessian cs
-    u = eps * 1j * np.eye(size)
-    complex_params = params.astype(np.complex64)  # change params to complex
-    for i in range(size):
-        for j in range(i, size):
-            hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
-            if i != j:
-                hess[j, i] = hess[i, j]
-    return hess
+    def _hessian_fun(params):
+        size = params.size
+        hess = np.empty((size, size))
+        u = eps * 1j * np.eye(size)
+        complex_params = params.astype(np.complex64)  # change params to complex
+        for i in range(size):
+            for j in range(i, size):
+                hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+                if i != j:
+                    hess[j, i] = hess[i, j]
+        return hess
+
+    return _hessian_fun
 
 
 def approx_hessian(
     likelihood: Likelihood,
-    params: NDArray[np.float64],
     eps: float = 1e-6,
-) -> NDArray[np.float64]:
+) -> Callable:
     from relife.lifetime_model import Gamma
     from relife.lifetime_model._regression import LifetimeRegression
 
     if isinstance(likelihood.model, LifetimeRegression):
         if isinstance(likelihood.model.baseline, Gamma):
-            return _hessian_scheme(likelihood, params, method="2point", eps=eps)
+            return _hessian_scheme(likelihood, method="2point", eps=eps)
     if isinstance(likelihood.model, Gamma):
-        return _hessian_scheme(likelihood, params, method="2point", eps=eps)
-    return _hessian_scheme(likelihood, params, eps=eps)
+        return _hessian_scheme(likelihood, method="2point", eps=eps)
+    return _hessian_scheme(likelihood, eps=eps)
 
 
 @dataclass

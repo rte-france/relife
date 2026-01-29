@@ -88,11 +88,8 @@ def scores_test(model, c: np.ndarray = None, *args, **kwargs) -> Tuple[float, fl
     elif isinstance(c, np.ndarray):
         assert len(c.shape) == 1
         assert model.nb_params == c.shape[-1]
-    #assert hasattr(model.fitting_results, "likelihood"), "you need likelihood object from fit to perform such a test"
+
     likelihood = model.fitting_results.likelihood
-    # TODO: Réintroduire l'ancien approx_hessian scheme qui retournait une fonction de param ?
-    #       Should it be introduced directly in Likelihood and usable during the fit as well ?
-    assert hasattr(likelihood, "hess_negative_log"), "you need hess_negative_log to perform such a test"
 
     if c is None:
         # null hypothesis is beta = 0
@@ -112,7 +109,6 @@ def scores_test(model, c: np.ndarray = None, *args, **kwargs) -> Tuple[float, fl
 
         # set seed for reproductibility
         model_under_h0 = model.__class__() # TODO: what about args ? Should we use something like sklearn clone ?
-
 
         model_under_h0.fit(  # TODO: fit_from_interval_censored_lifetimes and IntervalLifetimeLikelihood
             time=likelihood.time,

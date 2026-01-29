@@ -211,7 +211,6 @@ class Cox:
 
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
-        #likelihood.params = fitting_results.optimal_params # now done in likelihood.mle
         self.baseline = BreslowBaseline(
             covar_effect=self.covar_effect,
             event_count=likelihood._event_count,

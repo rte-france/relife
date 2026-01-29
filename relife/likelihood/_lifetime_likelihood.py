@@ -155,6 +155,25 @@ class DefaultLifetimeLikelihood(Likelihood):
         )
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
+    @override
+    def hess_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Hessian of the negative log likelihood.
+
+        The hessian is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the hessian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Hessian of the negative log likelihood value
+        """
+        return super().hess_negative_log(params)
+
 
 @final
 class IntervalLifetimeLikelihood(Likelihood):
@@ -315,6 +334,25 @@ class IntervalLifetimeLikelihood(Likelihood):
             self._jac_entry_contrib(),
         )
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
+
+    @override
+    def hess_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
+        """
+        Hessian of the negative log likelihood.
+
+        The hessian is computed with respect to parameters
+
+        Parameters
+        ----------
+        params : ndarray
+            Parameters values on which the hessian is evaluated
+
+        Returns
+        -------
+        ndarray
+            Hessian of the negative log likelihood value
+        """
+        return super().hess_negative_log(params)
 
 
 class PartialLifetimeLikelihood(Likelihood):
@@ -512,6 +550,7 @@ class PartialLifetimeLikelihood(Likelihood):
                     * (self._discount_rates * self._discount_rates_mask)[:, :, None, None]
             )
 
+    @override
     def negative_log(
             self,
             params: NDArray[np.float64],
@@ -546,10 +585,11 @@ class PartialLifetimeLikelihood(Likelihood):
             )
         return neg_L
 
+    @override
     def jac_negative_log(
             self,
             params: NDArray[np.float64],
-        ) -> np.ndarray:
+        ) -> NDArray[np.float64]:
         """Compute Jacobian of the negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
@@ -583,14 +623,15 @@ class PartialLifetimeLikelihood(Likelihood):
                     .sum(axis=0)
             )
 
+    @override
     def hess_negative_log(
             self,
             params: NDArray[np.float64],
-        ) -> np.ndarray:
+        ) -> NDArray[np.float64]:
         """Compute Hessian of the negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
-            np.ndarray: hessian matrix
+            NDArray[np.float64]: hessian matrix
         """
         self.params = params  # changes model params
 
