@@ -26,6 +26,7 @@ from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 from ._base import (
     FittableParametricLifetimeModel,
     ParametricLifetimeModel,
+    document_args,
 )
 
 __all__: list[str] = [
@@ -45,113 +46,36 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def sf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return super().sf(time)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def isf(self, probability: AnyFloat) -> NumpyFloat:
-        """
-        The inverse survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
-        # avoid division by zero
         cumulative_hazard_rate = -np.log(
             np.clip(probability, 0, 1 - np.finfo(float).resolution)
         )
         return self.ichf(cumulative_hazard_rate)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def cdf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return super().cdf(time)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def pdf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return super().pdf(time)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def ppf(self, probability: AnyFloat) -> NumpyFloat:
-        """
-        The percent point function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
         return super().ppf(probability)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def moment(self, n: int) -> NumpyFloat:
-        """
-        n-th order moment
-
-        Parameters
-        ----------
-        n : int
-            order of the moment, at least 1.
-
-        Returns
-        -------
-        np.float64
-        """
         return super().moment(n)
 
     @override
@@ -187,27 +111,10 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def jac_sf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac_chf, sf = self.jac_chf(time, asarray=True), self.sf(time)
         jac = -jac_chf * sf
         if not asarray:
@@ -235,31 +142,12 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         *,
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def jac_cdf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
-        jac = -self.jac_sf(time, asarray=True)
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+        return super().jac_cdf(time, asarray=asarray)
 
     @overload
     def jac_pdf(
@@ -283,27 +171,10 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def jac_pdf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac_hf, hf = self.jac_hf(time, asarray=True), self.hf(time)
         jac_sf, sf = self.jac_sf(time, asarray=True), self.sf(time)
         jac = jac_hf * sf + jac_sf * hf
@@ -348,6 +219,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def rvs(
         self,
         size: int | tuple[int, int],
@@ -361,26 +233,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         | tuple[NumpyFloat, NumpyFloat]
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        size : int or tuple (m, n) of int
-            Size of the generated sample.
-        return_event : bool, default is False
-            If True, returns event indicators along with the sample time values.
-        return_entry : bool, default is False
-            If True, returns corresponding entry values of the sample time values.
-        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
-            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
-
-        Returns
-        -------
-        float, ndarray or tuple of float or ndarray
-            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
-            the time values followed by event values, entry values or both.
-        """
         return super().rvs(
             size,
             return_event=return_event,
@@ -389,6 +241,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -397,25 +250,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         *,
         deg: int = 10,
     ) -> NumpyFloat:
-        """
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and one ndarray object as output
-        a : ndarray (maximum number of dimension is 2)
-            Lower bound(s) of integration.
-        b : ndarray (maximum number of dimension is 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
@@ -519,40 +353,13 @@ class Exponential(LifetimeDistribution):
         return self._params["rate"]
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def hf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-
         return self.rate * np.ones_like(time)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return np.asarray(self.rate, dtype=np.float64) * time
 
     @override
@@ -578,38 +385,13 @@ class Exponential(LifetimeDistribution):
         return 1 / np.asarray(self.rate) ** 2
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mrl(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return 1 / self.rate * np.ones_like(time)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-            Function values at each given cumulative hazard rate(s).
-        """
         return cumulative_hazard_rate / np.asarray(self.rate)
 
     @overload
@@ -634,27 +416,10 @@ class Exponential(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_hf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0).copy()
         else:
@@ -685,27 +450,10 @@ class Exponential(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_chf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy().astype(np.float64)
         else:
@@ -715,21 +463,8 @@ class Exponential(LifetimeDistribution):
         return jac
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def dhf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         if isinstance(time, np.ndarray):
             return np.zeros_like(time, dtype=np.float64)
         return np.asarray(0.0)
@@ -795,41 +530,15 @@ class Weibull(LifetimeDistribution):
         return self._params["rate"]
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def hf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return (
             self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
         )
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return (self.rate * np.asarray(time)) ** self.shape
 
     @override
@@ -855,21 +564,8 @@ class Weibull(LifetimeDistribution):
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mrl(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return (
             gamma(1 / self.shape)
             / (self.rate * self.shape * self.sf(time))
@@ -880,20 +576,8 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-            Function values at each given cumulative hazard rate(s).
-        """
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
     @overload
@@ -918,27 +602,10 @@ class Weibull(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_hf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac = (
             self.rate
             * (self.rate * time) ** (self.shape - 1)
@@ -971,27 +638,10 @@ class Weibull(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_chf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac = (
             np.log(self.rate * time) * (self.rate * time) ** self.shape,
             self.shape * time * (self.rate * time) ** (self.shape - 1),
@@ -1001,21 +651,8 @@ class Weibull(LifetimeDistribution):
         return jac
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def dhf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         time = np.asarray(time)
         return (
             self.shape
@@ -1088,39 +725,13 @@ class Gompertz(LifetimeDistribution):
         return self._params["rate"]
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def hf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return self.shape * self.rate * np.exp(self.rate * time)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return self.shape * np.expm1(self.rate * time)
 
     @override
@@ -1146,39 +757,14 @@ class Gompertz(LifetimeDistribution):
         return super().var()
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mrl(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-            Function values at each given cumulative hazard rate(s).
-        """
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
     @overload
@@ -1206,24 +792,6 @@ class Gompertz(LifetimeDistribution):
     def jac_hf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac = (
             self.rate * np.exp(self.rate * time),
             self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
@@ -1254,27 +822,10 @@ class Gompertz(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_chf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         jac = (
             np.expm1(self.rate * time),
             self.shape * time * np.exp(self.rate * time),
@@ -1284,21 +835,8 @@ class Gompertz(LifetimeDistribution):
         return jac
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def dhf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
     @override
@@ -1387,40 +925,14 @@ class Gamma(LifetimeDistribution):
         return self._params["rate"]
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def hf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         x = np.asarray(self.rate * time, dtype=np.float64)
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         x = np.asarray(self.rate * time, dtype=np.float64)
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
@@ -1447,20 +959,8 @@ class Gamma(LifetimeDistribution):
         return np.asarray(self.shape / (self.rate**2))
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-            Function values at each given cumulative hazard rate(s).
-        """
         return (
             1
             / self.rate
@@ -1492,27 +992,10 @@ class Gamma(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_hf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
         jac = (
@@ -1549,27 +1032,10 @@ class Gamma(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_chf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         x = self.rate * time
         jac = (
             digamma(self.shape) - self._jac_uppergamma_shape(x) / self._uppergamma(x),
@@ -1580,39 +1046,13 @@ class Gamma(LifetimeDistribution):
         return jac
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def dhf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mrl(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         return super().mrl(time)
 
 
@@ -1679,40 +1119,14 @@ class LogLogistic(LifetimeDistribution):
         return self._params["rate"]
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def hf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         x = self.rate * np.asarray(time)
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         x = self.rate * time
         return np.log(1 + x**self.shape)
 
@@ -1749,20 +1163,8 @@ class LogLogistic(LifetimeDistribution):
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
-
-        Returns
-        -------
-            Function values at each given cumulative hazard rate(s).
-        """
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
     @overload
@@ -1787,27 +1189,10 @@ class LogLogistic(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_hf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         x = self.rate * time
         jac = (
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
@@ -1841,27 +1226,10 @@ class LogLogistic(LifetimeDistribution):
         asarray: bool,
     ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def jac_chf(
         self, time: AnyFloat, *, asarray: bool = False
     ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        asarray : bool, default is False
-
-        Returns
-        -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
-        """
         x = self.rate * time
         jac = (
             (x**self.shape / (1 + x**self.shape)) * np.log(self.rate * time),
@@ -1872,21 +1240,8 @@ class LogLogistic(LifetimeDistribution):
         return jac
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def dhf(self, time: AnyFloat) -> NumpyFloat:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         x = self.rate * np.asarray(time)
         return (
             self.shape
@@ -1897,6 +1252,7 @@ class LogLogistic(LifetimeDistribution):
         )
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return super().mrl(time)
 
