@@ -1,14 +1,18 @@
-from typing import Tuple, TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import linalg
 from scipy.stats import chi2
 
+# TODO: needed but don't work
 #if TYPE_CHECKING:
-from relife.lifetime_model._base import FittableParametricLifetimeModel
+#from relife.lifetime_model._base import FittableParametricLifetimeModel
 
+__all__ = ["wald_test", "scores_test"]
 
-def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> Tuple[float, float]:
+# TODO: add tests
+
+def wald_test(model, c: np.ndarray = None, **kwargs) -> Tuple[float, float]:
     """Perform Wald's test (testing nullity of covariate effect)
 
     Args:
@@ -16,6 +20,9 @@ def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> T
         c (np.ndarray, optional): combination vector of 0 (beta is 0) and 1 (beta is not 0) indicating
             which covar coordinate is 0 in the null hypothesis
             Defaults to None, then the null hypothesis corresponds to null effect of all covariates
+        **kwargs: to pass information or covariance matrix if fitting_results have not been yet computed
+                    and stored into model (precisely in the case when wald_test is called during fitting_results
+                    processing)
 
     Returns:
         Tuple[float, float]: test value and its corresponding pvalue
@@ -29,9 +36,19 @@ def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> T
         assert len(c.shape) == 1
         assert model.nb_params == c.shape[-1]
 
+    if c is None and "information_matrix" in kwargs:
+        information_matrix = kwargs["information_matrix"]
+        covariance_matrix = None
+    elif c is not None and "covariance_matrix" in kwargs:
+        information_matrix = None
+        covariance_matrix = kwargs["covariance_matrix"]
+    else:
+        information_matrix = model.fitting_results.information_matrix
+        covariance_matrix = model.fitting_results.covariance_matrix
+
     if c is None:
         # null hypothesis is beta = 0
-        ch2 = np.dot(model.params, np.dot(model.fitting_results.information_matrix, model.params))
+        ch2 = np.dot(model.params, np.dot(information_matrix, model.params))
         pval = chi2.sf(ch2, df=model.nb_params)
         return round(ch2, 6), round(pval, 6)
     else:
@@ -42,7 +59,7 @@ def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> T
             model.params[other_covar],
             np.dot(
                 linalg.inv(
-                    model.fitting_results.covariance_matrix[np.ix_(other_covar, other_covar)]
+                    covariance_matrix[np.ix_(other_covar, other_covar)]
                 ),
                 model.params[other_covar],
             ),
@@ -51,7 +68,7 @@ def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> T
         return round(ch2, 6), round(pval, 6)
 
 
-def scores_test(model: FittableParametricLifetimeModel, c: np.ndarray = None, *args, **kwargs) -> Tuple[float, float]:
+def scores_test(model, c: np.ndarray = None, *args, **kwargs) -> Tuple[float, float]:
     """Perform scores test (testing nullity of covariate effect)
 
     Args:
@@ -95,7 +112,9 @@ def scores_test(model: FittableParametricLifetimeModel, c: np.ndarray = None, *a
 
         # set seed for reproductibility
         model_under_h0 = model.__class__() # TODO: what about args ? Should we use something like sklearn clone ?
-        model_under_h0.fit(
+
+
+        model_under_h0.fit(  # TODO: fit_from_interval_censored_lifetimes and IntervalLifetimeLikelihood
             time=likelihood.time,
             covar=likelihood.covar[:, tested_covar],
             event=likelihood.event,

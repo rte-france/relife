@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Unpack, Callable
+from typing import TYPE_CHECKING, Literal, Unpack, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +12,7 @@ from scipy.optimize import Bounds, approx_fprime, minimize
 from typing_extensions import override
 
 from relife.base import ParametricModel
+from relife.statistical_tests import wald_test
 
 if TYPE_CHECKING:
     from relife.typing import ScipyMinimizeOptions
@@ -31,12 +32,9 @@ class Likelihood(ABC):
     def __init__(self, model: ParametricModel, **kwargs) -> None:
         # deep copy model to have independent variation of params
         self.model = copy.deepcopy(model)
-        # Tout ce qui est passé nominément à l'__init__ de cette classe mère sera
-        # stocké comme attribut publique (puis potentiellement écrasé par le __init__ d'une classe fille)
-        # De cette manière, je m'assure de stocker time, covar, event, entry,
-        # nécessaires pour le calcul des tests statistiques
-        # TODO: Incompatible avec l'usage actuel de model_args dans DefaultLifetimeLikelihood
-        #       IntervalLifetimeLikelihood utilise des arguments non rencontrés dans les tests statistiques implémentés
+        # Storing nominated args as attributes.
+        # This may look like useless memory burden, but I don't know how to work my way around it.
+        # Model.fit passes its arguments to Likelihood.__init__, and I want to pass it back during statistical testing
         for attn, attv in kwargs.items():
             setattr(self, attn, attv)
 
@@ -134,7 +132,7 @@ class Likelihood(ABC):
         else:
             information_matrix = approx_hessian(self, optimal_params)
 
-        self.params = optimal_params # required ?
+        self.params = optimal_params # don't know if last optimization iteration did it, but just in case ...
         return FittingResults(
             self.nb_observations,
             optimal_params,
@@ -194,15 +192,12 @@ class FittingResults:
     """Fitting results of the parametric_model core."""
 
     nb_obversations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64] = field(repr=False)  #: Optimal parameters values
+    optimal_params: NDArray[np.float64] = field()  #: Optimal parameters values
     neg_log_likelihood: float = field(repr=False)  #: Negative log likelihood value at optimal parameters values
-
     information_matrix: NDArray[np.float64] | None = field(
         repr=False, default=None
-    ) # from which we derive the covariance_matrix in __post_init__
-
+    ) # From which we derive the covariance_matrix in __post_init__
     # Access to likelihood object may be required for further KPI (e.g. statistical tests) computation
-    # Those tests have not been integrated in FittingResults yet (TODO ?)
     likelihood: Likelihood | None = field(
         repr=False, default=None
     )
@@ -211,17 +206,25 @@ class FittingResults:
     aic: float = field(init=False)  #: Akaike Information Criterion.
     aicc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
     bic: float = field(init=False)  #: Bayesian Information Criterion.
+    wald_stat: NDArray[np.float64] = field(init=False)  #: Wald test statistic
+    wald_pval: NDArray[np.float64] = field(init=False)  #: Wald test pvalue
     se: NDArray[np.float64] | None = field(
         init=False, repr=False
     )  #: Standard error, square root of the diagonal of the covariance matrix
     ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
 
     def __post_init__(self):
-        nb_params = self.optimal_params.size
+        self.nb_params = self.optimal_params.size
         self.covariance_matrix = np.linalg.pinv(self.information_matrix) #: Covariance matrix (computed as the inverse of the Hessian matrix).
-        self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
-        self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
-        self.bic = np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+        self.aic = 2 * self.nb_params + 2 * self.neg_log_likelihood
+        self.aicc = self.aic + 2 * self.nb_params * (self.nb_params + 1) / (self.nb_obversations - self.nb_params - 1)
+        self.bic = np.log(self.nb_obversations) * self.nb_params + 2 * self.neg_log_likelihood
+        c_1_null_param_test = np.ones((self.nb_params, self.nb_params))
+        np.fill_diagonal(c_1_null_param_test, 0)
+        self.wald_stat, self.wald_pval = np.zeros(self.nb_params, dtype=np.float64), np.zeros(self.nb_params, dtype=np.float64)
+        for i in range(self.nb_params):
+            self.wald_stat[i], self.wald_pval[i] = wald_test(self.likelihood.model, c_1_null_param_test[i, :],
+                                                             covariance_matrix=self.covariance_matrix)
         self.se = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
@@ -270,6 +273,8 @@ class FittingResults:
             "AIC": self.aic,
             "AICc": self.aicc,
             "BIC": self.bic,
+            "Wald statistic": self.wald_stat,
+            "Wald pvalue": self.wald_pval
         }
         # Find the maximum field name length for alignment
         max_name_length = max(len(name) for name, _ in fields.items())

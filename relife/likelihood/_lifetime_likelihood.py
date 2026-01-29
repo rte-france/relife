@@ -36,7 +36,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
-        super().__init__(model, time=time, event=event, entry=entry) # TODO: il faudrait pouvoir extraire covar de model_args....
+        super().__init__(model, time=time, model_args=model_args, event=event, entry=entry)
         self.params = self.model.get_initial_params(time, model_args)
 
         time = reshape_1d_arg(time)
@@ -175,7 +175,7 @@ class IntervalLifetimeLikelihood(Likelihood):
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
-        super().__init__(model)
+        super().__init__(model, time_inf=time_inf, time_sup=time_sup, model_args=model_args, entry=entry)
         self.params = self.model._get_initial_params(time_sup, model_args)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
