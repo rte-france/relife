@@ -42,7 +42,7 @@ def wald_test(model: FittableParametricLifetimeModel, c: np.ndarray = None) -> T
             model.params[other_covar],
             np.dot(
                 linalg.inv(
-                    model.fitting_results.covariance_matrix[np.ix_(other_covar, other_covar)] # TODO: why not use information_matrix ?
+                    model.fitting_results.covariance_matrix[np.ix_(other_covar, other_covar)]
                 ),
                 model.params[other_covar],
             ),
@@ -71,15 +71,18 @@ def scores_test(model: FittableParametricLifetimeModel, c: np.ndarray = None, *a
     elif isinstance(c, np.ndarray):
         assert len(c.shape) == 1
         assert model.nb_params == c.shape[-1]
-    assert hasattr(model.fitting_results, "likelihood"), "you need likelihood object from fit to perform such a test"
+    #assert hasattr(model.fitting_results, "likelihood"), "you need likelihood object from fit to perform such a test"
     likelihood = model.fitting_results.likelihood
+    # TODO: Réintroduire l'ancien approx_hessian scheme qui retournait une fonction de param ?
+    #       Should it be introduced directly in Likelihood and usable during the fit as well ?
+    assert hasattr(likelihood, "hess_negative_log"), "you need hess_negative_log to perform such a test"
 
     if c is None:
         # null hypothesis is beta = 0
         ch2 = np.dot(
             -likelihood.jac_negative_log(np.zeros(model.nb_params)),
             np.dot(
-                model.fitting_results.covariance_matrix(np.zeros(model.nb_params)),
+                linalg.inv(likelihood.hess_negative_log(np.zeros(model.nb_params))),
                 -likelihood.jac_negative_log(np.zeros(model.nb_params)),
             ),
         )
@@ -91,7 +94,7 @@ def scores_test(model: FittableParametricLifetimeModel, c: np.ndarray = None, *a
         other_covar = np.where(c == 0)[0]
 
         # set seed for reproductibility
-        model_under_h0 = model.__class__()
+        model_under_h0 = model.__class__() # TODO: what about args ? Should we use something like sklearn clone ?
         model_under_h0.fit(
             time=likelihood.time,
             covar=likelihood.covar[:, tested_covar],
@@ -100,12 +103,12 @@ def scores_test(model: FittableParametricLifetimeModel, c: np.ndarray = None, *a
             *args, **kwargs
         )
         beta_under_h0 = np.zeros(model.nb_params)
-        beta_under_h0[tested_covar] = model_under_h0.param
+        beta_under_h0[tested_covar] = model_under_h0.params
 
         ch2 = np.dot(
             likelihood.jac_negative_log(beta_under_h0)[other_covar],
             np.dot(
-                model.fitting_results.covariance_matrix(beta_under_h0)[np.ix_(other_covar, other_covar)],
+                linalg.inv(likelihood.hess_negative_log(beta_under_h0))[np.ix_(other_covar, other_covar)],
                 likelihood.jac_negative_log(beta_under_h0)[other_covar],
             ),
         )

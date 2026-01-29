@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Unpack, Optional
+from typing import TYPE_CHECKING, Literal, Unpack, Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -28,9 +28,17 @@ SCIPY_MINIMIZE_ORDER_2_ALGO = [
 class Likelihood(ABC):
     model: ParametricModel
 
-    def __init__(self, model: ParametricModel) -> None:
+    def __init__(self, model: ParametricModel, **kwargs) -> None:
         # deep copy model to have independent variation of params
         self.model = copy.deepcopy(model)
+        # Tout ce qui est passé nominément à l'__init__ de cette classe mère sera
+        # stocké comme attribut publique (puis potentiellement écrasé par le __init__ d'une classe fille)
+        # De cette manière, je m'assure de stocker time, covar, event, entry,
+        # nécessaires pour le calcul des tests statistiques
+        # TODO: Incompatible avec l'usage actuel de model_args dans DefaultLifetimeLikelihood
+        #       IntervalLifetimeLikelihood utilise des arguments non rencontrés dans les tests statistiques implémentés
+        for attn, attv in kwargs.items():
+            setattr(self, attn, attv)
 
     @property
     def params(self) -> NDArray[np.float64]:

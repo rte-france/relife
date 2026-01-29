@@ -12,7 +12,7 @@ from ._base import Likelihood
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import FittableParametricLifetimeModel
-    from relife.lifetime_model.semi_parametric import Cox
+    from relife.lifetime_model._semi_parametric import Cox
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "PartialLifetimeLikelihood"]
 
@@ -36,7 +36,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
-        super().__init__(model)
+        super().__init__(model, time=time, event=event, entry=entry) # TODO: il faudrait pouvoir extraire covar de model_args....
         self.params = self.model.get_initial_params(time, model_args)
 
         time = reshape_1d_arg(time)
@@ -327,7 +327,7 @@ class PartialLifetimeLikelihood(Likelihood):
             event: NDArray[np.bool_] | None = None,
             entry: NDArray[np.float64] | None = None,
     ):
-        super().__init__(model)
+        super().__init__(model, time=time, covar=covar, event=event, entry=entry)
         self.params = self.model.get_initial_params(time, covar)
 
         time = reshape_1d_arg(time)
