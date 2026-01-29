@@ -79,14 +79,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().moment(n)
 
     @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
     def median(self) -> NumpyFloat:
-        """
-        The median.
-
-        Returns
-        -------
-        np.float64
-        """
         return self.ppf(0.5)  # no super here to return np.float64
 
     @override
@@ -250,13 +244,14 @@ class Exponential(LifetimeDistribution):
 
     Parameters
     ----------
-    rate : float, optional
-        rate parameter
+    rate : float, default is None
+        Rate parameter.
 
     Attributes
     ----------
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     nb_params
     params
     params_names
@@ -269,11 +264,12 @@ class Exponential(LifetimeDistribution):
 
     @property
     def rate(self):  # optional but better for clarity and type checking
-        """Get the current rate value.
+        """
+        Returns the rate value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["rate"]
 
@@ -288,25 +284,13 @@ class Exponential(LifetimeDistribution):
         return np.asarray(self.rate, dtype=np.float64) * time
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mean(self) -> NumpyFloat:
-        """
-        The mean of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return 1 / np.asarray(self.rate)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def var(self) -> NumpyFloat:
-        """
-        The variance of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return 1 / np.asarray(self.rate) ** 2
 
     @override
@@ -364,15 +348,16 @@ class Weibull(LifetimeDistribution):
 
     Parameters
     ----------
-    shape : float, optional
-        shape parameter
-    rate : float, optional
-        rate parameter
+    shape : float, default is None
+        Shape parameter.
+    rate : float, default is None
+        Rate parameter.
 
     Attributes
     ----------
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     nb_params
     params
     params_names
@@ -386,21 +371,23 @@ class Weibull(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        """Get the current shape value.
+        """
+        Returns shape value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        """Get the current rate value.
+        """
+        Returns the rate value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["rate"]
 
@@ -417,25 +404,13 @@ class Weibull(LifetimeDistribution):
         return (self.rate * np.asarray(time)) ** self.shape
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mean(self) -> NumpyFloat:
-        """
-        The mean of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return gamma(1 + 1 / self.shape) / self.rate
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def var(self) -> NumpyFloat:
-        """
-        The variance of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
     @override
@@ -511,15 +486,16 @@ class Gompertz(LifetimeDistribution):
 
     Parameters
     ----------
-    shape : float, optional
-        shape parameter
-    rate : float, optional
-        rate parameter
+    shape : float, default is None
+        Shape parameter.
+    rate : float, default is None
+        Rate parameter.
 
     Attributes
     ----------
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     nb_params
     params
     params_names
@@ -533,21 +509,23 @@ class Gompertz(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        """Get the current shape value.
+        """
+        Returns the shape value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        """Get the current rate value.
+        """
+        Returns the rate value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["rate"]
 
@@ -562,25 +540,13 @@ class Gompertz(LifetimeDistribution):
         return self.shape * np.expm1(self.rate * time)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mean(self) -> NumpyFloat:
-        """
-        The mean of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def var(self) -> NumpyFloat:
-        """
-        The variance of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return super().var()
 
     @override
@@ -655,15 +621,16 @@ class Gamma(LifetimeDistribution):
 
     Parameters
     ----------
-    shape : float, optional
-        shape parameter
-    rate : float, optional
-        rate parameter
+    shape : float, default is None
+        Shape parameter.
+    rate : float, default is None
+        Rate parameter.
 
     Attributes
     ----------
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     nb_params
     params
     params_names
@@ -686,21 +653,23 @@ class Gamma(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        """Get the current shape value.
+        """
+        Returns the shape value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        """Get the current rate value.
+        """
+        Returns the rate value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["rate"]
 
@@ -717,25 +686,13 @@ class Gamma(LifetimeDistribution):
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mean(self) -> NumpyFloat:
-        """
-        The mean of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return np.asarray(self.shape / self.rate)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def var(self) -> NumpyFloat:
-        """
-        The variance of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         return np.asarray(self.shape / (self.rate**2))
 
     @override
@@ -808,15 +765,16 @@ class LogLogistic(LifetimeDistribution):
 
     Parameters
     ----------
-    shape : float, optional
-        shape parameter
-    rate : float, optional
-        rate parameter
+    shape : float, default is None
+        Shape parameter.
+    rate : float, default is None
+        Rate parameter.
 
     Attributes
     ----------
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     nb_params
     params
     params_names
@@ -830,21 +788,22 @@ class LogLogistic(LifetimeDistribution):
 
     @property
     def shape(self) -> float:  # optional but better for clarity and type checking
-        """Get the current shape value.
+        """
+        Returns the shape value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["shape"]
 
     @property
     def rate(self) -> float:  # optional but better for clarity and type checking
-        """Get the current rate value.
+        """Returns the rate value.
 
         Returns
         -------
-        float
+        out: float
         """
         return self._params["rate"]
 
@@ -861,14 +820,8 @@ class LogLogistic(LifetimeDistribution):
         return np.log(1 + x**self.shape)
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def mean(self) -> NumpyFloat:
-        """
-        The mean of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         b = np.pi / self.shape
         if self.shape <= 1:
             raise ValueError(
@@ -877,14 +830,8 @@ class LogLogistic(LifetimeDistribution):
         return b / (self.rate * np.sin(b))
 
     @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
     def var(self) -> NumpyFloat:
-        """
-        The variance of the distribution.
-
-        Returns
-        -------
-        np.float64
-        """
         b = np.pi / self.shape
         if self.shape <= 2:
             raise ValueError(
@@ -942,7 +889,8 @@ Ts = TypeVarTuple("Ts")
 
 @final
 class EquilibriumDistribution(ParametricLifetimeModel[*Ts]):
-    r"""Equilibrium distribution.
+    r"""
+    Equilibrium distribution.
 
     The equilibirum distribution is the distribution that makes the renewal process
     stationnary.
@@ -1010,7 +958,8 @@ AnyInt: TypeAlias = int | np.int64 | NDArray[np.int64]
 
 @final
 class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
-    r"""Series structure of n identical and independent components.
+    r"""
+    Series structure of n identical and independent components.
 
     The hazard function of the system is given by:
 

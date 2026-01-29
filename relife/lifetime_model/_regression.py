@@ -88,7 +88,7 @@ class CovarEffect(ParametricModel):
 
     Parameters
     ----------
-    *coefficients : float
+    coefficients : tuple of float, default is (None,)
         Coefficients of the covariates effect.
     """
 
@@ -98,19 +98,29 @@ class CovarEffect(ParametricModel):
     @property
     def nb_coef(self) -> int:
         """
-        The number of coefficients
+        Returns the number of coefficients.
 
         Returns
         -------
-        int
+        out: int
         """
         return self.nb_params
 
     def g(self, covar: AnyFloat) -> NumpyFloat:
         """
-        Compute the covariates effect.
-        If covar.shape : () or (nb_coef,) => out.shape : (), float
-        If covar.shape : (m, nb_coef) => out.shape : (m, 1)
+        Returns the covariates effect.
+
+        Parameters
+        ----------
+        covar: float or np.ndarray
+            The covariate values
+
+        Returns
+        -------
+        out: np.float64 or np.ndarray
+            If `covar.shape` is `()`, `out` is `float`.
+            If `covar.shape` is `(nb_coef,)`, `out.shape` is `()`.
+            If `covar.shape` is `(m, nb_coef)`, `out.shape` is `(m, 1)`.
         """
         arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         if arr_covar.ndim > 2:
@@ -129,9 +139,18 @@ class CovarEffect(ParametricModel):
 
     def jac_g(self, covar: AnyFloat) -> NumpyFloat:
         """
-        Compute the Jacobian of the covariates effect.
-        If covar.shape : () or (nb_coef,) => out.shape : (nb_coef,)
-        If covar.shape : (m, nb_coef) => out.shape : (nb_coef, m, 1)
+        Returns the jacobian of the covariates effect.
+
+        Parameters
+        ----------
+        covar: float or np.ndarray
+            The covariate values
+
+        Returns
+        -------
+        out: np.ndarray
+            If `covar.shape` is `()` or `(nb_coef,)`, `out.shape` is `(nb_coef,)`.
+            If `covar.shape` is (m, nb_coef)`, `out.shape` is `(nb_coef, m, 1)`.
         """
         arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         g = self.g(arr_covar)  # () or (m, 1)
@@ -167,21 +186,23 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
 
     @property
     def coefficients(self) -> NDArray[np.float64]:
-        """Coefficients of the regression.
+        """
+        Return the coefficients values.
 
         Returns
         -------
-        ndarray
+        out: ndarray
         """
         return self.covar_effect.params
 
     @property
     def nb_coef(self) -> int:
-        """Number of coefficients.
+        """
+        Returns the number of coefficients.
 
         Returns
         -------
-        int
+        out: int
         """
         return self.covar_effect.nb_params
 
@@ -383,11 +404,13 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         ----------
         covar : float or np.ndarray
             Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
+            Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.
 
         Returns
         -------
-        FrozenParametricModel
+        out: frozen regression
+            The same object but with `covar` stored as object data. Calling methods
+            from the frozen regression does not need `covar`.
         """
         return FrozenParametricLifetimeModel(self, covar)
 
@@ -499,7 +522,8 @@ class ProportionalHazard(LifetimeRegression):
     covar_effect : _CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     coefficients
     nb_params
     params
@@ -642,7 +666,8 @@ class AcceleratedFailureTime(LifetimeRegression):
     covar_effect : _CovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
-        An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
+        An object containing fitting results (AIC, BIC, etc.).
+        If the model is not fitted, the value is None.
     coefficients
     nb_params
     params
