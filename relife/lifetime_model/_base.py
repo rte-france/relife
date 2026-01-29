@@ -548,34 +548,12 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         super().__init__(**kwparams)
         self.fitting_results = None
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @abstractmethod
     def jac_hf(
         self,
         time: AnyFloat,
         *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    ) -> NumpyFloat:
         """
         The jacobian of the hazard function.
 
@@ -585,46 +563,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
         {args_docstring}
-        asarray : bool, default is False
-            If true, the result is returned in one np.ndarray instead of a tuple.
 
         Returns
         -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
+        np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
         """
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @abstractmethod
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_chf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The jacobian of the cumulative hazard function.
 
@@ -634,46 +582,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
         {args_docstring}
-        asarray : bool, default is False
-            If true, the result is returned in one np.ndarray instead of a tuple.
 
         Returns
         -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
+        np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
         """
 
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @abstractmethod
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_sf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The jacobian of the survival function.
 
@@ -683,42 +601,15 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
         {args_docstring}
-        asarray : bool, default is False
-            If true, the result is returned in one np.ndarray instead of a tuple.
 
         Returns
         -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
+        np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
         """
 
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    def jac_cdf(
-        self, time: AnyFloat, *args: *Ts, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_cdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The jacobian of the cumulative density function.
 
@@ -726,52 +617,19 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         ----------
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         {args_docstring}
-        asarray : bool, default is False
-            If true, the result is returned in one np.ndarray instead of a tuple.
 
         Returns
         -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
+        np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
         """
-        jac = -self.jac_sf(time, *args, asarray=True)
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+        return -self.jac_sf(time, *args)
 
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @abstractmethod
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_pdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
         The jacobian of the probability density function.
 
@@ -779,18 +637,15 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         ----------
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         {args_docstring}
-        asarray : bool, default is False
-            If true, the result is returned in one np.ndarray instead of a tuple.
 
         Returns
         -------
-        np.float64, np.ndarray or tuple of np.float64 or np.ndarray
-            The derivatives with respect to each parameter. If ``asarray`` is False, the function returns a tuple containing
-            the same number of elements as parameters. If ``asarray`` is True, the function returns an ndarray
-            whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
-            tuple when ``asarray`` is False.
+        np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+
         """
 
     @abstractmethod

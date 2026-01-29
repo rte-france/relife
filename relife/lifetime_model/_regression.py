@@ -127,19 +127,7 @@ class CovarEffect(ParametricModel):
             return np.float64(g.item())
         return g
 
-    @overload
-    def jac_g(
-        self, covar: AnyFloat, asarray: Literal[True]
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_g(self, covar: AnyFloat, asarray: Literal[False]) -> NumpyFloat: ...
-    @overload
-    def jac_g(
-        self, covar: AnyFloat, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    def jac_g(
-        self, covar: AnyFloat, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_g(self, covar: AnyFloat) -> NumpyFloat:
         """
         Compute the Jacobian of the covariates effect.
         If covar.shape : () or (nb_coef,) => out.shape : (nb_coef,)
@@ -150,8 +138,6 @@ class CovarEffect(ParametricModel):
         jac = arr_covar.T.reshape(self.nb_coef, -1, 1) * g  # (nb_coef, m, 1)
         if arr_covar.ndim <= 1:
             jac = jac.reshape(self.nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
-        if not asarray:
-            return np.unstack(jac, axis=0)  # tuple
         return jac  # (nb_coef, m, 1)
 
 
@@ -287,30 +273,6 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     def median(self, covar: AnyFloat) -> NumpyFloat:
         return super().median(covar)
 
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -319,37 +281,9 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = -self.jac_chf(time, covar, asarray=True) * self.sf(time, covar)
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+    ) -> NumpyFloat:
+        return -self.jac_chf(time, covar) * self.sf(time, covar)
 
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -358,37 +292,9 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = -self.jac_sf(time, covar, asarray=True)
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+    ) -> NumpyFloat:
+        return super().jac_cdf(time, covar)
 
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -397,13 +303,10 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = self.jac_hf(time, covar, asarray=True) * self.sf(
+    ) -> NumpyFloat:
+        jac = self.jac_hf(time, covar) * self.sf(time, covar) + self.jac_sf(
             time, covar
-        ) + self.jac_sf(time, covar, asarray=True) * self.hf(time, covar)
-        if not asarray:
-            return np.unstack(jac)
+        ) * self.hf(time, covar)
         return jac
 
     @overload
@@ -635,38 +538,13 @@ class ProportionalHazard(LifetimeRegression):
     def dhf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.covar_effect.g(covar) * self.baseline.dhf(time)
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
     def jac_hf(
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    ) -> NumpyFloat:
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         out_shape = _broadcast_time_covar_shapes(
@@ -675,11 +553,11 @@ class ProportionalHazard(LifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
 
         baseline_hf = self.baseline.hf(time)  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf = self.baseline.jac_hf(time, asarray=True)  # (p, m, n)
+        baseline_jac_hf = self.baseline.jac_hf(time)  # (p, m, n)
         jac_g = np.repeat(
             jac_g, baseline_hf.shape[-1], axis=-1
         )  # (nb_coef, m, n) necessary to concatenate
@@ -693,42 +571,15 @@ class ProportionalHazard(LifetimeRegression):
         )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
-        if not asarray:
-            return np.unstack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
     def jac_chf(
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    ) -> NumpyFloat:
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         out_shape = _broadcast_time_covar_shapes(
@@ -737,10 +588,10 @@ class ProportionalHazard(LifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         baseline_chf = self.baseline.chf(time)  # (m, n)
         #  p == baseline.nb_params
-        baseline_jac_chf = self.baseline.jac_chf(time, asarray=True)  # (p, m, n)
+        baseline_jac_chf = self.baseline.jac_chf(time)  # (p, m, n)
         jac_g = np.repeat(
             jac_g, baseline_chf.shape[-1], axis=-1
         )  # (nb_coef, m, n) necessary to concatenate
@@ -754,8 +605,6 @@ class ProportionalHazard(LifetimeRegression):
         )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
-        if not asarray:
-            return np.unstack(jac)
         return jac
 
 
@@ -834,38 +683,13 @@ class AcceleratedFailureTime(LifetimeRegression):
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0) / self.covar_effect.g(covar) ** 2
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
     def jac_hf(
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    ) -> NumpyFloat:
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         out_shape = _broadcast_time_covar_shapes(
@@ -874,10 +698,10 @@ class AcceleratedFailureTime(LifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         t0 = time / g  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf_t0 = self.baseline.jac_hf(t0, asarray=True)  # (p, m, n)
+        baseline_jac_hf_t0 = self.baseline.jac_hf(t0)  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0)  # (m, n)
         baseline_dhf_t0 = self.baseline.dhf(t0)  # (m, n)
         jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n)
@@ -895,42 +719,15 @@ class AcceleratedFailureTime(LifetimeRegression):
         )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
-        if not asarray:
-            return np.unstack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        covar: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
     def jac_chf(
         self,
         time: AnyFloat,
         covar: AnyFloat,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    ) -> NumpyFloat:
         time = np.asarray(time)  # (), (n,) or (m, n)
         covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         out_shape = _broadcast_time_covar_shapes(
@@ -939,10 +736,10 @@ class AcceleratedFailureTime(LifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         t0 = time / g  #  (m, n)
         # p == baseline.nb_params
-        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, asarray=True)  # (p, m, n)
+        baseline_jac_chf_t0 = self.baseline.jac_chf(t0)  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0)  #  (m, n)
         jac_g = np.repeat(
             jac_g, baseline_hf_t0.shape[-1], axis=-1
@@ -957,6 +754,4 @@ class AcceleratedFailureTime(LifetimeRegression):
         )  # (p + nb_coef, m, n)
 
         jac = jac.reshape((self.nb_params,) + out_shape)
-        if not asarray:
-            return np.unstack(jac)
         return jac

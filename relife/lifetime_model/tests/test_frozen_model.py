@@ -103,31 +103,31 @@ class TestFrozenRegression:
 
     def test_jac_sf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_sf(time, asarray=True).shape == (
+        assert frozen_model.jac_sf(time).shape == (
             frozen_model.nb_params,
         ) + expected_shape(time=time, covar=covar)
 
     def test_jac_hf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_hf(time, asarray=True).shape == (
+        assert frozen_model.jac_hf(time).shape == (
             frozen_model.nb_params,
         ) + expected_shape(time=time, covar=covar)
 
     def test_jac_chf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_chf(time, asarray=True).shape == (
+        assert frozen_model.jac_chf(time).shape == (
             frozen_model.nb_params,
         ) + expected_shape(time=time, covar=covar)
 
     def test_jac_cdf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_cdf(time, asarray=True).shape == (
+        assert frozen_model.jac_cdf(time).shape == (
             frozen_model.nb_params,
         ) + expected_shape(time=time, covar=covar)
 
     def test_jac_pdf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_pdf(time, asarray=True).shape == (
+        assert frozen_model.jac_pdf(time).shape == (
             frozen_model.nb_params,
         ) + expected_shape(time=time, covar=covar)
 

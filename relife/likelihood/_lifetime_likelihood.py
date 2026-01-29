@@ -88,7 +88,6 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         jac = self.model.jac_chf(
             self._time,
             *self._args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -101,7 +100,6 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         jac = -self.model.jac_hf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.hf(self._complete_time, *self._complete_time_args)
 
         # Sum all contribs
@@ -116,7 +114,6 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         jac = -self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -277,7 +274,6 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         jac = -self.model.jac_pdf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.pdf(
             self._complete_time,
             *self._complete_time_args,
@@ -293,12 +289,10 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
             self.model.jac_sf(
                 self._censored_time_upper_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
             - self.model.jac_sf(
                 self._censored_time_lower_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
         ) / (
             10**-10
@@ -317,7 +311,6 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         jac = self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         return -np.sum(jac, axis=tuple(range(1, jac.ndim)))

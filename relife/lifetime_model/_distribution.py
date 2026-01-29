@@ -89,98 +89,23 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         """
         return self.ppf(0.5)  # no super here to return np.float64
 
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
-    def jac_sf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac_chf, sf = self.jac_chf(time, asarray=True), self.sf(time)
-        jac = -jac_chf * sf
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+    def jac_sf(self, time: AnyFloat) -> NumpyFloat:
+        jac_chf, sf = self.jac_chf(time), self.sf(time)
+        return -jac_chf * sf
 
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
-    def jac_cdf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        return super().jac_cdf(time, asarray=asarray)
+    def jac_cdf(self, time: AnyFloat) -> NumpyFloat:
+        return super().jac_cdf(time)
 
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
-    def jac_pdf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac_hf, hf = self.jac_hf(time, asarray=True), self.hf(time)
-        jac_sf, sf = self.jac_sf(time, asarray=True), self.sf(time)
-        jac = jac_hf * sf + jac_sf * hf
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+    def jac_pdf(self, time: AnyFloat) -> NumpyFloat:
+        jac_hf, hf = self.jac_hf(time), self.hf(time)
+        jac_sf, sf = self.jac_sf(time), self.sf(time)
+        return jac_hf * sf + jac_sf * hf
 
     @overload
     def rvs(
@@ -394,72 +319,22 @@ class Exponential(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return cumulative_hazard_rate / np.asarray(self.rate)
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_hf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0).copy()
         else:
             jac = np.array([1], dtype=np.float64)
-        if not asarray:
-            return np.unstack(jac)
         return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_chf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy().astype(np.float64)
         else:
             jac = np.array([time], dtype=np.float64)
-        if not asarray:
-            return np.unstack(jac)
         return jac
 
     @override
@@ -580,75 +455,27 @@ class Weibull(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_hf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = (
-            self.rate
-            * (self.rate * time) ** (self.shape - 1)
-            * (1 + self.shape * np.log(self.rate * time)),
-            self.shape**2 * (self.rate * time) ** (self.shape - 1),
+    def jac_hf(self, time: AnyFloat) -> NumpyFloat:
+        return np.stack(
+            (
+                self.rate
+                * (self.rate * time) ** (self.shape - 1)
+                * (1 + self.shape * np.log(self.rate * time)),
+                self.shape**2 * (self.rate * time) ** (self.shape - 1),
+            )
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_chf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = (
-            np.log(self.rate * time) * (self.rate * time) ** self.shape,
-            self.shape * time * (self.rate * time) ** (self.shape - 1),
+    def jac_chf(self, time: AnyFloat) -> NumpyFloat:
+        return np.stack(
+            (
+                np.log(self.rate * time) * (self.rate * time) ** self.shape,
+                self.shape * time * (self.rate * time) ** (self.shape - 1),
+            )
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
@@ -767,72 +594,25 @@ class Gompertz(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @override
-    def jac_hf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = (
-            self.rate * np.exp(self.rate * time),
-            self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
-        )
-        if asarray:
-            return np.stack(jac)
-        return jac
-
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_chf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = (
-            np.expm1(self.rate * time),
-            self.shape * time * np.exp(self.rate * time),
+    def jac_hf(self, time: AnyFloat) -> NumpyFloat:
+        return np.stack(
+            (
+                self.rate * np.exp(self.rate * time),
+                self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
+            )
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
+
+    @override
+    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    def jac_chf(self, time: AnyFloat) -> NumpyFloat:
+        return np.stack(
+            (
+                np.expm1(self.rate * time),
+                self.shape * time * np.exp(self.rate * time),
+            )
+        )
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
@@ -970,32 +750,9 @@ class Gamma(LifetimeDistribution):
             )
         )
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_hf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
         jac = (
@@ -1006,44 +763,17 @@ class Gamma(LifetimeDistribution):
             ),
             y * ((self.shape - x) * self._uppergamma(x) + x**self.shape * np.exp(-x)),
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
+        return np.stack(jac)
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_chf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
             digamma(self.shape) - self._jac_uppergamma_shape(x) / self._uppergamma(x),
             (x ** (self.shape - 1) * time * np.exp(-x) / self._uppergamma(x)),
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
+        return np.stack(jac)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
@@ -1167,32 +897,9 @@ class LogLogistic(LifetimeDistribution):
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_hf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
@@ -1200,44 +907,17 @@ class LogLogistic(LifetimeDistribution):
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
             * (self.shape**2 / self.rate),
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
+        return np.stack(jac)
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
-    def jac_chf(
-        self, time: AnyFloat, *, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
             (x**self.shape / (1 + x**self.shape)) * np.log(self.rate * time),
             (x**self.shape / (1 + x**self.shape)) * (self.shape / self.rate),
         )
-        if asarray:
-            return np.stack(jac)
-        return jac
+        return np.stack(jac)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring="")
@@ -1394,149 +1074,31 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
     def dhf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         return n * self.baseline.dhf(time, *args)
 
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_chf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        return n * self.baseline.jac_chf(time, *args, asarray=asarray)
+    def jac_chf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
+        return n * self.baseline.jac_chf(time, *args)
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_hf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        return n * self.baseline.jac_chf(time, *args, asarray=asarray)
+    def jac_hf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
+        return n * self.baseline.jac_chf(time, *args)
 
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_sf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
+    def jac_sf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
         jac_chf, sf = (
-            self.jac_chf(time, n, *args, asarray=True),
+            self.jac_chf(time, n, *args),
             self.sf(time, n, *args),
         )
-        jac = -jac_chf * sf
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+        return -jac_chf * sf
 
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_cdf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_cdf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    def jac_cdf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac = -self.jac_sf(time, n, *args, asarray=True)
-        if not asarray:
-            return np.unstack(jac)
-        return jac
-
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        n: AnyInt,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = True
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @override
-    def jac_pdf(
-        self, time: AnyFloat, n: AnyInt, *args: *Ts, asarray: bool = False
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat:
-        jac_hf, hf = self.jac_hf(time, n, *args, asarray=True), self.hf(time, n, *args)
-        jac_sf, sf = self.jac_sf(time, n, *args, asarray=True), self.sf(time, n, *args)
-        jac = jac_hf * sf + jac_sf * hf
-        if not asarray:
-            return np.unstack(jac)
-        return jac
+    def jac_cdf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
+        return super().jac_cdf(time, n, *args)
+
+    @override
+    def jac_pdf(self, time: AnyFloat, n: AnyInt, *args: *Ts) -> NumpyFloat:
+        jac_hf, hf = self.jac_hf(time, n, *args), self.hf(time, n, *args)
+        jac_sf, sf = self.jac_sf(time, n, *args), self.sf(time, n, *args)
+        return jac_hf * sf + jac_sf * hf
 
     @override
     def ls_integrate(
