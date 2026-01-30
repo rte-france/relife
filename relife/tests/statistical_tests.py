@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 from relife.lifetime_model import Cox
-from relife.statistical_tests import proportionality_effect, likelihood_ratio_test
+from relife.statistical_tests import cox_snell_residuals
 
 
 # Données chaines d'isolateur
@@ -31,11 +31,6 @@ print(re_model.fitting_results)
 
 # Relife proportionality_effect test
 #likelihood_ratio_test(re_model, model_init_kwargs={}, c=np.array([1, 1, 0]), optimizer_options=None, seed=1)
-proportionality_effect(
-    re_model,
-    model_init_kwargs={},
-    tested_covar=data.filter(regex="covar").values[:, 0],
-    nb_strata=4,
-    optimizer_options=None,
-    seed=1
-)
+print(cox_snell_residuals(
+    re_model
+))

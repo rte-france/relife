@@ -10,15 +10,17 @@ import matplotlib.pyplot as plt
 # TODO: needed but don't work
 #if TYPE_CHECKING:
 #from relife.lifetime_model._base import FittableParametricLifetimeModel
+#from relife.lifetime_model import Cox
+from relife.lifetime_model import NelsonAalen
 from relife.likelihood._base import Likelihood
 from relife.typing import ScipyMinimizeOptions
 
 from relife.likelihood import IntervalLifetimeLikelihood
 from relife.utils import is_2d_np_array, reshape_1d_arg, nearest_1dinterp, get_ordered_event_time
 
-__all__ = ["wald_test", "scores_test"]
+__all__ = ["wald_test", "scores_test", "likelihood_ratio_test", "proportionality_effect", "cox_snell_residuals"]
 
-# TODO: add tests
+# TODO: Add proper tests in relife.tests (tests/statistical_tests.py -> tests/test_statistical_tests.py)
 
 
 def _try_fit_a_regression_model_from_likelihood_stored_data(
@@ -158,7 +160,7 @@ def scores_test(model, model_init_kwargs: dict, c: np.ndarray = None, **kwargs) 
     Args:
         model (FittableParametricLifetimeModel): model object representing a fitted model
         model_init_kwargs (dict): model.__init__ arguments to clone the model specification
-        TODO: Should we use something like sklearn clone ? Make a issue for it ?
+        TODO: Should we use something like sklearn clone ?
                 This way, we could remove the dependence on model_init_kwargs, but it probably requires
                 introducing some conventions (such as storing all Model.__init__ args as attributes).
                 We did kinda the same thing when storing fitting data into Likelihood ...
@@ -378,3 +380,61 @@ def proportionality_effect(
             plt.show()
         else:
             return log_chf0_diff
+
+
+def cox_snell_residuals(
+    model, plot: bool = False
+) -> None | tuple[np.ndarray, np.ndarray]:
+    """Graphical check of the overall fit of the cox model
+
+    Args:
+        model (Cox): Cox instance model
+        plot (bool, optional): If True, plot the graphical check of the overall model fit
+    """
+    assert hasattr(model, "fitting_results"), "model has to be fitted before calling cox_snell_residuals"
+
+    likelihood = model.fitting_results.likelihood
+    assert hasattr(likelihood, "covar"), "fitting covar is assumed to have been stored directly into likelihood"
+
+    ordered_event_time, _, _ = get_ordered_event_time(
+        time=likelihood.time, event=likelihood.event
+    )
+
+    # compute cox_snell residuals
+    chf0_values = nearest_1dinterp(likelihood.time, ordered_event_time, model.baseline.chf())
+    residuals = chf0_values * np.squeeze(model.covar_effect.g(likelihood.covar))
+
+    # compute chf values of residuals
+    nelson_aalen_estimator = NelsonAalen()
+    nelson_aalen_estimator.fit(residuals, likelihood.event)
+
+    nelson_aalen_timeline, nelson_aalen_estimation = nelson_aalen_estimator.chf(se=False)
+    chf_of_residuals = nearest_1dinterp(
+        residuals, nelson_aalen_timeline, nelson_aalen_estimation
+    )
+
+    ordered_residuals_index = np.argsort(residuals)
+
+    if plot:
+        # plot results
+        fig, ax = plt.subplots()
+        ax.step(
+            residuals[ordered_residuals_index],
+            chf_of_residuals[ordered_residuals_index],
+            where="post",
+        )
+        ax.plot(
+            [0, np.max(residuals)],
+            [0, np.max(residuals)],
+            c="black",
+            linestyle="--",
+        )
+        ax.set_xlabel("Residual")
+        ax.set_ylabel("Estimated Cumulative Hazard Rates")
+        fig.tight_layout()
+        plt.show()
+    else:
+        return (
+            residuals[ordered_residuals_index],
+            chf_of_residuals[ordered_residuals_index],
+        )

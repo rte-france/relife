@@ -16,6 +16,7 @@ _submodules = [
     "stochastic_process",
     "quadrature",
     "economic",
+    "statistical_tests",
     "typing",
     "utils",
 ]
