@@ -4,10 +4,9 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.stats import norm
-from scipy import linalg
 
 from relife.lifetime_model._regression import CovarEffect
-from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
+from relife.likelihood import PartialLifetimeLikelihood
 from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO, SCIPY_MINIMIZE_BOUND_ALGO
 
 

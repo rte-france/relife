@@ -9,6 +9,9 @@ __all__ = [
     "reshape_1d_arg",
     "flatten_if_possible",
     "get_args_nb_assets",
+    "is_2d_np_array",
+    "nearest_1dinterp",
+    "get_ordered_event_time"
 ]
 
 
@@ -54,6 +57,49 @@ def is_2d_np_array(arr) -> bool:
     if not isinstance(arr, np.ndarray):
         return False
     return arr.ndim == 2
+
+
+def nearest_1dinterp(x: np.ndarray, xp: np.ndarray, yp: np.ndarray) -> np.ndarray:
+    """Returns x nearest interpolation based on xp and yp data points
+    xp has to be monotonically increasing
+
+    Args:
+        x (np.ndarray): 1d x coordinates to interpolate
+        xp (np.ndarray): 1d known x coordinates
+        yp (np.ndarray): 1d known y coordinates
+
+    Returns:
+        np.ndarray: interpolation values of x
+    """
+    spacing = np.diff(xp) / 2
+    xp = xp + np.hstack([spacing, spacing[-1]])
+    yp = np.concatenate([yp, yp[-1, None]])
+    return yp[np.searchsorted(xp, x)]
+
+
+def get_ordered_event_time(time: np.ndarray, event: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    From time and event samples returns uncensored sorted untied times,
+    associated original index and counts
+
+     Args:
+        time (np.ndarray): 1d or reshape_1d_arg time sample
+        event (np.ndarray): 1d or reshape_1d_arg event sample
+
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray]: uncensored sorted untied times,
+        associated original index and counts
+    """
+    (
+        ordered_event_time,  # uncensored sorted untied times
+        ordered_event_index,
+        event_count,
+    ) = np.unique(
+        time[event == 1],
+        return_index=True,
+        return_counts=True,
+    )
+    return ordered_event_time, ordered_event_index, event_count
 
 
 def flatten_if_possible(value: NumpyFloat) -> NumpyFloat:

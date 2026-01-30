@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.utils import reshape_1d_arg
+from relife.utils import reshape_1d_arg, get_ordered_event_time
 
 from ._base import Likelihood
 
@@ -36,6 +36,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
+        # Careful
         super().__init__(model, time=time, model_args=model_args, event=event, entry=entry)
         self.params = self.model.get_initial_params(time, model_args)
 
@@ -381,11 +382,8 @@ class PartialLifetimeLikelihood(Likelihood):
             ordered_event_time,    # uncensored sorted untied times
             ordered_event_index,
             self._event_count,
-        ) = np.unique(
-            time[event == 1],
-            return_index=True,
-            return_counts=True,
-        )
+        ) = get_ordered_event_time(time=time, event=event)
+
         # here risk_set is mask array on time
         # left truncated & right censored
         self._risk_set = np.logical_and(
