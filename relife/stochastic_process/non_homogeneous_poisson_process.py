@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Self, Sequence, Tuple, TypeVarTuple
+from typing import Any, Generic, Self, Sequence, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray

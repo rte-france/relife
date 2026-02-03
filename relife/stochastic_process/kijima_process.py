@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Self, Sequence, Tuple, TypeVarTuple
+from typing import Any, Generic, Self, TypeVarTuple
 
 import numpy as np
-from numpy.typing import NDArray
 
 from relife.base import FrozenParametricModel, ParametricModel
-from relife.data import NHPPData
 from relife.lifetime_model._base import FittableParametricLifetimeModel
-from relife.likelihood import DefaultLifetimeLikelihood
 from relife.likelihood._base import FittingResults
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 
 Ts = TypeVarTuple("Ts")
 
