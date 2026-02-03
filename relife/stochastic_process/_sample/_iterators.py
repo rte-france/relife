@@ -328,7 +328,11 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
         )  # type: ignore
 
 
-class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
+class StochasticAgesProcessIterator(StochasticDataIterator):
+    """
+    Abstract class for all stochastic process iterators that involve an age or virtual age for the iterative sampling
+    """
+
     @property
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
@@ -336,6 +340,8 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         ages = self.ages.copy()
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
 
+
+class NonHomogeneousPoissonProcessIterator(StochasticAgesProcessIterator):
     def update_ages(
         self,
         time: NDArray[np.float64],
@@ -343,9 +349,41 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         entry: NDArray[np.float64],
     ):
         """
-        In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
+        In a NHPP, ages are reset to 0 only when a replacement is made
         """
         # Update asset ages
         self.ages += time - entry
+        # If no events (replacement), restarts age for next step
+        self.ages[~event] = 0
+
+
+class KijimaIProcessIterator(StochasticAgesProcessIterator):
+    def update_ages(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ):
+        """
+        In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
+        """
+        # Update asset ages
+        self.ages = self.ages + self.process.q * (time - entry)
+        # If no events (replacement), restarts age for next step
+        self.ages[~event] = 0
+
+
+class KijimaIIProcessIterator(StochasticAgesProcessIterator):
+    def update_ages(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_],
+        entry: NDArray[np.float64],
+    ):
+        """
+        In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
+        """
+        # Update asset ages
+        self.ages = self.process.q * (self.ages + time - entry)
         # If no events (replacement), restarts age for next step
         self.ages[~event] = 0
