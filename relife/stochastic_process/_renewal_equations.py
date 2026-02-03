@@ -16,9 +16,10 @@ def renewal_equation_solver(
     evaluated_func: Callable[[AnyFloat], NumpyFloat],
     discounting: Optional[ExponentialDiscounting] = None,
 ) -> NDArray[np.float64]:
-
     # timeline : (nb_steps,) or (m, nb_steps)
-    tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
+    tm = 0.5 * (
+        timeline[..., 1:] + timeline[..., :-1]
+    )  # (nb_steps - 1,) or (m, nb_steps - 1)
     f = lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
     fm = lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
     y = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps)
@@ -39,7 +40,11 @@ def renewal_equation_solver(
     z[..., 0] = y[..., 0]
     z[..., 1] = q0 * (y[..., 1] + z[..., 0] * u[..., 1])
     for n in range(2, f.shape[-1]):
-        z[..., n] = q0 * (y[..., n] + z[..., 0] * u[..., n] + np.sum(z[..., 1:n][..., ::-1] * v[..., 1:n], axis=-1))
+        z[..., n] = q0 * (
+            y[..., n]
+            + z[..., 0] * u[..., n]
+            + np.sum(z[..., 1:n][..., ::-1] * v[..., 1:n], axis=-1)
+        )
     return z
 
 
@@ -51,7 +56,9 @@ def delayed_renewal_equation_solver(
     discounting: Optional[ExponentialDiscounting] = None,
 ) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)
-    tm = 0.5 * (timeline[..., 1:] + timeline[..., :-1])  # (nb_steps - 1,) or (m, nb_steps - 1)
+    tm = 0.5 * (
+        timeline[..., 1:] + timeline[..., :-1]
+    )  # (nb_steps - 1,) or (m, nb_steps - 1)
     f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
     f1m = first_lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
     y1 = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps - 1)
@@ -63,7 +70,9 @@ def delayed_renewal_equation_solver(
     u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
     v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
     z1[..., 0] = y1[..., 0]
-    z1[..., 1] = y1[..., 1] + z[..., 0] * u1[..., 1] + z[..., 1] * d[..., 0] * f1m[..., 0]
+    z1[..., 1] = (
+        y1[..., 1] + z[..., 0] * u1[..., 1] + z[..., 1] * d[..., 0] * f1m[..., 0]
+    )
     for n in range(2, f1.shape[-1]):
         z1[..., n] = (
             y1[..., n]

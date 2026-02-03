@@ -73,7 +73,9 @@ class Likelihood(ABC):
             Jacobian of the negative log likelihood value
         """
 
-    def maximum_likelihood_estimation(self, **optimizer_options: Unpack[ScipyMinimizeOptions]) -> FittingResults:
+    def maximum_likelihood_estimation(
+        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+    ) -> FittingResults:
         """
         Finds the parameter values that maximize the likelihood.
 
@@ -92,11 +94,7 @@ class Likelihood(ABC):
         bounds: Bounds | None = optimizer_options.pop("bounds", None)
         if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
             optimizer = minimize(
-                self.negative_log,
-                x0,
-                method=method,
-                bounds=bounds,
-                **optimizer_options
+                self.negative_log, x0, method=method, bounds=bounds, **optimizer_options
             )
         else:
             optimizer = minimize(
@@ -105,10 +103,12 @@ class Likelihood(ABC):
                 jac=self.jac_negative_log,
                 method=method,
                 bounds=bounds,
-                **optimizer_options
+                **optimizer_options,
             )
         optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(optimizer.fun)  # neg_log_likelihood value at optimal
+        neg_log_likelihood = np.copy(
+            optimizer.fun
+        )  # neg_log_likelihood value at optimal
         hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.pinv(hessian)
         return FittingResults(
@@ -142,7 +142,9 @@ def _hessian_scheme(
     complex_params = params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
-            hess[i, j] = np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+            hess[i, j] = (
+                np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+            )
             if i != j:
                 hess[j, i] = hess[i, j]
     return hess
@@ -169,8 +171,12 @@ class FittingResults:
     """Fitting results of the parametric_model core."""
 
     nb_obversations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64] = field(repr=False)  #: Optimal parameters values
-    neg_log_likelihood: float = field(repr=False)  #: Negative log likelihood value at optimal parameters values
+    optimal_params: NDArray[np.float64] = field(
+        repr=False
+    )  #: Optimal parameters values
+    neg_log_likelihood: float = field(
+        repr=False
+    )  #: Negative log likelihood value at optimal parameters values
 
     covariance_matrix: NDArray[np.float64] | None = field(
         repr=False, default=None
@@ -178,7 +184,9 @@ class FittingResults:
 
     nb_params: int = field(init=False, repr=False)  #: Number of parameters.
     aic: float = field(init=False)  #: Akaike Information Criterion.
-    aicc: float = field(init=False)  #: Akaike Information Criterion with a correction for small sample sizes.
+    aicc: float = field(
+        init=False
+    )  #: Akaike Information Criterion with a correction for small sample sizes.
     bic: float = field(init=False)  #: Bayesian Information Criterion.
     se: NDArray[np.float64] | None = field(
         init=False, repr=False
@@ -188,18 +196,22 @@ class FittingResults:
     def __post_init__(self):
         nb_params = self.optimal_params.size
         self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
-        self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (self.nb_obversations - nb_params - 1)
-        self.bic = np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+        self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (
+            self.nb_obversations - nb_params - 1
+        )
+        self.bic = (
+            np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+        )
         self.se = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
-            self.ic = self.optimal_params.reshape(-1, 1) + stats.norm.ppf((0.05, 0.95)) * self.se.reshape(
-                -1, 1
-            ) / np.sqrt(
-                self.nb_obversations
-            )  # (p, 2)
+            self.ic = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
+                (0.05, 0.95)
+            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_obversations)  # (p, 2)
 
-    def se_estimation_function(self, jac_f: NDArray[np.float64]) -> np.float64 | NDArray[np.float64]:
+    def se_estimation_function(
+        self, jac_f: NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
         """Standard error estimation function.
 
         Parameters
@@ -222,11 +234,19 @@ class FittingResults:
         # self.var : (p, p)
         if self.covariance_matrix is not None:
             if jac_f.ndim == 1:  # jac_f : (p,)
-                return np.sqrt(np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f))  # ()
+                return np.sqrt(
+                    np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f)
+                )  # ()
             if jac_f.ndim == 2:  # jac_f : (p, n)
-                return np.sqrt(np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f))  # (n,)
-            if jac_f.ndim == 3:  # jac_f : (p, m, n) if regression with more than one asset
-                return np.sqrt(np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f))  # (m,n)
+                return np.sqrt(
+                    np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f)
+                )  # (n,)
+            if (
+                jac_f.ndim == 3
+            ):  # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(
+                    np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)
+                )  # (m,n)
             raise ValueError("Invalid jac_f ndim")
         raise ValueError("Can't compute if var is None")
 

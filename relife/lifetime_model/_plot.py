@@ -72,13 +72,18 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         jac_f = getattr(self.model, "jac_" + fname, None)
         y = f(timeline, *args)
         se = None
-        if getattr(self.model, "fitting_results", None) is not None and jac_f is not None:
+        if (
+            getattr(self.model, "fitting_results", None) is not None
+            and jac_f is not None
+        ):
             se = zeros_like(timeline)
             se[..., 1:] = self.model.fitting_results.se_estimation_function(
                 jac_f(timeline[..., 1:], *args, asarray=True)
             )
         label = kwargs.pop("label", f"{self.model.__class__.__name__}" + f".{fname}")
-        ax = plot_prob_function(timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs)
+        ax = plot_prob_function(
+            timeline, y, se=se, ci_bounds=ci_bounds, label=label, **kwargs
+        )
         return ax
 
     def sf(self, *args: *Args, **kwargs) -> Axes:

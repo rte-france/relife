@@ -16,7 +16,6 @@ __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 
 @final
 class DefaultLifetimeLikelihood(Likelihood):
-
     _nb_observations: int
     _time: NDArray[np.float64]
     _complete_time: NDArray[np.float64]
@@ -37,8 +36,16 @@ class DefaultLifetimeLikelihood(Likelihood):
         self.params = self.model.get_initial_params(time, model_args)
 
         time = reshape_1d_arg(time)
-        event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
+        event = (
+            reshape_1d_arg(event)
+            if event is not None
+            else np.ones_like(time, dtype=np.bool_)
+        )
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -71,7 +78,9 @@ class DefaultLifetimeLikelihood(Likelihood):
     def _event_contrib(self) -> np.float64 | None:
         if len(self._complete_time) == 0:
             return None
-        return np.sum(-np.log(self.model.hf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.hf(self._complete_time, *self._complete_time_args))
+        )
 
     def _entry_contrib(self) -> np.float64 | None:
         if len(self._nonzero_entry) == 0:
@@ -82,7 +91,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = self.model.jac_chf(
             self._time,
             *self._args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -95,7 +103,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_hf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.hf(self._complete_time, *self._complete_time_args)
 
         # Sum all contribs
@@ -110,7 +117,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -173,10 +179,14 @@ class IntervalLifetimeLikelihood(Likelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model._get_initial_params(time_sup, model_args)
+        self.params = self.model.get_initial_params(time_sup, model_args)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time_inf, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -211,7 +221,9 @@ class IntervalLifetimeLikelihood(Likelihood):
     def _complete_time_contrib(self) -> np.float64 | None:
         if len(self._complete_time == 0):
             return None
-        return np.sum(-np.log(self.model.pdf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.pdf(self._complete_time, *self._complete_time_args))
+        )
 
     def _interval_censored_time_contrib(self) -> np.float64 | None:
         if len(self._censored_time_upper_bound) == 0:
@@ -219,8 +231,12 @@ class IntervalLifetimeLikelihood(Likelihood):
         return np.sum(
             -np.log(
                 10**-10
-                + self.model.cdf(self._censored_time_upper_bound, *self._censored_time_args)
-                - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
+                + self.model.cdf(
+                    self._censored_time_upper_bound, *self._censored_time_args
+                )
+                - self.model.cdf(
+                    self._censored_time_lower_bound, *self._censored_time_args
+                )
             ),
         )
 
@@ -235,7 +251,6 @@ class IntervalLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_pdf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.pdf(
             self._complete_time,
             *self._complete_time_args,
@@ -251,12 +266,10 @@ class IntervalLifetimeLikelihood(Likelihood):
             self.model.jac_sf(
                 self._censored_time_upper_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
             - self.model.jac_sf(
                 self._censored_time_lower_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
         ) / (
             10**-10
@@ -264,7 +277,9 @@ class IntervalLifetimeLikelihood(Likelihood):
             - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
         )
 
-        return np.sum(jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim)))
+        return np.sum(
+            jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim))
+        )
 
     def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
         if len(self._nonzero_entry) == 0:
@@ -273,7 +288,6 @@ class IntervalLifetimeLikelihood(Likelihood):
         jac = self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         return -np.sum(jac, axis=tuple(range(1, jac.ndim)))

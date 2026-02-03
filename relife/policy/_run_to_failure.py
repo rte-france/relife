@@ -189,13 +189,20 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         return timeline, npv
 
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
-
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value()
         if total_sum:
             return np.sum(asymptotic_npv)
@@ -204,22 +211,31 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-
-        timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(tf, nb_steps)
+        timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
+            tf, nb_steps
+        )
         if total_sum and eeac.ndim == 2:
             return timeline, np.sum(eeac, axis=0)
         return timeline, eeac
 
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
-        asymptotic_eeac = self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
+        asymptotic_eeac = (
+            self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+        )
         if total_sum:
             return np.sum(asymptotic_eeac)
         return asymptotic_eeac
@@ -265,26 +281,34 @@ class RunToFailurePolicy(BaseRunToFailure):
             self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(self.a0),
+            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(
+                self.a0
+            ),
         )
 
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
         return timeline, npv
 
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
-
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()
         if total_sum:
             return np.sum(asymptotic_npv)
@@ -293,22 +317,31 @@ class RunToFailurePolicy(BaseRunToFailure):
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-
-        timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(tf, nb_steps)
+        timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
+            tf, nb_steps
+        )
         if total_sum and eeac.ndim == 2:
             eeac = np.sum(eeac, axis=0)
         return timeline, eeac
 
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
-        asymptotic_eeac = self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
+        asymptotic_eeac = (
+            self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+        )
         if total_sum:
             return np.sum(asymptotic_eeac)
         return asymptotic_eeac
