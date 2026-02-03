@@ -12,6 +12,7 @@ from abc import ABC
 from typing import Any, Callable, Literal, Self, final
 
 import numpy as np
+import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import overload, override
@@ -160,11 +161,16 @@ class CovarEffect(ParametricModel):
         return jac  # (nb_coef, m, 1)
 
 
-_covar_docstring = """
-covar: float or np.ndarray
-    Covariates values. float can only be valid if the regression has one coefficients.
-    Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.
-"""
+_covar_docstring = [
+    docscrape.Parameter(
+        "covar",
+        "float or np.ndarray",
+        [
+            "Covariates values. float can only be valid if the regression has one coefficients.",
+            "Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.",
+        ],
+    ),
+]
 
 
 class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):

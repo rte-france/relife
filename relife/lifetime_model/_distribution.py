@@ -46,12 +46,12 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def sf(self, time: AnyFloat) -> NumpyFloat:
         return super().sf(time)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def isf(self, probability: AnyFloat) -> NumpyFloat:
         cumulative_hazard_rate = -np.log(
             np.clip(probability, 0, 1 - np.finfo(float).resolution)
@@ -59,43 +59,43 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return self.ichf(cumulative_hazard_rate)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def cdf(self, time: AnyFloat) -> NumpyFloat:
         return super().cdf(time)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def pdf(self, time: AnyFloat) -> NumpyFloat:
         return super().pdf(time)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ppf(self, probability: AnyFloat) -> NumpyFloat:
         return super().ppf(probability)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def moment(self, n: int) -> NumpyFloat:
         return super().moment(n)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def median(self) -> NumpyFloat:
         return self.ppf(0.5)  # no super here to return np.float64
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_sf(self, time: AnyFloat) -> NumpyFloat:
         jac_chf, sf = self.jac_chf(time), self.sf(time)
         return -jac_chf * sf
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_cdf(self, time: AnyFloat) -> NumpyFloat:
         return super().jac_cdf(time)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_pdf(self, time: AnyFloat) -> NumpyFloat:
         jac_hf, hf = self.jac_hf(time), self.hf(time)
         jac_sf, sf = self.jac_sf(time), self.sf(time)
@@ -138,7 +138,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
         self,
         size: int | tuple[int, int],
@@ -160,7 +160,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -274,37 +274,37 @@ class Exponential(LifetimeDistribution):
         return self._params["rate"]
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def hf(self, time: AnyFloat) -> NumpyFloat:
         return self.rate * np.ones_like(time)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
         return np.asarray(self.rate, dtype=np.float64) * time
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def mean(self) -> NumpyFloat:
         return 1 / np.asarray(self.rate)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def var(self) -> NumpyFloat:
         return 1 / np.asarray(self.rate) ** 2
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return 1 / self.rate * np.ones_like(time)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return cumulative_hazard_rate / np.asarray(self.rate)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0).copy()
@@ -313,7 +313,7 @@ class Exponential(LifetimeDistribution):
         return jac
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).copy().astype(np.float64)
@@ -322,7 +322,7 @@ class Exponential(LifetimeDistribution):
         return jac
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         if isinstance(time, np.ndarray):
             return np.zeros_like(time, dtype=np.float64)
@@ -392,29 +392,29 @@ class Weibull(LifetimeDistribution):
         return self._params["rate"]
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def hf(self, time: AnyFloat) -> NumpyFloat:
         return (
             self.shape * self.rate * (self.rate * np.asarray(time)) ** (self.shape - 1)
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
         return (self.rate * np.asarray(time)) ** self.shape
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mean(self) -> NumpyFloat:
         return gamma(1 + 1 / self.shape) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def var(self) -> NumpyFloat:
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return (
             gamma(1 / self.shape)
@@ -426,12 +426,12 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return np.asarray(cumulative_hazard_rate) ** (1 / self.shape) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         return np.stack(
             (
@@ -443,7 +443,7 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         return np.stack(
             (
@@ -453,7 +453,7 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         time = np.asarray(time)
         return (
@@ -530,38 +530,38 @@ class Gompertz(LifetimeDistribution):
         return self._params["rate"]
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def hf(self, time: AnyFloat) -> NumpyFloat:
         return self.shape * self.rate * np.exp(self.rate * time)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
         return self.shape * np.expm1(self.rate * time)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mean(self) -> NumpyFloat:
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def var(self) -> NumpyFloat:
         return super().var()
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         z = self.shape * np.exp(self.rate * time)
         return np.exp(z) * exp1(z) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return 1 / self.rate * np.log1p(cumulative_hazard_rate / self.shape)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         return np.stack(
             (
@@ -571,7 +571,7 @@ class Gompertz(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         return np.stack(
             (
@@ -581,7 +581,7 @@ class Gompertz(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
 
@@ -674,29 +674,29 @@ class Gamma(LifetimeDistribution):
         return self._params["rate"]
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def hf(self, time: AnyFloat) -> NumpyFloat:
         x = np.asarray(self.rate * time, dtype=np.float64)
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
         x = np.asarray(self.rate * time, dtype=np.float64)
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mean(self) -> NumpyFloat:
         return np.asarray(self.shape / self.rate)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def var(self) -> NumpyFloat:
         return np.asarray(self.shape / (self.rate**2))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return (
             1
@@ -708,7 +708,7 @@ class Gamma(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         y = x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
@@ -723,7 +723,7 @@ class Gamma(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
@@ -733,12 +733,12 @@ class Gamma(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         return self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return super().mrl(time)
 
@@ -808,19 +808,19 @@ class LogLogistic(LifetimeDistribution):
         return self._params["rate"]
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def hf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * np.asarray(time)
         return self.shape * self.rate * x ** (self.shape - 1) / (1 + x**self.shape)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         return np.log(1 + x**self.shape)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mean(self) -> NumpyFloat:
         b = np.pi / self.shape
         if self.shape <= 1:
@@ -830,7 +830,7 @@ class LogLogistic(LifetimeDistribution):
         return b / (self.rate * np.sin(b))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def var(self) -> NumpyFloat:
         b = np.pi / self.shape
         if self.shape <= 2:
@@ -840,12 +840,12 @@ class LogLogistic(LifetimeDistribution):
         return (1 / self.rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / self.shape)) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_hf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
@@ -857,7 +857,7 @@ class LogLogistic(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def jac_chf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * time
         jac = (
@@ -867,7 +867,7 @@ class LogLogistic(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         x = self.rate * np.asarray(time)
         return (
@@ -879,7 +879,7 @@ class LogLogistic(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring="")
+    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return super().mrl(time)
 

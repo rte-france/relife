@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-import inspect
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -11,12 +10,15 @@ from typing import (
     Callable,
     Generic,
     Literal,
+    ParamSpec,
     Self,
+    TypeVar,
     TypeVarTuple,
     overload,
 )
 
 import numpy as np
+import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, newton
 
@@ -68,11 +70,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             sf values at each given time(s).
         """
         if hasattr(self, "chf"):
@@ -102,11 +105,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             hf values at each given time(s).
         """
         if hasattr(self, "pdf") and hasattr(self, "sf"):
@@ -129,11 +133,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             chf values at each given time(s).
         """
         if hasattr(self, "sf"):
@@ -158,11 +163,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             pdf values at each given time(s).
         """
         try:
@@ -184,11 +190,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             cdf values at each given time(s).
         """
         return 1 - self.sf(time, *args)
@@ -202,11 +209,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         probability : float or np.ndarray
             Probability value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             ppf values at each given probability value(s).
         """
         probability = np.asarray(probability)
@@ -218,11 +226,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         Parameters
         ----------
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
         """
         return self.ppf(0.5, *args)
 
@@ -235,11 +244,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         probability : float or np.ndarray
             Probability value(s) at which to compute the function.
             If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             isf values at each given probability value(s).
         """
 
@@ -262,11 +272,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         cumulative_hazard_rate : float or np.ndarray
             Cumulative hazard rate value(s) at which to compute the function.
             If ndarray, allowed shapes are (), (n,) or (m, n).
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             ichf values at each given cumulative hazard rate(s).
         """
 
@@ -335,7 +346,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         size : int or tuple (m, n) of int
             Size of the generated sample.
-        {args_docstring}
+        *args
+            Any additonal args.
         return_event : bool, default is False
             If True, returns event indicators along with the sample time values.
         return_entry : bool, default is False
@@ -345,7 +357,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         Returns
         -------
-        out: float, ndarray or tuple of float or ndarray
+        out : float, ndarray or tuple of float or ndarray
             The sample values. If either `return_event` or `return_entry` is True, returns a tuple containing
             the time values followed by event values, entry values or both.
         """
@@ -399,13 +411,14 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             Lower bound(s) of integration.
         b : ndarray (maximum number of dimension is 2)
             Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
-        {args_docstring}
+        *args
+            Any additonal args.
         deg : int, default 10
             Degree of the polynomials interpolation.
 
         Returns
         -------
-        out: np.ndarray
+        out : np.ndarray
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
 
@@ -479,11 +492,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         n : int
             order of the moment, at least 1.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64
+        out : np.float64
         """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
@@ -505,11 +519,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         Parameters
         ----------
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
         """
         return self.moment(1, *args)
 
@@ -519,11 +534,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         Parameters
         ----------
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
         """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
@@ -536,11 +552,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             Function values at each given time(s).
         """
 
@@ -555,19 +572,29 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return ls / sf
 
 
-def document_args(*, base_cls: type, args_docstring: str):
-    def decorator_extend_docstring(method):
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def document_args(
+    *, base_cls: type, args_docstring: list[docscrape.Parameter]
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def decorator_extend_docstring(
+        method: Callable[P, T],
+    ) -> Callable[P, T]:
         base_doc = getattr(base_cls, method.__name__).__doc__
-        if base_doc is not None:
-            base_doc = inspect.cleandoc(base_doc)
-            if args_docstring == "":
-                doc = base_doc.replace("{args_docstring}\n", "")
+        numpy_docstring = docscrape.NumpyDocString(base_doc)
+        new_parameters_docstring: list[docscrape.Parameter] = []
+        for param in numpy_docstring["Parameters"]:  # pyright: ignore[reportUnknownVariableType]
+            if param.name != "*args":  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
+                new_parameters_docstring.append(param)  # pyright: ignore[reportArgumentType]
             else:
-                doc = base_doc.format(args_docstring=inspect.cleandoc(args_docstring))
-            method.__doc__ = inspect.cleandoc(doc)
+                new_parameters_docstring += args_docstring
+        numpy_docstring["Parameters"] = new_parameters_docstring
+        method.__doc__ = str(numpy_docstring)
 
         @functools.wraps(method)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             return method(*args, **kwargs)
 
         return wrapper
@@ -600,7 +627,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             The derivatives with respect to each parameter. If the result is
             an `np.ndarray`, the first dimension holds the number of parameters.
         """
@@ -619,7 +646,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             The derivatives with respect to each parameter. If the result is
             an `np.ndarray`, the first dimension holds the number of parameters.
         """
@@ -638,7 +665,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             The derivatives with respect to each parameter. If the result is
             an `np.ndarray`, the first dimension holds the number of parameters.
         """
@@ -656,7 +683,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             The derivatives with respect to each parameter. If the result is
             an `np.ndarray`, the first dimension holds the number of parameters.
         """
@@ -676,7 +703,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             The derivatives with respect to each parameter. If the result is
             an `np.ndarray`, the first dimension holds the number of parameters.
 
@@ -696,7 +723,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             Function values at each given time(s).
         """
 
@@ -751,7 +778,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: the object instance
+        out : the object instance
             The estimated parameters are setted inplace.
         """
         from relife.likelihood import DefaultLifetimeLikelihood
@@ -809,7 +836,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        out: the object instance
+        out : the object instance
             The estimated parameters are setted inplace.
         """
         from relife.likelihood import IntervalLifetimeLikelihood
