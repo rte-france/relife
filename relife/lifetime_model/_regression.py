@@ -167,7 +167,7 @@ _covar_docstring = [
         "float or np.ndarray",
         [
             "Covariates values. float can only be valid if the regression has one coefficients.",
-            "Otherwise it must be a ndarray of shape ``(nb_coef,)`` or ``(m, nb_coef)``.",
+            "Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.",
         ],
     ),
 ]

@@ -162,7 +162,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         *args
             Any additonal args.
 
@@ -189,7 +189,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         *args
             Any additonal args.
 
@@ -208,7 +208,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         probability : float or np.ndarray
             Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         *args
             Any additonal args.
 
@@ -243,7 +243,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         probability : float or np.ndarray
             Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         *args
             Any additonal args.
 
@@ -271,7 +271,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ----------
         cumulative_hazard_rate : float or np.ndarray
             Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are (), (n,) or (m, n).
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
         *args
             Any additonal args.
 
@@ -577,7 +577,10 @@ T = TypeVar("T")
 
 
 def document_args(
-    *, base_cls: type, args_docstring: list[docscrape.Parameter]
+    *,
+    base_cls: type,
+    args_docstring: list[docscrape.Parameter],
+    returns: list[docscrape.Parameter] | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator_extend_docstring(
         method: Callable[P, T],
@@ -591,6 +594,8 @@ def document_args(
             else:
                 new_parameters_docstring += args_docstring
         numpy_docstring["Parameters"] = new_parameters_docstring
+        if returns is not None:
+            numpy_docstring["Returns"] = returns
         method.__doc__ = str(numpy_docstring)
 
         @functools.wraps(method)
@@ -623,7 +628,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
@@ -642,7 +648,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
@@ -661,7 +668,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
@@ -679,7 +687,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
@@ -699,7 +708,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------
@@ -719,7 +729,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time : float or np.ndarray
             Elapsed time value(s) at which to compute the function.
             If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        {args_docstring}
+        *args
+            Any additonal args.
 
         Returns
         -------

@@ -15,6 +15,7 @@ from typing import (
 )
 
 import numpy as np
+import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
@@ -79,7 +80,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().moment(n)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def median(self) -> NumpyFloat:
         return self.ppf(0.5)  # no super here to return np.float64
 
@@ -284,14 +289,22 @@ class Exponential(LifetimeDistribution):
         return np.asarray(self.rate, dtype=np.float64) * time
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def mean(self) -> NumpyFloat:
-        return 1 / np.asarray(self.rate)
+        return 1 / np.float64(self.rate)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def var(self) -> NumpyFloat:
-        return 1 / np.asarray(self.rate) ** 2
+        return 1 / np.float64(self.rate) ** 2
 
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
@@ -404,12 +417,20 @@ class Weibull(LifetimeDistribution):
         return (self.rate * np.asarray(time)) ** self.shape
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def mean(self) -> NumpyFloat:
         return gamma(1 + 1 / self.shape) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def var(self) -> NumpyFloat:
         return gamma(1 + 2 / self.shape) / self.rate**2 - self.mean() ** 2
 
@@ -540,12 +561,20 @@ class Gompertz(LifetimeDistribution):
         return self.shape * np.expm1(self.rate * time)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def mean(self) -> NumpyFloat:
         return np.exp(self.shape) * exp1(self.shape) / self.rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def var(self) -> NumpyFloat:
         return super().var()
 
@@ -686,14 +715,22 @@ class Gamma(LifetimeDistribution):
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def mean(self) -> NumpyFloat:
-        return np.asarray(self.shape / self.rate)
+        return np.float64(self.shape / self.rate)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def var(self) -> NumpyFloat:
-        return np.asarray(self.shape / (self.rate**2))
+        return np.float64(self.shape / (self.rate**2))
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -820,7 +857,11 @@ class LogLogistic(LifetimeDistribution):
         return np.log(1 + x**self.shape)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def mean(self) -> NumpyFloat:
         b = np.pi / self.shape
         if self.shape <= 1:
@@ -830,7 +871,11 @@ class LogLogistic(LifetimeDistribution):
         return b / (self.rate * np.sin(b))
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
+    @document_args(
+        base_cls=FittableParametricLifetimeModel,
+        args_docstring=[],
+        returns=[docscrape.Parameter("out", "np.float64", [""])],
+    )
     def var(self) -> NumpyFloat:
         b = np.pi / self.shape
         if self.shape <= 2:
