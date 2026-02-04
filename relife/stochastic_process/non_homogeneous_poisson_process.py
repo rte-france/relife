@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Self, Sequence, Tuple, TypeVarTuple
+from typing import Any, Generic, Self, Sequence, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -274,9 +274,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
-        self.lifetime_model.get_initial_params(time, *args)
         likelihood = DefaultLifetimeLikelihood(
-            self.lifetime_model, time, event=event, entry=entry
+            self.lifetime_model, time, args, event=event, entry=entry
         )
         if optimizer_options is None:
             optimizer_options = {}

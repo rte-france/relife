@@ -1,26 +1,21 @@
 from __future__ import annotations
 
-from copy import copy
-from typing import TYPE_CHECKING, Any, Unpack, final
+from typing import Any, final
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, minimize
 from typing_extensions import override
 
 from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
-from ._base import DifferentiableLikelihood, FittingResults, approx_hessian
-
-if TYPE_CHECKING:
-    from relife.typing import ScipyMinimizeOptions
+from ._base import Likelihood
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
 
 
 @final
-class DefaultLifetimeLikelihood(DifferentiableLikelihood):
+class DefaultLifetimeLikelihood(Likelihood):
     _nb_observations: int
     _time: NDArray[np.float64]
     _complete_time: NDArray[np.float64]
@@ -38,6 +33,8 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
+        self.params = self.model.get_initial_params(time, model_args)
+
         time = reshape_1d_arg(time)
         event = (
             reshape_1d_arg(event)
@@ -68,6 +65,12 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         self._args = args
         self._complete_time_args = tuple(arg[np.flatnonzero(event)] for arg in args)
         self._nonzero_entry_args = tuple(arg[np.flatnonzero(entry)] for arg in args)
+        self._nb_observations = len(time)
+
+    @property
+    @override
+    def nb_observations(self):
+        return self._nb_observations
 
     def _time_contrib(self) -> np.float64:
         return np.sum(self.model.chf(self._time, *self._args))
@@ -155,40 +158,9 @@ class DefaultLifetimeLikelihood(DifferentiableLikelihood):
         )
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
-    @override
-    def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
-    ) -> FittingResults:
-        x0: NDArray[np.float64] = optimizer_options.get("x0", self.params)
-        method: str = optimizer_options.get("method", "L-BFGS-B")
-        bounds: Bounds | None = optimizer_options.get("bounds", None)
-        if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
-            optimizer = minimize(
-                self.negative_log,
-                x0,
-                bounds=bounds,
-            )
-        else:
-            optimizer = minimize(
-                self.negative_log,
-                x0,
-                jac=self.jac_negative_log,
-                bounds=bounds,
-            )
-        optimal_params = np.copy(optimizer.x)
-        optimal_neg_log_likelihood = copy(optimizer.fun)
-        hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian).astype(np.float64)
-        return FittingResults(
-            self._nb_observations,
-            optimal_params,
-            optimal_neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )
-
 
 @final
-class IntervalLifetimeLikelihood(DifferentiableLikelihood):
+class IntervalLifetimeLikelihood(Likelihood):
     _nb_observations: int
     _complete_time: NDArray[np.float64]
     _censored_time_lower_bound: NDArray[np.float64]
@@ -205,9 +177,9 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         time_sup: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
-        params0: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
+        self.params = self.model.get_initial_params(time_sup, model_args)
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
         entry = (
@@ -240,6 +212,11 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
         self._complete_time_args = tuple(arg[complete_time_index] for arg in args)
         self._censored_time_args = tuple(arg[~complete_time_index] for arg in args)
         self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
+
+    @property
+    @override
+    def nb_observations(self):
+        return self._nb_observations
 
     def _complete_time_contrib(self) -> np.float64 | None:
         if len(self._complete_time == 0):
@@ -349,34 +326,3 @@ class IntervalLifetimeLikelihood(DifferentiableLikelihood):
             self._jac_entry_contrib(),
         )
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
-
-    @override
-    def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
-    ) -> FittingResults:
-        x0: NDArray[np.float64] = optimizer_options.get("x0", self.params)
-        method: str = optimizer_options.get("method", "L-BFGS-B")
-        bounds: Bounds | None = optimizer_options.get("bounds", None)
-        if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
-            optimizer = minimize(
-                self.negative_log,
-                x0,
-                bounds=bounds,
-            )
-        else:
-            optimizer = minimize(
-                self.negative_log,
-                x0,
-                jac=self.jac_negative_log,
-                bounds=bounds,
-            )
-        optimal_params: NDArray[np.float64] = np.copy(optimizer.x)
-        optimal_neg_log_likelihood: float = copy(optimizer.fun)
-        hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian).astype(np.float64)
-        return FittingResults(
-            self._nb_observations,
-            optimal_params,
-            optimal_neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )
