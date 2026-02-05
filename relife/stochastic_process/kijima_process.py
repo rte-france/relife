@@ -23,17 +23,19 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
 
     lifetime_model: FittableParametricLifetimeModel[*Ts]
     fitting_results: FittingResults | None
-    q: float | None
 
     def __init__(
         self,
         lifetime_model: FittableParametricLifetimeModel[*Ts],
         q: float | None = None,
     ):
-        super().__init__()
+        super().__init__(q=q)
         self.lifetime_model = lifetime_model
-        self.q = q
         self.fitting_results = None
+
+    @property
+    def q(self):
+        return self.params[0]
 
     def freeze(self, *args: *Ts) -> FrozenKijima1Process[*Ts]:
         """
@@ -147,17 +149,19 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
 
     lifetime_model: FittableParametricLifetimeModel[*Ts]
     fitting_results: FittingResults | None
-    q: float | None
 
     def __init__(
         self,
         lifetime_model: FittableParametricLifetimeModel[*Ts],
         q: float | None = None,
     ):
-        super().__init__()
+        super().__init__(q=q)
         self.lifetime_model = lifetime_model
-        self.q = q
         self.fitting_results = None
+
+    @property
+    def q(self):
+        return self.params[0]
 
     def freeze(self, *args: *Ts) -> FrozenKijima2Process[*Ts]:
         """
