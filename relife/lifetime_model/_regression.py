@@ -96,6 +96,7 @@ class CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[float | None, ...] = (None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
+    @property
     def nb_coef(self) -> int:
         """
         Returns the number of coefficients.
