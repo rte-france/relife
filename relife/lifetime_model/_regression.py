@@ -102,7 +102,7 @@ class CovarEffect(ParametricModel):
 
         Returns
         -------
-        out: int
+        out : int
         """
         return self.nb_params
 
@@ -112,12 +112,12 @@ class CovarEffect(ParametricModel):
 
         Parameters
         ----------
-        covar: float or np.ndarray
+        covar : float or np.ndarray
             The covariate values
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             If `covar.shape` is `()`, `out` is `float`.
             If `covar.shape` is `(nb_coef,)`, `out.shape` is `()`.
             If `covar.shape` is `(m, nb_coef)`, `out.shape` is `(m, 1)`.
@@ -143,12 +143,12 @@ class CovarEffect(ParametricModel):
 
         Parameters
         ----------
-        covar: float or np.ndarray
+        covar : float or np.ndarray
             The covariate values
 
         Returns
         -------
-        out: np.ndarray
+        out : np.ndarray
             If `covar.shape` is `()` or `(nb_coef,)`, `out.shape` is `(nb_coef,)`.
             If `covar.shape` is (m, nb_coef)`, `out.shape` is `(nb_coef, m, 1)`.
         """
@@ -192,11 +192,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @property
     def coefficients(self) -> NDArray[np.float64]:
         """
-        Return the coefficients values.
+        Returns the coefficients values.
 
         Returns
         -------
-        out: ndarray
+        out : ndarray
         """
         return self.covar_effect.params
 
@@ -207,7 +207,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
 
         Returns
         -------
-        out: int
+        out : int
         """
         return self.covar_effect.nb_params
 

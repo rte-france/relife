@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
 from ._base import Likelihood
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
+
+if TYPE_CHECKING:
+    from relife.lifetime_model._base import FittableParametricLifetimeModel
 
 
 @final
