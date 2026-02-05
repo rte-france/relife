@@ -59,7 +59,7 @@
     <link rel="prev" title="LeftTruncatedModel" href="relife.lifetime_model.LeftTruncatedModel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.4.0" />
+  <meta name="docsearch:version" content="2.4.1.dev9+g59d31e2ca" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.4.0</div>
+2.4.1.dev9+g59d31e2ca</div>
     
   </div>
   
@@ -543,19 +543,19 @@
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.isf" title="relife.lifetime_model.AgeReplacementModel.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
-<td><p>The inverse of the survival function.</p></td>
+<td><p>The inverse survival function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.ls_integrate" title="relife.lifetime_model.AgeReplacementModel.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.mean" title="relife.lifetime_model.AgeReplacementModel.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
-<td><p>The mean.</p></td>
+<td><p>The mean of the distribution.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.median" title="relife.lifetime_model.AgeReplacementModel.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.moment" title="relife.lifetime_model.AgeReplacementModel.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
-<td><p>n-th order moment</p></td>
+<td><p>n-th order moment.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.mrl" title="relife.lifetime_model.AgeReplacementModel.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
@@ -573,7 +573,7 @@
 <td><p>The survival function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.AgeReplacementModel.var" title="relife.lifetime_model.AgeReplacementModel.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
-<td><p>The variance.</p></td>
+<td><p>The variance of the distribution.</p></td>
 </tr>
 </tbody>
 </table>
@@ -586,18 +586,18 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>cdf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -612,18 +612,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>chf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -660,18 +660,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>hf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -686,18 +686,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given cumulative hazard rate(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ichf values at each given cumulative hazard rate(s).</p>
 </dd>
 </dl>
 </dd>
@@ -707,23 +707,23 @@ as only one age of replacement per asset can be given</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.isf">
 <span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.isf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.isf" title="Link to this definition">#</a></dt>
-<dd><p>The inverse of the survival function.</p>
+<dd><p>The inverse survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>isf values at each given probability value(s).</p>
 </dd>
 </dl>
 </dd>
@@ -737,24 +737,24 @@ as only one age of replacement per asset can be given</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output</p>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output.</p>
 </dd>
 <dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)</p>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
-<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation</p>
+<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
+<dt><strong>out</strong><span class="classifier">np.ndarray</span></dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -764,20 +764,20 @@ as only one age of replacement per asset can be given</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.mean">
 <span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.mean" title="Link to this definition">#</a></dt>
-<dd><p>The mean.</p>
+<dd><p>The mean of the distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -790,16 +790,16 @@ as only one age of replacement per asset can be given</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -808,21 +808,22 @@ as only one age of replacement per asset can be given</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.moment">
 <span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.moment" title="Link to this definition">#</a></dt>
-<dd><p>n-th order moment</p>
+<dd><p>n-th order moment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>n</strong><span class="classifier">order of the moment, at least 1.</span></dt><dd></dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>order of the moment, at least 1.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+</dd>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -836,18 +837,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>Function values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -908,18 +909,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>pdf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -940,18 +941,18 @@ as only one age of replacement per asset can be given</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ppf values at each given probability value(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1000,18 +1001,18 @@ the time values followed by event values, entry values or both.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n_values,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_assets,</span> <span class="pre">n_values)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>sf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1021,20 +1022,20 @@ as only one age of replacement per asset can be given</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.var">
 <span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.var" title="Link to this definition">#</a></dt>
-<dd><p>The variance.</p>
+<dd><p>The variance of the distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
+If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>

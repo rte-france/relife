@@ -59,7 +59,7 @@
     <link rel="prev" title="ParametricModel" href="../base_class/relife.base.ParametricModel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.4.0" />
+  <meta name="docsearch:version" content="2.4.1.dev9+g59d31e2ca" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.4.0</div>
+2.4.1.dev9+g59d31e2ca</div>
     
   </div>
   
@@ -518,13 +518,14 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>rate</strong><span class="classifier">float, optional</span></dt><dd><p>rate parameter</p>
+<dt><strong>rate</strong><span class="classifier">float, default is None</span></dt><dd><p>Rate parameter.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.</p>
+<dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.).
+If the model is not fitted, the value is None.</p>
 </dd>
 <dt><a class="reference internal" href="#relife.lifetime_model.Exponential.nb_params" title="relife.lifetime_model.Exponential.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
 </dd>
@@ -534,7 +535,7 @@
 </dd>
 <dt><a class="reference internal" href="#relife.lifetime_model.Exponential.plot" title="relife.lifetime_model.Exponential.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionnalities</p>
 </dd>
-<dt><a class="reference internal" href="#relife.lifetime_model.Exponential.rate" title="relife.lifetime_model.Exponential.rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rate</span></code></a></dt><dd><p>Get the current rate value.</p>
+<dt><a class="reference internal" href="#relife.lifetime_model.Exponential.rate" title="relife.lifetime_model.Exponential.rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rate</span></code></a></dt><dd><p>Returns the rate value.</p>
 </dd>
 </dl>
 </dd>
@@ -558,7 +559,7 @@
 <td><p>Estimation of the distribution parameters from interval censored lifetime data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.get_initial_params" title="relife.lifetime_model.Exponential.get_initial_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_initial_params</span></code></a></p></td>
-<td><p>Get the inital params values used in 'fit'.</p></td>
+<td><p>Gets the inital parameters values used in before fitting.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.hf" title="relife.lifetime_model.Exponential.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
@@ -594,7 +595,7 @@
 <td><p>The median.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.moment" title="relife.lifetime_model.Exponential.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
-<td><p>n-th order moment</p></td>
+<td><p>n-th order moment.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Exponential.mrl" title="relife.lifetime_model.Exponential.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
@@ -625,13 +626,13 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>cdf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -646,13 +647,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>chf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -667,13 +668,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>Function values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -712,7 +713,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Self</dt><dd><p>The current object with the estimated parameters setted inplace.</p>
+<dt><strong>out</strong><span class="classifier">the object instance</span></dt><dd><p>The estimated parameters are setted inplace.</p>
 </dd>
 </dl>
 </dd>
@@ -751,7 +752,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Self</dt><dd><p>The current object with the estimated parameters setted inplace.</p>
+<dt><strong>out</strong><span class="classifier">the object instance</span></dt><dd><p>The estimated parameters are setted inplace.</p>
 </dd>
 </dl>
 </dd>
@@ -762,9 +763,26 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.get_initial_params">
-<span class="sig-name descname"><span class="pre">get_initial_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.get_initial_params" title="Link to this definition">#</a></dt>
-<dd><p>Get the inital params values used in ‘fit’.
-To change this value, pass ‘x0’ in ‘optimizer_options’ of ‘fit’.</p>
+<span class="sig-name descname"><span class="pre">get_initial_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.get_initial_params" title="Link to this definition">#</a></dt>
+<dd><p>Gets the inital parameters values used in before fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
+</dd>
+<dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.
+If it is not None, it will be used to select only complete lifetimes.</p>
+</dd>
+<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">1d array of float</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -775,13 +793,13 @@ To change this value, pass ‘x0’ in ‘optimizer_options’ of ‘fit’.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>hf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -796,13 +814,14 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
-If ndarray, allowed shapes are (), (n,) or (m, n).</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Function values at each given cumulative hazard rate(s).</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ichf values at each given cumulative hazard rate(s).</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -816,13 +835,13 @@ If ndarray, allowed shapes are (), (n,) or (m, n).</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>isf values at each given probability value(s).</p>
 </dd>
 </dl>
 </dd>
@@ -831,23 +850,20 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.jac_cdf">
-<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_cdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_cdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64, np.ndarray or tuple of np.float64 or np.ndarray</dt><dd><p>The derivatives with respect to each parameter. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False, the function returns a tuple containing
-the same number of elements as parameters. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is True, the function returns an ndarray
-whose first dimension equals the number of parameters. This output is equivalent to applying <code class="docutils literal notranslate"><span class="pre">np.stack</span></code> on the output
-tuple when <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False.</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -856,23 +872,20 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.jac_chf">
-<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_distribution.html#Exponential.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_chf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_distribution.html#Exponential.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_chf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the cumulative hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64, np.ndarray or tuple of np.float64 or np.ndarray</dt><dd><p>The derivatives with respect to each parameter. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False, the function returns a tuple containing
-the same number of elements as parameters. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is True, the function returns an ndarray
-whose first dimension equals the number of parameters. This output is equivalent to applying <code class="docutils literal notranslate"><span class="pre">np.stack</span></code> on the output
-tuple when <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False.</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -881,23 +894,20 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.jac_hf">
-<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_distribution.html#Exponential.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_hf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_distribution.html#Exponential.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_hf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the hazard function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64, np.ndarray or tuple of np.float64 or np.ndarray</dt><dd><p>The derivatives with respect to each parameter. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False, the function returns a tuple containing
-the same number of elements as parameters. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is True, the function returns an ndarray
-whose first dimension equals the number of parameters. This output is equivalent to applying <code class="docutils literal notranslate"><span class="pre">np.stack</span></code> on the output
-tuple when <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False.</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -906,23 +916,20 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.jac_pdf">
-<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_pdf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_pdf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the probability density function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64, np.ndarray or tuple of np.float64 or np.ndarray</dt><dd><p>The derivatives with respect to each parameter. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False, the function returns a tuple containing
-the same number of elements as parameters. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is True, the function returns an ndarray
-whose first dimension equals the number of parameters. This output is equivalent to applying <code class="docutils literal notranslate"><span class="pre">np.stack</span></code> on the output
-tuple when <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False.</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -931,23 +938,20 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.jac_sf">
-<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asarray</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_sf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.jac_sf" title="Link to this definition">#</a></dt>
 <dd><p>The jacobian of the survival function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>asarray</strong><span class="classifier">bool, default is False</span></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64, np.ndarray or tuple of np.float64 or np.ndarray</dt><dd><p>The derivatives with respect to each parameter. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False, the function returns a tuple containing
-the same number of elements as parameters. If <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is True, the function returns an ndarray
-whose first dimension equals the number of parameters. This output is equivalent to applying <code class="docutils literal notranslate"><span class="pre">np.stack</span></code> on the output
-tuple when <code class="docutils literal notranslate"><span class="pre">asarray</span></code> is False.</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -961,19 +965,19 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output</p>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output.</p>
 </dd>
 <dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)</p>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
 </dd>
-<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation</p>
+<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
+<dt><strong>out</strong><span class="classifier">np.ndarray</span></dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -987,7 +991,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1000,7 +1004,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1009,7 +1013,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.moment">
 <span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Exponential.moment" title="Link to this definition">#</a></dt>
-<dd><p>n-th order moment</p>
+<dd><p>n-th order moment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1019,7 +1023,7 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1033,13 +1037,13 @@ tuple when <code class="docutils literal notranslate"><span class="pre">asarray<
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>Function values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1106,13 +1110,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>pdf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1133,13 +1137,13 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given probability value(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ppf values at each given probability value(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1149,11 +1153,11 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.Exponential.rate">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#relife.lifetime_model.Exponential.rate" title="Link to this definition">#</a></dt>
-<dd><p>Get the current rate value.</p>
+<dd><p>Returns the rate value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>float</dt><dd></dd>
+<dt>out: float</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1178,7 +1182,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">return_entry</span></code> is True, returns a tuple containing
+<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is True, returns a tuple containing
 the time values followed by event values, entry values or both.</p>
 </dd>
 </dl>
@@ -1194,13 +1198,13 @@ the time values followed by event values, entry values or both.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>np.float64 or np.ndarray</dt><dd><p>Function values at each given time(s).</p>
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>sf values at each given time(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1214,7 +1218,7 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>np.float64</dt><dd></dd>
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
