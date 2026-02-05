@@ -384,8 +384,9 @@ class RenewalRewardProcess(RenewalProcess):
             timeline,
             self.lifetime_model,
             lambda t: self.lifetime_model.ls_integrate(
-                lambda x: self.reward.conditional_expectation(x)
-                * self.discounting.factor(x),
+                lambda x: (
+                    self.reward.conditional_expectation(x) * self.discounting.factor(x)
+                ),
                 np.zeros_like(t),
                 np.asarray(t),
                 deg=15,
@@ -398,8 +399,10 @@ class RenewalRewardProcess(RenewalProcess):
                 z,
                 self.first_lifetime_model,
                 lambda t: self.first_lifetime_model.ls_integrate(
-                    lambda x: self.first_reward.conditional_expectation(x)
-                    * self.discounting.factor(x),
+                    lambda x: (
+                        self.first_reward.conditional_expectation(x)
+                        * self.discounting.factor(x)
+                    ),
                     np.zeros_like(t),
                     np.asarray(t),
                     deg=15,
@@ -451,8 +454,9 @@ class RenewalRewardProcess(RenewalProcess):
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
-            lambda x: self.discounting.factor(x)
-            * self.reward.conditional_expectation(x),
+            lambda x: (
+                self.discounting.factor(x) * self.reward.conditional_expectation(x)
+            ),
             0.0,
             np.inf,
             deg=100,
@@ -466,8 +470,10 @@ class RenewalRewardProcess(RenewalProcess):
             )  # () or (m,)
             ly1 = np.squeeze(
                 self.first_lifetime_model.ls_integrate(
-                    lambda x: self.discounting.factor(x)
-                    * self.first_reward.conditional_expectation(x),
+                    lambda x: (
+                        self.discounting.factor(x)
+                        * self.first_reward.conditional_expectation(x)
+                    ),
                     0.0,
                     np.inf,
                     deg=100,
