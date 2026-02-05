@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.utils import reshape_1d_arg
 
 from ._base import Likelihood
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood"]
+
+if TYPE_CHECKING:
+    from relife.lifetime_model._base import FittableParametricLifetimeModel
 
 
 @final
@@ -33,7 +35,7 @@ class DefaultLifetimeLikelihood(Likelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model.get_initial_params(time, model_args)
+        self.params = self.model.get_initial_params(time, event, model_args)
 
         time = reshape_1d_arg(time)
         event = (
@@ -179,7 +181,7 @@ class IntervalLifetimeLikelihood(Likelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model.get_initial_params(time_sup, model_args)
+
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
         entry = (
@@ -212,6 +214,10 @@ class IntervalLifetimeLikelihood(Likelihood):
         self._complete_time_args = tuple(arg[complete_time_index] for arg in args)
         self._censored_time_args = tuple(arg[~complete_time_index] for arg in args)
         self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
+
+        self.params = self.model.get_initial_params(
+            self._complete_time, model_args=model_args
+        )
 
     @property
     @override

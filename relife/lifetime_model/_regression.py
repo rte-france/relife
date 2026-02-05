@@ -96,13 +96,14 @@ class CovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[float | None, ...] = (None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
+    @property
     def nb_coef(self) -> int:
         """
         Returns the number of coefficients.
 
         Returns
         -------
-        out: int
+        out : int
         """
         return self.nb_params
 
@@ -112,12 +113,12 @@ class CovarEffect(ParametricModel):
 
         Parameters
         ----------
-        covar: float or np.ndarray
+        covar : float or np.ndarray
             The covariate values
 
         Returns
         -------
-        out: np.float64 or np.ndarray
+        out : np.float64 or np.ndarray
             If `covar.shape` is `()`, `out` is `float`.
             If `covar.shape` is `(nb_coef,)`, `out.shape` is `()`.
             If `covar.shape` is `(m, nb_coef)`, `out.shape` is `(m, 1)`.
@@ -143,12 +144,12 @@ class CovarEffect(ParametricModel):
 
         Parameters
         ----------
-        covar: float or np.ndarray
+        covar : float or np.ndarray
             The covariate values
 
         Returns
         -------
-        out: np.ndarray
+        out : np.ndarray
             If `covar.shape` is `()` or `(nb_coef,)`, `out.shape` is `(nb_coef,)`.
             If `covar.shape` is (m, nb_coef)`, `out.shape` is `(nb_coef, m, 1)`.
         """
@@ -192,11 +193,11 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     @property
     def coefficients(self) -> NDArray[np.float64]:
         """
-        Return the coefficients values.
+        Returns the coefficients values.
 
         Returns
         -------
-        out: ndarray
+        out : ndarray
         """
         return self.covar_effect.params
 
@@ -207,7 +208,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
 
         Returns
         -------
-        out: int
+        out : int
         """
         return self.covar_effect.nb_params
 
@@ -440,11 +441,12 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline.get_initial_params(
-            time, model_args
+            time, event, model_args
         )
         return param0
 

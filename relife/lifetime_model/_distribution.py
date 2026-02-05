@@ -180,6 +180,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         param0 = np.ones(self.nb_params, dtype=np.float64)
@@ -615,11 +616,12 @@ class Gompertz(LifetimeDistribution):
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         param0 = np.empty(self.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(time))
-        shape = np.exp(-rate * np.mean(time))
+        rate = np.pi / (np.sqrt(6) * np.std(time[event]))
+        shape = np.exp(-rate * np.mean(time[event]))
         param0[0] = shape
         param0[1] = rate
         return param0

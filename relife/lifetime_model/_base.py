@@ -743,12 +743,25 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         """
-        Get the inital params values used in `fit`.
+        Gets the inital parameters values used in before fitting.
 
-        To change this value, pass `x0` in `optimizer_options` of `fit`.
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+            If it is not None, it will be used to select only complete lifetimes.
+        model_args : any ndarray or tuple of ndarray, default is None
+            Any additional arguments required by the model.
+
+        Returns
+        -------
+        out : 1d array of float
         """
 
     @property
