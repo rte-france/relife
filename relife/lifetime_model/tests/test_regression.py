@@ -58,18 +58,22 @@ def test_covar_effect():
     assert covar_effect.g(np.ones((1, covar_effect.nb_coef))).shape == (1, 1)
     assert covar_effect.g(np.ones((10, covar_effect.nb_coef))).shape == (10, 1)
 
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef)).shape == (
         covar_effect.nb_coef,
     )
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef), asarray=True).shape == (
+    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef)).shape == (
         covar_effect.nb_coef,
     )
-    assert covar_effect.jac_g(
-        np.ones((1, covar_effect.nb_coef)), asarray=True
-    ).shape == (covar_effect.nb_coef, 1, 1)
-    assert covar_effect.jac_g(
-        np.ones((10, covar_effect.nb_coef)), asarray=True
-    ).shape == (covar_effect.nb_coef, 10, 1)
+    assert covar_effect.jac_g(np.ones((1, covar_effect.nb_coef))).shape == (
+        covar_effect.nb_coef,
+        1,
+        1,
+    )
+    assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef))).shape == (
+        covar_effect.nb_coef,
+        10,
+        1,
+    )
 
 
 def test_rvs(regression, covar, rvs_size):
@@ -143,31 +147,31 @@ def test_dhf(regression, time, covar):
 
 
 def test_jac_sf(regression, time, covar):
-    assert regression.jac_sf(time, covar, asarray=True).shape == (
+    assert regression.jac_sf(time, covar).shape == (
         regression.nb_params,
     ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_hf(regression, time, covar):
-    assert regression.jac_hf(time, covar, asarray=True).shape == (
+    assert regression.jac_hf(time, covar).shape == (
         regression.nb_params,
     ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_chf(regression, time, covar):
-    assert regression.jac_chf(time, covar, asarray=True).shape == (
+    assert regression.jac_chf(time, covar).shape == (
         regression.nb_params,
     ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_cdf(regression, time, covar):
-    assert regression.jac_cdf(time, covar, asarray=True).shape == (
+    assert regression.jac_cdf(time, covar).shape == (
         regression.nb_params,
     ) + expected_shape(time=time, covar=covar)
 
 
 def test_jac_pdf(regression, time, covar):
-    assert regression.jac_pdf(time, covar, asarray=True).shape == (
+    assert regression.jac_pdf(time, covar).shape == (
         regression.nb_params,
     ) + expected_shape(time=time, covar=covar)
 

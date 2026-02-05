@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, Literal, TypeVarTuple, overload
 
 import numpy as np
+import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from typing_extensions import override
 
@@ -15,12 +16,30 @@ from relife.typing import (
 )
 from relife.utils import is_frozen, reshape_1d_arg
 
-from ._base import ParametricLifetimeModel
+from ._base import ParametricLifetimeModel, document_args
 from ._frozen import FrozenParametricLifetimeModel
 
 __all__: list[str] = ["AgeReplacementModel", "LeftTruncatedModel"]
 
 Ts = TypeVarTuple("Ts")
+
+_ar_args_docstring = [
+    docscrape.Parameter(
+        "ar",
+        "float or np.ndarray",
+        [
+            "Age of replacement values.",
+            "If ndarray, shape can only be `(m,)` because only one age of replacement per asset can be given.",
+        ],
+    ),
+    docscrape.Parameter(
+        "*args",
+        "",
+        [
+            "Any other arguments needed by the model.",
+        ],
+    ),
+]
 
 
 class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
@@ -51,197 +70,52 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         self.baseline = baseline
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def sf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def hf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def cdf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         return super().cdf(time, *(ar, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def chf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def isf(self, probability: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The inverse of the survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ichf(
         self, cumulative_hazard_rate: AnyFloat, ar: AnyFloat, *args: *Ts
     ) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given cumulative hazard rate(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def pdf(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def mrl(self, time: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         ar = reshape_1d_arg(ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
@@ -257,50 +131,14 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return np.ma.getdata(mu)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ppf(self, probability: AnyFloat, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The percent point function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
         ar = reshape_1d_arg(ar)
         return self.isf(1 - probability, ar, *args)
 
-    # def cdf(self, time, ar, *args):
-    #     ar = reshape_ar_or_a0("ar", ar)
-    #     return np.where(time < ar, self.baseline.cdf(time, *args), 1.0)
-
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def median(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The median.
-
-        Parameters
-        ----------
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
@@ -416,6 +254,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             return time, event, entry
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -425,30 +264,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         *args: *Ts,
         deg: int = 10,
     ) -> NumpyFloat:
-        """
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and one ndarray object as output
-        a : ndarray (maximum number of dimension is 2)
-            Lower bound(s) of integration.
-        b : ndarray (maximum number of dimension is 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
         ar = reshape_1d_arg(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
@@ -459,23 +274,8 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         )
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def moment(self, n: int, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        n-th order moment
-
-        Parameters
-        ----------
-        n : order of the moment, at least 1.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         ar = reshape_1d_arg(ar)
         return self.ls_integrate(
             lambda x: x**n,
@@ -487,42 +287,14 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         )
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def mean(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The mean.
-
-        Parameters
-        ----------
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         ar = reshape_1d_arg(ar)
         return self.moment(1, ar, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def var(self, ar: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The variance.
-
-        Parameters
-        ----------
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         ar = reshape_1d_arg(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
@@ -545,6 +317,25 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         FrozenParametricModel
         """
         return FrozenParametricLifetimeModel(self, ar, *args)
+
+
+_a0_args_docstring = [
+    docscrape.Parameter(
+        "a0",
+        "float or np.ndarray",
+        [
+            "Current ages.",
+            "If ndarray, shape can only be `(m,)`.",
+        ],
+    ),
+    docscrape.Parameter(
+        "*args",
+        "",
+        [
+            "Any other arguments needed by the model.",
+        ],
+    ),
+]
 
 
 class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
@@ -577,174 +368,47 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         self.baseline = baseline
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def sf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The survival function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return super().sf(time, a0, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def pdf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The probability density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return super().pdf(time, a0, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def isf(self, probability: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The inverse of the survival function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-        """
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
         a0 = reshape_1d_arg(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def chf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def cdf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The cumulative density function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return super().cdf(time, *(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def hf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return self.baseline.hf(a0 + time, *args)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ichf(
         self, cumulative_hazard_rate: AnyFloat, a0: AnyFloat, *args: *Ts
     ) -> NumpyFloat:
-        """
-        Inverse cumulative hazard function.
-
-        Parameters
-        ----------
-        cumulative_hazard_rate : float or np.ndarray
-            Cumulative hazard rate value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given cumulative hazard rate(s).
-        """
         a0 = reshape_1d_arg(a0)
         return (
             self.baseline.ichf(
@@ -794,6 +458,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def rvs(
         self,
         size: int | tuple[int, int],
@@ -808,31 +473,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         | tuple[NumpyFloat, NumpyFloat]
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        size : int or tuple (m, n) of int
-            Size of the generated sample.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        return_event : bool, default is False
-            If True, returns event indicators along with the sample time values.
-        return_entry : bool, default is False
-            If True, returns corresponding entry values of the sample time values.
-        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
-            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
-
-        Returns
-        -------
-        float, ndarray or tuple of float or ndarray
-            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
-            the time values followed by event values, entry values or both.
-        """
         a0 = reshape_1d_arg(a0)
         super_rvs = super().rvs(
             size,
@@ -868,6 +508,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return output[0]
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ls_integrate(
         self,
         func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
@@ -877,165 +518,42 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         *args: *Ts,
         deg: int = 10,
     ) -> NumpyFloat:
-        """
-        Lebesgue-Stieltjes integration.
-
-        Parameters
-        ----------
-        func : callable (in : 1 ndarray , out : 1 ndarray)
-            The callable must have only one ndarray object as argument and one ndarray object as output
-        a : ndarray (maximum number of dimension is 2)
-            Lower bound(s) of integration.
-        b : ndarray (maximum number of dimension is 2)
-            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.)
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        deg : int, default 10
-            Degree of the polynomials interpolation
-
-        Returns
-        -------
-        np.ndarray
-            Lebesgue-Stieltjes integral of func from `a` to `b`.
-        """
         a0 = reshape_1d_arg(a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def mean(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The mean.
-
-        Parameters
-        ----------
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         a0 = reshape_1d_arg(a0)
         return super().mean(*(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def median(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The median.
-
-        Parameters
-        ----------
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         a0 = reshape_1d_arg(a0)
         return super().median(*(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def var(self, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The variance.
-
-        Parameters
-        ----------
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         a0 = reshape_1d_arg(a0)
         return super().var(*(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def moment(self, n: int, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        n-th order moment
-
-        Parameters
-        ----------
-        n : int
-            Order of the moment, at least 1
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-        """
         a0 = reshape_1d_arg(a0)
         return super().moment(n, *(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def mrl(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n_values,)`` or ``(n_assets, n_values)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
         a0 = reshape_1d_arg(a0)
         return super().mrl(time, *(a0, *args))
 
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ppf(self, probability: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
-        """
-        The percent point function.
-
-        Parameters
-        ----------
-        probability : float or np.ndarray
-            Probability value(s) at which to compute the function.
-            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.
-        a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-
-        Returns
-        -------
-        np.float64 or np.ndarray
-            Function values at each given probability value(s).
-
-        Notes
-        -----
-        The ``ppf`` is the inverse of :py:meth:`~LeftTruncatedModel.cdf`.
-
-        """
         a0 = reshape_1d_arg(a0)
         return super().ppf(probability, *(a0, *args))
 
