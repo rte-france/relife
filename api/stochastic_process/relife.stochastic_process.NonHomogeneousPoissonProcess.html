@@ -57,7 +57,7 @@
     <link rel="prev" title="RenewalRewardProcess" href="relife.stochastic_process.RenewalRewardProcess.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.4.1" />
+  <meta name="docsearch:version" content="2.4.2.dev1+g999eb70fb" />
   </head>
   
   
@@ -130,7 +130,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.4.1</div>
+2.4.2.dev1+g999eb70fb</div>
     
   </div>
   
@@ -512,7 +512,7 @@
 <td><p>Freeze any arguments required by the process into the object data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data" title="relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_failure_data</span></code></a></p></td>
-<td><p>Generate failure data</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.intensity" title="relife.stochastic_process.NonHomogeneousPoissonProcess.intensity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intensity</span></code></a></p></td>
 <td><p>The intensity function of the process.</p></td>
@@ -626,27 +626,10 @@ containing the unique ids corresponding to each values contained in <code class=
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data">
 <span class="sig-name descname"><span class="pre">generate_failure_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_process/non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.generate_failure_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_process.NonHomogeneousPoissonProcess.generate_failure_data" title="Link to this definition">#</a></dt>
-<dd><p>Generate failure data</p>
-<p>This function will generate failure data that can be used to fit a non-homogeneous Poisson process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>nb_samples</strong><span class="classifier">int</span></dt><dd><p>The number of samples.</p>
-</dd>
-<dt><strong>time_window</strong><span class="classifier">tuple of two floats</span></dt><dd><p>Time window in which data are sampled.</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
-</dd>
-<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids</dt><dd></dd>
-</dl>
-</dd>
-</dl>
+<dd><div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Not implemented yet</p>
+</div>
 </dd></dl>
 
 <dl class="py method">

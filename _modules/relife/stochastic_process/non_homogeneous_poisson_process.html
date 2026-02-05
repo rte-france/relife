@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.4.1" />
+  <meta name="docsearch:version" content="2.4.2.dev1+g999eb70fb" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.4.1</div>
+2.4.2.dev1+g999eb70fb</div>
     
   </div>
   
@@ -416,6 +416,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TypeVarTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -555,82 +556,70 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate failure data</span>
-
-<span class="sd">        This function will generate failure data that can be used to fit a non-homogeneous Poisson process.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            The number of samples.</span>
-<span class="sd">        time_window : tuple of two floats</span>
-<span class="sd">            Time window in which data are sampled.</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Random seed, by default None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning:: Not implemented yet</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcessIterable</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Failure data methods for stochastic processes will be introduced in a future release&quot;</span>
+        <span class="p">)</span></div>
 
-        <span class="n">frozen_nhpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span>
-            <span class="n">frozen_nhpp</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
-        <span class="p">)</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
-            <span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="c1"># from ._sample import NonHomogeneousPoissonProcessIterable</span>
 
-        <span class="n">first_ages_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;entry&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time_window</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">last_ages_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">time_window</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># frozen_nhpp = self.freeze(*args)</span>
 
-        <span class="n">event_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">])</span>
+        <span class="c1"># iterable = NonHomogeneousPoissonProcessIterable(</span>
+        <span class="c1">#     frozen_nhpp, nb_samples, time_window=time_window, seed=seed</span>
+        <span class="c1"># )</span>
+        <span class="c1"># struct_array = np.concatenate(tuple(iterable))</span>
+        <span class="c1"># struct_array = np.sort(</span>
+        <span class="c1">#     struct_array, order=(&quot;sample_id&quot;, &quot;asset_id&quot;, &quot;timeline&quot;)</span>
+        <span class="c1"># )</span>
 
-        <span class="n">first_ages</span> <span class="o">=</span> <span class="n">struct_array</span><span class="p">[</span><span class="n">first_ages_index</span><span class="p">][</span><span class="s2">&quot;entry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">last_ages</span> <span class="o">=</span> <span class="n">struct_array</span><span class="p">[</span><span class="n">last_ages_index</span><span class="p">][</span><span class="s2">&quot;age&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># first_ages_index = np.nonzero(struct_array[&quot;entry&quot;] == time_window[0])</span>
+        <span class="c1"># last_ages_index = np.nonzero(struct_array[&quot;age&quot;] == time_window[1])</span>
 
-        <span class="n">assets_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
-                    <span class="n">struct_array</span><span class="p">[</span><span class="n">last_ages_index</span><span class="p">][</span><span class="s2">&quot;sample_id&quot;</span><span class="p">],</span> <span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span>
-                <span class="p">),</span>
-                <span class="n">struct_array</span><span class="p">[</span><span class="n">last_ages_index</span><span class="p">][</span><span class="s2">&quot;sample_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">),</span>
-            <span class="p">),</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
-                    <span class="n">struct_array</span><span class="p">[</span><span class="n">last_ages_index</span><span class="p">][</span><span class="s2">&quot;asset_id&quot;</span><span class="p">],</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span>
-                <span class="p">),</span>
-                <span class="n">struct_array</span><span class="p">[</span><span class="n">last_ages_index</span><span class="p">][</span><span class="s2">&quot;asset_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">),</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
+        <span class="c1"># event_index = np.nonzero(struct_array[&quot;event&quot;])</span>
 
-        <span class="n">events_assets_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
-                    <span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;sample_id&quot;</span><span class="p">],</span> <span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span>
-                <span class="p">),</span>
-                <span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;sample_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">),</span>
-            <span class="p">),</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;asset_id&quot;</span><span class="p">],</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">),</span>
-                <span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;asset_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">),</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">ages_at_events</span> <span class="o">=</span> <span class="n">struct_array</span><span class="p">[</span><span class="n">event_index</span><span class="p">][</span><span class="s2">&quot;age&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># first_ages = struct_array[first_ages_index][&quot;entry&quot;].copy()</span>
+        <span class="c1"># last_ages = struct_array[last_ages_index][&quot;age&quot;].copy()</span>
 
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;ages_at_events&quot;</span><span class="p">:</span> <span class="n">ages_at_events</span><span class="p">,</span>
-            <span class="s2">&quot;events_assets_ids&quot;</span><span class="p">:</span> <span class="n">events_assets_ids</span><span class="p">,</span>
-            <span class="s2">&quot;first_ages&quot;</span><span class="p">:</span> <span class="n">first_ages</span><span class="p">,</span>
-            <span class="s2">&quot;last_ages&quot;</span><span class="p">:</span> <span class="n">last_ages</span><span class="p">,</span>
-            <span class="s2">&quot;assets_ids&quot;</span><span class="p">:</span> <span class="n">assets_ids</span><span class="p">,</span>
-        <span class="p">}</span></div>
+        <span class="c1"># assets_ids = np.char.add(</span>
+        <span class="c1">#     np.char.add(</span>
+        <span class="c1">#         np.full_like(</span>
+        <span class="c1">#             struct_array[last_ages_index][&quot;sample_id&quot;], &quot;S&quot;, dtype=np.str_</span>
+        <span class="c1">#         ),</span>
+        <span class="c1">#         struct_array[last_ages_index][&quot;sample_id&quot;].astype(np.str_),</span>
+        <span class="c1">#     ),</span>
+        <span class="c1">#     np.char.add(</span>
+        <span class="c1">#         np.full_like(</span>
+        <span class="c1">#             struct_array[last_ages_index][&quot;asset_id&quot;], &quot;A&quot;, dtype=np.str_</span>
+        <span class="c1">#         ),</span>
+        <span class="c1">#         struct_array[last_ages_index][&quot;asset_id&quot;].astype(np.str_),</span>
+        <span class="c1">#     ),</span>
+        <span class="c1"># )</span>
 
+        <span class="c1"># events_assets_ids = np.char.add(</span>
+        <span class="c1">#     np.char.add(</span>
+        <span class="c1">#         np.full_like(</span>
+        <span class="c1">#             struct_array[event_index][&quot;sample_id&quot;], &quot;S&quot;, dtype=np.str_</span>
+        <span class="c1">#         ),</span>
+        <span class="c1">#         struct_array[event_index][&quot;sample_id&quot;].astype(np.str_),</span>
+        <span class="c1">#     ),</span>
+        <span class="c1">#     np.char.add(</span>
+        <span class="c1">#         np.full_like(struct_array[event_index][&quot;asset_id&quot;], &quot;A&quot;, dtype=np.str_),</span>
+        <span class="c1">#         struct_array[event_index][&quot;asset_id&quot;].astype(np.str_),</span>
+        <span class="c1">#     ),</span>
+        <span class="c1"># )</span>
+        <span class="c1"># ages_at_events = struct_array[event_index][&quot;age&quot;].copy()</span>
+
+        <span class="c1"># return {</span>
+        <span class="c1">#     &quot;ages_at_events&quot;: ages_at_events,</span>
+        <span class="c1">#     &quot;events_assets_ids&quot;: events_assets_ids,</span>
+        <span class="c1">#     &quot;first_ages&quot;: first_ages,</span>
+        <span class="c1">#     &quot;last_ages&quot;: last_ages,</span>
+        <span class="c1">#     &quot;assets_ids&quot;: assets_ids,</span>
+        <span class="c1"># }</span>
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.fit">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html#relife.stochastic_process.NonHomogeneousPoissonProcess.fit">[docs]</a>
@@ -697,6 +686,10 @@
 <span class="sd">            model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)</span>
 <span class="sd">        )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Fit method of NHPP will change in a future release&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span>
+        <span class="p">)</span>
+
         <span class="n">nhpp_data</span> <span class="o">=</span> <span class="n">NHPPData</span><span class="p">(</span>
             <span class="n">ages_at_events</span><span class="p">,</span>
             <span class="n">events_assets_ids</span><span class="p">,</span>
