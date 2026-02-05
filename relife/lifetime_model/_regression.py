@@ -441,11 +441,12 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
         param0 = np.zeros_like(self.params, dtype=np.float64)
         param0[-self.baseline.params.size :] = self.baseline.get_initial_params(
-            time, model_args
+            time, event, model_args
         )
         return param0
 
