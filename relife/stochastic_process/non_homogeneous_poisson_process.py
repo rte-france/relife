@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Generic, Self, Sequence, TypeVarTuple
+import warnings
 
 import numpy as np
 from numpy.typing import NDArray
@@ -125,81 +126,67 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
     def generate_failure_data(
         self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
     ) -> dict[str, Any]:
-        """Generate failure data
-
-        This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
-
-        Parameters
-        ----------
-        nb_samples : int
-            The number of samples.
-        time_window : tuple of two floats
-            Time window in which data are sampled.
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        seed : int, optional
-            Random seed, by default None.
-
-        Returns
-        -------
-        A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
+        r"""
+        .. warning:: Not implemented yet
         """
-        from ._sample import NonHomogeneousPoissonProcessIterable
+        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")
+    
+        # from ._sample import NonHomogeneousPoissonProcessIterable
 
-        frozen_nhpp = self.freeze(*args)
+        # frozen_nhpp = self.freeze(*args)
 
-        iterable = NonHomogeneousPoissonProcessIterable(
-            frozen_nhpp, nb_samples, time_window=time_window, seed=seed
-        )
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(
-            struct_array, order=("sample_id", "asset_id", "timeline")
-        )
+        # iterable = NonHomogeneousPoissonProcessIterable(
+        #     frozen_nhpp, nb_samples, time_window=time_window, seed=seed
+        # )
+        # struct_array = np.concatenate(tuple(iterable))
+        # struct_array = np.sort(
+        #     struct_array, order=("sample_id", "asset_id", "timeline")
+        # )
 
-        first_ages_index = np.nonzero(struct_array["entry"] == time_window[0])
-        last_ages_index = np.nonzero(struct_array["age"] == time_window[1])
+        # first_ages_index = np.nonzero(struct_array["entry"] == time_window[0])
+        # last_ages_index = np.nonzero(struct_array["age"] == time_window[1])
 
-        event_index = np.nonzero(struct_array["event"])
+        # event_index = np.nonzero(struct_array["event"])
 
-        first_ages = struct_array[first_ages_index]["entry"].copy()
-        last_ages = struct_array[last_ages_index]["age"].copy()
+        # first_ages = struct_array[first_ages_index]["entry"].copy()
+        # last_ages = struct_array[last_ages_index]["age"].copy()
 
-        assets_ids = np.char.add(
-            np.char.add(
-                np.full_like(
-                    struct_array[last_ages_index]["sample_id"], "S", dtype=np.str_
-                ),
-                struct_array[last_ages_index]["sample_id"].astype(np.str_),
-            ),
-            np.char.add(
-                np.full_like(
-                    struct_array[last_ages_index]["asset_id"], "A", dtype=np.str_
-                ),
-                struct_array[last_ages_index]["asset_id"].astype(np.str_),
-            ),
-        )
+        # assets_ids = np.char.add(
+        #     np.char.add(
+        #         np.full_like(
+        #             struct_array[last_ages_index]["sample_id"], "S", dtype=np.str_
+        #         ),
+        #         struct_array[last_ages_index]["sample_id"].astype(np.str_),
+        #     ),
+        #     np.char.add(
+        #         np.full_like(
+        #             struct_array[last_ages_index]["asset_id"], "A", dtype=np.str_
+        #         ),
+        #         struct_array[last_ages_index]["asset_id"].astype(np.str_),
+        #     ),
+        # )
 
-        events_assets_ids = np.char.add(
-            np.char.add(
-                np.full_like(
-                    struct_array[event_index]["sample_id"], "S", dtype=np.str_
-                ),
-                struct_array[event_index]["sample_id"].astype(np.str_),
-            ),
-            np.char.add(
-                np.full_like(struct_array[event_index]["asset_id"], "A", dtype=np.str_),
-                struct_array[event_index]["asset_id"].astype(np.str_),
-            ),
-        )
-        ages_at_events = struct_array[event_index]["age"].copy()
+        # events_assets_ids = np.char.add(
+        #     np.char.add(
+        #         np.full_like(
+        #             struct_array[event_index]["sample_id"], "S", dtype=np.str_
+        #         ),
+        #         struct_array[event_index]["sample_id"].astype(np.str_),
+        #     ),
+        #     np.char.add(
+        #         np.full_like(struct_array[event_index]["asset_id"], "A", dtype=np.str_),
+        #         struct_array[event_index]["asset_id"].astype(np.str_),
+        #     ),
+        # )
+        # ages_at_events = struct_array[event_index]["age"].copy()
 
-        return {
-            "ages_at_events": ages_at_events,
-            "events_assets_ids": events_assets_ids,
-            "first_ages": first_ages,
-            "last_ages": last_ages,
-            "assets_ids": assets_ids,
-        }
+        # return {
+        #     "ages_at_events": ages_at_events,
+        #     "events_assets_ids": events_assets_ids,
+        #     "first_ages": first_ages,
+        #     "last_ages": last_ages,
+        #     "assets_ids": assets_ids,
+        # }
 
     def fit(
         self,
@@ -264,6 +251,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)
         )
         """
+        warnings.warn("Fit method of NHPP will change in a future release", DeprecationWarning)
+    
         nhpp_data = NHPPData(
             ages_at_events,
             events_assets_ids,

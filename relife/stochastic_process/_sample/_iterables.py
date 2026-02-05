@@ -12,8 +12,8 @@ from typing_extensions import override
 from relife.utils import get_model_nb_assets
 
 from ._iterators import (
-    KijimaIIProcessIterator,
-    KijimaIProcessIterator,
+    Kijima2ProcessIterator,
+    Kijima1ProcessIterator,
     NonHomogeneousPoissonProcessIterator,
     RenewalProcessIterator,
     RenewalRewardProcessIterator,
@@ -24,8 +24,8 @@ __all__ = [
     "StochasticDataIterable",
     "RenewalProcessIterable",
     "NonHomogeneousPoissonProcessIterable",
-    "KijimaIProcessIterable",
-    "KijimaIIProcessIterable",
+    "Kijima1ProcessIterable",
+    "Kijima2ProcessIterable",
 ]
 
 
@@ -112,7 +112,7 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
         )
 
 
-class KijimaIProcessIterable(StochasticDataIterable):
+class Kijima1ProcessIterable(StochasticDataIterable):
     def __init__(
         self,
         process,
@@ -123,8 +123,8 @@ class KijimaIProcessIterable(StochasticDataIterable):
         super().__init__(nb_samples, time_window, seed=seed)
         self.process = process
 
-    def __iter__(self) -> KijimaIProcessIterator:
-        return KijimaIProcessIterator(
+    def __iter__(self) -> Kijima1ProcessIterator:
+        return Kijima1ProcessIterator(
             self.process,
             self.nb_samples,
             self.time_window,
@@ -133,7 +133,7 @@ class KijimaIProcessIterable(StochasticDataIterable):
         )
 
 
-class KijimaIIProcessIterable(StochasticDataIterable):
+class Kijima2ProcessIterable(StochasticDataIterable):
     def __init__(
         self,
         process,
@@ -144,8 +144,8 @@ class KijimaIIProcessIterable(StochasticDataIterable):
         super().__init__(nb_samples, time_window, seed=seed)
         self.process = process
 
-    def __iter__(self) -> KijimaIIProcessIterator:
-        return KijimaIIProcessIterator(
+    def __iter__(self) -> Kijima2ProcessIterator:
+        return Kijima2ProcessIterator(
             self.process,
             self.nb_samples,
             self.time_window,

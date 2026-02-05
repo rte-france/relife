@@ -13,10 +13,10 @@ from relife.stochastic_process._sample import StochasticSampleMapping
 
 Ts = TypeVarTuple("Ts")
 
-__all__ = ["KijimaIProcess", "KijimaIIProcess"]
+__all__ = ["Kijima1Process", "Kijima2Process"]
 
 
-class KijimaIProcess(ParametricModel, Generic[*Ts]):
+class Kijima1Process(ParametricModel, Generic[*Ts]):
     """
     Kijima I Process.
     """
@@ -31,7 +31,7 @@ class KijimaIProcess(ParametricModel, Generic[*Ts]):
         self.q = q
         self.fitting_results = None
 
-    def freeze(self, *args: *Ts) -> FrozenKijimaIProcess[*Ts]:
+    def freeze(self, *args: *Ts) -> FrozenKijima1Process[*Ts]:
         """
         Freeze any arguments required by the process into the object data.
 
@@ -44,7 +44,7 @@ class KijimaIProcess(ParametricModel, Generic[*Ts]):
         -------
         FrozenParametricModel
         """
-        return FrozenKijimaIProcess(self, *args)
+        return FrozenKijima1Process(self, *args)
 
     def sample(
         self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
@@ -71,18 +71,24 @@ class KijimaIProcess(ParametricModel, Generic[*Ts]):
     def generate_failure_data(
         self
     ) -> dict[str, Any]:
-        ...
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")
 
     def fit(
         self
     ) -> Self:
-        ...
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Fitting methods for Kijima processes will be introduced in a future release")
 
 
 
 
-class FrozenKijimaIProcess(
-    FrozenParametricModel[KijimaIProcess[*Ts], *Ts]
+class FrozenKijima1Process(
+    FrozenParametricModel[Kijima1Process[*Ts], *Ts]
 ):
     """
     Kijima I process.
@@ -109,9 +115,9 @@ class FrozenKijimaIProcess(
         """
 
         from relife.utils import get_model_nb_assets
-        from ._sample import KijimaIProcessIterable
+        from ._sample import Kijima1ProcessIterable
 
-        iterable = KijimaIProcessIterable(
+        iterable = Kijima1ProcessIterable(
             self, nb_samples, time_window=time_window, seed=seed
         )
         struct_array = np.concatenate(tuple(iterable))
@@ -123,13 +129,16 @@ class FrozenKijimaIProcess(
         )
 
     def generate_failure_data(
-        self,
-    ):
-        ...
+        self
+    ) -> dict[str, Any]:
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")
 
 
 
-class KijimaIIProcess(ParametricModel, Generic[*Ts]):
+class Kijima2Process(ParametricModel, Generic[*Ts]):
     """
     Kijima II Process.
     """
@@ -144,7 +153,7 @@ class KijimaIIProcess(ParametricModel, Generic[*Ts]):
         self.q = q
         self.fitting_results = None
 
-    def freeze(self, *args: *Ts) -> FrozenKijimaIIProcess[*Ts]:
+    def freeze(self, *args: *Ts) -> FrozenKijima2Process[*Ts]:
         """
         Freeze any arguments required by the process into the object data.
 
@@ -157,7 +166,7 @@ class KijimaIIProcess(ParametricModel, Generic[*Ts]):
         -------
         FrozenParametricModel
         """
-        return FrozenKijimaIIProcess(self, *args)
+        return FrozenKijima2Process(self, *args)
 
     def sample(
         self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
@@ -184,18 +193,24 @@ class KijimaIIProcess(ParametricModel, Generic[*Ts]):
     def generate_failure_data(
         self
     ) -> dict[str, Any]:
-        ...
-
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")
+    
     def fit(
         self
     ) -> Self:
-        ...
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Fitting methods for Kijima processes will be introduced in a future release")
 
 
 
 
-class FrozenKijimaIIProcess(
-    FrozenParametricModel[KijimaIIProcess[*Ts], *Ts]
+class FrozenKijima2Process(
+    FrozenParametricModel[Kijima2Process[*Ts], *Ts]
 ):
     """
     Kijima II process.
@@ -222,9 +237,9 @@ class FrozenKijimaIIProcess(
         """
 
         from relife.utils import get_model_nb_assets
-        from ._sample import KijimaIIProcessIterable
+        from ._sample import Kijima2ProcessIterable
 
-        iterable = KijimaIIProcessIterable(
+        iterable = Kijima2ProcessIterable(
             self, nb_samples, time_window=time_window, seed=seed
         )
         struct_array = np.concatenate(tuple(iterable))
@@ -236,6 +251,9 @@ class FrozenKijimaIIProcess(
         )
 
     def generate_failure_data(
-        self,
-    ):
-        ...
+        self
+    ) -> dict[str, Any]:
+        r"""
+        .. warning:: Not implemented yet
+        """
+        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")

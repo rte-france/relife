@@ -357,7 +357,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticAgesProcessIterator):
         self.ages[~event] = 0
 
 
-class KijimaIProcessIterator(StochasticAgesProcessIterator):
+class Kijima1ProcessIterator(StochasticAgesProcessIterator):
     def update_ages(
         self,
         time: NDArray[np.float64],
@@ -373,7 +373,7 @@ class KijimaIProcessIterator(StochasticAgesProcessIterator):
         self.ages[~event] = 0
 
 
-class KijimaIIProcessIterator(StochasticAgesProcessIterator):
+class Kijima2ProcessIterator(StochasticAgesProcessIterator):
     def update_ages(
         self,
         time: NDArray[np.float64],
