@@ -12,8 +12,8 @@ from typing_extensions import override
 from relife.utils import get_model_nb_assets
 
 from ._iterators import (
-    Kijima2ProcessIterator,
     Kijima1ProcessIterator,
+    Kijima2ProcessIterator,
     NonHomogeneousPoissonProcessIterator,
     RenewalProcessIterator,
     RenewalRewardProcessIterator,

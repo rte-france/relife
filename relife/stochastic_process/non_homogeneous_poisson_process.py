@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Self, Sequence, TypeVarTuple
 import warnings
+from typing import Any, Generic, Self, Sequence, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -129,8 +129,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         r"""
         .. warning:: Not implemented yet
         """
-        raise NotImplementedError("Failure data methods for stochastic processes will be introduced in a future release")
-    
+        raise NotImplementedError(
+            "Failure data methods for stochastic processes will be introduced in a future release"
+        )
+
         # from ._sample import NonHomogeneousPoissonProcessIterable
 
         # frozen_nhpp = self.freeze(*args)
@@ -251,8 +253,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)
         )
         """
-        warnings.warn("Fit method of NHPP will change in a future release", DeprecationWarning)
-    
+        warnings.warn(
+            "Fit method of NHPP will change in a future release", DeprecationWarning
+        )
+
         nhpp_data = NHPPData(
             ages_at_events,
             events_assets_ids,

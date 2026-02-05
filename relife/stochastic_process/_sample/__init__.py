@@ -1,7 +1,7 @@
 from ._data import StochasticSampleMapping
 from ._iterables import (
-    Kijima2ProcessIterable,
     Kijima1ProcessIterable,
+    Kijima2ProcessIterable,
     NonHomogeneousPoissonProcessIterable,
     RenewalProcessIterable,
 )
