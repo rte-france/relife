@@ -56,7 +56,6 @@ class TestDistribution:
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_sample_lifetime_data(self, distribution):
         expected_params = distribution.params.copy()
-        q1 = distribution.ppf(0.25)
         q3 = distribution.ppf(0.75)
         success = 0
         n = 100
