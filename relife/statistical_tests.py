@@ -42,6 +42,8 @@ def _try_fit_a_regression_model_from_likelihood_stored_data(
     'is_tested_covar_index' is tested_covar np.array of int indicating index of
     covar of interest or np.array of float giving direct values
 
+    'value_index' sample index np.array to subsample
+
     'kwargs' args not stored into likelihood (e.g. optimizer_options)
     """
     if isinstance(likelihood, IntervalLifetimeLikelihood):

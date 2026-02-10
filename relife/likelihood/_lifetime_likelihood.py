@@ -36,7 +36,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
-        # Careful
         super().__init__(model, time=time, model_args=model_args, event=event, entry=entry)
         self.params = self.model.get_initial_params(time, model_args)
 
