@@ -10,22 +10,22 @@ from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
 from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
 
 
-class BreslowBaseline:
+class _BreslowBaseline:
     """
     Class for Cox non-parametric Breslow baseline
     """
 
     def __init__(
             self,
-            covar_effect: CovarEffect,
-            event_count: np.ndarray,
-            ordered_event_covar: np.ndarray,
-            psi: Callable,
+            _covar_effect: CovarEffect,
+            _event_count: np.ndarray,
+            _ordered_event_covar: np.ndarray,
+            _psi: Callable,
     ):
-        self.covar_effect = covar_effect
-        self.event_count = event_count
-        self.ordered_event_covar = ordered_event_covar
-        self.psi = psi
+        self._covar_effect = _covar_effect
+        self._event_count = _event_count
+        self._ordered_event_covar = _ordered_event_covar
+        self._psi = _psi
 
     def chf(
         self, conf_int: bool = False, kp: bool = False
@@ -45,16 +45,16 @@ class BreslowBaseline:
                 - (
                     1
                     - (
-                        self.covar_effect.g(self.ordered_event_covar)
-                        / self.psi()
+                        self._covar_effect.g(self._ordered_event_covar)
+                        / self._psi()
                     )
                 )
-                ** (self.covar_effect.g(self.ordered_event_covar))
+                ** (self._covar_effect.g(self._ordered_event_covar))
             )
         else:
-            values = np.cumsum(self.event_count[:, None] / self.psi())
+            values = np.cumsum(self._event_count[:, None] / self._psi())
         if conf_int:
-            var = np.cumsum(self.event_count[:, None] / self.psi() ** 2)
+            var = np.cumsum(self._event_count[:, None] / self._psi() ** 2)
             conf_int = np.hstack(
                 [
                     values[:, None]
@@ -129,9 +129,9 @@ class Cox:
         """
         values = self.baseline.sf() ** self.covar_effect.g(covar)
         if conf_int:
-            psi = self.baseline.psi()
-            psi_order_1 = self.baseline.psi(order=1)
-            d_j_on_psi = self.baseline.event_count[:, None] / psi
+            psi = self.baseline._psi()
+            psi_order_1 = self.baseline._psi(order=1)
+            d_j_on_psi = self.baseline._event_count[:, None] / psi
 
             q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
             q2 = np.squeeze(
@@ -197,11 +197,11 @@ class Cox:
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
-        self._baseline = BreslowBaseline(
-            covar_effect=self.covar_effect,
-            event_count=likelihood._event_count,
-            ordered_event_covar=likelihood._ordered_event_covar,
-            psi=likelihood._psi,
+        self._baseline = _BreslowBaseline(
+            _covar_effect=self.covar_effect,
+            _event_count=likelihood._event_count,
+            _ordered_event_covar=likelihood._ordered_event_covar,
+            _psi=likelihood._psi,
         )
 
         return self
