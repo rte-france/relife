@@ -2,7 +2,6 @@ from typing import Callable
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds
 from scipy.stats import norm
 
 from relife.lifetime_model._regression import CovarEffect
@@ -89,22 +88,27 @@ class Cox:
     Class for Cox, semi-parametric, Proportional Hazards, model
     """
 
-    def __init__(self, coefficients=(None,), baseline_estimator: str = "Breslow"):
-        self.covar_effect = CovarEffect(coefficients)
-        assert baseline_estimator == "Breslow", "The only Cox baseline estimator available is Breslow"
-        self.baseline_estimator = baseline_estimator
+    def __init__(self):
+        self.covar_effect = None
+        self.fitting_results = None
         self._baseline = None
 
     @property
     def params(self):
+        if self.covar_effect is None:
+            return None
         return self.covar_effect.params
 
     @params.setter
     def params(self, value):
+        if self.covar_effect is None:
+            raise ValueError("You cannot set params without having instantiating covar_effect first")
         self.covar_effect.params = value
 
     @property
     def nb_params(self):
+        if self.covar_effect is None:
+            return None
         return self.covar_effect.nb_params
 
     @property
@@ -127,6 +131,8 @@ class Cox:
             Tuple[np.ndarray, np.ndarray] or np.ndarray:  values of sf estimator and its confidence interval
             at 95% level. Arrays are of size :math:`m`
         """
+        if self.fitting_results is None:
+            raise ValueError("You need a fitted model to evaluate sf")
         values = self.baseline.sf() ** self.covar_effect.g(covar)
         if conf_int:
             psi = self.baseline._psi()
