@@ -1,10 +1,9 @@
-from typing import Any, Callable
+from typing import Callable
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from scipy.stats import norm
-from scipy import linalg
 
 from relife.lifetime_model._regression import CovarEffect
 from relife.likelihood._lifetime_likelihood import PartialLifetimeLikelihood
@@ -95,7 +94,6 @@ class Cox:
         assert baseline_estimator == "Breslow", "The only Cox baseline estimator available is Breslow"
         self.baseline_estimator = baseline_estimator
         self._baseline = None
-        self._hess = None
 
     @property
     def params(self):
@@ -116,12 +114,6 @@ class Cox:
         else:
             return self._baseline
 
-    @baseline.setter
-    def baseline(self, value):
-        if not isinstance(value, BreslowBaseline):
-            raise TypeError("Cox baseline must be a BreslowBaseline object")
-        self._baseline = value
-
     def sf(
             self, covar: np.ndarray, conf_int: bool = False
     ) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
@@ -140,14 +132,12 @@ class Cox:
             psi = self.baseline.psi()
             psi_order_1 = self.baseline.psi(order=1)
             d_j_on_psi = self.baseline.event_count[:, None] / psi
-            information_matrix = self._hess
-            inverse_information_matrix = linalg.inv(information_matrix)
 
             q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
             q2 = np.squeeze(
                 np.matmul(
                     q3[:, None, :],
-                    np.matmul(inverse_information_matrix[None, :, :], q3[:, :, None]),
+                    np.matmul(self.fitting_results.covariance_matrix[None, :, :], q3[:, :, None]),
                 )
             )  # m
             q1 = np.cumsum(d_j_on_psi * (1 / psi))
@@ -175,12 +165,6 @@ class Cox:
         param0 = np.zeros_like(self.params, dtype=np.float64)
         return param0
 
-    @property
-    def params_bounds(self):
-        lb = np.full(self.nb_params, -np.inf)
-        ub = np.full(self.nb_params, np.inf)
-        return Bounds(lb, ub)
-
     def fit(
         self,
         time,
@@ -200,8 +184,6 @@ class Cox:
 
         if optimizer_options is None:
             optimizer_options = {}
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = self.params_bounds
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
         if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and ("hess" not in optimizer_options):
@@ -215,12 +197,11 @@ class Cox:
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
-        self.baseline = BreslowBaseline(
+        self._baseline = BreslowBaseline(
             covar_effect=self.covar_effect,
             event_count=likelihood._event_count,
             ordered_event_covar=likelihood._ordered_event_covar,
             psi=likelihood._psi,
         )
-        self._hess = likelihood.hess_negative_log(fitting_results.optimal_params)
 
         return self
