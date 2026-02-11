@@ -62,7 +62,7 @@ def _broadcast_time_covar_shapes(time_shape: tuple[int, ...], covar_shape: tuple
 
 
 @final
-class CovarEffect(ParametricModel):
+class LinearCovarEffect(ParametricModel):
     """
     Covariates effect.
 

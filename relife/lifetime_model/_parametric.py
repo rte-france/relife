@@ -10,7 +10,7 @@ from scipy.optimize import Bounds
 from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.lifetime_model._distribution import LifetimeDistribution
 from relife.lifetime_model._frozen import FrozenParametricLifetimeModel
-from relife.lifetime_model._regression import CovarEffect, _broadcast_time_covar_shapes, _broadcast_time_covar
+from relife.lifetime_model._regression import LinearCovarEffect, _broadcast_time_covar_shapes, _broadcast_time_covar
 from relife.typing import AnyFloat, NumpyFloat, Seed, NumpyBool, ScipyMinimizeOptions
 
 
@@ -20,11 +20,11 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
     """
 
     baseline: LifetimeDistribution
-    covar_effect: CovarEffect
+    covar_effect: LinearCovarEffect
 
     def __init__(self, baseline: LifetimeDistribution, coefficients: tuple[float | None, ...] = (None,)):
         super().__init__()
-        self.covar_effect = CovarEffect(coefficients)
+        self.covar_effect = LinearCovarEffect(coefficients)
         self.baseline = baseline
 
     @property
@@ -615,7 +615,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         if model_args is None:
             raise ValueError("LifetimeRegression expects covar but model_args is None")
         covar = model_args[0]
-        self.covar_effect = CovarEffect(
+        self.covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
         return super().fit(time, model_args=model_args, event=event, entry=entry, optimizer_options=optimizer_options)
@@ -632,7 +632,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         if model_args is None:
             raise ValueError("LifetimeRegression expects covar but model_args is None")
         covar = model_args[0]
-        self.covar_effect = CovarEffect(
+        self.covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
         return super().fit_from_interval_censored_lifetimes(
@@ -669,7 +669,7 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : CovarEffect
+    covar_effect : LinearCovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.
@@ -965,7 +965,7 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     ----------
     baseline : FittableParametricLifetimeModel
         The regression baseline model (lifetime model).
-    covar_effect : CovarEffect
+    covar_effect : LinearCovarEffect
         The regression covariate effect.
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.). If the model is not fitted, the value is None.

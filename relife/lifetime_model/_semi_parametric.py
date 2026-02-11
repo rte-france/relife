@@ -1,9 +1,8 @@
-from typing import Callable
 
 import numpy as np
 from scipy.stats import norm
 
-from relife.lifetime_model._regression import CovarEffect
+from relife.lifetime_model._regression import LinearCovarEffect
 from relife.likelihood import CoxPartialLifetimeLikelihood
 from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
 
@@ -15,15 +14,12 @@ class _BreslowBaseline:
 
     def __init__(
             self,
-            _covar_effect: CovarEffect,
-            _event_count: np.ndarray,
-            _ordered_event_covar: np.ndarray,
-            _psi: Callable,
+            likelihood: CoxPartialLifetimeLikelihood,
     ):
-        self._covar_effect = _covar_effect
-        self._event_count = _event_count
-        self._ordered_event_covar = _ordered_event_covar
-        self._psi = _psi
+        self._covar_effect = likelihood.model
+        self._event_count = likelihood._event_count
+        self._ordered_event_covar = likelihood._ordered_event_covar
+        self._psi = likelihood._psi
 
     def chf(
         self, conf_int: bool = False, kp: bool = False
@@ -110,13 +106,6 @@ class SemiParametricProportionalHazard:
             return None
         return self.covar_effect.nb_params
 
-    @property
-    def baseline(self):
-        if self._baseline is None:
-            raise ValueError("Cox baseline is not available before model fitting")
-        else:
-            return self._baseline
-
     def sf(
             self, covar: np.ndarray, conf_int: bool = False
     ) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
@@ -132,11 +121,11 @@ class SemiParametricProportionalHazard:
         """
         if self.fitting_results is None:
             raise ValueError("You need a fitted model to evaluate sf")
-        values = self.baseline.sf() ** self.covar_effect.g(covar)
+        values = self._baseline.sf() ** self.covar_effect.g(covar)
         if conf_int:
-            psi = self.baseline._psi()
-            psi_order_1 = self.baseline._psi(order=1)
-            d_j_on_psi = self.baseline._event_count[:, None] / psi
+            psi = self._baseline._psi()
+            psi_order_1 = self._baseline._psi(order=1)
+            d_j_on_psi = self._baseline._event_count[:, None] / psi
 
             q3 = np.cumsum((psi_order_1 / psi - covar) * d_j_on_psi, axis=0)  # [m, p]
             q2 = np.squeeze(
@@ -190,13 +179,7 @@ class SemiParametricProportionalHazard:
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
 
         self.fitting_results = fitting_results
-        self.covar_effect = CovarEffect(coefficients=fitting_results.optimal_params)
-        likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
-        self._baseline = _BreslowBaseline(
-            _covar_effect=self.covar_effect,
-            _event_count=likelihood._event_count,
-            _ordered_event_covar=likelihood._ordered_event_covar,
-            _psi=likelihood._psi,
-        )
+        self.covar_effect = LinearCovarEffect(coefficients=fitting_results.optimal_params)
+        self._baseline = _BreslowBaseline(likelihood=likelihood)
 
         return self

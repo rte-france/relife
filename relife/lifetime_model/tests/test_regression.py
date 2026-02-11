@@ -5,7 +5,7 @@ from pytest import approx
 from scipy.stats import boxcox, zscore
 
 from relife.lifetime_model import ParametricAcceleratedFailureTime, ParametricProportionalHazard, Weibull
-from relife.lifetime_model._regression import CovarEffect
+from relife.lifetime_model._regression import LinearCovarEffect
 from relife.lifetime_model.semi_parametric import Cox
 
 
@@ -44,7 +44,7 @@ def test_covar_effect():
     => jac_g : (nb_coef, m, 1)
     """
 
-    covar_effect = CovarEffect(coefficients=(2.4, 5.5))
+    covar_effect = LinearCovarEffect(coefficients=(2.4, 5.5))
     z1 = np.array([1, 2, 3])
     z2 = np.array([0.8, 0.7, 0.5])
     assert covar_effect.g(np.column_stack((z1, z2))) == approx(np.exp(2.4 * z1 + 5.5 * z2).reshape(-1, 1))

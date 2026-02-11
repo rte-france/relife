@@ -126,6 +126,7 @@ class Likelihood(ABC):
         else:
             hessian = approx_hessian(self, optimal_params)
         covariance_matrix = np.linalg.pinv(hessian)
+        self.params = optimal_params  # don't know if last optimization iteration did it, but just in case ...
         return FittingResults(
             self.nb_observations,
             optimal_params,

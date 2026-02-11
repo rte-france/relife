@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.utils import reshape_1d_arg
-from relife.lifetime_model._regression import CovarEffect
+from relife.lifetime_model._regression import LinearCovarEffect
 
 from ._base import Likelihood
 
@@ -326,7 +326,7 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             event: NDArray[np.bool_] | None = None,
             entry: NDArray[np.float64] | None = None,
     ):
-        covar_effect = CovarEffect(
+        covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
 
