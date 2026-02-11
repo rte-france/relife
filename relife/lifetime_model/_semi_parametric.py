@@ -163,13 +163,6 @@ class Cox:
         else:
             return values
 
-    def get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-    ) -> NDArray[np.float64]:
-        param0 = np.zeros_like(self.params, dtype=np.float64)
-        return param0
 
     def fit(
         self,
@@ -180,12 +173,9 @@ class Cox:
         optimizer_options=None,
         seed: int = 1
     ):
-        self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
 
         likelihood = PartialLifetimeLikelihood(
-            self, time, covar, event=event, entry=entry
+            time, covar, event=event, entry=entry
         )
 
         if optimizer_options is None:
@@ -200,8 +190,8 @@ class Cox:
 
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
 
-        self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
+        self.covar_effect = CovarEffect(coefficients=fitting_results.optimal_params)
         likelihood.params = fitting_results.optimal_params # necessary to update likelihood._psi
         self._baseline = _BreslowBaseline(
             _covar_effect=self.covar_effect,

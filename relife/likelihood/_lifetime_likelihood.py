@@ -7,12 +7,12 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.utils import reshape_1d_arg
+from relife.lifetime_model._regression import CovarEffect
 
 from ._base import Likelihood
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import FittableParametricLifetimeModel
-    from relife.lifetime_model.semi_parametric import Cox
 
 __all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "PartialLifetimeLikelihood"]
 
@@ -321,14 +321,16 @@ class PartialLifetimeLikelihood(Likelihood):
 
     def __init__(
             self,
-            model: Cox,
             time: NDArray[np.float64],
             covar: NDArray[np.float64],
             event: NDArray[np.bool_] | None = None,
             entry: NDArray[np.float64] | None = None,
     ):
-        super().__init__(model)
-        self.params = self.model.get_initial_params(time, covar)
+        covar_effect = CovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
+
+        super().__init__(model=covar_effect)
 
         time = reshape_1d_arg(time)
         event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
@@ -460,17 +462,17 @@ class PartialLifetimeLikelihood(Likelihood):
 
         if order == 0:
             # shape [m]
-            return np.dot(i_set, self.model.covar_effect.g(self._covar))
+            return np.dot(i_set, self.model.g(self._covar))
         elif order == 1:
             # shape [m, p]
-            return np.dot(i_set, self._covar * self.model.covar_effect.g(self._covar))
+            return np.dot(i_set, self._covar * self.model.g(self._covar))
         elif order == 2:
             # shape [m, p, p]
             return np.tensordot(
                 i_set[:, :None],
                 self._covar[:, None]
                 * self._covar[:, :, None]
-                * self.model.covar_effect.g(self._covar)[:, :, None],
+                * self.model.g(self._covar)[:, :, None],
                 axes=1,
             )
 
@@ -525,12 +527,12 @@ class PartialLifetimeLikelihood(Likelihood):
 
         if self.method == "cox":
             neg_L = -(
-                    np.log(self.model.covar_effect.g(self._ordered_event_covar)).sum()
+                    np.log(self.model.g(self._ordered_event_covar)).sum()
                     - np.log(self._psi()).sum()
             )
         elif self.method == "breslow":
             neg_L = -(
-                    np.log(self.model.covar_effect.g(self._s_j)).sum()
+                    np.log(self.model.g(self._s_j)).sum()
                     - (self._event_count[:, None] * np.log(self._psi())).sum()
             )
         elif self.method == "efron":
@@ -539,7 +541,7 @@ class PartialLifetimeLikelihood(Likelihood):
             # using where in np.log allows to avoid 0. masked elements
             m = self._psi_efron()
             neg_L = -(
-                    np.log(self.model.covar_effect.g(self._s_j)).sum()
+                    np.log(self.model.g(self._s_j)).sum()
                     - np.log(m, out=np.zeros_like(m), where=(m != 0))
                     .sum(axis=1, keepdims=True)
                     .sum()
