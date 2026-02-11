@@ -4,7 +4,7 @@ import numpy as np
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
-from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
+from relife.lifetime_model import ParametricAcceleratedFailureTime, ParametricProportionalHazard, Weibull
 from relife.lifetime_model._regression import CovarEffect
 from relife.lifetime_model.semi_parametric import Cox
 
@@ -188,13 +188,13 @@ def test_aft_pph_weibull_eq(insulator_string_data):
             )
         )
     )
-    weibull_aft = AcceleratedFailureTime(Weibull()).fit(
+    weibull_aft = ParametricAcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
         model_args=covar_data,
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
-    weibull_pph = ProportionalHazard(Weibull()).fit(
+    weibull_pph = ParametricProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
         model_args=covar_data,
         event=insulator_string_data["event"],

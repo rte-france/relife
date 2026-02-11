@@ -43,8 +43,8 @@ Parametric lifetime models
     :template: class_template.rst
     :nosignatures:
 
-    ProportionalHazard
-    AcceleratedFailureTime
+    ParametricProportionalHazard
+    ParametricAcceleratedFailureTime
 
 .. rubric:: Conditional lifetime models
 

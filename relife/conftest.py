@@ -4,13 +4,13 @@ from numpy.typing import NDArray
 
 from relife.data import load_insulator_string, load_power_transformer
 from relife.lifetime_model import (
-    AcceleratedFailureTime,
+    ParametricAcceleratedFailureTime,
     AgeReplacementModel,
     Exponential,
     Gamma,
     Gompertz,
     LogLogistic,
-    ProportionalHazard,
+    ParametricProportionalHazard,
     Weibull,
 )
 
@@ -25,16 +25,16 @@ DISTRIBUTION_INSTANCES = [
 NB_COEF = 2
 
 REGRESSION_INSTANCES = [
-    ProportionalHazard(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
-    AcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
+    ParametricProportionalHazard(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
+    ParametricProportionalHazard(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
+    ParametricProportionalHazard(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
+    ParametricProportionalHazard(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
+    ParametricProportionalHazard(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
+    ParametricAcceleratedFailureTime(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
+    ParametricAcceleratedFailureTime(Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))),
+    ParametricAcceleratedFailureTime(Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))),
+    ParametricAcceleratedFailureTime(Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))),
+    ParametricAcceleratedFailureTime(LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))),
 ]
 
 ########################################################################################################################

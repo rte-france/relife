@@ -14,7 +14,7 @@ from ._base import Likelihood
 if TYPE_CHECKING:
     from relife.lifetime_model._base import FittableParametricLifetimeModel
 
-__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "PartialLifetimeLikelihood"]
+__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "CoxPartialLifetimeLikelihood"]
 
 
 @final
@@ -317,7 +317,7 @@ class IntervalLifetimeLikelihood(Likelihood):
         return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
 
 
-class PartialLifetimeLikelihood(Likelihood):
+class CoxPartialLifetimeLikelihood(Likelihood):
 
     def __init__(
             self,

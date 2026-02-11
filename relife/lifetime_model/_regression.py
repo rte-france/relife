@@ -29,7 +29,7 @@ from ._base import FittableParametricLifetimeModel
 from ._distribution import LifetimeDistribution
 from ._frozen import FrozenParametricLifetimeModel
 
-__all__: list[str] = ["AcceleratedFailureTime", "ProportionalHazard"]
+__all__: list[str] = ["ParametricAcceleratedFailureTime", "ParametricProportionalHazard"]
 
 
 def _broadcast_time_covar(time: AnyFloat, covar: AnyFloat) -> tuple[NumpyFloat, NumpyFloat]:
@@ -137,9 +137,9 @@ class CovarEffect(ParametricModel):
         return jac  # (nb_coef, m, 1)
 
 
-class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
+class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     """
-    Base class for lifetime regression.
+    Base class for parametric lifetime regression.
     """
 
     baseline: LifetimeDistribution
@@ -764,9 +764,9 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
 
 
 @final
-class ProportionalHazard(LifetimeRegression):
+class ParametricProportionalHazard(ParametricLifetimeRegression):
     r"""
-    Proportional Hazard regression.
+    Parametric Proportional Hazard regression.
 
     The cumulative hazard function :math:`H` is linked to the multiplier
     function :math:`g` by the relation:
@@ -1058,10 +1058,10 @@ class ProportionalHazard(LifetimeRegression):
 
 
 @final
-class AcceleratedFailureTime(LifetimeRegression):
+class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     # noinspection PyUnresolvedReferences
     r"""
-    Accelerated failure time regression.
+    Parametric Accelerated failure time regression.
 
     The cumulative hazard function :math:`H` is linked to the multiplier
     function :math:`g` by the relation:

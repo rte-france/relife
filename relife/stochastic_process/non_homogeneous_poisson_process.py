@@ -249,8 +249,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         With additional information and model args (regression of 2 coefficients)
 
-        >>> from relife.lifetime_model import ProportionalHazard
-        >>> nhpp = NonHomogeneousPoissonProcess(ProportionalHazard())
+        >>> from relife.lifetime_model import ParametricProportionalHazard
+        >>> nhpp = NonHomogeneousPoissonProcess(ParametricProportionalHazard())
         >>> nhpp.fit(
             np.array([11., 13., 21., 25., 27.]),
             ("AB2", "CX13", "AB2", "AB2", "CX13"),

@@ -169,9 +169,9 @@ def approx_hessian(
     eps: float = 1e-6,
 ) -> NDArray[np.float64]:
     from relife.lifetime_model import Gamma
-    from relife.lifetime_model._regression import LifetimeRegression
+    from relife.lifetime_model._regression import ParametricLifetimeRegression
 
-    if isinstance(likelihood.model, LifetimeRegression):
+    if isinstance(likelihood.model, ParametricLifetimeRegression):
         if isinstance(likelihood.model.baseline, Gamma):
             return _hessian_scheme(likelihood, params, method="2point", eps=eps)
     if isinstance(likelihood.model, Gamma):

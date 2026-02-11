@@ -54,8 +54,8 @@ from ._distribution import (
     Weibull,
 )
 from ._non_parametric import ECDF, KaplanMeier, NelsonAalen
-from ._regression import AcceleratedFailureTime, ProportionalHazard
-from ._semi_parametric import Cox
+from ._regression import ParametricAcceleratedFailureTime, ParametricProportionalHazard
+from ._semi_parametric import SemiParametricProportionalHazard
 
 __all__ = [
     "Exponential",
@@ -65,9 +65,9 @@ __all__ = [
     "LogLogistic",
     "MinimumDistribution",
     "EquilibriumDistribution",
-    "ProportionalHazard",
-    "Cox",
-    "AcceleratedFailureTime",
+    "ParametricProportionalHazard",
+    "SemiParametricProportionalHazard",
+    "ParametricAcceleratedFailureTime",
     "KaplanMeier",
     "ECDF",
     "NelsonAalen",
