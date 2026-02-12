@@ -1,10 +1,11 @@
-
+# pyright: basic
 import numpy as np
 from scipy.stats import norm
 
-from relife.lifetime_model._regression import LinearCovarEffect
 from relife.likelihood import CoxPartialLifetimeLikelihood
 from relife.likelihood._base import SCIPY_MINIMIZE_ORDER_2_ALGO
+
+from ._regression import LinearCovarEffect
 
 
 class _BreslowBaseline:
@@ -13,8 +14,8 @@ class _BreslowBaseline:
     """
 
     def __init__(
-            self,
-            likelihood: CoxPartialLifetimeLikelihood,
+        self,
+        likelihood: CoxPartialLifetimeLikelihood,
     ):
         self._covar_effect = likelihood.model
         self._event_count = likelihood._event_count
@@ -36,13 +37,7 @@ class _BreslowBaseline:
         if kp:
             values = np.cumsum(
                 1
-                - (
-                    1
-                    - (
-                        self._covar_effect.g(self._ordered_event_covar)
-                        / self._psi()
-                    )
-                )
+                - (1 - (self._covar_effect.g(self._ordered_event_covar) / self._psi()))
                 ** (self._covar_effect.g(self._ordered_event_covar))
             )
         else:
@@ -94,12 +89,6 @@ class SemiParametricProportionalHazard:
             return None
         return self.covar_effect.params
 
-    @params.setter
-    def params(self, value):
-        if self.covar_effect is None:
-            raise ValueError("You cannot set params without having instantiating covar_effect first")
-        self.covar_effect.params = value
-
     @property
     def nb_params(self):
         if self.covar_effect is None:
@@ -107,7 +96,7 @@ class SemiParametricProportionalHazard:
         return self.covar_effect.nb_params
 
     def sf(
-            self, covar: np.ndarray, conf_int: bool = False
+        self, covar: np.ndarray, conf_int: bool = False
     ) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
         """Knowing estimates of beta, computes the sf estimator and confidence interval (optional)
 
@@ -131,12 +120,15 @@ class SemiParametricProportionalHazard:
             q2 = np.squeeze(
                 np.matmul(
                     q3[:, None, :],
-                    np.matmul(self.fitting_results.covariance_matrix[None, :, :], q3[:, :, None]),
+                    np.matmul(
+                        self.fitting_results.covariance_matrix[None, :, :],
+                        q3[:, :, None],
+                    ),
                 )
             )  # m
             q1 = np.cumsum(d_j_on_psi * (1 / psi))
 
-            var = (values ** 2) * (q1 + q2)
+            var = (values**2) * (q1 + q2)
 
             conf_int = np.hstack(
                 [
@@ -151,26 +143,18 @@ class SemiParametricProportionalHazard:
         else:
             return values
 
-
     def fit(
-        self,
-        time,
-        covar,
-        event=None,
-        entry=None,
-        optimizer_options=None,
-        seed: int = 1
+        self, time, covar, event=None, entry=None, optimizer_options=None, seed: int = 1
     ):
-
-        likelihood = CoxPartialLifetimeLikelihood(
-            time, covar, event=event, entry=entry
-        )
+        likelihood = CoxPartialLifetimeLikelihood(time, covar, event=event, entry=entry)
 
         if optimizer_options is None:
             optimizer_options = {}
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
-        if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and ("hess" not in optimizer_options):
+        if (optimizer_options["method"] in SCIPY_MINIMIZE_ORDER_2_ALGO) and (
+            "hess" not in optimizer_options
+        ):
             optimizer_options["hess"] = likelihood.hess_negative_log
         if "x0" not in optimizer_options:
             np.random.seed(seed)
@@ -179,7 +163,10 @@ class SemiParametricProportionalHazard:
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
 
         self.fitting_results = fitting_results
-        self.covar_effect = LinearCovarEffect(coefficients=fitting_results.optimal_params)
+        self.covar_effect = LinearCovarEffect(
+            coefficients=fitting_results.optimal_params
+        )
         self._baseline = _BreslowBaseline(likelihood=likelihood)
 
         return self
+
