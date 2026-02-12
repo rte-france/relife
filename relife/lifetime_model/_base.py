@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -9,12 +10,15 @@ from typing import (
     Callable,
     Generic,
     Literal,
+    ParamSpec,
     Self,
+    TypeVar,
     TypeVarTuple,
     overload,
 )
 
 import numpy as np
+import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, newton
 
@@ -42,13 +46,13 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     This class is a blueprint for implementing parametric lifetime models.
     The interface is generic and can define a variadic set of arguments.
-    It expects implementation of the hazard function (``hf``), the cumulative hazard function (``chf``),
-    the probability density function (``pdf``) and the survival function (``sf``).
+    It expects implementation of the hazard function (`hf`), the cumulative hazard function (`chf`),
+    the probability density function (`pdf`) and the survival function (`sf`).
     Other functions are implemented by default but can be overridden by the derived classes.
 
     Note:
         The abstract methods also provides a default implementation. One may not have to implement
-        ``hf``, ``chf``, ``pdf`` and ``sf`` and just call ``super()`` to access the base implementation.
+        `hf`, `chf`, `pdf` and `sf` and just call `super()` to access the base implementation.
 
     Methods:
         hf: Abstract method to compute the hazard function.
@@ -59,6 +63,22 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def sf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            sf values at each given time(s).
+        """
         if hasattr(self, "chf"):
             return np.exp(
                 -self.chf(
@@ -78,6 +98,22 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def hf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            hf values at each given time(s).
+        """
         if hasattr(self, "pdf") and hasattr(self, "sf"):
             return self.pdf(time, *args) / self.sf(time, *args)
         else:
@@ -90,6 +126,22 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def chf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            chf values at each given time(s).
+        """
         if hasattr(self, "sf"):
             return -np.log(self.sf(time, *args))
         elif hasattr(self, "pdf") and hasattr(self, "hf"):
@@ -104,6 +156,22 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def pdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            pdf values at each given time(s).
+        """
         try:
             return self.sf(time, *args) * self.hf(time, *args)
         except NotImplementedError as err:
@@ -115,16 +183,76 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ) from err
 
     def cdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            cdf values at each given time(s).
+        """
         return 1 - self.sf(time, *args)
 
     def ppf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The percent point function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            ppf values at each given probability value(s).
+        """
         probability = np.asarray(probability)
         return self.isf(1 - probability, *args)
 
     def median(self, *args: *Ts) -> NumpyFloat:
+        """
+        The median.
+
+        Parameters
+        ----------
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+        """
         return self.ppf(0.5, *args)
 
     def isf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The inverse survival function.
+
+        Parameters
+        ----------
+        probability : float or np.ndarray
+            Probability value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            isf values at each given probability value(s).
+        """
 
         def func(x: NDArray[np.float64]) -> NumpyFloat:
             return self.sf(x, *args) - probability
@@ -137,6 +265,22 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         )
 
     def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        Inverse cumulative hazard function.
+
+        Parameters
+        ----------
+        cumulative_hazard_rate : float or np.ndarray
+            Cumulative hazard rate value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            ichf values at each given cumulative hazard rate(s).
+        """
 
         def func(x: NDArray[np.float64]) -> NumpyFloat:
             return self.chf(x, *args) - cumulative_hazard_rate
@@ -150,19 +294,17 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
-        seed: int | None = None,
+        seed: Seed | None = None,
     ) -> NumpyFloat: ...
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -170,9 +312,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -180,33 +321,16 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
     def rvs(
         self,
-        size: int,
+        size: int | tuple[int, int],
         *args: *Ts,
-        nb_assets: int | None = None,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
-    def rvs(
-        self,
-        size: int,
-        *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -216,17 +340,43 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         | tuple[NumpyFloat, NumpyFloat]
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
+        """
+        Random variable sampling.
+
+        Parameters
+        ----------
+        size : int or tuple (m, n) of int
+            Size of the generated sample.
+        *args
+            Any additonal args.
+        return_event : bool, default is False
+            If True, returns event indicators along with the sample time values.
+        return_entry : bool, default is False
+            If True, returns corresponding entry values of the sample time values.
+        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
+            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
+
+        Returns
+        -------
+        out : float, ndarray or tuple of float or ndarray
+            The sample values. If either `return_event` or `return_entry` is True, returns a tuple containing
+            the time values followed by event values, entry values or both.
+        """
         rng = np.random.default_rng(seed)
-        if nb_assets is not None:
-            np_size = (nb_assets, size)
-        else:
-            np_size = size
-        probability = rng.uniform(size=np_size)
-        if np_size == 1:
+        probability = rng.uniform(size=size)
+        if size == 1:
             probability = np.squeeze(probability)
         time = self.isf(probability, *args)
-        event = np.ones_like(time, dtype=np.bool_) if isinstance(time, np.ndarray) else np.bool_(True)
-        entry = np.zeros_like(time, dtype=np.float64) if isinstance(time, np.ndarray) else np.float64(0)
+        event = (
+            np.ones_like(time, dtype=np.bool_)
+            if isinstance(time, np.ndarray)
+            else np.bool_(True)
+        )
+        entry = (
+            np.zeros_like(time, dtype=np.float64)
+            if isinstance(time, np.ndarray)
+            else np.float64(0)
+        )
         if not return_event and not return_entry:
             return time
         elif return_event and not return_entry:
@@ -251,6 +401,28 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         *args: *Ts,
         deg: int = 10,
     ) -> NumpyFloat:
+        """
+        Lebesgue-Stieltjes integration.
+
+        Parameters
+        ----------
+        func : callable (in : 1 ndarray , out : 1 ndarray)
+            The callable must have only one ndarray object as argument and one ndarray object as output.
+        a : ndarray (maximum number of dimension is 2)
+            Lower bound(s) of integration.
+        b : ndarray (maximum number of dimension is 2)
+            Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.
+        *args
+            Any additonal args.
+        deg : int, default 10
+            Degree of the polynomials interpolation.
+
+        Returns
+        -------
+        out : np.ndarray
+            Lebesgue-Stieltjes integral of func from `a` to `b`.
+        """
+
         def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n), ie points of quadratures
             # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
@@ -261,15 +433,19 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
                 _ = np.broadcast_shapes(fx.shape[-len(x.shape) :], x.shape)
             except ValueError:
                 raise ValueError(
-                    f"""
+                    """
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
                     """
                 )
-            if x.ndim == 3:  # reshape because model.pdf is tested only for input ndim <= 2
+            if (
+                x.ndim == 3
+            ):  # reshape because model.pdf is tested only for input ndim <= 2
                 x_shape: tuple[int, int, int] = x.shape
                 xdeg, m, n = x_shape
-                x = np.rollaxis(x, 1).reshape(m, -1)  # (m, deg*n), roll on m because axis 0 must align with m of args
+                x = np.rollaxis(x, 1).reshape(
+                    m, -1
+                )  # (m, deg*n), roll on m because axis 0 must align with m of args
                 pdf = self.pdf(x, *args)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, xdeg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
@@ -284,11 +460,19 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if np.any(arr_a > arr_b):
             raise ValueError("Bound values a must be lower than values of b")
 
-        bound_b = self.isf(1e-4, *args)  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
+        bound_b = self.isf(
+            1e-4, *args
+        )  #  () or (m, 1), if (m, 1) then arr_b.shape == (m, 1) or (m, n)
         broadcasted_arrs = np.broadcast_arrays(arr_a, arr_b, bound_b)
-        arr_a = broadcasted_arrs[0].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        arr_b = broadcasted_arrs[1].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
-        bound_b = broadcasted_arrs[2].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_a = broadcasted_arrs[
+            0
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        arr_b = broadcasted_arrs[
+            1
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
+        bound_b = broadcasted_arrs[
+            2
+        ].copy()  # arr_a.shape == arr_b.shape == bound_b.shape
         is_inf = np.isinf(arr_b)  # () or (n,) or (m, n)
         arr_b = np.where(is_inf, bound_b, arr_b)
         integration = legendre_quadrature(
@@ -302,6 +486,20 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         )
 
     def moment(self, n: int, *args: *Ts) -> NumpyFloat:
+        """
+        n-th order moment.
+
+        Parameters
+        ----------
+        n : int
+            order of the moment, at least 1.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64
+        """
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
 
@@ -317,12 +515,53 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         )  #  high degree of polynome to ensure high precision
 
     def mean(self, *args: *Ts) -> NumpyFloat:
+        """
+        The mean of the distribution.
+
+        Parameters
+        ----------
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+        """
         return self.moment(1, *args)
 
     def var(self, *args: *Ts) -> NumpyFloat:
+        """
+        The variance of the distribution.
+
+        Parameters
+        ----------
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+        """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def mrl(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The mean residual life function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+
         sf = self.sf(time, *args)
 
         def func(x: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -334,6 +573,41 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return ls / sf
 
 
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def document_args(
+    *,
+    base_cls: type,
+    args_docstring: list[docscrape.Parameter],
+    returns: list[docscrape.Parameter] | None = None,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def decorator_extend_docstring(
+        method: Callable[P, T],
+    ) -> Callable[P, T]:
+        base_doc = getattr(base_cls, method.__name__).__doc__
+        numpy_docstring = docscrape.NumpyDocString(base_doc)
+        new_parameters_docstring: list[docscrape.Parameter] = []
+        for param in numpy_docstring["Parameters"]:  # pyright: ignore[reportUnknownVariableType]
+            if param.name != "*args":  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
+                new_parameters_docstring.append(param)  # pyright: ignore[reportArgumentType]
+            else:
+                new_parameters_docstring += args_docstring
+        numpy_docstring["Parameters"] = new_parameters_docstring
+        if returns is not None:
+            numpy_docstring["Returns"] = returns
+        method.__doc__ = str(numpy_docstring)
+
+        @functools.wraps(method)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            return method(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_extend_docstring
+
+
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     fitting_results: FittingResults | None
 
@@ -341,130 +615,153 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         super().__init__(**kwparams)
         self.fitting_results = None
 
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_hf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
     @abstractmethod
     def jac_hf(
         self,
         time: AnyFloat,
         *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @abstractmethod
-    def jac_chf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @abstractmethod
-    def jac_sf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[False],
-    ) -> tuple[NumpyFloat, ...]: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: Literal[True],
-    ) -> NumpyFloat: ...
-    @overload
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
-    @abstractmethod
-    def jac_pdf(
-        self,
-        time: AnyFloat,
-        *args: *Ts,
-        asarray: bool = True,
-    ) -> tuple[NumpyFloat, ...] | NumpyFloat: ...
+    ) -> NumpyFloat:
+        """
+        The jacobian of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
 
     @abstractmethod
-    def dhf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat: ...
+    def jac_chf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+
+    @abstractmethod
+    def jac_sf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The jacobian of the survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+
+    def jac_cdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The jacobian of the cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+        return -self.jac_sf(time, *args)
+
+    @abstractmethod
+    def jac_pdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The jacobian of the probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+
+        """
+
+    @abstractmethod
+    def dhf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+        """
+        The derivate of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
 
     @abstractmethod
     def get_initial_params(
         self,
         time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
     ) -> NDArray[np.float64]:
-        """Get the inital params values used in 'fit'.
-        To change this value, pass 'x0' in 'optimizer_options' of 'fit'.
+        """
+        Gets the inital parameters values used in before fitting.
+
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+            If it is not None, it will be used to select only complete lifetimes.
+        model_args : any ndarray or tuple of ndarray, default is None
+            Any additional arguments required by the model.
+
+        Returns
+        -------
+        out : 1d array of float
         """
 
     @property
@@ -476,7 +773,11 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             np.full(self.nb_params, np.inf),
         )
 
-    def _fit(self, likelihood: Likelihood, optimizer_options: ScipyMinimizeOptions | None = None):
+    def _fit(
+        self,
+        likelihood: Likelihood,
+        optimizer_options: ScipyMinimizeOptions | None = None,
+    ):
         if optimizer_options is None:
             optimizer_options = {}
         if "bounds" not in optimizer_options:
@@ -519,12 +820,14 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        Self
-            The current object with the estimated parameters setted inplace.
+        out : the object instance
+            The estimated parameters are setted inplace.
         """
         from relife.likelihood import DefaultLifetimeLikelihood
 
-        likelihood = DefaultLifetimeLikelihood(self, time, model_args, event=event, entry=entry)
+        likelihood = DefaultLifetimeLikelihood(
+            self, time, model_args, event=event, entry=entry
+        )
         return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)
 
     def fit_from_interval_censored_lifetimes(
@@ -564,10 +867,12 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
         Returns
         -------
-        Self
-            The current object with the estimated parameters setted inplace.
+        out : the object instance
+            The estimated parameters are setted inplace.
         """
         from relife.likelihood import IntervalLifetimeLikelihood
 
-        likelihood = IntervalLifetimeLikelihood(self, time_inf, time_sup, model_args, entry=entry)
+        likelihood = IntervalLifetimeLikelihood(
+            self, time_inf, time_sup, model_args, entry=entry
+        )
         return self._fit(likelihood=likelihood, optimizer_options=optimizer_options)

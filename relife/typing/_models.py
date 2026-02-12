@@ -4,6 +4,7 @@ from typing import (
     Callable,
     Literal,
     Protocol,
+    Sequence,
     TypeVarTuple,
     overload,
 )
@@ -40,9 +41,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -50,9 +50,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[False],
         seed: Seed | None = None,
@@ -60,9 +59,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[False],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -70,9 +68,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: Literal[True],
         return_entry: Literal[True],
         seed: Seed | None = None,
@@ -80,9 +77,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     @overload
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,
@@ -94,9 +90,8 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     ): ...
     def rvs(
         self,
-        size: int,
+        size: int | Sequence[int],
         *args: *Ts,
-        nb_assets: int | None = None,
         return_event: bool = False,
         return_entry: bool = False,
         seed: Seed | None = None,

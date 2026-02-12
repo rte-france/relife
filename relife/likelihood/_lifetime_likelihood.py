@@ -6,20 +6,23 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.utils import reshape_1d_arg
 from relife.lifetime_model._regression import LinearCovarEffect
+from relife.utils import reshape_1d_arg
 
 from ._base import Likelihood
+
+__all__ = [
+    "DefaultLifetimeLikelihood",
+    "IntervalLifetimeLikelihood",
+    "CoxPartialLifetimeLikelihood",
+]
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import FittableParametricLifetimeModel
 
-__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "CoxPartialLifetimeLikelihood"]
-
 
 @final
 class DefaultLifetimeLikelihood(Likelihood):
-
     _nb_observations: int
     _time: NDArray[np.float64]
     _complete_time: NDArray[np.float64]
@@ -37,11 +40,19 @@ class DefaultLifetimeLikelihood(Likelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model.get_initial_params(time, model_args)
+        self.params = self.model.get_initial_params(time, event, model_args)
 
         time = reshape_1d_arg(time)
-        event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
+        event = (
+            reshape_1d_arg(event)
+            if event is not None
+            else np.ones_like(time, dtype=np.bool_)
+        )
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -74,7 +85,9 @@ class DefaultLifetimeLikelihood(Likelihood):
     def _event_contrib(self) -> np.float64 | None:
         if len(self._complete_time) == 0:
             return None
-        return np.sum(-np.log(self.model.hf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.hf(self._complete_time, *self._complete_time_args))
+        )
 
     def _entry_contrib(self) -> np.float64 | None:
         if len(self._nonzero_entry) == 0:
@@ -85,7 +98,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = self.model.jac_chf(
             self._time,
             *self._args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -98,7 +110,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_hf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.hf(self._complete_time, *self._complete_time_args)
 
         # Sum all contribs
@@ -113,7 +124,6 @@ class DefaultLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         # Sum all contribs
@@ -176,10 +186,14 @@ class IntervalLifetimeLikelihood(Likelihood):
         entry: NDArray[np.float64] | None = None,
     ):
         super().__init__(model)
-        self.params = self.model._get_initial_params(time_sup, model_args)
+
         time_inf = reshape_1d_arg(time_inf)
         time_sup = reshape_1d_arg(time_sup)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time_inf, dtype=np.float64)
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time_inf, dtype=np.float64)
+        )
         if isinstance(model_args, tuple):
             args = tuple((reshape_1d_arg(arg) for arg in model_args))
         elif isinstance(model_args, np.ndarray):
@@ -206,6 +220,10 @@ class IntervalLifetimeLikelihood(Likelihood):
         self._censored_time_args = tuple(arg[~complete_time_index] for arg in args)
         self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
 
+        self.params = self.model.get_initial_params(
+            self._complete_time, model_args=model_args
+        )
+
     @property
     @override
     def nb_observations(self):
@@ -214,7 +232,9 @@ class IntervalLifetimeLikelihood(Likelihood):
     def _complete_time_contrib(self) -> np.float64 | None:
         if len(self._complete_time == 0):
             return None
-        return np.sum(-np.log(self.model.pdf(self._complete_time, *self._complete_time_args)))
+        return np.sum(
+            -np.log(self.model.pdf(self._complete_time, *self._complete_time_args))
+        )
 
     def _interval_censored_time_contrib(self) -> np.float64 | None:
         if len(self._censored_time_upper_bound) == 0:
@@ -222,8 +242,12 @@ class IntervalLifetimeLikelihood(Likelihood):
         return np.sum(
             -np.log(
                 10**-10
-                + self.model.cdf(self._censored_time_upper_bound, *self._censored_time_args)
-                - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
+                + self.model.cdf(
+                    self._censored_time_upper_bound, *self._censored_time_args
+                )
+                - self.model.cdf(
+                    self._censored_time_lower_bound, *self._censored_time_args
+                )
             ),
         )
 
@@ -238,7 +262,6 @@ class IntervalLifetimeLikelihood(Likelihood):
         jac = -self.model.jac_pdf(
             self._complete_time,
             *self._complete_time_args,
-            asarray=True,
         ) / self.model.pdf(
             self._complete_time,
             *self._complete_time_args,
@@ -254,12 +277,10 @@ class IntervalLifetimeLikelihood(Likelihood):
             self.model.jac_sf(
                 self._censored_time_upper_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
             - self.model.jac_sf(
                 self._censored_time_lower_bound,
                 *self._censored_time_args,
-                asarray=True,
             )
         ) / (
             10**-10
@@ -267,7 +288,9 @@ class IntervalLifetimeLikelihood(Likelihood):
             - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
         )
 
-        return np.sum(jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim)))
+        return np.sum(
+            jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim))
+        )
 
     def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
         if len(self._nonzero_entry) == 0:
@@ -276,7 +299,6 @@ class IntervalLifetimeLikelihood(Likelihood):
         jac = self.model.jac_chf(
             self._nonzero_entry,
             *self._nonzero_entry_args,
-            asarray=True,
         )
 
         return -np.sum(jac, axis=tuple(range(1, jac.ndim)))
@@ -318,13 +340,12 @@ class IntervalLifetimeLikelihood(Likelihood):
 
 
 class CoxPartialLifetimeLikelihood(Likelihood):
-
     def __init__(
-            self,
-            time: NDArray[np.float64],
-            covar: NDArray[np.float64],
-            event: NDArray[np.bool_] | None = None,
-            entry: NDArray[np.float64] | None = None,
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
     ):
         covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
@@ -333,8 +354,16 @@ class CoxPartialLifetimeLikelihood(Likelihood):
         super().__init__(model=covar_effect)
 
         time = reshape_1d_arg(time)
-        event = reshape_1d_arg(event) if event is not None else np.ones_like(time, dtype=np.bool_)
-        entry = reshape_1d_arg(entry) if entry is not None else np.zeros_like(time, dtype=np.float64)
+        event = (
+            reshape_1d_arg(event)
+            if event is not None
+            else np.ones_like(time, dtype=np.bool_)
+        )
+        entry = (
+            reshape_1d_arg(entry)
+            if entry is not None
+            else np.zeros_like(time, dtype=np.float64)
+        )
         sizes = [len(x) for x in (time, event, entry, covar) if x is not None]
         if len(set(sizes)) != 1:
             raise ValueError(
@@ -342,7 +371,7 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             )
 
         (
-            ordered_event_time,    # uncensored sorted untied times
+            ordered_event_time,  # uncensored sorted untied times
             ordered_event_index,
             self._event_count,
         ) = np.unique(
@@ -354,18 +383,18 @@ class CoxPartialLifetimeLikelihood(Likelihood):
         # left truncated & right censored
         self._risk_set = np.logical_and(
             (
-                    np.vstack([entry[:, 0]] * len(ordered_event_time))
-                    < np.hstack([ordered_event_time[:, None]] * len(time))
+                np.vstack([entry[:, 0]] * len(ordered_event_time))
+                < np.hstack([ordered_event_time[:, None]] * len(time))
             ),
             (
-                    np.hstack([ordered_event_time[:, None]] * len(time))
-                    <= np.vstack([time[:, 0]] * len(ordered_event_time))
+                np.hstack([ordered_event_time[:, None]] * len(time))
+                <= np.vstack([time[:, 0]] * len(ordered_event_time))
             ),
         )
 
-        self._death_set = np.vstack([time[:, 0] * event[:, 0]] * len(ordered_event_time)) == np.hstack(
-            [ordered_event_time[:, None]] * len(time)
-        )
+        self._death_set = np.vstack(
+            [time[:, 0] * event[:, 0]] * len(ordered_event_time)
+        ) == np.hstack([ordered_event_time[:, None]] * len(time))
 
         self._covar = covar
         self._ordered_event_covar = covar[event[:, 0] == 1][ordered_event_index]
@@ -435,8 +464,8 @@ class CoxPartialLifetimeLikelihood(Likelihood):
         """
 
         self._discount_rates = (
-                np.vstack([np.arange(self._event_count.max())] * len(self._event_count))
-                / self._event_count[:, None]
+            np.vstack([np.arange(self._event_count.max())] * len(self._event_count))
+            / self._event_count[:, None]
         )
         self._discount_rates_mask = np.where(self._discount_rates < 1, 1, 0)
 
@@ -492,32 +521,31 @@ class CoxPartialLifetimeLikelihood(Likelihood):
         if order == 0:
             # shape [m, max(d_j)]
             return (
-                    self._psi() * self._discount_rates_mask
-                    - self._psi(on="death")
-                    * self._discount_rates
-                    * self._discount_rates_mask
+                self._psi() * self._discount_rates_mask
+                - self._psi(on="death")
+                * self._discount_rates
+                * self._discount_rates_mask
             )
         elif order == 1:
             # shape [m, max(d_j), p]
             return (
-                    self._psi(order=1)[:, None, :]
-                    * self._discount_rates_mask[:, :, None]
-                    - self._psi(on="death", order=1)[:, None, :]
-                    * (self._discount_rates * self._discount_rates_mask)[:, :, None]
+                self._psi(order=1)[:, None, :] * self._discount_rates_mask[:, :, None]
+                - self._psi(on="death", order=1)[:, None, :]
+                * (self._discount_rates * self._discount_rates_mask)[:, :, None]
             )
         elif order == 2:
             # shape [m, max(d_j), p, p]
             return (
-                    self._psi(order=2)[:, None, :]
-                    * self._discount_rates_mask[:, :, None, None]
-                    - self._psi(on="death", order=2)[:, None, :]
-                    * (self._discount_rates * self._discount_rates_mask)[:, :, None, None]
+                self._psi(order=2)[:, None, :]
+                * self._discount_rates_mask[:, :, None, None]
+                - self._psi(on="death", order=2)[:, None, :]
+                * (self._discount_rates * self._discount_rates_mask)[:, :, None, None]
             )
 
     def negative_log(
-            self,
-            params: NDArray[np.float64],
-        ) -> float:
+        self,
+        params: NDArray[np.float64],
+    ) -> float:
         """Compute negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
@@ -527,13 +555,13 @@ class CoxPartialLifetimeLikelihood(Likelihood):
 
         if self.method == "cox":
             neg_L = -(
-                    np.log(self.model.g(self._ordered_event_covar)).sum()
-                    - np.log(self._psi()).sum()
+                np.log(self.model.g(self._ordered_event_covar)).sum()
+                - np.log(self._psi()).sum()
             )
         elif self.method == "breslow":
             neg_L = -(
-                    np.log(self.model.g(self._s_j)).sum()
-                    - (self._event_count[:, None] * np.log(self._psi())).sum()
+                np.log(self.model.g(self._s_j)).sum()
+                - (self._event_count[:, None] * np.log(self._psi())).sum()
             )
         elif self.method == "efron":
             # .sum(axis=1, keepdims=True) --> sum on alpha to d_j
@@ -541,17 +569,17 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             # using where in np.log allows to avoid 0. masked elements
             m = self._psi_efron()
             neg_L = -(
-                    np.log(self.model.g(self._s_j)).sum()
-                    - np.log(m, out=np.zeros_like(m), where=(m != 0))
-                    .sum(axis=1, keepdims=True)
-                    .sum()
+                np.log(self.model.g(self._s_j)).sum()
+                - np.log(m, out=np.zeros_like(m), where=(m != 0))
+                .sum(axis=1, keepdims=True)
+                .sum()
             )
         return neg_L
 
     def jac_negative_log(
-            self,
-            params: NDArray[np.float64],
-        ) -> np.ndarray:
+        self,
+        params: NDArray[np.float64],
+    ) -> np.ndarray:
         """Compute Jacobian of the negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
@@ -561,16 +589,15 @@ class CoxPartialLifetimeLikelihood(Likelihood):
 
         if self.method == "cox":
             return -(
-                    self._ordered_event_covar.sum(axis=0)
-                    - (self._psi(order=1) / self._psi()).sum(axis=0)
+                self._ordered_event_covar.sum(axis=0)
+                - (self._psi(order=1) / self._psi()).sum(axis=0)
             )
         elif self.method == "breslow":
             return -(
-                    self._s_j.sum(axis=0)
-                    - (
-                            self._event_count[:, None]
-                            * (self._psi(order=1) / self._psi())
-                    ).sum(axis=0)
+                self._s_j.sum(axis=0)
+                - (self._event_count[:, None] * (self._psi(order=1) / self._psi())).sum(
+                    axis=0
+                )
             )
         elif self.method == "efron":
             # .sum(axis=1) --> sum on alpha to d_j
@@ -579,16 +606,16 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             a = self._psi_efron(order=1)
             b = self._psi_efron()[:, :, None]
             return -(
-                    self._s_j.sum(axis=0)
-                    - np.divide(a, b, out=np.zeros_like(a), where=(b != 0))
-                    .sum(axis=1)
-                    .sum(axis=0)
+                self._s_j.sum(axis=0)
+                - np.divide(a, b, out=np.zeros_like(a), where=(b != 0))
+                .sum(axis=1)
+                .sum(axis=0)
             )
 
     def hess_negative_log(
-            self,
-            params: NDArray[np.float64],
-        ) -> np.ndarray:
+        self,
+        params: NDArray[np.float64],
+    ) -> np.ndarray:
         """Compute Hessian of the negative log partial likelihood depending on method used (cox, breslow or efron)
 
         Returns:
@@ -604,7 +631,7 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             # print("hessian_part_1 [d, p, p]:", hessian_part_1.shape)
 
             hessian_part_2 = (psi_order_1 / psi_order_0)[:, None] * (
-                    psi_order_1 / psi_order_0
+                psi_order_1 / psi_order_0
             )[:, :, None]
             # print("hessian_part_2 [d, p, p]:", hessian_part_2.shape)
 
@@ -631,14 +658,14 @@ class CoxPartialLifetimeLikelihood(Likelihood):
             # using where in np.divide allows to avoid 0. masked elements
             b = psi_order_0[:, :, None]
             hessian_part_2 = (
+                np.divide(
+                    psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
+                )[:, :, None, :]
+                * (
                     np.divide(
                         psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
-                    )[:, :, None, :]
-                    * (
-                        np.divide(
-                            psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
-                        )
-                    )[:, :, :, None]
+                    )
+                )[:, :, :, None]
             )
             hessian_part_2 = hessian_part_2.sum(axis=1)
 

@@ -1,6 +1,15 @@
-from .data import (
-    NonHomogeneousPoissonProcessSample,
-    RenewalProcessSample,
-    RenewalRewardProcessSample,
+from ._data import StochasticSampleMapping
+from ._iterables import (
+    Kijima1ProcessIterable,
+    Kijima2ProcessIterable,
+    NonHomogeneousPoissonProcessIterable,
+    RenewalProcessIterable,
 )
-from .iterables import NonHomogeneousPoissonProcessIterable, RenewalProcessIterable
+
+__all__ = [
+    "StochasticSampleMapping",
+    "NonHomogeneousPoissonProcessIterable",
+    "RenewalProcessIterable",
+    "Kijima1ProcessIterable",
+    "Kijima2ProcessIterable",
+]

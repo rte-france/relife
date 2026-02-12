@@ -8,7 +8,6 @@ __all__ = ["ScipyMinimizeOptions"]
 
 
 class ScipyMinimizeOptions(TypedDict):
-
     x0: NotRequired[NDArray[np.float64]]
     method: NotRequired[str]
     bounds: NotRequired[Bounds | None]

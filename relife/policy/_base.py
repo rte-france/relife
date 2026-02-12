@@ -48,7 +48,7 @@ class ExpectedCostsABC(ABC):
             The number of steps used to discretized the time.
         total_sum : bool, default False
             If True, returns the total sum over the first axis of the result. If the policy data encodes several
-            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
+            assets, this option allows to return the sum result on the fleet rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -57,13 +57,21 @@ class ExpectedCostsABC(ABC):
         """
 
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]: ...
     @abstractmethod
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         r"""
         The asymtotic expected net present value.
 
@@ -75,7 +83,7 @@ class ExpectedCostsABC(ABC):
         ----------
         total_sum : bool, default False
             If True, returns the total sum over the first axis of the result. If the policy data encodes several
-            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
+            assets, this option allows to return the sum result on the fleet rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -108,7 +116,7 @@ class ExpectedCostsABC(ABC):
             The number of steps used to discretized the time.
         total_sum : bool, default False
             If True, returns the total sum over the first axis of the result. If the policy data encodes several
-            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
+            assets, this option allows to return the sum result on the fleet rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -117,15 +125,21 @@ class ExpectedCostsABC(ABC):
         """
 
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
     @abstractmethod
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         r"""
         The asymtotic expected equivalent annual cost.
 
@@ -137,7 +151,7 @@ class ExpectedCostsABC(ABC):
         ----------
         total_sum : bool, default False
             If True, returns the total sum over the first axis of the result. If the policy data encodes several
-            assets, this option allows to return the sum result on the flit rather than calling ``np.sum`` afterwards.
+            assets, this option allows to return the sum result on the fleet rather than calling ``np.sum`` afterwards.
 
         Returns
         -------
@@ -172,7 +186,8 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         timeline = _make_timeline(tf, nb_steps)
         etc = np.asarray(
             self.lifetime_model.ls_integrate(
-                lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
+                lambda x: self.reward.conditional_expectation(x)
+                * self.discounting.factor(x),
                 np.zeros_like(timeline),
                 timeline,
                 deg=15,
@@ -186,16 +201,25 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         return timeline, etc  # (nb_steps,) and (nb_steps,)/(m, nb_steps)
 
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_net_present_value(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]: ...
+    def asymptotic_expected_net_present_value(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         # reward partial expectation
         value = np.squeeze(
             self.lifetime_model.ls_integrate(
-                lambda x: self.reward.conditional_expectation(x) * self.discounting.factor(x),
+                lambda x: self.reward.conditional_expectation(x)
+                * self.discounting.factor(x),
                 np.float64(0.0),
                 np.asarray(np.inf),
                 deg=15,
@@ -205,8 +229,9 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             value = np.sum(value)
         return value  # () or (m,)
 
-    def _expected_equivalent_annual_cost(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
-
+    def _expected_equivalent_annual_cost(
+        self, timeline: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: NDArray[np.float64]) -> NDArray[np.float64]:
             # avoid zero division + 1e-6
@@ -219,7 +244,9 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(
             np.asarray(self.period_before_discounting, dtype=float)
         )  # () or (m, 1)
-        a = np.full_like(timeline, self.period_before_discounting)  # (nb_steps,) or (m, nb_steps)
+        a = np.full_like(
+            timeline, self.period_before_discounting
+        )  # (nb_steps,) or (m, nb_steps)
 
         # change first value of lower bound to compute the integral
         a[timeline < self.period_before_discounting] = 0.0  # (nb_steps,)
@@ -246,14 +273,20 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         return timeline, value  # (nb_steps,) or (m, nb_steps)
 
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[False]) -> NDArray[np.float64]: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[False]
+    ) -> NDArray[np.float64]: ...
     @overload
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: Literal[True]) -> np.float64: ...
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: Literal[True]
+    ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_equivalent_annual_cost(self, total_sum: bool = False) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_equivalent_annual_cost(
+        self, total_sum: bool = False
+    ) -> np.float64 | NDArray[np.float64]:
         timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         value = self._expected_equivalent_annual_cost(timeline)
         if total_sum:

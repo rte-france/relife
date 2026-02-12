@@ -25,8 +25,8 @@ Lifetime distribution
 Lifetime regression
 -------------------
 
-    ProportionalHazard
-    AcceleratedFailureTime
+    ParametricProportionalHazard
+    ParametricAcceleratedFailureTime
 
 Nonparametric models
 --------------------
@@ -53,9 +53,9 @@ from ._distribution import (
     MinimumDistribution,
     Weibull,
 )
-from ._parametric import ParametricProportionalHazard, ParametricAcceleratedFailureTime
-from ._semi_parametric import SemiParametricProportionalHazard
 from ._non_parametric import ECDF, KaplanMeier, NelsonAalen
+from ._parametric import ParametricAcceleratedFailureTime, ParametricProportionalHazard
+from ._semi_parametric import SemiParametricProportionalHazard
 
 __all__ = [
     "Exponential",

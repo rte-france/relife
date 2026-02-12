@@ -6,16 +6,24 @@ from relife.policy import OneCycleRunToFailurePolicy, RunToFailurePolicy
 
 
 class TestOneCycleRunToFailure:
-    def test_asymptotic_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+    def test_asymptotic_expected_equivalent_annual_cost(
+        self, distribution, cf, discounting_rate
+    ):
         if isinstance(distribution, Exponential):
-            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
-        policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+            pytest.skip(
+                "Exponential distribution won't work with this cf (not tested in v1.0.0 too)"
+            )
+        policy = OneCycleRunToFailurePolicy(
+            distribution, cf, discounting_rate=discounting_rate
+        )
         qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
         assert qa.shape == cf.shape
 
     def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
         if isinstance(distribution, Exponential):
-            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+            pytest.skip(
+                "Exponential distribution won't work with this cf (not tested in v1.0.0 too)"
+            )
         policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
         qa = policy.asymptotic_expected_equivalent_annual_cost()
         timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
@@ -24,16 +32,24 @@ class TestOneCycleRunToFailure:
 
 
 class TestRunToFailure:
-    def test_asymptotic_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
+    def test_asymptotic_expected_equivalent_annual_cost(
+        self, distribution, cf, discounting_rate
+    ):
         if isinstance(distribution, Exponential):
-            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
-        policy = OneCycleRunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
+            pytest.skip(
+                "Exponential distribution won't work with this cf (not tested in v1.0.0 too)"
+            )
+        policy = OneCycleRunToFailurePolicy(
+            distribution, cf, discounting_rate=discounting_rate
+        )
         qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
         assert qa.shape == cf.shape
 
     def test_expected_equivalent_annual_cost(self, distribution, cf, discounting_rate):
         if isinstance(distribution, Exponential):
-            pytest.skip("Exponential distribution won't work with this cf (not tested in v1.0.0 too)")
+            pytest.skip(
+                "Exponential distribution won't work with this cf (not tested in v1.0.0 too)"
+            )
         policy = RunToFailurePolicy(distribution, cf, discounting_rate=discounting_rate)
         qa = policy.asymptotic_expected_equivalent_annual_cost()
         timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)

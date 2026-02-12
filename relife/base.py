@@ -42,7 +42,9 @@ class _Parameters:
         self._all_values = ()
         self._all_names = ()
         if bool(kwargs):
-            self._mapping = {k: v if v is not None else np.nan for k, v in kwargs.items()}
+            self._mapping = {
+                k: v if v is not None else np.nan for k, v in kwargs.items()
+            }
             self.update_tree()  # update _names and _values
 
     @property
@@ -71,7 +73,11 @@ class _Parameters:
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
         pos = len(self._mapping.items())
-        self._mapping.update(zip(self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])))
+        self._mapping.update(
+            zip(
+                self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])
+            )
+        )
         self._all_values = tuple((np.nan if v is None else v for v in values))
         for leaf in self._leaves.values():
             leaf.set_all_values(values[pos : pos + leaf.size])
@@ -137,7 +143,9 @@ class ParametricModel:
     @params.setter
     def params(self, new_params: NDArray[np.float64]) -> None:
         if new_params.ndim > 1:
-            raise ValueError(f"Expected params values to be 1d array. Got {new_params.ndim} ndim")
+            raise ValueError(
+                f"Expected params values to be 1d array. Got {new_params.ndim} ndim"
+            )
         self._params.set_all_values(tuple(v.item() for v in new_params))
 
     @property
