@@ -23,13 +23,14 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import FittingResults
-from relife.lifetime_model._base import DefaultLifetimeLikelihood
 from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions, Seed
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import (
+    DefaultLifetimeLikelihood,
     FittableParametricLifetimeModel,
     ParametricLifetimeModel,
+    LifetimeData,
     approx_parameters_covariance,
     document_args,
 )
@@ -208,7 +209,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return self
 
 
-# TODO : pourquoi ne pas mettre LifetimeData dans lifetime_model._base
 def init_distribution_params_from_lifetimes(
     model: LifetimeDistribution, data: LifetimeData
 ) -> NDArray[np.float64]:

@@ -18,7 +18,6 @@ from scipy.optimize import Bounds
 from typing_extensions import overload, override
 
 from relife.base import ParametricModel, FittingResults
-from relife.lifetime_model._base import DefaultLifetimeLikelihood
 from relife.typing import (
     AnyFloat,
     NumpyBool,
@@ -28,6 +27,8 @@ from relife.typing import (
 )
 
 from ._base import (
+    DefaultLifetimeLikelihood,
+    LifetimeData,
     FittableParametricLifetimeModel,
     approx_parameters_covariance,
     document_args,

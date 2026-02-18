@@ -21,11 +21,8 @@ from typing import (
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
-from numpy._typing import NDArray
 from numpy.typing import NDArray
 from optype.numpy import Array2D, Array1D, ToFloat
-from relife.likelihood._lifetime_likelihood import M
-from relife.utils import reshape_1d_arg
 from scipy.optimize import approx_fprime, newton
 
 from relife.base import ParametricModel, FittingResults, MaximumLikehoodOptimizer
@@ -36,6 +33,7 @@ from relife.typing import (
     ScipyMinimizeOptions,
     Seed,
 )
+from relife.utils import reshape_1d_arg
 from relife.utils.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
 
 from ._plot import PlotParametricLifetimeModel
