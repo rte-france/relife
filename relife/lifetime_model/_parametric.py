@@ -336,7 +336,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
             tuple when ``asarray`` is False.
         """
-        jac = -self.jac_chf(time, covar, asarray=True) * self.sf(time, covar)
+        jac = -self.jac_chf(time, covar) * self.sf(time, covar)
         if not asarray:
             return np.unstack(jac)
         return jac
@@ -449,7 +449,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             whose first dimension equals the number of parameters. This output is equivalent to applying ``np.stack`` on the output
             tuple when ``asarray`` is False.
         """
-        jac = self.jac_hf(time, covar, asarray=True) * self.sf(time, covar) + self.jac_sf(
+        jac = self.jac_hf(time, covar) * self.sf(time, covar) + self.jac_sf(
             time, covar, asarray=True
         ) * self.hf(time, covar)
         if not asarray:
@@ -847,11 +847,11 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
 
         baseline_hf = self.baseline.hf(time)  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf = self.baseline.jac_hf(time, asarray=True)  # (p, m, n)
+        baseline_jac_hf = self.baseline.jac_hf(time)  # (p, m, n)
         jac_g = np.repeat(jac_g, baseline_hf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
         jac = np.concatenate(
@@ -926,10 +926,10 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         baseline_chf = self.baseline.chf(time)  # (m, n)
         #  p == baseline.nb_params
-        baseline_jac_chf = self.baseline.jac_chf(time, asarray=True)  # (p, m, n)
+        baseline_jac_chf = self.baseline.jac_chf(time)  # (p, m, n)
         jac_g = np.repeat(jac_g, baseline_chf.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
         jac = np.concatenate(
@@ -1144,10 +1144,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         t0 = time / g  # (m, n)
         # p == baseline.nb_params
-        baseline_jac_hf_t0 = self.baseline.jac_hf(t0, asarray=True)  # (p, m, n)
+        baseline_jac_hf_t0 = self.baseline.jac_hf(t0)  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0)  # (m, n)
         baseline_dhf_t0 = self.baseline.dhf(t0)  # (m, n)
         jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n)
@@ -1224,10 +1224,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
 
         g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar, asarray=True)  # (nb_coef, m, 1)
+        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
         t0 = time / g  #  (m, n)
         # p == baseline.nb_params
-        baseline_jac_chf_t0 = self.baseline.jac_chf(t0, asarray=True)  # (p, m, n)
+        baseline_jac_chf_t0 = self.baseline.jac_chf(t0)  # (p, m, n)
         baseline_hf_t0 = self.baseline.hf(t0)  #  (m, n)
         jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n) necessary to concatenate
 
