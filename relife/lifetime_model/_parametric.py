@@ -7,11 +7,17 @@ import numpy as np
 from numpy._typing import NDArray
 from scipy.optimize import Bounds
 
-from relife.lifetime_model._base import FittableParametricLifetimeModel
-from relife.lifetime_model._distribution import LifetimeDistribution
-from relife.lifetime_model._frozen import FrozenParametricLifetimeModel
-from relife.lifetime_model._regression import LinearCovarEffect, _broadcast_time_covar_shapes, _broadcast_time_covar
+from ._base import (
+    FittableParametricLifetimeModel,
+    DefaultLifetimeLikelihood,
+    LifetimeData,
+    approx_parameters_covariance
+)
+from ._distribution import LifetimeDistribution
+from ._frozen import FrozenParametricLifetimeModel
+from ._regression import LinearCovarEffect, _broadcast_time_covar_shapes, _broadcast_time_covar
 from relife.typing import AnyFloat, NumpyFloat, Seed, NumpyBool, ScipyMinimizeOptions
+
 
 
 class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
@@ -576,32 +582,6 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         """
         return FrozenParametricLifetimeModel(self, covar)
 
-    @property
-    @override
-    def params_bounds(self) -> Bounds:
-        lb = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline.params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
-
-    @override
-    def get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-    ) -> NDArray[np.float64]:
-        param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline._get_initial_params(time, event=None, entry=None)
-        return param0
 
     @override
     def fit(
@@ -618,26 +598,58 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         self.covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
-        return super().fit(time, model_args=model_args, event=event, entry=entry, optimizer_options=optimizer_options)
+
+        optimizer = ParametricRegressionLikelihood(self, time, model_args, event, entry)
+        # fitting_results must be refactored (a container always initialized but empty by default)
+        self.fitting_results = optimizer.maximum_likelihood_estimation(
+            **optimizer_options
+        )
+        # TODO: type checkers perdu, confusion avec params en attribut. Passer par "set_params" (cf sklearn)
+        self.params = self.fitting_results.optimal_params
+        self.fitting_results.covariance_matrix = approx_parameters_covariance(
+            optimizer, self.params, method=self.approx_hessian_method
+        )
+        return self
+
+
+def init_regression_params_from_lifetimes(
+        model: ParametricLifetimeRegression,
+        data: LifetimeData
+) -> NDArray[np.float64]:
+    param0 = np.zeros_like(model.params, dtype=np.float64)
+    param0[-model.baseline.params.size:] = model.baseline._get_initial_params(data["time"], event=None, entry=None)
+    return param0
+
+
+@final
+class ParametricRegressionLikelihood(DefaultLifetimeLikelihood[ParametricLifetimeRegression]):
+    model: ParametricLifetimeRegression
+    data: LifetimeData
 
     @override
-    def fit_from_interval_censored_lifetimes(
+    def _initialize_model(
         self,
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
-    ) -> Self:
-        if model_args is None:
-            raise ValueError("LifetimeRegression expects covar but model_args is None")
-        covar = model_args[0]
-        self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-        return super().fit_from_interval_censored_lifetimes(
-            time_inf, time_sup, model_args=model_args, entry=entry, optimizer_options=optimizer_options
+    ) -> ParametricLifetimeRegression:
+        self.model.params = init_regression_params_from_lifetimes(
+            self.model, self.data
         )
+        return self.model
+
+    @override
+    def _get_params_bounds(self) -> Bounds:
+        lb = np.concatenate(
+            (
+                np.full(self.model.covar_effect.nb_params, -np.inf),
+                self.model.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.model.covar_effect.nb_params, np.inf),
+                self.model.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
 
 
 @final

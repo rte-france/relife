@@ -796,6 +796,16 @@ M = TypeVar(
 )
 
 
+class LifetimeData(TypedDict):
+    complete_time: NDArray[np.float64]
+    censored_time: NDArray[np.float64]  # 1d array or 2d
+    left_truncations: NDArray[np.float64]
+    complete_time_args: tuple[NDArray[Any], ...]
+    censored_time_args: tuple[NDArray[Any], ...]
+    left_truncations_args: tuple[NDArray[Any], ...]
+    nb_observations: int
+
+
 class DefaultLifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData], ABC):
     """
     Default likelihood from lifetime data.
@@ -903,16 +913,6 @@ def approx_parameters_covariance(
                 hess[j, i] = hess[i, j]
     covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
     return covariance_matrix
-
-
-class LifetimeData(TypedDict):
-    complete_time: NDArray[np.float64]
-    censored_time: NDArray[np.float64]  # 1d array or 2d
-    left_truncations: NDArray[np.float64]
-    complete_time_args: tuple[NDArray[Any], ...]
-    censored_time_args: tuple[NDArray[Any], ...]
-    left_truncations_args: tuple[NDArray[Any], ...]
-    nb_observations: int
 
 
 def _init_lifetime_data(
