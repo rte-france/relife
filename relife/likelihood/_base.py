@@ -1,180 +1,22 @@
+# TODO : déplacer dans relife.base (avoir circular import)
 from __future__ import annotations
 
-import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Unpack
+from typing import Generic, TypeVar, Unpack
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array1D, Array2D, ToFloat
 from scipy import stats
-from scipy.optimize import Bounds, approx_fprime, minimize
+from scipy.optimize import Bounds, minimize
 from typing_extensions import override
 
 from relife.base import ParametricModel
-
-if TYPE_CHECKING:
-    from relife.typing import ScipyMinimizeOptions
-
-SCIPY_MINIMIZE_ORDER_2_ALGO = [
-    "Newton-CG",
-    "dogleg",
-    "trust-ncg",
-    "trust-krylov",
-    "trust-exact",
-    "trust-constr",
-]
+from relife.typing import MethodMinimize, ScipyMinimizeOptions
 
 
-class Likelihood(ABC):
-    model: ParametricModel
-
-    def __init__(self, model: ParametricModel) -> None:
-        # deep copy model to have independent variation of params
-        self.model = copy.deepcopy(model)
-
-    @property
-    def params(self) -> NDArray[np.float64]:
-        return self.model.params
-
-    @params.setter
-    def params(self, value: NDArray[np.float64]) -> None:
-        self.model.params = value
-
-    @property
-    @abstractmethod
-    def nb_observations(self) -> int:
-        """
-        The number of observations.
-        """
-
-    @abstractmethod
-    def negative_log(self, params: NDArray[np.float64]) -> float:
-        """
-        Negative log likelihood.
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which likelihood is evaluated
-
-        Returns
-        -------
-        float
-            Negative log likelihood value
-        """
-
-    @abstractmethod
-    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
-        Jacobian of the negative log likelihood.
-
-        The jacobian (here gradient) is computed with respect to parameters
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which the jacobian is evaluated
-
-        Returns
-        -------
-        ndarray
-            Jacobian of the negative log likelihood value
-        """
-
-    def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
-    ) -> FittingResults:
-        """
-        Finds the parameter values that maximize the likelihood.
-
-        Parameters
-        ----------
-        **optimizer_options
-            Extra arguments used by `scipy.minimize`
-
-        Returns
-        -------
-        FittingResults
-            The fitting results.
-        """
-        x0: NDArray[np.float64] = optimizer_options.pop("x0", self.params)
-        method: str = optimizer_options.pop("method", "L-BFGS-B")
-        bounds: Bounds | None = optimizer_options.pop("bounds", None)
-        if method in ("Nelder-Mead", "Powell", "COBYLA", "COBYQA"):
-            optimizer = minimize(
-                self.negative_log, x0, method=method, bounds=bounds, **optimizer_options
-            )
-        else:
-            optimizer = minimize(
-                self.negative_log,
-                x0,
-                jac=self.jac_negative_log,
-                method=method,
-                bounds=bounds,
-                **optimizer_options,
-            )
-        optimal_params = np.copy(optimizer.x)
-        neg_log_likelihood = np.copy(
-            optimizer.fun
-        )  # neg_log_likelihood value at optimal
-        hessian = approx_hessian(self, optimal_params)
-        covariance_matrix = np.linalg.pinv(hessian)
-        return FittingResults(
-            self.nb_observations,
-            optimal_params,
-            neg_log_likelihood,
-            covariance_matrix=covariance_matrix,
-        )
-
-
-def _hessian_scheme(
-    likelihood: Likelihood,
-    params: NDArray[np.float64],
-    method: Literal["2point", "cs"] = "cs",
-    eps: float = 1e-6,
-) -> NDArray[np.float64]:
-    size = params.size
-    hess = np.empty((size, size))
-
-    # hessian 2 point
-    if method == "2point":
-        for i in range(size):
-            hess[i] = approx_fprime(
-                params,
-                lambda x: likelihood.jac_negative_log(x)[i],
-                eps,
-            )
-        return hess
-    # hessian cs
-    u = eps * 1j * np.eye(size)
-    complex_params = params.astype(np.complex64)  # change params to complex
-    for i in range(size):
-        for j in range(i, size):
-            hess[i, j] = (
-                np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
-            )
-            if i != j:
-                hess[j, i] = hess[i, j]
-    return hess
-
-
-def approx_hessian(
-    likelihood: Likelihood,
-    params: NDArray[np.float64],
-    eps: float = 1e-6,
-) -> NDArray[np.float64]:
-    from relife.lifetime_model import Gamma
-    from relife.lifetime_model._parametric import ParametricLifetimeRegression
-
-    if isinstance(likelihood.model, ParametricLifetimeRegression):
-        if isinstance(likelihood.model.baseline, Gamma):
-            return _hessian_scheme(likelihood, params, method="2point", eps=eps)
-    if isinstance(likelihood.model, Gamma):
-        return _hessian_scheme(likelihood, params, method="2point", eps=eps)
-    return _hessian_scheme(likelihood, params, eps=eps)
-
-
+# TODO : sortir se_estimation (utile seulement pour les plot, donc à mettre avec)
 @dataclass
 class FittingResults:
     """Fitting results of the parametric_model core."""
@@ -187,7 +29,7 @@ class FittingResults:
         repr=False
     )  #: Negative log likelihood value at optimal parameters values
 
-    covariance_matrix: NDArray[np.float64] | None = field(
+    covariance_matrix: Array2D[np.float64] | None = field(
         repr=False, default=None
     )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
 
@@ -203,13 +45,13 @@ class FittingResults:
     ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
 
     def __post_init__(self):
-        nb_params = self.optimal_params.size
-        self.aic = 2 * nb_params + 2 * self.neg_log_likelihood
-        self.aicc = self.aic + 2 * nb_params * (nb_params + 1) / (
-            self.nb_obversations - nb_params - 1
+        self.nb_params = self.optimal_params.size
+        self.aic = 2 * self.nb_params + 2 * self.neg_log_likelihood
+        self.aicc = self.aic + 2 * self.nb_params * (self.nb_params + 1) / (
+            self.nb_obversations - self.nb_params - 1
         )
         self.bic = (
-            np.log(self.nb_obversations) * nb_params + 2 * self.neg_log_likelihood
+            np.log(self.nb_obversations) * self.nb_params + 2 * self.neg_log_likelihood
         )
         self.se = None
         if self.covariance_matrix is not None:
@@ -261,7 +103,6 @@ class FittingResults:
 
     @override
     def __str__(self) -> str:
-        """Returns a string representation of FittingResults with fields in a single column."""
         fields = {
             "fitted params": self.optimal_params,
             "AIC": self.aic,
@@ -279,3 +120,93 @@ class FittingResults:
                 value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
             lines.append(f"{name:<{max_name_length}} : {value_str}")
         return "\n".join(lines)
+
+
+M = TypeVar("M", bound=ParametricModel)
+D = TypeVar("D")
+
+
+# TODO : mettre dans relife.base, à côté de ParametricModel (evite les imports circulaire)
+class MaximumLikehoodOptimizer(Generic[M, D], ABC):
+    """
+    Abstract maximum likelihood optimizer.
+
+    Notes
+    -----
+    Jacobian and hessian are not required but they can be passed as additional
+    arguments to `**optimizer_options` at runtime or in subclass implementions
+    by overriding `maximum_likelihood_estimation`.
+    """
+
+    model: M
+    data: D
+    scipy_method: MethodMinimize = "L-BFGS-B"
+
+    @property
+    @abstractmethod
+    def nb_observations(self) -> int: ...
+
+    @abstractmethod
+    def _initialize_model(self) -> M: ...
+
+    @abstractmethod
+    def _get_params_bounds(self) -> Bounds: ...
+
+    @abstractmethod
+    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
+        """
+        Negative log likelihood.
+
+        Parameters
+        ----------
+        model : parametric model
+            A parametrized model, ie. params values must be set.
+
+        Returns
+        -------
+        out : float
+            Negative log likelihood value.
+        """
+
+    def maximum_likelihood_estimation(
+        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+    ) -> FittingResults:
+        """
+        Search parameters values that maximize the likelihood given data.
+
+        Parameters
+        ----------
+        **optimizer_options
+            Any additional keyword arguments corresponding to optional
+            `scipy.optimize.minimize` arguments.
+
+        Returns
+        -------
+        out : FittingResults
+            An object that encapsulates optimal parameters and fitting
+            information (AIC, variance, etc.).
+        """
+        # set
+        model = self._initialize_model()
+        x0 = optimizer_options.pop("x0", None)
+        if x0 is None:
+            x0 = model.params.copy()
+
+        method = optimizer_options.pop("method", self.scipy_method)
+        bounds = optimizer_options.pop("bounds", self._get_params_bounds())
+        jac = optimizer_options.pop("jac", None)
+        hess = optimizer_options.pop("hess", None)
+
+        optimizer = minimize(
+            self.negative_log,
+            x0=x0,
+            jac=jac,
+            hess=hess,
+            method=method,
+            bounds=bounds,
+        )
+        return FittingResults(
+            self.nb_observations,
+            np.copy(optimizer.x),
+            optimizer.fun,
+        )

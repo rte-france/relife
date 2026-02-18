@@ -10,6 +10,7 @@ from typing import (
     Self,
     TypeAlias,
     TypeVarTuple,
+    Unpack,
     final,
     overload,
 )
@@ -21,12 +22,15 @@ from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
+from relife.likelihood._base import FittingResults
+from relife.likelihood._lifetime_likelihood import DefaultLifetimeLikelihood
 from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions, Seed
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import (
     FittableParametricLifetimeModel,
     ParametricLifetimeModel,
+    approx_parameters_covariance,
     document_args,
 )
 
@@ -45,6 +49,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
+
+    fitting_results: FittingResults | None
 
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
@@ -177,53 +183,68 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
-    def get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-    ) -> NDArray[np.float64]:
-        param0 = np.ones(self.nb_params, dtype=np.float64)
-        param0[-1] = 1 / np.median(time)
-        return param0
-
-    @property
-    @override
-    def params_bounds(self):
-        return super().params_bounds
-
-    @override
     def fit(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        **optimizer_options: Unpack[ScipyMinimizeOptions],
     ) -> Self:
         if model_args is not None:
             raise ValueError(
                 "LifetimeDistribution does not expect additional arguments in model_args"
             )
-        return super().fit(
-            time, event=event, entry=entry, optimizer_options=optimizer_options
+        optimizer = DistributionLikelihood(self, time, model_args, event, entry)
+        # fitting_results must be refactored (a container always initialized but empty by default)
+        self.fitting_results = optimizer.maximum_likelihood_estimation(
+            **optimizer_options
         )
+        # TODO: type checkers perdu, confusion avec params en attribut. Passer par "set_params" (cf sklearn)
+        self.params = self.fitting_results.optimal_params
+        self.fitting_results.covariance_matrix = approx_parameters_covariance(
+            optimizer, self.params, method=self.approx_hessian_method
+        )
+        return self
+
+
+# TODO : pourquoi ne pas mettre LifetimeData dans lifetime_model._base
+def init_distribution_params_from_lifetimes(
+    model: LifetimeDistribution, data: LifetimeData
+) -> NDArray[np.float64]:
+    if isinstance(model, Gompertz):
+        param0 = np.empty(model.nb_params, dtype=np.float64)
+        rate = np.pi / (np.sqrt(6) * np.std(data["complete_time"]))
+        shape = np.exp(-rate * np.mean(data["complete_time"]))
+        param0[0] = shape
+        param0[1] = rate
+        return param0
+
+    param0 = np.ones(model.nb_params, dtype=np.float64)
+    param0[-1] = 1 / np.median(data["time"])
+    return param0
+
+
+# place it in lifetime_model.distribution
+@final
+class DistributionLikelihood(DefaultLifetimeLikelihood[LifetimeDistribution]):
+    model: LifetimeDistribution
+    data: LifetimeData
 
     @override
-    def fit_from_interval_censored_lifetimes(
+    def _initialize_model(
         self,
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
-    ) -> Self:
-        if model_args is not None:
-            raise ValueError(
-                "LifetimeDistribution does not expect additional arguments in model_args"
-            )
-        return super().fit_from_interval_censored_lifetimes(
-            time_inf, time_sup, entry=entry, optimizer_options=optimizer_options
+    ) -> LifetimeDistribution:
+        self.model.params = init_distribution_params_from_lifetimes(
+            self.model, self.data
+        )
+        return self.model
+
+    @override
+    def _get_params_bounds(self) -> Bounds:
+        return Bounds(
+            np.full(self.model.nb_params, np.finfo(float).resolution),
+            np.full(self.model.nb_params, np.inf),
         )
 
 
@@ -666,6 +687,8 @@ class Gamma(LifetimeDistribution):
     shape
     rate
     """
+
+    approx_hessian_method = "2point"
 
     def __init__(self, shape: float | None = None, rate: float | None = None):
         super().__init__(shape=shape, rate=rate)

@@ -1,672 +1,314 @@
+# TODO : deplacer tout ce module dans lifetime_model._base
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, final
+import copy
+from abc import ABC
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, Unpack
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array1D, ToFloat
 from typing_extensions import override
 
-from relife.lifetime_model._regression import LinearCovarEffect
+from relife.typing import ScipyMinimizeOptions
 from relife.utils import reshape_1d_arg
 
-from ._base import Likelihood
+from ._base import FittingResults, MaximumLikehoodOptimizer
 
 __all__ = [
     "DefaultLifetimeLikelihood",
-    "IntervalLifetimeLikelihood",
-    "CoxPartialLifetimeLikelihood",
 ]
 
 if TYPE_CHECKING:
     from relife.lifetime_model._base import FittableParametricLifetimeModel
 
 
-@final
-class DefaultLifetimeLikelihood(Likelihood):
-    _nb_observations: int
-    _time: NDArray[np.float64]
-    _complete_time: NDArray[np.float64]
-    _nonzero_entry: NDArray[np.float64]
-    _args: tuple[NDArray[Any], ...]
-    _complete_time_args: tuple[NDArray[Any], ...]
-    _nonzero_entry_args: tuple[NDArray[Any], ...]
+M = TypeVar("M", bound=FittableParametricLifetimeModel[*tuple[Any, ...]])
 
-    def __init__(
-        self,
-        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
-        time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-    ):
-        super().__init__(model)
-        self.params = self.model.get_initial_params(time, event, model_args)
 
-        time = reshape_1d_arg(time)
+# TODO : mettre dans lifetime_model._base (circular import)
+class LifetimeData(TypedDict):
+    complete_time: NDArray[np.float64]
+    censored_time: NDArray[np.float64]  # 1d array or 2d
+    left_truncations: NDArray[np.float64]
+    complete_time_args: tuple[NDArray[Any], ...]
+    censored_time_args: tuple[NDArray[Any], ...]
+    left_truncations_args: tuple[NDArray[Any], ...]
+    nb_observations: int
+
+
+# TODO : mettre dans lifetime_model._base (circular import)
+def _init_lifetime_data(
+    time: NDArray[np.float64],  # 1d array or 2d
+    model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+    event: NDArray[np.bool_] | None = None,
+    entry: NDArray[np.float64] | None = None,
+) -> LifetimeData:
+    time = reshape_1d_arg(time)
+    if time.shape[-1] == 2 and event is not None:
+        raise ValueError("If time is given as intervals, event must be None")
+    if time.shape[-1] == 1:
         event = (
             reshape_1d_arg(event)
             if event is not None
             else np.ones_like(time, dtype=np.bool_)
         )
-        entry = (
-            reshape_1d_arg(entry)
-            if entry is not None
-            else np.zeros_like(time, dtype=np.float64)
+    entry = (
+        reshape_1d_arg(entry)
+        if entry is not None
+        else np.zeros(len(time), dtype=np.float64)
+    )
+    if np.any(time <= entry):
+        raise ValueError("All time values must be greater than entry values")
+    if isinstance(model_args, tuple):
+        args = tuple((reshape_1d_arg(arg) for arg in model_args))
+    elif isinstance(model_args, np.ndarray):
+        args = (reshape_1d_arg(model_args),)
+    elif model_args is None:
+        args = ()
+    sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+    if len(set(sizes)) != 1:
+        raise ValueError(
+            f"""
+            All lifetime data must have the same number of values. Fields
+            length are different. Got {tuple(sizes)}
+            """
         )
-        if isinstance(model_args, tuple):
-            args = tuple((reshape_1d_arg(arg) for arg in model_args))
-        elif isinstance(model_args, np.ndarray):
-            args = (reshape_1d_arg(model_args),)
-        elif model_args is None:
-            args = ()
-        sizes = [len(x) for x in (time, event, entry, *args)]
-        if len(set(sizes)) != 1:
-            raise ValueError(
-                f"All lifetime data must have the same number of values. Fields length are different. Got {tuple(sizes)}"
-            )
-
-        self._time = time
-        self._nb_observations = len(time)
-        self._complete_time = time[np.flatnonzero(event)]
-        self._nonzero_entry = entry[np.flatnonzero(entry)]
-        self._args = args
-        self._complete_time_args = tuple(arg[np.flatnonzero(event)] for arg in args)
-        self._nonzero_entry_args = tuple(arg[np.flatnonzero(entry)] for arg in args)
-        self._nb_observations = len(time)
-
-    @property
-    @override
-    def nb_observations(self):
-        return self._nb_observations
-
-    def _time_contrib(self) -> np.float64:
-        return np.sum(self.model.chf(self._time, *self._args))
-
-    def _event_contrib(self) -> np.float64 | None:
-        if len(self._complete_time) == 0:
-            return None
-        return np.sum(
-            -np.log(self.model.hf(self._complete_time, *self._complete_time_args))
+    non_zero_entry = np.flatnonzero(entry)
+    if event is not None:
+        non_zero_event = np.flatnonzero(event)
+        data = LifetimeData(
+            complete_time=time[non_zero_event],
+            censored_time=time[~non_zero_event],
+            left_truncations=entry[non_zero_entry],
+            complete_time_args=tuple(arg[non_zero_event] for arg in args),
+            censored_time_args=tuple(arg[~non_zero_event] for arg in args),
+            left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
+            nb_observations=time.size,
         )
+        return data
 
-    def _entry_contrib(self) -> np.float64 | None:
-        if len(self._nonzero_entry) == 0:
-            return None
-        return -np.sum(self.model.chf(self._nonzero_entry, *self._nonzero_entry_args))
-
-    def _jac_time_contrib(self) -> NDArray[np.float64]:
-        jac = self.model.jac_chf(
-            self._time,
-            *self._args,
-        )
-
-        # Sum all contribs
-        # Axis 0 is the parameters
-        return np.sum(jac, axis=tuple(range(1, jac.ndim)))
-
-    def _jac_event_contrib(self) -> NDArray[np.float64] | None:
-        if len(self._complete_time) == 0:
-            return None
-        jac = -self.model.jac_hf(
-            self._complete_time,
-            *self._complete_time_args,
-        ) / self.model.hf(self._complete_time, *self._complete_time_args)
-
-        # Sum all contribs
-        # Axis 0 is the parameters
-        return np.sum(jac, axis=tuple(range(1, jac.ndim)))
-
-    def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
-        if len(self._nonzero_entry) == 0:
-            return None
-
-        # filter entry==0 to avoid numerical error in jac_chf
-        jac = -self.model.jac_chf(
-            self._nonzero_entry,
-            *self._nonzero_entry_args,
-        )
-
-        # Sum all contribs
-        # Axis 0 is the parameters
-        return np.sum(jac, axis=tuple(range(1, jac.ndim)))
-
-    @override
-    def negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> float:
-        self.params = params  # changes model params
-        contributions = (
-            self._time_contrib(),
-            self._event_contrib(),
-            self._entry_contrib(),
-        )
-        return sum(x for x in contributions if x is not None)  # ()
-
-    @override
-    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
-        Jacobian of the negative log likelihood.
-
-        The jacobian (here gradient) is computed with respect to parameters
-
-        Parameters
-        ----------
-        params : ndarray Parameters values on which the jacobian is evaluated Returns
-        -------
-        ndarray
-            Jacobian of the negative log likelihood value
-        """
-        self.params = params
-        jac_contributions = (
-            self._jac_time_contrib(),
-            self._jac_event_contrib(),
-            self._jac_entry_contrib(),
-        )
-        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
+    complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
+    data = LifetimeData(
+        complete_time=time[:, 1][complete_time_index],
+        censored_time=time[~complete_time_index],
+        left_truncations=entry[non_zero_entry],
+        complete_time_args=tuple(arg[complete_time_index] for arg in args),
+        censored_time_args=tuple(arg[~complete_time_index] for arg in args),
+        left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
+        nb_observations=time.size,
+    )
+    return data
 
 
-@final
-class IntervalLifetimeLikelihood(Likelihood):
-    _nb_observations: int
-    _complete_time: NDArray[np.float64]
-    _censored_time_lower_bound: NDArray[np.float64]
-    _censored_time_upper_bound: NDArray[np.float64]
-    _nonzero_entry: NDArray[np.float64]
-    _complete_time_args: tuple[NDArray[Any], ...]
-    _censored_time_args: tuple[NDArray[Any], ...]
-    _nonzero_entry_args: tuple[NDArray[Any], ...]
+def _complete_time_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> float:
+    if data["complete_time"].size == 0.0:
+        return 0.0
+    return -np.sum(
+        np.log(model.pdf(data["complete_time"], *data["complete_time_args"]))
+    )
 
-    def __init__(
-        self,
-        model: FittableParametricLifetimeModel[*tuple[Any, ...]],
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        entry: NDArray[np.float64] | None = None,
-    ):
-        super().__init__(model)
 
-        time_inf = reshape_1d_arg(time_inf)
-        time_sup = reshape_1d_arg(time_sup)
-        entry = (
-            reshape_1d_arg(entry)
-            if entry is not None
-            else np.zeros_like(time_inf, dtype=np.float64)
-        )
-        if isinstance(model_args, tuple):
-            args = tuple((reshape_1d_arg(arg) for arg in model_args))
-        elif isinstance(model_args, np.ndarray):
-            args = (reshape_1d_arg(model_args),)
-        elif model_args is None:
-            args = ()
+def _jac_complete_time_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> NDArray[np.float64]:
+    if data["complete_time"].size == 0:
+        return np.zeros_like(model.params)
+    jac = -model.jac_pdf(
+        data["complete_time"], *data["complete_time_args"]
+    ) / model.pdf(data["complete_time"], *data["complete_time_args"])
 
-        sizes = [len(x) for x in (time_inf, time_sup, entry, *args)]
-        if len(set(sizes)) != 1:
-            raise ValueError(
-                f"All lifetime data must have the same number of values. Fields length are different. Got {tuple(sizes)}"
-            )
+    return np.sum(jac, axis=(1, 2))
 
-        self._nb_observations = len(time_inf)
 
-        complete_time_index = np.flatnonzero(time_inf == time_sup)
-        self._complete_time = time_sup[complete_time_index]
-        self._censored_time_lower_bound = time_inf[~complete_time_index]
-        self._censored_time_upper_bound = time_sup[~complete_time_index]
-
-        self._nonzero_entry = entry[(entry > 0).squeeze()]
-
-        self._complete_time_args = tuple(arg[complete_time_index] for arg in args)
-        self._censored_time_args = tuple(arg[~complete_time_index] for arg in args)
-        self._nonzero_entry_args = tuple(arg[(entry > 0).squeeze()] for arg in args)
-
-        self.params = self.model.get_initial_params(
-            self._complete_time, model_args=model_args
-        )
-
-    @property
-    @override
-    def nb_observations(self):
-        return self._nb_observations
-
-    def _complete_time_contrib(self) -> np.float64 | None:
-        if len(self._complete_time == 0):
-            return None
-        return np.sum(
-            -np.log(self.model.pdf(self._complete_time, *self._complete_time_args))
-        )
-
-    def _interval_censored_time_contrib(self) -> np.float64 | None:
-        if len(self._censored_time_upper_bound) == 0:
-            return None
+def _censored_time_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> float:
+    if data["censored_time"].size == 0:
+        return 0.0
+    if data["censored_time"].shape[-1] > 1:
+        # interval censored time
         return np.sum(
             -np.log(
                 10**-10
-                + self.model.cdf(
-                    self._censored_time_upper_bound, *self._censored_time_args
-                )
-                - self.model.cdf(
-                    self._censored_time_lower_bound, *self._censored_time_args
-                )
+                + model.cdf(data["censored_time"][:, 1], *data["censored_time_args"])
+                - model.cdf(data["censored_time"][:, 0], *data["censored_time_args"])
             ),
         )
+    else:
+        # right censored time
+        return np.sum(model.chf(data["censored_time"], *data["censored_time_args"]))
 
-    def _entry_contrib(self) -> np.float64 | None:
-        if len(self._nonzero_entry) == 0:
-            return None
-        return -np.sum(self.model.chf(self._nonzero_entry, *self._nonzero_entry_args))
 
-    def _jac_complete_time_contrib(self) -> NDArray[np.float64] | None:
-        if len(self._complete_time == 0):
-            return None
-        jac = -self.model.jac_pdf(
-            self._complete_time,
-            *self._complete_time_args,
-        ) / self.model.pdf(
-            self._complete_time,
-            *self._complete_time_args,
-        )
-
-        return np.sum(jac, axis=tuple(range(1, jac.ndim)))
-
-    def _jac_interval_censored_time_contrib(self) -> NDArray[np.float64] | None:
-        if len(self._censored_time_upper_bound) == 0:
-            return None
-
+def _jac_censored_time_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> NDArray[np.float64]:
+    if data["censored_time"].size == 0:
+        return np.zeros_like(model.params)
+    if data["censored_time"].shape[-1] > 1:
+        # interval censored time
         jac_interval_censored = (
-            self.model.jac_sf(
-                self._censored_time_upper_bound,
-                *self._censored_time_args,
-            )
-            - self.model.jac_sf(
-                self._censored_time_lower_bound,
-                *self._censored_time_args,
-            )
+            model.jac_sf(data["censored_time"][:, 1], *data["censored_time_args"])
+            - model.jac_sf(data["censored_time"][:, 0], *data["censored_time_args"])
         ) / (
             10**-10
-            + self.model.cdf(self._censored_time_upper_bound, *self._censored_time_args)
-            - self.model.cdf(self._censored_time_lower_bound, *self._censored_time_args)
+            + model.cdf(data["censored_time"][:, 1], *data["censored_time_args"])
+            - model.cdf(data["censored_time"][:, 0], *data["censored_time_args"])
         )
 
+        return np.sum(jac_interval_censored, axis=(1, 2))
+    else:
+        # right censored time
         return np.sum(
-            jac_interval_censored, axis=tuple(range(1, jac_interval_censored.ndim))
+            model.jac_chf(data["censored_time"], *data["censored_time_args"]), axis=1
         )
 
-    def _jac_entry_contrib(self) -> NDArray[np.float64] | None:
-        if len(self._nonzero_entry) == 0:
-            return None
-        # filter entry==0 to avoid numerical error in jac_chf
-        jac = self.model.jac_chf(
-            self._nonzero_entry,
-            *self._nonzero_entry_args,
-        )
 
-        return -np.sum(jac, axis=tuple(range(1, jac.ndim)))
-
-    @override
-    def negative_log(self, params: NDArray[np.float64]) -> float:
-        self.params = params
-        contributions = (
-            self._complete_time_contrib(),
-            self._interval_censored_time_contrib(),
-            self._entry_contrib(),
-        )
-        return sum(x for x in contributions if x is not None)  # ()
-
-    @override
-    def jac_negative_log(self, params: NDArray[np.float64]) -> NDArray[np.float64]:
-        """
-        Jacobian of the negative log likelihood.
-
-        The jacobian (here gradient) is computed with respect to parameters
-
-        Parameters
-        ----------
-        params : ndarray
-            Parameters values on which the jacobian is evaluated
-
-        Returns
-        -------
-        ndarray
-            Jacobian of the negative log likelihood value
-        """
-        self.params = params
-        jac_contributions = (
-            self._jac_interval_censored_time_contrib(),
-            self._jac_complete_time_contrib(),
-            self._jac_entry_contrib(),
-        )
-        return np.asarray(sum(x for x in jac_contributions if x is not None))  # (p,)
+def _left_truncations_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> float:
+    if data["left_truncations"].size == 0.0:
+        return 0.0
+    return -np.sum(model.chf(data["left_truncations"], *data["left_truncations_args"]))
 
 
-class CoxPartialLifetimeLikelihood(Likelihood):
+def _jac_left_truncations_contrib(
+    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    data: LifetimeData,
+) -> NDArray[np.float64]:
+    if data["left_truncations"].size == 0.0:
+        return np.zeros_like(model.params)
+    jac = -model.jac_chf(data["left_truncations"], *data["left_truncations_args"])
+    return np.sum(jac, axis=1)
+
+
+class DefaultLifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData], ABC):
+    """
+    Default likelihood from lifetime data.
+
+    Parameters
+    ----------
+    model : generic FittableParametricLifetimeModel
+        All model parameters must exist first. Its values are initialized by
+        the likelihood with respect to data.
+    # TODO
+    """
+
+    model: M
+    data: LifetimeData
+
     def __init__(
         self,
+        model: M,
         time: NDArray[np.float64],
-        covar: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
     ):
-        covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-
-        super().__init__(model=covar_effect)
-
-        time = reshape_1d_arg(time)
-        event = (
-            reshape_1d_arg(event)
-            if event is not None
-            else np.ones_like(time, dtype=np.bool_)
+        self.model = copy.deepcopy(model)
+        self.data = _init_lifetime_data(
+            time, model_args=model_args, event=event, entry=entry
         )
-        entry = (
-            reshape_1d_arg(entry)
-            if entry is not None
-            else np.zeros_like(time, dtype=np.float64)
-        )
-        sizes = [len(x) for x in (time, event, entry, covar) if x is not None]
-        if len(set(sizes)) != 1:
-            raise ValueError(
-                f"All lifetime data must have the same number of values. Fields length are different. Got {tuple(sizes)}"
-            )
-
-        (
-            ordered_event_time,  # uncensored sorted untied times
-            ordered_event_index,
-            self._event_count,
-        ) = np.unique(
-            time[event == 1],
-            return_index=True,
-            return_counts=True,
-        )
-        # here risk_set is mask array on time
-        # left truncated & right censored
-        self._risk_set = np.logical_and(
-            (
-                np.vstack([entry[:, 0]] * len(ordered_event_time))
-                < np.hstack([ordered_event_time[:, None]] * len(time))
-            ),
-            (
-                np.hstack([ordered_event_time[:, None]] * len(time))
-                <= np.vstack([time[:, 0]] * len(ordered_event_time))
-            ),
-        )
-
-        self._death_set = np.vstack(
-            [time[:, 0] * event[:, 0]] * len(ordered_event_time)
-        ) == np.hstack([ordered_event_time[:, None]] * len(time))
-
-        self._covar = covar
-        self._ordered_event_covar = covar[event[:, 0] == 1][ordered_event_index]
-
-        self._nb_observations = len(time)
-
-        if (self._event_count > 3).any():
-            self.set_method("efron")
-        elif (self._event_count <= 3).all() and (2 in self._event_count):
-            self.set_method("breslow")
-        else:
-            self.set_method("cox")
 
     @property
-    def nb_observations(self):
-        return self._nb_observations
+    @override
+    def nb_observations(self) -> int:
+        return self.data["nb_observations"]
 
-    def set_method(self, method: str) -> None:
-        r"""Manually specify method used to compute partial likelihood and its derivates. By default :code:`method` is set automatically.
-
-        Args:
-            method (str): "cox", "breslow" or "efron"
-
-        Notes:
-            Based on :code:`method` value, the computation of the partial negative log partial likelihood differs :
-                - If "cox", :math:`\sum_j^{m}\ln\left( \psi_{\mathbf{R}_j}(\vec{z}_i)\right) - \sum_j^{m}\ln(g(\vec{z}_{(j)}))`
-                - If "breslow", :math:`\sum_j^{m} d_j \ln\left( \psi\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
-                - If "efron", :math:`\sum_j^{m} \sum_{\alpha}^{d_j} \ln\left( \psi_{\mathbf{R}_j} - \frac{\alpha -1}{d_j} \psi_{\mathbf{D}_j}\right) - \sum_j^{m}\ln(g(\vec{s}_j))`
-
-            When Cox or Breslow methods are used, psi is defined as followed :
-                - Order 0 derivative, :math:`\psi_{\mathbf{R}_j}(\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)}g(\vec{z}_i)`
-                - Order 1 derivative, :math:`\psi_{\mathbf{R}_j}(k, \vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)`
-                - Order 2 derivative, :math:`\psi_{\mathbf{R}_j}(h,~k,~\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i)`
-            See :code:`Cox(*args)._psi(*args)`
-
-            When Efron method is used, psi is defined as followed :
-                - Order 0 derivative, :math:`\psi_{\mathbf{R}_j}(\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)}g(\vec{z}_i)`
-                - Order 1 derivative, :math:`\psi_{\mathbf{R}_j}(k, \vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot g(\vec{z}_i)`
-                - Order 2 derivative, :math:`\psi_{\mathbf{R}_j}(h,~k,~\vec{z}_i) = \sum_{i\in\mathbf{R}(v_j)} z_{ik} \cdot z_{ih} \cdot g(\vec{z}_i)`
-            See :code:`Cox(*args)._psi_efron(*args)`
-        """
-        if method.lower() == "efron":
-            self.method = method
-            self._compute_s_j()
-            self._compute_efron_discount_rates()
-        elif method.lower() == "breslow":
-            self.method = method
-            self._compute_s_j()
-            self._discount_rates = None
-            self._discount_rates_mask = None
-        elif method.lower() == "cox":
-            self.method = method
-            self._s_j = None
-            self._discount_rates = None
-            self._discount_rates_mask = None
-        else:
-            raise ValueError(f"method allowed are efron, breslow or cox. Not {method}")
-
-    def _compute_s_j(self) -> None:
-        """s_j : [m, p]"""
-        self._s_j = np.dot(self._death_set, self._covar)
-
-    def _compute_efron_discount_rates(self) -> None:
-        """
-        discount_rates : [m, max(event_count)] or [m, max(event_count)]
-        discount_rates_mask : [m, max(event_count)] or [m, max(event_count)]
-        """
-
-        self._discount_rates = (
-            np.vstack([np.arange(self._event_count.max())] * len(self._event_count))
-            / self._event_count[:, None]
+    @override
+    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
+        self.model.params = params
+        return (
+            _complete_time_contrib(self.model, self.data)
+            + _censored_time_contrib(self.model, self.data)
+            + _left_truncations_contrib(self.model, self.data)
         )
-        self._discount_rates_mask = np.where(self._discount_rates < 1, 1, 0)
 
-    def _psi(self, on: str = "risk", order: int = 0) -> np.ndarray:
-        r"""Psi formula used for likelihood computations
-
-        Args:
-            on (str, optional): "risk" or "death". Defaults to "risk". If "death", sum is applied on death set.
-            order (int, optional): order derivatives with respect to params. Defaults to 0.
-
-        Returns:
-            np.ndarray: psi formulation
-            If order 0, shape [m, 1]
-            If order 1, shape [m, p]
-            If order 2, shape [m, p, p]
+    def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
         """
-        if on == "risk":
-            i_set = self._risk_set
-        elif on == "death":
-            i_set = self._death_set
-        else:
-            raise ValueError(f"'on' allowed values are 'risk' and 'death', not {on}")
+        Jacobian of the negative log likelihood.
 
-        if order == 0:
-            # shape [m]
-            return np.dot(i_set, self.model.g(self._covar))
-        elif order == 1:
-            # shape [m, p]
-            return np.dot(i_set, self._covar * self.model.g(self._covar))
-        elif order == 2:
-            # shape [m, p, p]
-            return np.tensordot(
-                i_set[:, :None],
-                self._covar[:, None]
-                * self._covar[:, :, None]
-                * self.model.g(self._covar)[:, :, None],
-                axes=1,
-            )
+        The jacobian is computed with respect to parameters.
 
-    def _psi_efron(self, order: int = 0) -> np.ndarray:
-        """Psi formula for Efron method
+        Parameters
+        ----------
+        model : parametric model
+            A parametrized model with appropriate parameters values.
 
-        Args:
-            order (int, optional): order derivatives with respect to params. Defaults to 0.
-
-        Returns:
-            np.ndarray: psi formulation for Efron method
-            If order 0, shape [m, max(d_j)]
-            If order 1, shape [m, max(d_j), p]
-            If order 2, shape [m, max(d_j), p, p]
+        Returns
+        -------
+        out : ndarray
         """
+        self.model.params = params
+        return (
+            _jac_complete_time_contrib(self.model, self.data)
+            + _jac_censored_time_contrib(self.model, self.data)
+            + _jac_left_truncations_contrib(self.model, self.data)
+        )
 
-        if order == 0:
-            # shape [m, max(d_j)]
-            return (
-                self._psi() * self._discount_rates_mask
-                - self._psi(on="death")
-                * self._discount_rates
-                * self._discount_rates_mask
-            )
-        elif order == 1:
-            # shape [m, max(d_j), p]
-            return (
-                self._psi(order=1)[:, None, :] * self._discount_rates_mask[:, :, None]
-                - self._psi(on="death", order=1)[:, None, :]
-                * (self._discount_rates * self._discount_rates_mask)[:, :, None]
-            )
-        elif order == 2:
-            # shape [m, max(d_j), p, p]
-            return (
-                self._psi(order=2)[:, None, :]
-                * self._discount_rates_mask[:, :, None, None]
-                - self._psi(on="death", order=2)[:, None, :]
-                * (self._discount_rates * self._discount_rates_mask)[:, :, None, None]
-            )
+    @override
+    def maximum_likelihood_estimation(
+        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+    ) -> FittingResults:
+        if "jac" not in optimizer_options:
+            optimizer_options["jac"] = self.jac_negative_log
+        return super().maximum_likelihood_estimation(**optimizer_options)
 
-    def negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> float:
-        """Compute negative log partial likelihood depending on method used (cox, breslow or efron)
+        # hessian = approx_hessian(self, fitting_results.optimal_params)
+        # fitting_results.covariance_matrix = np.linalg.pinv(hessian)
+        # return fitting_results
 
-        Returns:
-            float : negative log partial likelihood at params
-        """
-        self.params = params  # changes model params
 
-        if self.method == "cox":
-            neg_L = -(
-                np.log(self.model.g(self._ordered_event_covar)).sum()
-                - np.log(self._psi()).sum()
-            )
-        elif self.method == "breslow":
-            neg_L = -(
-                np.log(self.model.g(self._s_j)).sum()
-                - (self._event_count[:, None] * np.log(self._psi())).sum()
-            )
-        elif self.method == "efron":
-            # .sum(axis=1, keepdims=True) --> sum on alpha to d_j
-            # .sum() --> sum on j
-            # using where in np.log allows to avoid 0. masked elements
-            m = self._psi_efron()
-            neg_L = -(
-                np.log(self.model.g(self._s_j)).sum()
-                - np.log(m, out=np.zeros_like(m), where=(m != 0))
-                .sum(axis=1, keepdims=True)
-                .sum()
-            )
-        return neg_L
+# def _hessian_scheme(
+#     likelihood: DefaultLifetimeLikelihood[M],
+#     params: NDArray[np.float64],
+#     method: Literal["2point", "cs"] = "cs",
+#     eps: float = 1e-6,
+# ) -> NDArray[np.float64]:
+#     size = params.size
+#     hess = np.empty((size, size))
 
-    def jac_negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> np.ndarray:
-        """Compute Jacobian of the negative log partial likelihood depending on method used (cox, breslow or efron)
+#     # hessian 2 point
+#     if method == "2point":
+#         for i in range(size):
+#             hess[i] = approx_fprime(
+#                 params,
+#                 lambda x: likelihood.jac_negative_log(x)[i],
+#                 eps,
+#             )
+#         return hess
+#     # hessian cs
+#     u = eps * 1j * np.eye(size)
+#     complex_params = params.astype(np.complex64)  # change params to complex
+#     for i in range(size):
+#         for j in range(i, size):
+#             hess[i, j] = (
+#                 np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
+#             )
+#             if i != j:
+#                 hess[j, i] = hess[i, j]
+#     return hess
 
-        Returns:
-            np.ndarray: jacobian vector
-        """
-        self.params = params  # changes model params
 
-        if self.method == "cox":
-            return -(
-                self._ordered_event_covar.sum(axis=0)
-                - (self._psi(order=1) / self._psi()).sum(axis=0)
-            )
-        elif self.method == "breslow":
-            return -(
-                self._s_j.sum(axis=0)
-                - (self._event_count[:, None] * (self._psi(order=1) / self._psi())).sum(
-                    axis=0
-                )
-            )
-        elif self.method == "efron":
-            # .sum(axis=1) --> sum on alpha to d_j
-            # .sum(axis=0) --> sum on j
-            # using where in np.divide allows to avoid 0. masked elements
-            a = self._psi_efron(order=1)
-            b = self._psi_efron()[:, :, None]
-            return -(
-                self._s_j.sum(axis=0)
-                - np.divide(a, b, out=np.zeros_like(a), where=(b != 0))
-                .sum(axis=1)
-                .sum(axis=0)
-            )
+# add approx_hessian str arg to options of fit instead of testing instance
+# def approx_hessian(
+#     likelihood: DefaultLifetimeLikelihood[M],
+#     params: NDArray[np.float64],
+#     eps: float = 1e-6,
+# ) -> NDArray[np.float64]:
+#     from relife.lifetime_model import Gamma
+#     from relife.lifetime_model._parametric import ParametricLifetimeRegression
 
-    def hess_negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> np.ndarray:
-        """Compute Hessian of the negative log partial likelihood depending on method used (cox, breslow or efron)
-
-        Returns:
-            np.ndarray: hessian matrix
-        """
-        self.params = params  # changes model params
-
-        if self.method == "cox" or self.method == "breslow":
-            psi_order_0 = self._psi()
-            psi_order_1 = self._psi(order=1)
-
-            hessian_part_1 = self._psi(order=2) / psi_order_0[:, :, None]
-            # print("hessian_part_1 [d, p, p]:", hessian_part_1.shape)
-
-            hessian_part_2 = (psi_order_1 / psi_order_0)[:, None] * (
-                psi_order_1 / psi_order_0
-            )[:, :, None]
-            # print("hessian_part_2 [d, p, p]:", hessian_part_2.shape)
-
-            if self.method == "cox":
-                return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
-            elif self.method == "breslow":
-                return (self._event_count[:, None, None] * hessian_part_1).sum(
-                    axis=0
-                ) - (self._event_count[:, None, None] * hessian_part_2).sum(axis=0)
-
-        elif self.method == "efron":
-            psi_order_0 = self._psi_efron()
-            psi_order_1 = self._psi_efron(order=1)
-
-            # .sum(axis=1) --> sum on alpha to d_j
-            # using where in np.divide allows to avoid 0. masked elements
-            a = self._psi_efron(order=2)
-            b = psi_order_0[:, :, None, None]
-            hessian_part_1 = np.divide(a, b, out=np.zeros_like(a), where=(b != 0)).sum(
-                axis=1
-            )
-
-            # .sum(axis=1) --> sum on alpha to d_j
-            # using where in np.divide allows to avoid 0. masked elements
-            b = psi_order_0[:, :, None]
-            hessian_part_2 = (
-                np.divide(
-                    psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
-                )[:, :, None, :]
-                * (
-                    np.divide(
-                        psi_order_1, b, out=np.zeros_like(psi_order_1), where=(b != 0)
-                    )
-                )[:, :, :, None]
-            )
-            hessian_part_2 = hessian_part_2.sum(axis=1)
-
-            return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
+#     if isinstance(likelihood.model, ParametricLifetimeRegression):
+#         if isinstance(likelihood.model.baseline, Gamma):
+#             return _hessian_scheme(likelihood, params, method="2point", eps=eps)
+#     if isinstance(likelihood.model, Gamma):
+#         return _hessian_scheme(likelihood, params, method="2point", eps=eps)
+#     return _hessian_scheme(likelihood, params, eps=eps)
