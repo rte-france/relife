@@ -17,9 +17,8 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import overload, override
 
-from relife.base import ParametricModel
-from relife.likelihood._base import FittingResults
-from relife.likelihood._lifetime_likelihood import DefaultLifetimeLikelihood
+from relife.base import ParametricModel, FittingResults
+from relife.lifetime_model._base import DefaultLifetimeLikelihood
 from relife.typing import (
     AnyFloat,
     NumpyBool,

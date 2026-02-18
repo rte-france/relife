@@ -22,8 +22,8 @@ from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.likelihood._base import FittingResults
-from relife.likelihood._lifetime_likelihood import DefaultLifetimeLikelihood
+from relife.base import FittingResults
+from relife.lifetime_model._base import DefaultLifetimeLikelihood
 from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions, Seed
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 

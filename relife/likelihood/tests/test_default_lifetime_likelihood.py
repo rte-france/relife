@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from relife.likelihood import DefaultLifetimeLikelihood
+from relife.lifetime_model._base import DefaultLifetimeLikelihood
 
 
 class TestLikelihoodDistribution:

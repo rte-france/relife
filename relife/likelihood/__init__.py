@@ -1,3 +1,4 @@
-from ._lifetime_likelihood import DefaultLifetimeLikelihood, IntervalLifetimeLikelihood, CoxPartialLifetimeLikelihood
+from ._lifetime_likelihood import IntervalLifetimeLikelihood, CoxPartialLifetimeLikelihood
+from relife.lifetime_model._base import DefaultLifetimeLikelihood
 
-__all__ = ["DefaultLifetimeLikelihood", "IntervalLifetimeLikelihood", "CoxPartialLifetimeLikelihood"]
+__all__ = ["IntervalLifetimeLikelihood", "CoxPartialLifetimeLikelihood"]

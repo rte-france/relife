@@ -8,11 +8,9 @@ from typing import Any, Generic, Self, Sequence, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.base import FrozenParametricModel, ParametricModel
+from relife.base import FrozenParametricModel, ParametricModel, FittingResults
 from relife.data import NHPPData
-from relife.lifetime_model._base import FittableParametricLifetimeModel
-from relife.likelihood import DefaultLifetimeLikelihood
-from relife.likelihood._base import FittingResults
+from relife.lifetime_model._base import FittableParametricLifetimeModel, DefaultLifetimeLikelihood
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 
