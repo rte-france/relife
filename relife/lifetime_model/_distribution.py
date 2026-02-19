@@ -29,8 +29,8 @@ from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 from ._base import (
     DefaultLifetimeLikelihood,
     FittableParametricLifetimeModel,
-    ParametricLifetimeModel,
     LifetimeData,
+    ParametricLifetimeModel,
     approx_parameters_covariance,
     document_args,
 )
@@ -149,6 +149,20 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        *,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
@@ -212,16 +226,20 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 def init_distribution_params_from_lifetimes(
     model: LifetimeDistribution, data: LifetimeData
 ) -> NDArray[np.float64]:
+    # flatten censored_time in case it is 2D
+    all_time_values = np.concatenate(
+        (data["complete_time"], data["censored_time"].flatten())
+    )
     if isinstance(model, Gompertz):
         param0 = np.empty(model.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(data["complete_time"]))
-        shape = np.exp(-rate * np.mean(data["complete_time"]))
+        rate = np.pi / (np.sqrt(6) * np.std(all_time_values))
+        shape = np.exp(-rate * np.mean(all_time_values))
         param0[0] = shape
         param0[1] = rate
         return param0
 
     param0 = np.ones(model.nb_params, dtype=np.float64)
-    param0[-1] = 1 / np.median(data["time"])
+    param0[-1] = 1 / np.median(all_time_values)
     return param0
 
 
@@ -632,20 +650,6 @@ class Gompertz(LifetimeDistribution):
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: AnyFloat) -> NumpyFloat:
         return self.shape * self.rate**2 * np.exp(self.rate * time)
-
-    @override
-    def get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-    ) -> NDArray[np.float64]:
-        param0 = np.empty(self.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(time[event]))
-        shape = np.exp(-rate * np.mean(time[event]))
-        param0[0] = shape
-        param0[1] = rate
-        return param0
 
 
 @final

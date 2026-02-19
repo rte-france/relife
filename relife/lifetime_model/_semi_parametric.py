@@ -1,21 +1,17 @@
 import copy
 from dataclasses import dataclass, field
-from typing import Literal, Unpack, final, override
 
 import numpy as np
 from numpy._typing import NDArray
-from numpy.typing import NDArray
 from optype.numpy import Array1D, ToFloat, ToFloat2D
-from relife.lifetime_model._regression import LinearCovarEffect
 from scipy.optimize import Bounds
 from scipy.stats import norm
-from typing_extensions import overload
+from typing_extensions import Literal, Unpack, final, overload, override
 
 from relife.base import FittingResults, MaximumLikehoodOptimizer
+from relife.lifetime_model._regression import LinearCovarEffect
 from relife.typing import ScipyMinimizeOptions
 from relife.utils import reshape_1d_arg
-
-from ._regression import LinearCovarEffect
 
 
 @dataclass

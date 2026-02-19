@@ -8,9 +8,12 @@ from typing import Any, Generic, Self, Sequence, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.base import FrozenParametricModel, ParametricModel, FittingResults
+from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
-from relife.lifetime_model._base import FittableParametricLifetimeModel, DefaultLifetimeLikelihood
+from relife.lifetime_model._base import (
+    DefaultLifetimeLikelihood,
+    FittableParametricLifetimeModel,
+)
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
 
@@ -365,3 +368,14 @@ class FrozenNonHomogeneousPoissonProcess(
         return self._unfrozen_model.generate_failure_data(
             nb_samples, time_window, *self.args, seed=seed
         )
+
+
+def is_non_homogeneous_poisson_process(model):
+    """
+    Checks if model is a non-homogeneous Poisson process.
+    """
+    # local import to avoid circular import
+
+    return isinstance(
+        model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)
+    )

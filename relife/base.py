@@ -4,26 +4,28 @@ from __future__ import annotations
 
 import inspect
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import (
     Any,
     Generic,
-    Iterator,
+    Literal,
     Self,
     TypeVar,
     TypeVarTuple,
-    final, override, Unpack,
+    Unpack,
+    final,
 )
 
 import numpy as np
 from numpy._typing import NDArray
-from numpy.typing import NDArray
-from optype.numpy import Array2D, Array1D, ToFloat
-from relife.typing import MethodMinimize, ScipyMinimizeOptions
+from optype.numpy import Array1D, Array2D, ToFloat
 from scipy import stats
 from scipy.optimize import Bounds, minimize
-from typing_extensions import override
+from typing_extensions import overload, override
+
+from relife.typing import MethodMinimize, ScipyMinimizeOptions
 
 __all__ = ["ParametricModel", "FrozenParametricModel"]
 
@@ -101,7 +103,9 @@ class _Parameters:
     def update_tree(self) -> None:
         """update names and values of current and parent nodes"""
 
-        def items_walk(parameters: _Parameters) -> Iterator[tuple[str, float]]:
+        def items_walk(
+            parameters: _Parameters,
+        ) -> Iterator[tuple[tuple[str, float], ...]]:
             yield tuple(parameters._mapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
@@ -209,8 +213,8 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     """
     Class of every frozen parametric models.
 
-    Frozen models encapsulate additional arguments values allowing to request the object without
-    giving them.
+    Frozen models encapsulate additional arguments values allowing to request
+    the object without giving them.
     """
 
     _args: tuple[*Ts]
@@ -240,7 +244,7 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     def __getattr__(self, key: str) -> Any:
         frozen_type = self._unfrozen_model.__class__.__name__
         if key == "fit":
-            raise AttributeError(f"Frozen model can't be fit")
+            raise AttributeError("Frozen model can't be fit")
         try:
             attr = getattr(self._unfrozen_model, key)
         except AttributeError:
@@ -254,54 +258,23 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
         return attr
 
 
-# class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
-#     """
-#     Class of every frozen parametric models.
+@overload
+def is_frozen(model: FrozenParametricModel[ParametricModel, *Ts]) -> Literal[True]: ...
+@overload
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool: ...
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool:
+    """
+    Checks if model is frozen
+    """
+    from relife.base import FrozenParametricModel
 
-#     Frozen models encapsulate additional arguments values allowing to request the object without
-#     giving them.
-#     """
+    return isinstance(model, FrozenParametricModel)
 
-#     _args: tuple[*Ts]
-#     _unfrozen_model: _ParametricModel_T
 
-#     def __init__(self, model: _ParametricModel_T, *args: *Ts):
-#         super().__init__()
-#         if np.any(np.isnan(model.params)):
-#             raise ValueError("Can't freeze a model with NaN params. Set params first")
-#         self._unfrozen_model = model
-#         self._args = args
-
-#     @property
-#     def args(self) -> tuple[*Ts]:
-#         return self._args
-
-#     @args.setter
-#     def args(self, value: tuple[*Ts]) -> None:
-#         if len(value) != len(self._args):
-#             raise ValueError
-#         self._args = value
-
-#     def unfreeze(self) -> _ParametricModel_T:
-#         return self._unfrozen_model
-
-#     def __getattr__(self, key: str) -> Any:
-#         frozen_type = self._unfrozen_model.__class__.__name__
-#         if key == "fit":
-#             raise AttributeError(f"Frozen model can't be fit")
-#         try:
-#             attr = getattr(self._unfrozen_model, key)
-#         except AttributeError:
-#             raise AttributeError(f"Frozen {frozen_type} has no attribute {key}")
-
-#         def wrapper(*args: Any, **kwargs: Any):
-#             return attr(*(*args, *self.args), **kwargs)
-
-#         if inspect.ismethod(attr):
-#             return wrapper
-#         return attr
-
-# TODO : sortir se_estimation (utile seulement pour les plot, donc à mettre avec)
 @dataclass
 class FittingResults:
     """Fitting results of the parametric_model core."""

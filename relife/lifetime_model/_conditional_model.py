@@ -7,6 +7,7 @@ import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs
 from numpy.typing import NDArray
 from typing_extensions import override
 
+from relife.base import is_frozen
 from relife.typing import (
     AnyFloat,
     AnyParametricLifetimeModel,
@@ -14,10 +15,9 @@ from relife.typing import (
     NumpyFloat,
     Seed,
 )
-from relife.utils import is_frozen, reshape_1d_arg
+from relife.utils import reshape_1d_arg
 
-from ._base import ParametricLifetimeModel, document_args
-from ._frozen import FrozenParametricLifetimeModel
+from ._base import FrozenParametricLifetimeModel, ParametricLifetimeModel, document_args
 
 __all__: list[str] = ["AgeReplacementModel", "LeftTruncatedModel"]
 
@@ -29,7 +29,10 @@ _ar_args_docstring = [
         "float or np.ndarray",
         [
             "Age of replacement values.",
-            "If ndarray, shape can only be `(m,)` because only one age of replacement per asset can be given.",
+            """
+            If ndarray, shape can only be `(m,)` because only one age of
+            replacement per asset can be given.
+            """,
         ],
     ),
     docscrape.Parameter(
@@ -46,8 +49,9 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     r"""
     Age replacement model.
 
-    Lifetime model where the assets are replaced at age :math:`a_r`. This is equivalent to the model of :math:`\min(X,a_r)` where
-    :math:`X` is a baseline lifetime and :math:`a_r` is the age of replacement.
+    Lifetime model where the assets are replaced at age :math:`a_r`. This is
+    equivalent to the model of :math:`\min(X,a_r)` where :math:`X` is a
+    baseline lifetime and :math:`a_r` is the age of replacement.
 
     Parameters
     ----------
@@ -182,7 +186,23 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        ar: AnyFloat,
+        *args: *Ts,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
     @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def rvs(
         self,
         size: int | tuple[int, int],
@@ -197,36 +217,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         | tuple[NumpyFloat, NumpyFloat]
         | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ):
-        """
-        Random variable sampling.
-
-        Parameters
-        ----------
-        size : int or tuple (m, n) of int
-            Size of the generated sample.
-        ar : float or np.ndarray
-            Age of replacement values. If ndarray, shape can only be (m,)
-            as only one age of replacement per asset can be given
-        *args : float or np.ndarray
-            Additional arguments needed by the model.
-        return_event : bool, default is False
-            If True, returns event indicators along with the sample time values.
-        return_entry : bool, default is False
-            If True, returns corresponding entry values of the sample time values.
-        seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
-            If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.
-
-        Returns
-        -------
-        float, ndarray or tuple of float or ndarray
-            The sample values. If either ``return_event`` or ``return_entry`` is True, returns a tuple containing
-            the time values followed by event values, entry values or both.
-
-        Notes
-        -----
-        If ``return_entry`` is true, returned time values are not residual time. Otherwise, the times are residuals
-        """
-
         ar = reshape_1d_arg(ar)
         baseline_rvs = self.baseline.rvs(
             size,
@@ -457,6 +447,21 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        a0: AnyFloat,
+        *args: *Ts,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def rvs(
@@ -566,8 +571,9 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         Parameters
         ----------
         a0 : float or np.ndarray
-            Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-            as only one age per asset can be given
+            Conditional age values. It represents ages reached by assets. If
+            ndarray, shape can only be (m,) as only one age per asset can be
+            given
         *args : float or np.ndarray
             Additional arguments needed by the model.
 

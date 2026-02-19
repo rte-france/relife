@@ -5,12 +5,6 @@ from typing import Literal, Self, final, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from ._plot import (
-    PlotECDF,
-    PlotKaplanMeier,
-    PlotNelsonAalen,
-)
-
 __all__: list[str] = ["ECDF", "KaplanMeier", "NelsonAalen"]
 
 
@@ -144,10 +138,6 @@ class ECDF:
         if se:
             return self._cdf["timeline"], self._cdf["estimation"], self._cdf["se"]
         return self._cdf["timeline"], self._cdf["estimation"]
-
-    @property
-    def plot(self):
-        return PlotECDF(self)
 
 
 @final
@@ -286,10 +276,6 @@ class KaplanMeier:
             return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
         return self._sf["timeline"], self._sf["estimation"]
 
-    @property
-    def plot(self):
-        return PlotKaplanMeier(self)
-
 
 @final
 class NelsonAalen:
@@ -426,7 +412,3 @@ class NelsonAalen:
         if se:
             return self._chf["timeline"], self._chf["estimation"], self._chf["se"]
         return self._chf["timeline"], self._chf["estimation"]
-
-    @property
-    def plot(self):
-        return PlotNelsonAalen(self)

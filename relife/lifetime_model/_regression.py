@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import overload, override
 
-from relife.base import ParametricModel, FittingResults
+from relife.base import FittingResults, ParametricModel
 from relife.typing import (
     AnyFloat,
     NumpyBool,
@@ -28,13 +28,13 @@ from relife.typing import (
 
 from ._base import (
     DefaultLifetimeLikelihood,
-    LifetimeData,
     FittableParametricLifetimeModel,
+    FrozenParametricLifetimeModel,
+    LifetimeData,
     approx_parameters_covariance,
     document_args,
 )
 from ._distribution import LifetimeDistribution, init_distribution_params_from_lifetimes
-from ._frozen import FrozenParametricLifetimeModel
 
 __all__: list[str] = [
     "ParametricAcceleratedFailureTime",
@@ -54,7 +54,10 @@ def _broadcast_time_covar(
             covar = np.repeat(covar, time.shape[0], axis=0)
         case (m1, m2) if m1 != m2:
             raise ValueError(
-                f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets"
+                f"""
+                Incompatible time and covar. time has {m1} nb_assets but
+                covar has {m2} nb_assets
+                """
             )
         case _:
             pass
@@ -80,7 +83,10 @@ def _broadcast_time_covar_shapes(
         case [(mt, n), (mc, _)] if mt != mc:
             if mt != 1 and mc != 1:
                 raise ValueError(
-                    f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets"
+                    f"""
+                    Invalid time and covar : time got {mt} nb assets but covar
+                    got {mc} nb assets
+                    """
                 )
             return max(mt, mc), n
         case [(mt, n), (mc, _)] if mt == mc:
@@ -182,7 +188,10 @@ _covar_docstring = [
         "covar",
         "float or np.ndarray",
         [
-            "Covariates values. float can only be valid if the regression has one coefficients.",
+            """
+            Covariates values. float can only be valid if the regression has
+            one coefficients.
+            """,
             "Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.",
         ],
     ),
@@ -453,7 +462,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
 
-        optimizer = LifetimeRegressionLikelihood(self, time, model_args, event, entry)
+        optimizer = ParametricRegressionLikelihood(self, time, model_args, event, entry)
         self.fitting_results = optimizer.maximum_likelihood_estimation(
             **optimizer_options
         )
@@ -464,8 +473,18 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         return self
 
 
+def init_regression_params_from_lifetimes(
+    model: ParametricLifetimeRegression, data: LifetimeData
+) -> NDArray[np.float64]:
+    param0 = np.zeros_like(model.params, dtype=np.float64)
+    param0[-model.baseline.params.size :] = init_distribution_params_from_lifetimes(
+        model.baseline, data
+    )
+    return param0
+
+
 @final
-class LifetimeRegressionLikelihood(
+class ParametricRegressionLikelihood(
     DefaultLifetimeLikelihood[ParametricLifetimeRegression]
 ):
     model: ParametricLifetimeRegression
@@ -475,11 +494,7 @@ class LifetimeRegressionLikelihood(
     def _initialize_model(
         self,
     ) -> ParametricLifetimeRegression:
-        param0 = np.zeros_like(self.model.params, dtype=np.float64)
-        param0[-self.model.baseline.params.size :] = (
-            init_distribution_params_from_lifetimes(self.model.baseline, self.data)
-        )
-        self.model.param = param0
+        self.model.params = init_regression_params_from_lifetimes(self.model, self.data)
         return self.model
 
     @override
@@ -487,13 +502,13 @@ class LifetimeRegressionLikelihood(
         lb = np.concatenate(
             (
                 np.full(self.model.covar_effect.nb_params, -np.inf),
-                np.full(self.model.baseline.nb_params, np.finfo(float).resolution),
+                self.model.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
             )
         )
         ub = np.concatenate(
             (
                 np.full(self.model.covar_effect.nb_params, np.inf),
-                np.full(self.model.baseline.nb_params, np.inf),
+                self.model.baseline.params_bounds.ub,
             )
         )
         return Bounds(lb, ub)
