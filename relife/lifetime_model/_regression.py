@@ -27,14 +27,14 @@ from relife.typing import (
 )
 
 from ._base import (
-    DefaultLifetimeLikelihood,
+    LifetimeLikelihood,
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     LifetimeData,
     approx_parameters_covariance,
     document_args,
 )
-from ._distribution import LifetimeDistribution, init_distribution_params_from_lifetimes
+from ._distribution import LifetimeDistribution
 
 __all__: list[str] = [
     "ParametricAcceleratedFailureTime",
@@ -447,6 +447,30 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         return FrozenParametricLifetimeModel(self, covar)
 
     @override
+    def _init_params_from_lifetimes(
+            self, data: LifetimeData
+    ) -> NDArray[np.float64]:
+        param0 = np.zeros_like(self.params, dtype=np.float64)
+        param0[-self.baseline.params.size:] = self.baseline._init_params_from_lifetimes(data)
+        return param0
+
+    @override
+    def _get_params_bounds(self) -> Bounds:
+        lb = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, -np.inf),
+                self.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
+            )
+        )
+        ub = np.concatenate(
+            (
+                np.full(self.covar_effect.nb_params, np.inf),
+                self.baseline.params_bounds.ub,
+            )
+        )
+        return Bounds(lb, ub)
+
+    @override
     def fit(
         self,
         time: NDArray[np.float64],
@@ -462,7 +486,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
 
-        optimizer = ParametricRegressionLikelihood(self, time, model_args, event, entry)
+        optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
         self.fitting_results = optimizer.maximum_likelihood_estimation(
             **optimizer_options
         )
@@ -471,47 +495,6 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             optimizer, self.params, method=self.baseline.approx_hessian_method
         )
         return self
-
-
-def init_regression_params_from_lifetimes(
-    model: ParametricLifetimeRegression, data: LifetimeData
-) -> NDArray[np.float64]:
-    param0 = np.zeros_like(model.params, dtype=np.float64)
-    param0[-model.baseline.params.size :] = init_distribution_params_from_lifetimes(
-        model.baseline, data
-    )
-    return param0
-
-
-@final
-class ParametricRegressionLikelihood(
-    DefaultLifetimeLikelihood[ParametricLifetimeRegression]
-):
-    model: ParametricLifetimeRegression
-    data: LifetimeData
-
-    @override
-    def _initialize_model(
-        self,
-    ) -> ParametricLifetimeRegression:
-        self.model.params = init_regression_params_from_lifetimes(self.model, self.data)
-        return self.model
-
-    @override
-    def _get_params_bounds(self) -> Bounds:
-        lb = np.concatenate(
-            (
-                np.full(self.model.covar_effect.nb_params, -np.inf),
-                self.model.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.model.covar_effect.nb_params, np.inf),
-                self.model.baseline.params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
 
 
 @final

@@ -18,13 +18,14 @@ from typing import (
     TypeVarTuple,
     Unpack,
     overload,
+    final,
 )
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from optype.numpy import Array1D, Array2D, ToFloat
-from scipy.optimize import approx_fprime, newton
+from scipy.optimize import approx_fprime, newton, Bounds
 from typing_extensions import override
 
 from relife.base import (
@@ -912,6 +913,26 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
+    def _init_params_from_lifetimes(self, data: LifetimeData):
+        """
+        Method to initialize the value of fittable parameters from lifetime data
+
+        Model specific, thus requires to be overwritten
+
+        Called by model copy in MaximumLikelihoodOptimizer
+        """
+
+    @abstractmethod
+    def _get_params_bounds(self):
+        """
+        Method to get model params bounds
+
+        Model specific, thus requires to be overwritten
+
+        Called by model copy in MaximumLikelihoodOptimizer
+        """
+
+    @abstractmethod
     def fit(
         self,
         time: NDArray[np.float64],
@@ -966,7 +987,8 @@ class LifetimeData(TypedDict):
     nb_observations: int
 
 
-class DefaultLifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData], ABC):
+@final
+class LifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData]):
     """
     Default likelihood from lifetime data.
 
@@ -998,6 +1020,15 @@ class DefaultLifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData], ABC):
     @override
     def nb_observations(self) -> int:
         return self.data["nb_observations"]
+
+    @override
+    def _initialize_model(self) -> M:
+        self.model.params = self.model._init_params_from_lifetimes(self.data)
+        return self.model
+
+    @override
+    def _get_params_bounds(self) -> Bounds:
+        return self.model._get_params_bounds()
 
     @override
     def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
@@ -1044,7 +1075,7 @@ class DefaultLifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData], ABC):
 
 
 def approx_parameters_covariance(
-    likelihood: DefaultLifetimeLikelihood[M],
+    likelihood: LifetimeLikelihood[M],
     optimal_params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,

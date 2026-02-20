@@ -138,7 +138,10 @@ class _BreslowBaseline:
     data: CoxData
     covar_effect: LinearCovarEffect
 
-    def __init__(self, data: CoxData, covar_effect: LinearCovarEffect):
+    def __init__(self,
+                 covar_effect: LinearCovarEffect,
+                 data: CoxData
+                 ):
         assert data.covar.shape[-1] == covar_effect.nb_params
         self.covar_effect = covar_effect
         self.data = data
@@ -292,32 +295,29 @@ class SemiParametricProportionalHazard:
         self.covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )
-        # encapsulate data and computes other informations (ordered_event_time, etc.)
-        data = CoxData(time, covar, event=event, entry=entry)
-        # data_nhpp = ...
-        # data_nhpp.to_lifetime_data() -> LifetimeData
 
-        if (data.event_count > 3).any():  # efron
-            likelihood = EfronPartialLifetimeLikelihood(self.covar_effect, data)
-        elif (data.event_count <= 3).all() and (2 in data.event_count):  # breslow
-            likelihood = BreslowPartialLifetimeLikelihood(self.covar_effect, data)
+        _,  event_count = np.unique(time[event == 1], return_counts=True)
+        if (event_count > 3).any():  # efron
+            likelihood = EfronPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
+        elif (event_count <= 3).all() and (2 in event_count):  # breslow
+            likelihood = BreslowPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
         else:
-            likelihood = CoxPartialLifetimeLikelihood(self.covar_effect, data)
+            likelihood = CoxPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
 
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.fitting_results = fitting_results
         self.covar_effect.params = fitting_results.optimal_params.copy()
 
         # currently only BreslowBaseline is used to compute sf
-        baseline = _BreslowBaseline(data, self.covar_effect)
+        baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
 
         # estimate sf
         values = baseline.sf(conf_int=False) ** self.covar_effect.g(covar)
 
         if fitting_results.covariance_matrix is not None:
-            psi_values = psi(self.covar_effect, data)
-            psi_order_1 = psi(self.covar_effect, data, order=1)
-            d_j_on_psi = data.event_count[:, None] / psi_values
+            psi_values = psi(self.covar_effect, likelihood.data)
+            psi_order_1 = psi(self.covar_effect, likelihood.data, order=1)
+            d_j_on_psi = likelihood.data.event_count[:, None] / psi_values
 
             q3 = np.cumsum(
                 (psi_order_1 / psi_values - covar) * d_j_on_psi, axis=0
@@ -363,10 +363,13 @@ class CoxPartialLifetimeLikelihood(
     def __init__(
         self,
         covar_effect: LinearCovarEffect,
-        data: CoxData,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
     ):
         self.model = copy.deepcopy(covar_effect)
-        self.data = data
+        self.data = CoxData(time, covar, event=event, entry=entry)
 
     @property
     @override
@@ -432,10 +435,13 @@ class BreslowPartialLifetimeLikelihood(
     def __init__(
         self,
         covar_effect: LinearCovarEffect,
-        data: CoxData,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
     ):
         self.model = copy.deepcopy(covar_effect)
-        self.data = data
+        self.data = CoxData(time, covar, event=event, entry=entry)
         self.s_j = np.dot(self.data.death_set, self.data.covar)
 
     @property
@@ -510,10 +516,13 @@ class EfronPartialLifetimeLikelihood(
     def __init__(
         self,
         covar_effect: LinearCovarEffect,
-        data: CoxData,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
     ):
         self.model = copy.deepcopy(covar_effect)
-        self.data = data
+        self.data = CoxData(time, covar, event=event, entry=entry)
         self.s_j = np.dot(self.data.death_set, self.data.covar)
         self.discount_rates = (
             np.vstack(

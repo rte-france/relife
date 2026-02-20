@@ -54,7 +54,7 @@ from ._distribution import (
     Weibull,
 )
 from ._non_parametric import ECDF, KaplanMeier, NelsonAalen
-from ._parametric import ParametricAcceleratedFailureTime, ParametricProportionalHazard
+from ._regression import ParametricAcceleratedFailureTime, ParametricProportionalHazard
 from ._semi_parametric import SemiParametricProportionalHazard
 
 __all__ = [

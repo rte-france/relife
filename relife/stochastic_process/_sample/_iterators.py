@@ -14,7 +14,7 @@ from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.lifetime_model._distribution import (
     EquilibriumDistribution,
 )
-from relife.utils import is_frozen
+from relife.base import is_frozen
 
 __all__ = [
     "StochasticDataIterator",

@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.lifetime_model._base import (
-    DefaultLifetimeLikelihood,
+    LifetimeLikelihood,
     FittableParametricLifetimeModel,
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
@@ -268,7 +268,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
         # noinspection PyProtectedMember
-        likelihood = DefaultLifetimeLikelihood(
+        likelihood = LifetimeLikelihood(
             self.lifetime_model, time, args, event=event, entry=entry
         )
         if optimizer_options is None:

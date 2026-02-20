@@ -27,7 +27,7 @@ from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions,
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import (
-    DefaultLifetimeLikelihood,
+    LifetimeLikelihood,
     FittableParametricLifetimeModel,
     LifetimeData,
     ParametricLifetimeModel,
@@ -198,6 +198,33 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
+    def _init_params_from_lifetimes(
+            self, data: LifetimeData
+    ) -> NDArray[np.float64]:
+        # flatten censored_time in case it is 2D
+        all_time_values = np.concatenate(
+            (data["complete_time"], data["censored_time"].flatten())
+        )
+        if isinstance(self, Gompertz):
+            param0 = np.empty(self.nb_params, dtype=np.float64)
+            rate = np.pi / (np.sqrt(6) * np.std(all_time_values))
+            shape = np.exp(-rate * np.mean(all_time_values))
+            param0[0] = shape
+            param0[1] = rate
+            return param0
+
+        param0 = np.ones(self.nb_params, dtype=np.float64)
+        param0[-1] = 1 / np.median(all_time_values)
+        return param0
+
+    @override
+    def _get_params_bounds(self) -> Bounds:
+        return Bounds(
+            np.full(self.nb_params, np.finfo(float).resolution),
+            np.full(self.nb_params, np.inf),
+        )
+
+    @override
     def fit(
         self,
         time: NDArray[np.float64],
@@ -210,7 +237,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             raise ValueError(
                 "LifetimeDistribution does not expect additional arguments in model_args"
             )
-        optimizer = DistributionLikelihood(self, time, model_args, event, entry)
+        optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
         # fitting_results must be refactored (a container always initialized but empty by default)
         self.fitting_results = optimizer.maximum_likelihood_estimation(
             **optimizer_options
@@ -221,49 +248,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             optimizer, self.params, method=self.approx_hessian_method
         )
         return self
-
-
-def init_distribution_params_from_lifetimes(
-    model: LifetimeDistribution, data: LifetimeData
-) -> NDArray[np.float64]:
-    # flatten censored_time in case it is 2D
-    all_time_values = np.concatenate(
-        (data["complete_time"], data["censored_time"].flatten())
-    )
-    if isinstance(model, Gompertz):
-        param0 = np.empty(model.nb_params, dtype=np.float64)
-        rate = np.pi / (np.sqrt(6) * np.std(all_time_values))
-        shape = np.exp(-rate * np.mean(all_time_values))
-        param0[0] = shape
-        param0[1] = rate
-        return param0
-
-    param0 = np.ones(model.nb_params, dtype=np.float64)
-    param0[-1] = 1 / np.median(all_time_values)
-    return param0
-
-
-# place it in lifetime_model.distribution
-@final
-class DistributionLikelihood(DefaultLifetimeLikelihood[LifetimeDistribution]):
-    model: LifetimeDistribution
-    data: LifetimeData
-
-    @override
-    def _initialize_model(
-        self,
-    ) -> LifetimeDistribution:
-        self.model.params = init_distribution_params_from_lifetimes(
-            self.model, self.data
-        )
-        return self.model
-
-    @override
-    def _get_params_bounds(self) -> Bounds:
-        return Bounds(
-            np.full(self.model.nb_params, np.finfo(float).resolution),
-            np.full(self.model.nb_params, np.inf),
-        )
 
 
 @final
