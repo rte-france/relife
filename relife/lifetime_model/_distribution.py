@@ -203,7 +203,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     ) -> NDArray[np.float64]:
         # flatten censored_time in case it is 2D
         all_time_values = np.concatenate(
-            (data["complete_time"], data["censored_time"].flatten())
+            (data["complete_time"].flatten(), data["censored_time"].flatten())
         )
         if isinstance(self, Gompertz):
             param0 = np.empty(self.nb_params, dtype=np.float64)
@@ -1116,18 +1116,15 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
     ) -> NumpyFloat:
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
-    @property
     @override
-    def params_bounds(self) -> Bounds:
-        return self.baseline.params_bounds
+    def _get_params_bounds(self) -> Bounds:
+        return self.baseline._get_params_bounds()
 
     @override
-    def get_initial_params(
-        self,
-        time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+    def _init_params_from_lifetimes(
+            self, data: LifetimeData
     ) -> NDArray[np.float64]:
-        return self.baseline.get_initial_params(time, model_args=model_args)
+        return self.baseline._init_params_from_lifetimes(data)
 
     @override
     def fit(

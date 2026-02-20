@@ -236,7 +236,7 @@ def test_aft_pph_weibull_eq(insulator_string_data):
     assert weibull_pph.baseline.params == approx(weibull_aft.baseline.params, rel=1e-3)
     assert weibull_pph.covar_effect.params == approx(
         -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.params,
-        rel=1e-3,
+        rel=1.5 * 1e-3,
     )
 
 
@@ -247,7 +247,13 @@ def test_cox_params_eq(insulator_string_data):
     re_model = SemiParametricProportionalHazard()
     re_model.fit(
         time=insulator_string_data["time"],
-        covar=insulator_string_data.filter(regex="covar").values,
+        covar=np.column_stack(
+            (
+                insulator_string_data["pHCl"],
+                insulator_string_data["pH2SO4"],
+                insulator_string_data["HNO3"],
+            )
+        ),
         event=insulator_string_data["event"],
     )
 

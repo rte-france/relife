@@ -459,13 +459,13 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         lb = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
+                self.baseline._get_params_bounds().lb,  # baseline has _params_bounds according to typing
             )
         )
         ub = np.concatenate(
             (
                 np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline.params_bounds.ub,
+                self.baseline._get_params_bounds().ub,
             )
         )
         return Bounds(lb, ub)

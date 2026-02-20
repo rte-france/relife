@@ -1234,7 +1234,7 @@ def _jac_censored_time_contrib(
     else:
         # right censored time
         return np.sum(
-            model.jac_chf(data["censored_time"], *data["censored_time_args"]), axis=1
+            model.jac_chf(data["censored_time"], *data["censored_time_args"]), axis=(1, 2)
         )
 
 
@@ -1254,4 +1254,4 @@ def _jac_left_truncations_contrib(
     if data["left_truncations"].size == 0.0:
         return np.zeros_like(model.params)
     jac = -model.jac_chf(data["left_truncations"], *data["left_truncations_args"])
-    return np.sum(jac, axis=1)
+    return np.sum(jac, axis=(1, 2))
