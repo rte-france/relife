@@ -43,6 +43,7 @@ Conditional models
 
 """
 
+from ._base import LifetimeLikelihood
 from ._conditional_model import AgeReplacementModel, LeftTruncatedModel
 from ._distribution import (
     EquilibriumDistribution,
@@ -58,6 +59,7 @@ from ._regression import ParametricAcceleratedFailureTime, ParametricProportiona
 from ._semi_parametric import SemiParametricProportionalHazard
 
 __all__ = [
+    "LifetimeLikelihood",
     "Exponential",
     "Weibull",
     "Gompertz",

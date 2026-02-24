@@ -951,12 +951,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
 
-M = TypeVar(
-    "M",
-    bound=FittableParametricLifetimeModel[*tuple[Any, ...]],
-)
-
-
 class LifetimeData(TypedDict):
     complete_time: NDArray[np.float64]
     censored_time: NDArray[np.float64]  # 1d array or 2d
@@ -968,24 +962,33 @@ class LifetimeData(TypedDict):
 
 
 @final
-class LifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData]):
+class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeModel, LifetimeData]):
     """
-    Default likelihood from lifetime data.
+    Likelihood from lifetime data.
 
     Parameters
     ----------
     model : generic FittableParametricLifetimeModel
         All model parameters must exist first. Its values are initialized by
-        the likelihood with respect to data.
-    # TODO
+        model.fit with respect to data.
+    time: numpy array of lifetime durations
+    model_args: numpy array or tuple thereof with additional model arguments (e.g. covar)
+    event: numpy array of boolean indicating event occurrence or not
+    entry: numpy array with assets lifetime duration at the beginning of observation
+
+    Attributes
+    ----------
+    model: a copy of the original model object
+    data: a LifetimeData object with processed data information for model fitting purposes
+    nb_observations: number of samples
     """
 
-    model: M
+    model: FittableParametricLifetimeModel
     data: LifetimeData
 
     def __init__(
         self,
-        model: M,
+        model: FittableParametricLifetimeModel,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
@@ -1046,7 +1049,7 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData]):
 
 
 def approx_parameters_covariance(
-    likelihood: LifetimeLikelihood[M],
+    likelihood: LifetimeLikelihood,
     optimal_params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,
