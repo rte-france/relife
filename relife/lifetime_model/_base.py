@@ -1145,9 +1145,10 @@ def _init_lifetime_data(
     non_zero_entry = np.flatnonzero(entry)
     if event is not None:
         non_zero_event = np.flatnonzero(event)
+        zero_event = np.flatnonzero(event == 0)
         data = LifetimeData(
             complete_time=time[non_zero_event],
-            censored_time=time[~non_zero_event],
+            censored_time=time[zero_event],
             left_truncations=entry[non_zero_entry],
             complete_time_args=tuple(arg[non_zero_event] for arg in args),
             censored_time_args=tuple(arg[~non_zero_event] for arg in args),
@@ -1157,12 +1158,13 @@ def _init_lifetime_data(
         return data
 
     complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
+    non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
     data = LifetimeData(
         complete_time=time[:, 1][complete_time_index],
-        censored_time=time[~complete_time_index],
+        censored_time=time[non_complete_time_index],
         left_truncations=entry[non_zero_entry],
         complete_time_args=tuple(arg[complete_time_index] for arg in args),
-        censored_time_args=tuple(arg[~complete_time_index] for arg in args),
+        censored_time_args=tuple(arg[non_complete_time_index] for arg in args),
         left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
         nb_observations=time.size,
     )
