@@ -16,15 +16,6 @@ from relife.utils import reshape_1d_arg
 
 @dataclass
 class CoxData:
-    # TODO: à compléter
-    """
-    Object that encapsultates data used in Cox model estimation and inference.
-
-    Attributes
-    ----------
-    ...
-    """
-
     time: NDArray[np.float64]
     covar: NDArray[np.float64]
     event: NDArray[np.bool_] | None = None
@@ -32,6 +23,7 @@ class CoxData:
     likelihood_to_use: Literal["cox"] | Literal["breslow"] | Literal["efron"] = field(
         init=False, repr=True
     )
+    ordered_event_time: NDArray[np.float64] = field(init=False, repr=False)
     event_count: NDArray[np.int64] = field(init=False, repr=False)
     risk_set: NDArray[np.bool_] = field(init=False, repr=False)
     death_set: NDArray[np.bool_] = field(init=False, repr=False)
@@ -59,7 +51,7 @@ class CoxData:
                 """
             )
         (
-            ordered_event_time,  # uncensored sorted untied times
+            self.ordered_event_time,  # uncensored sorted untied times
             ordered_event_index,
             self.event_count,
         ) = np.unique(
@@ -71,18 +63,18 @@ class CoxData:
         # left truncated & right censored
         self.risk_set = np.logical_and(
             (
-                np.vstack([self.entry[:, 0]] * len(ordered_event_time))
-                < np.hstack([ordered_event_time[:, None]] * len(self.time))
+                np.vstack([self.entry[:, 0]] * len(self.ordered_event_time))
+                < np.hstack([self.ordered_event_time[:, None]] * len(self.time))
             ),
             (
-                np.hstack([ordered_event_time[:, None]] * len(self.time))
-                <= np.vstack([self.time[:, 0]] * len(ordered_event_time))
+                np.hstack([self.ordered_event_time[:, None]] * len(self.time))
+                <= np.vstack([self.time[:, 0]] * len(self.ordered_event_time))
             ),
         )
 
         self.death_set = np.vstack(
-            [self.time[:, 0] * self.event[:, 0]] * len(ordered_event_time)
-        ) == np.hstack([ordered_event_time[:, None]] * len(self.time))
+            [self.time[:, 0] * self.event[:, 0]] * len(self.ordered_event_time)
+        ) == np.hstack([self.ordered_event_time[:, None]] * len(self.time))
 
         self.ordered_event_covar = self.covar[self.event[:, 0] == 1][
             ordered_event_index
@@ -148,17 +140,29 @@ class _BreslowBaseline:
 
     @overload
     def chf(
-        self, conf_int: Literal[False], kp: bool = False
+        self, se: Literal[False], kp: bool = False
     ) -> NDArray[np.float64]: ...
     @overload
     def chf(
-        self, conf_int: Literal[True], kp: bool = False
+        self, se: Literal[True], kp: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
     def chf(
-        self, conf_int: bool = False, kp: bool = False
+        self, se: bool = False, kp: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | NDArray[np.float64]:
-        # TODO : docstring
+        """
+        The cumulative hazard function estimation
 
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline,
+            the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
         # TODO : comprendre le kp
         if kp:
             values = np.cumsum(
@@ -176,7 +180,7 @@ class _BreslowBaseline:
             values = np.cumsum(
                 self.data.event_count[:, None] / psi(self.covar_effect, self.data)
             )
-        if conf_int:
+        if se:
             var = np.cumsum(
                 self.data.event_count[:, None] / psi(self.covar_effect, self.data) ** 2
             )
@@ -193,21 +197,33 @@ class _BreslowBaseline:
             return values
 
     @overload
-    def sf(self, conf_int: Literal[False]) -> NDArray[np.float64]: ...
+    def sf(self, se: Literal[False]) -> NDArray[np.float64]: ...
     @overload
     def sf(
-        self, conf_int: Literal[True]
+        self, se: Literal[True]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
     def sf(
-        self, conf_int: bool = False
+        self, se: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | NDArray[np.float64]:
-        # TODO : docstring
+        """
+        The survival function estimation
 
-        if conf_int:
-            chf, chf_conf_int_values = self.chf(conf_int=True)
+        Parameters
+        ----------
+        se : bool, default is False
+            If true, the estimated standard errors are returned too.
+
+        Returns
+        -------
+        tuple of 2 or 3 ndarrays
+            A tuple containing the timeline,
+            the estimated values and optionally the estimated standard errors (if se is set to true)
+        """
+        if se:
+            chf, chf_conf_int_values = self.chf(se=True)
             return np.exp(-chf), np.exp(-chf_conf_int_values)
         else:
-            return np.exp(-self.chf(conf_int=False))
+            return np.exp(-self.chf(se=False))
 
 
 class SemiParametricProportionalHazard:
@@ -304,6 +320,14 @@ class SemiParametricProportionalHazard:
         else:
             likelihood = CoxPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
 
+        if "method" not in optimizer_options:
+            optimizer_options["method"] = "trust-exact"
+        optimizer_options["jac"] = likelihood.jac_negative_log
+        optimizer_options["hess"] = likelihood.hess_negative_log
+        if "x0" not in optimizer_options:
+            np.random.seed(1)
+            optimizer_options["x0"] = np.random.random(covar.shape[1])
+
         fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
         self.fitting_results = fitting_results
         self.covar_effect.params = fitting_results.optimal_params.copy()
@@ -311,8 +335,15 @@ class SemiParametricProportionalHazard:
         # currently only BreslowBaseline is used to compute sf
         baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
 
-        # estimate sf
-        values = baseline.sf(conf_int=False) ** self.covar_effect.g(covar)
+        # estimate _sf
+        # TODO: Qqch n'est pas clair ici !
+        #       Contrairement au cas non_paramétrique, .sf() doit pouvoir prendre (un nouveau) covar en argument.
+        #       La structure de ._sf doit donc changer (probablement qu'il suffit de stocker baseline.sf()
+        #       dans "estimation_baseline", plutôt que stocker "estimation")
+        #       Mais je ne comprends pas trop si "var" ("se") doit aussi voir sa valeur évoluer avec celle de covar,
+        #       ou si elle est déduite (et figée) des données d'apprentissage (le calcul de psi_values fait intervenir
+        #       likelihood.data.covar et pas directement covar, mais covar est aussi utilisé ailleurs dans le calcul de var)
+        sf = baseline.sf(se=False) ** self.covar_effect.g(covar)
 
         if fitting_results.covariance_matrix is not None:
             psi_values = psi(self.covar_effect, likelihood.data)
@@ -333,21 +364,19 @@ class SemiParametricProportionalHazard:
             )  # m
             q1 = np.cumsum(d_j_on_psi * (1 / psi_values))
 
-            var = (values**2) * (q1 + q2)
+            var = (sf**2) * (q1 + q2)
+        else:
+            var = np.nan
 
-            conf_int = np.hstack(
-                [
-                    values[:, None]
-                    + np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-                    values[:, None]
-                    - np.sqrt(var)[:, None] * norm.ppf(0.05 / 2, loc=0, scale=1),
-                ]
-            )
+        timeline = likelihood.data.ordered_event_time
+        dtype = np.dtype(
+            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        )
+        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
+        self._sf["timeline"] = np.insert(timeline, 0, 0)
+        self._sf["estimation"] = np.insert(sf, 0, 1)
+        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
 
-        # TODO: à compléter
-        # voir _non_parametric pour exemple
-        # pass values, conf_int in self._sf
-        # self._sf = ...
         return self
 
 
@@ -653,3 +682,29 @@ class EfronPartialLifetimeLikelihood(
         hessian_part_2 = hessian_part_2.sum(axis=1)
 
         return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    import pandas as pd
+
+    # Données chaines d'isolateur
+    relife_csv_datapath = Path(r"D:\Projets\RTE\ReLife\relife\relife\data\csv")
+    time, event, entry, *args = np.loadtxt(relife_csv_datapath / "insulator_string.csv", delimiter=",", skiprows=1,
+                                           unpack=True)
+    covar = np.column_stack(args)
+
+    # Into df
+    data = pd.DataFrame({"time": time, "event": event, "entry": entry})
+    covar = pd.DataFrame(covar)
+    covar.columns = [f"covar_{i}" for i in range(covar.shape[1])]
+    data = pd.concat([data, covar], axis=1)
+
+    # Relife model fit
+    re_model = SemiParametricProportionalHazard()
+    re_model.fit(
+        time=data["time"],
+        covar=data.filter(regex="covar").values,
+        event=data["event"],
+    )
+    print(re_model.params)

@@ -439,8 +439,6 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
         """
         # set
         x0 = optimizer_options.pop("x0", None)
-        if x0 is None: # or we could let scipy throw its own error (if any)
-            raise ValueError(".fit must provide an initial value x0 for params estimation")
         method = optimizer_options.pop("method", self.scipy_method)
         bounds = optimizer_options.pop("bounds", None)
         jac = optimizer_options.pop("jac", None)
