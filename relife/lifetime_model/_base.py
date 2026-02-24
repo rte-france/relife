@@ -913,26 +913,6 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def _init_params_from_lifetimes(self, data: LifetimeData):
-        """
-        Method to initialize the value of fittable parameters from lifetime data
-
-        Model specific, thus requires to be overwritten
-
-        Called by model copy in MaximumLikelihoodOptimizer
-        """
-
-    @abstractmethod
-    def _get_params_bounds(self):
-        """
-        Method to get model params bounds
-
-        Model specific, thus requires to be overwritten
-
-        Called by model copy in MaximumLikelihoodOptimizer
-        """
-
-    @abstractmethod
     def fit(
         self,
         time: NDArray[np.float64],
@@ -1020,15 +1000,6 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[M, LifetimeData]):
     @override
     def nb_observations(self) -> int:
         return self.data["nb_observations"]
-
-    @override
-    def _initialize_model(self) -> M:
-        self.model.params = self.model._init_params_from_lifetimes(self.data)
-        return self.model
-
-    @override
-    def _get_params_bounds(self) -> Bounds:
-        return self.model._get_params_bounds()
 
     @override
     def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
@@ -1151,7 +1122,7 @@ def _init_lifetime_data(
             censored_time=time[zero_event],
             left_truncations=entry[non_zero_entry],
             complete_time_args=tuple(arg[non_zero_event] for arg in args),
-            censored_time_args=tuple(arg[~non_zero_event] for arg in args),
+            censored_time_args=tuple(arg[zero_event] for arg in args),
             left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
             nb_observations=time.size,
         )

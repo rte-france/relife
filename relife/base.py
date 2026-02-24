@@ -404,12 +404,6 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
     def nb_observations(self) -> int: ...
 
     @abstractmethod
-    def _initialize_model(self) -> M: ...
-
-    @abstractmethod
-    def _get_params_bounds(self) -> Bounds: ...
-
-    @abstractmethod
     def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
         """
         Negative log likelihood.
@@ -444,13 +438,11 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
             information (AIC, variance, etc.).
         """
         # set
-        model = self._initialize_model()
         x0 = optimizer_options.pop("x0", None)
-        if x0 is None:
-            x0 = model.params.copy()
-
+        if x0 is None: # or we could let scipy throw its own error (if any)
+            raise ValueError(".fit must provide an initial value x0 for params estimation")
         method = optimizer_options.pop("method", self.scipy_method)
-        bounds = optimizer_options.pop("bounds", self._get_params_bounds())
+        bounds = optimizer_options.pop("bounds", None)
         jac = optimizer_options.pop("jac", None)
         hess = optimizer_options.pop("hess", None)
 
