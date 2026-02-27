@@ -317,6 +317,7 @@ class SemiParametricProportionalHazard:
         """Voir Klein and Moeschberger: Survival Analysis Techniques for Censored and Truncated Data (p 284)"""
         # TODO: Is it somehow dependent to Breslow estimator ? I don't think so, but the reference isn't clear enough.
         # TODO: Faut-il en faire une fonction et non une méthode ?
+        # TODO: estimation foireuse...
         if self.fitting_results is None:
             raise ValueError("This method can only be called in other methods after model fit")
         if self.fitting_results.covariance_matrix is not None:
