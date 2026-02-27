@@ -23,7 +23,7 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import FittingResults
-from relife.typing import AnyFloat, NumpyBool, NumpyFloat, ScipyMinimizeOptions, Seed
+from relife.typing import AnyFloat, NumpyBool, NumpyFloat, MaximumLikelihoodOptimizerOptions, Seed
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import (
@@ -31,7 +31,6 @@ from ._base import (
     FittableParametricLifetimeModel,
     LifetimeData,
     ParametricLifetimeModel,
-    approx_parameters_covariance,
     document_args,
 )
 
@@ -204,7 +203,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[ScipyMinimizeOptions],
+        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
     ) -> Self:
         if model_args is not None:
             raise ValueError(
@@ -217,6 +216,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             optimizer_options["x0"] = init_distrib_params_from_lifetimes(self, optimizer.data)
         if "bounds" not in optimizer_options:
             optimizer_options["bounds"] = get_distrib_params_bounds(self)
+        if "approx_hessian_method" not in optimizer_options:
+            optimizer_options["approx_hessian_method"] = self.approx_hessian_method
 
         # fitting_results must be refactored (a container always initialized but empty by default)
         self.fitting_results = optimizer.maximum_likelihood_estimation(
@@ -224,9 +225,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
         # TODO: type checkers perdu, confusion avec params en attribut. Passer par "set_params" (cf sklearn)
         self.params = self.fitting_results.optimal_params
-        self.fitting_results.covariance_matrix = approx_parameters_covariance(
-            optimizer, self.params, method=self.approx_hessian_method
-        )
+
         return self
 
 
@@ -1140,7 +1139,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
         if model_args is None:
             raise ValueError(
@@ -1161,7 +1160,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
         time_sup: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
         if model_args is None:
             raise ValueError(

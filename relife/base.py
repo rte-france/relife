@@ -15,17 +15,17 @@ from typing import (
     TypeVar,
     TypeVarTuple,
     Unpack,
-    final,
+    final, Callable,
 )
 
 import numpy as np
 from numpy._typing import NDArray
 from optype.numpy import Array1D, Array2D, ToFloat
 from scipy import stats
-from scipy.optimize import Bounds, minimize
+from scipy.optimize import Bounds, minimize, approx_fprime
 from typing_extensions import overload, override
 
-from relife.typing import MethodMinimize, ScipyMinimizeOptions
+from relife.typing import MethodMinimize, MaximumLikelihoodOptimizerOptions
 
 __all__ = ["ParametricModel", "FrozenParametricModel"]
 
@@ -420,7 +420,7 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
         """
 
     def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+        self, **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions]
     ) -> FittingResults:
         """
         Search parameters values that maximize the likelihood given data.
@@ -443,6 +443,7 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
         bounds = optimizer_options.pop("bounds", None)
         jac = optimizer_options.pop("jac", None)
         hess = optimizer_options.pop("hess", None)
+        approx_hessian_method = optimizer_options.pop("approx_hessian_method", None)
 
         optimizer = minimize(
             self.negative_log,
@@ -452,8 +453,50 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
             method=method,
             bounds=bounds,
         )
+
+        optimal_params = np.copy(optimizer.x)
+        if hess is not None:
+            covariance_matrix = np.linalg.pinv(hess(optimal_params))
+        elif jac is not None and approx_hessian_method is not None:
+            covariance_matrix = approx_parameters_covariance(jac, optimal_params, method=approx_hessian_method)
+        else:
+            covariance_matrix = None
+
         return FittingResults(
             self.nb_observations,
-            np.copy(optimizer.x),
+            optimal_params,
             optimizer.fun,
+            covariance_matrix=covariance_matrix
         )
+
+
+def approx_parameters_covariance(
+    jac_negative_log: Callable,
+    optimal_params: NDArray[np.float64],
+    method: Literal["2point", "cs"] = "cs",
+    eps: float = 1e-6,
+) -> Array2D[np.float64]:
+    size = optimal_params.size
+    hess = np.empty((size, size))
+
+    # hessian 2 point
+    if method == "2point":
+        for i in range(size):
+            hess[i] = approx_fprime(
+                optimal_params,
+                lambda x: jac_negative_log(x)[i],
+                eps,
+            )
+        return hess
+    # hessian cs
+    u = eps * 1j * np.eye(size)
+    complex_params = optimal_params.astype(np.complex64)  # change params to complex
+    for i in range(size):
+        for j in range(i, size):
+            hess[i, j] = (
+                np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
+            )
+            if i != j:
+                hess[j, i] = hess[i, j]
+    covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
+    return covariance_matrix

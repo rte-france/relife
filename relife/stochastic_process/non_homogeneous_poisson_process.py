@@ -15,7 +15,7 @@ from relife.lifetime_model._base import (
     FittableParametricLifetimeModel,
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
+from relife.typing import AnyFloat, NumpyFloat, MaximumLikelihoodOptimizerOptions
 
 Ts = TypeVarTuple("Ts")
 
@@ -199,7 +199,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         last_ages: NDArray[np.float64] | None = None,
         lifetime_model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         assets_ids: Sequence[str] | NDArray[np.int64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
         """
         Estimation of the process parameters from recurrent failure data.

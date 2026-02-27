@@ -10,7 +10,7 @@ from typing_extensions import Literal, Unpack, final, overload, override
 
 from relife.base import FittingResults, MaximumLikehoodOptimizer
 from relife.lifetime_model._regression import LinearCovarEffect
-from relife.typing import ScipyMinimizeOptions
+from relife.typing import MaximumLikelihoodOptimizerOptions
 from relife.utils import reshape_1d_arg
 
 
@@ -233,10 +233,12 @@ class SemiParametricProportionalHazard:
 
     fitting_results: FittingResults | None
     covar_effect: LinearCovarEffect | None
+    _training_data: CoxData | None
     _sf: NDArray[np.void] | None
 
     def __init__(self):
         self._sf = None
+        self._training_data = None
         self.fitting_results = None
         self.covar_effect = None
 
@@ -272,7 +274,7 @@ class SemiParametricProportionalHazard:
     ): ...
 
     def sf(
-        self, se: bool = True
+        self, covar: NDArray[np.float64], se: bool = True
     ) -> (
         tuple[NDArray[np.float64], NDArray[np.float64]]
         | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
@@ -283,6 +285,8 @@ class SemiParametricProportionalHazard:
 
         Parameters
         ----------
+        covar: np.array
+            array with covariates values
         se : bool, default True
             If True, the standard errors are returned in addition to timeline
             and sf values.
@@ -296,8 +300,47 @@ class SemiParametricProportionalHazard:
         if self._sf is None:
             return None
         if se:
-            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
-        return self._sf["timeline"], self._sf["estimation"]
+            return (
+                self._sf["timeline"],
+                self._sf["baseline_estimation"] ** self.covar_effect.g(covar),
+                self._sf["baseline_estimation"] ** self.covar_effect.g(covar) * np.sqrt(self._q1_q2_sum(covar))
+            )
+        return (
+            self._sf["timeline"],
+            self._sf["baseline_estimation"] ** self.covar_effect.g(covar)
+        )
+
+    def _q1_q2_sum(
+            self,
+            covar: NDArray[np.float64]
+    ) -> NDArray[np.float64] | None:
+        """Voir Klein and Moeschberger: Survival Analysis Techniques for Censored and Truncated Data (p 284)"""
+        # TODO: Is it somehow dependent to Breslow estimator ? I don't think so, but the reference isn't clear enough.
+        # TODO: Faut-il en faire une fonction et non une méthode ?
+        if self.fitting_results is None:
+            raise ValueError("This method can only be called in other methods after model fit")
+        if self.fitting_results.covariance_matrix is not None:
+            psi_values = psi(self.covar_effect, self._training_data)
+            psi_order_1 = psi(self.covar_effect, self._training_data, order=1)
+            d_j_on_psi = self._training_data.event_count[:, None] / psi_values
+
+            # TODO: ne marche pas car psi_order_1 / psi_values est (m, p) et covar (m', p)
+            #       mais m est issu de l'apprentissage et m' de l'inférence
+            q3 = np.cumsum(
+                (psi_order_1 / psi_values - covar) * d_j_on_psi, axis=0
+            )  # [m, p]
+            q2 = np.squeeze(
+                np.matmul(
+                    q3[:, None, :],
+                    np.matmul(
+                        self.fitting_results.covariance_matrix[None, :, :],
+                        q3[:, :, None],
+                    ),
+                )
+            )  # m
+            q1 = np.cumsum(d_j_on_psi * (1 / psi_values))
+            return q1 + q2
+        return None
 
     def fit(
         self,
@@ -305,7 +348,7 @@ class SemiParametricProportionalHazard:
         covar: NDArray[np.float64],
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[ScipyMinimizeOptions],
+        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
     ):
         # init covar_effect
         self.covar_effect = LinearCovarEffect(
@@ -320,62 +363,28 @@ class SemiParametricProportionalHazard:
         else:
             likelihood = CoxPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
 
+        if "x0" not in optimizer_options:
+            np.random.seed(1)
+            optimizer_options["x0"] = np.random.random(covar.shape[1])
         if "method" not in optimizer_options:
             optimizer_options["method"] = "trust-exact"
         optimizer_options["jac"] = likelihood.jac_negative_log
         optimizer_options["hess"] = likelihood.hess_negative_log
-        if "x0" not in optimizer_options:
-            np.random.seed(1)
-            optimizer_options["x0"] = np.random.random(covar.shape[1])
 
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
-        self.fitting_results = fitting_results
-        self.covar_effect.params = fitting_results.optimal_params.copy()
+        self.fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.covar_effect.params = self.fitting_results.optimal_params
+        self._training_data = likelihood.data
 
         # currently only BreslowBaseline is used to compute sf
         baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
 
-        # estimate _sf
-        # TODO: Qqch n'est pas clair ici !
-        #       Contrairement au cas non_paramétrique, .sf() doit pouvoir prendre (un nouveau) covar en argument.
-        #       La structure de ._sf doit donc changer (probablement qu'il suffit de stocker baseline.sf()
-        #       dans "estimation_baseline", plutôt que stocker "estimation")
-        #       Mais je ne comprends pas trop si "var" ("se") doit aussi voir sa valeur évoluer avec celle de covar,
-        #       ou si elle est déduite (et figée) des données d'apprentissage (le calcul de psi_values fait intervenir
-        #       likelihood.data.covar et pas directement covar, mais covar est aussi utilisé ailleurs dans le calcul de var)
-        sf = baseline.sf(se=False) ** self.covar_effect.g(covar)
-
-        if fitting_results.covariance_matrix is not None:
-            psi_values = psi(self.covar_effect, likelihood.data)
-            psi_order_1 = psi(self.covar_effect, likelihood.data, order=1)
-            d_j_on_psi = likelihood.data.event_count[:, None] / psi_values
-
-            q3 = np.cumsum(
-                (psi_order_1 / psi_values - covar) * d_j_on_psi, axis=0
-            )  # [m, p]
-            q2 = np.squeeze(
-                np.matmul(
-                    q3[:, None, :],
-                    np.matmul(
-                        fitting_results.covariance_matrix[None, :, :],
-                        q3[:, :, None],
-                    ),
-                )
-            )  # m
-            q1 = np.cumsum(d_j_on_psi * (1 / psi_values))
-
-            var = (sf**2) * (q1 + q2)
-        else:
-            var = np.nan
-
         timeline = likelihood.data.ordered_event_time
         dtype = np.dtype(
-            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+            [("timeline", np.float64), ("baseline_estimation", np.float64)]
         )
         self._sf = np.empty((timeline.size + 1,), dtype=dtype)
         self._sf["timeline"] = np.insert(timeline, 0, 0)
-        self._sf["estimation"] = np.insert(sf, 0, 1)
-        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
+        self._sf["baseline_estimation"] = np.insert(baseline.sf(se=False), 0, 1)
 
         return self
 
@@ -708,3 +717,10 @@ if __name__ == "__main__":
         event=data["event"],
     )
     print(re_model.params)
+
+    # Relife sf
+    X = data.filter(regex="covar").iloc[:2]
+
+    sf_relife = re_model.sf(
+        covar=X.values, se=True
+    )

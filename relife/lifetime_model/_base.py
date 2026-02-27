@@ -24,8 +24,8 @@ from typing import (
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
-from optype.numpy import Array1D, Array2D, ToFloat
-from scipy.optimize import approx_fprime, newton, Bounds
+from optype.numpy import Array1D, ToFloat
+from scipy.optimize import newton
 from typing_extensions import override
 
 from relife.base import (
@@ -38,7 +38,7 @@ from relife.typing import (
     AnyFloat,
     NumpyBool,
     NumpyFloat,
-    ScipyMinimizeOptions,
+    MaximumLikelihoodOptimizerOptions,
     Seed,
 )
 from relife.utils import reshape_1d_arg
@@ -919,7 +919,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[ScipyMinimizeOptions],
+        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
     ) -> Self:
         """
         Estimation of the distribution parameters from lifetime data.
@@ -1037,7 +1037,7 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeMode
 
     @override
     def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[ScipyMinimizeOptions]
+        self, **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions]
     ) -> FittingResults:
         if "jac" not in optimizer_options:
             optimizer_options["jac"] = self.jac_negative_log
@@ -1046,38 +1046,6 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeMode
         # hessian = approx_hessian(self, fitting_results.optimal_params)
         # fitting_results.covariance_matrix = np.linalg.pinv(hessian)
         # return fitting_results
-
-
-def approx_parameters_covariance(
-    likelihood: LifetimeLikelihood,
-    optimal_params: NDArray[np.float64],
-    method: Literal["2point", "cs"] = "cs",
-    eps: float = 1e-6,
-) -> Array2D[np.float64]:
-    size = optimal_params.size
-    hess = np.empty((size, size))
-
-    # hessian 2 point
-    if method == "2point":
-        for i in range(size):
-            hess[i] = approx_fprime(
-                optimal_params,
-                lambda x: likelihood.jac_negative_log(x)[i],
-                eps,
-            )
-        return hess
-    # hessian cs
-    u = eps * 1j * np.eye(size)
-    complex_params = optimal_params.astype(np.complex64)  # change params to complex
-    for i in range(size):
-        for j in range(i, size):
-            hess[i, j] = (
-                np.imag(likelihood.jac_negative_log(complex_params + u[i])[j]) / eps
-            )
-            if i != j:
-                hess[j, i] = hess[i, j]
-    covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
-    return covariance_matrix
 
 
 def _init_lifetime_data(

@@ -22,7 +22,7 @@ from relife.typing import (
     AnyFloat,
     NumpyBool,
     NumpyFloat,
-    ScipyMinimizeOptions,
+    MaximumLikelihoodOptimizerOptions,
     Seed,
 )
 
@@ -31,7 +31,6 @@ from ._base import (
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     LifetimeData,
-    approx_parameters_covariance,
     document_args,
 )
 from ._distribution import LifetimeDistribution, init_distrib_params_from_lifetimes, get_distrib_params_bounds
@@ -453,7 +452,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[ScipyMinimizeOptions],
+        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
     ) -> Self:
         if model_args is None:
             raise ValueError("LifetimeRegression expects covar but model_args is None")
@@ -468,14 +467,14 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             optimizer_options["x0"] = init_regression_params_from_lifetimes(self, optimizer.data)
         if "bounds" not in optimizer_options:
             optimizer_options["bounds"] = get_regression_params_bounds(self)
+        if "approx_hessian_method" not in optimizer_options:
+            optimizer_options["approx_hessian_method"] = self.baseline.approx_hessian_method
 
         self.fitting_results = optimizer.maximum_likelihood_estimation(
             **optimizer_options
         )
         self.params = self.fitting_results.optimal_params
-        self.fitting_results.covariance_matrix = approx_parameters_covariance(
-            optimizer, self.params, method=self.baseline.approx_hessian_method
-        )
+
         return self
 
 

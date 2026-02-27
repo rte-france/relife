@@ -4,7 +4,7 @@ import numpy as np
 from optype.numpy import Array1D, ToFloat, ToFloat1D, ToFloat2D
 from scipy.optimize import Bounds
 
-__all__ = ["ScipyMinimizeOptions", "MethodMinimize"]
+__all__ = ["MaximumLikelihoodOptimizerOptions", "MethodMinimize"]
 
 _1DArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.float64]]
 _2DArray: TypeAlias = np.ndarray[tuple[int, int], np.dtype[np.float64]]
@@ -44,9 +44,10 @@ MethodMinimize: TypeAlias = Literal[
 ]
 
 
-class ScipyMinimizeOptions(TypedDict):
+class MaximumLikelihoodOptimizerOptions(TypedDict):
     x0: NotRequired[ToFloat | ToFloat1D]
     method: NotRequired[MethodMinimize]
     bounds: NotRequired[Bounds | None]
     jac: NotRequired[Callable[[Array1D[np.float64]], ToFloat1D] | None]
     hess: NotRequired[Callable[[Array1D[np.float64]], ToFloat2D] | None]
+    approx_hessian_method: NotRequired[str | None]
