@@ -243,7 +243,7 @@ def test_aft_pph_weibull_eq(insulator_string_data):
 def test_cox_params_eq(insulator_string_data):
     # From manual experiment and comparison to lifelines results
     insulator_data_cox_params = np.array([5.08787802, -2.98553117, 4.51758019])
-    timeline_head = np.array([0.0,
+    timeline_head = np.array([
                                      1.1,
                                      2.6,
                                      3.0,
@@ -263,7 +263,7 @@ def test_cox_params_eq(insulator_string_data):
                                      6.5,
                                      6.6,
                                      6.9], dtype=np.float64)
-    sf_head = np.array([[1.        , 1.        ],
+    sf_head = np.array([
                                [0.99997434, 0.99985195],
                                [0.99994812, 0.99970062],
                                [0.99992171, 0.99954827],
@@ -302,5 +302,5 @@ def test_cox_params_eq(insulator_string_data):
     )
 
     assert re_model.params == approx(insulator_data_cox_params, rel=1e-3)
-    assert sf_relife[0][:20] == approx(timeline_head, rel=1e-3)
-    assert np.transpose(sf_relife[1][:, :20]) == approx(sf_head, rel=1e-3)
+    assert sf_relife[0][:19] == approx(timeline_head, rel=1e-3)
+    assert np.transpose(sf_relife[1][:, :19]) == approx(sf_head, rel=1e-3)

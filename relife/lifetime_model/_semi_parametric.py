@@ -324,20 +324,19 @@ class SemiParametricProportionalHazard:
             psi_order_1 = psi(self.covar_effect, self._training_data, order=1)
             d_j_on_psi = self._training_data.event_count[:, None] / psi_values
 
-            # TODO: ne marche pas car psi_order_1 / psi_values est (m, p) et covar (m', p)
-            #       mais m est issu de l'apprentissage et m' de l'inférence
             q3 = np.cumsum(
-                (psi_order_1 / psi_values - covar) * d_j_on_psi, axis=0
-            )  # [m, p]
+                (psi_order_1 / psi_values)[None, :, :] - covar[:, None, :]
+                * d_j_on_psi[None, :, :], axis=1
+            )  # [m: new sample for inference, t: timeline, p]
             q2 = np.squeeze(
                 np.matmul(
-                    q3[:, None, :],
+                    q3[:, :, None, :],
                     np.matmul(
-                        self.fitting_results.covariance_matrix[None, :, :],
-                        q3[:, :, None],
+                        self.fitting_results.covariance_matrix[None, None, :, :],
+                        q3[:, :, :, None],
                     ),
                 )
-            )  # m
+            )  # [m, t]
             q1 = np.cumsum(d_j_on_psi * (1 / psi_values))
             return q1 + q2
         return None
@@ -382,9 +381,9 @@ class SemiParametricProportionalHazard:
         dtype = np.dtype(
             [("timeline", np.float64), ("baseline_estimation", np.float64)]
         )
-        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
-        self._sf["timeline"] = np.insert(timeline, 0, 0)
-        self._sf["baseline_estimation"] = np.insert(baseline.sf(se=False), 0, 1)
+        self._sf = np.empty((timeline.size,), dtype=dtype)
+        self._sf["timeline"] = timeline
+        self._sf["baseline_estimation"] = baseline.sf(se=False)
 
         return self
 
@@ -691,36 +690,3 @@ class EfronPartialLifetimeLikelihood(
         hessian_part_2 = hessian_part_2.sum(axis=1)
 
         return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
-
-
-if __name__ == "__main__":
-    from pathlib import Path
-    import pandas as pd
-
-    # Données chaines d'isolateur
-    relife_csv_datapath = Path(r"D:\Projets\RTE\ReLife\relife\relife\data\csv")
-    time, event, entry, *args = np.loadtxt(relife_csv_datapath / "insulator_string.csv", delimiter=",", skiprows=1,
-                                           unpack=True)
-    covar = np.column_stack(args)
-
-    # Into df
-    data = pd.DataFrame({"time": time, "event": event, "entry": entry})
-    covar = pd.DataFrame(covar)
-    covar.columns = [f"covar_{i}" for i in range(covar.shape[1])]
-    data = pd.concat([data, covar], axis=1)
-
-    # Relife model fit
-    re_model = SemiParametricProportionalHazard()
-    re_model.fit(
-        time=data["time"],
-        covar=data.filter(regex="covar").values,
-        event=data["event"],
-    )
-    print(re_model.params)
-
-    # Relife sf
-    X = data.filter(regex="covar").iloc[:2]
-
-    sf_relife = re_model.sf(
-        covar=X.values, se=True
-    )
