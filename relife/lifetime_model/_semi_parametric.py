@@ -130,18 +130,13 @@ class _BreslowBaseline:
     data: CoxData
     covar_effect: LinearCovarEffect
 
-    def __init__(self,
-                 covar_effect: LinearCovarEffect,
-                 data: CoxData
-                 ):
+    def __init__(self, covar_effect: LinearCovarEffect, data: CoxData):
         assert data.covar.shape[-1] == covar_effect.nb_params
         self.covar_effect = covar_effect
         self.data = data
 
     @overload
-    def chf(
-        self, se: Literal[False], kp: bool = False
-    ) -> NDArray[np.float64]: ...
+    def chf(self, se: Literal[False], kp: bool = False) -> NDArray[np.float64]: ...
     @overload
     def chf(
         self, se: Literal[True], kp: bool = False
@@ -303,31 +298,32 @@ class SemiParametricProportionalHazard:
             return (
                 self._sf["timeline"],
                 self._sf["baseline_estimation"] ** self.covar_effect.g(covar),
-                self._sf["baseline_estimation"] ** self.covar_effect.g(covar) * np.sqrt(self._q1_q2_sum(covar))
+                self._sf["baseline_estimation"] ** self.covar_effect.g(covar)
+                * np.sqrt(self._q1_q2_sum(covar)),
             )
         return (
             self._sf["timeline"],
-            self._sf["baseline_estimation"] ** self.covar_effect.g(covar)
+            self._sf["baseline_estimation"] ** self.covar_effect.g(covar),
         )
 
-    def _q1_q2_sum(
-            self,
-            covar: NDArray[np.float64]
-    ) -> NDArray[np.float64] | None:
+    def _q1_q2_sum(self, covar: NDArray[np.float64]) -> NDArray[np.float64] | None:
         """Voir Klein and Moeschberger: Survival Analysis Techniques for Censored and Truncated Data (p 284)"""
         # TODO: Is it somehow dependent to Breslow estimator ? I don't think so, but the reference isn't clear enough.
         # TODO: Faut-il en faire une fonction et non une méthode ?
         # TODO: estimation foireuse...
         if self.fitting_results is None:
-            raise ValueError("This method can only be called in other methods after model fit")
+            raise ValueError(
+                "This method can only be called in other methods after model fit"
+            )
         if self.fitting_results.covariance_matrix is not None:
             psi_values = psi(self.covar_effect, self._training_data)
             psi_order_1 = psi(self.covar_effect, self._training_data, order=1)
             d_j_on_psi = self._training_data.event_count[:, None] / psi_values
 
             q3 = np.cumsum(
-                (psi_order_1 / psi_values)[None, :, :] - covar[:, None, :]
-                * d_j_on_psi[None, :, :], axis=1
+                ((psi_order_1 / psi_values)[None, :, :] - covar[:, None, :])
+                * d_j_on_psi[None, :, :],
+                axis=1,
             )  # [m: new sample for inference, t: timeline, p]
             q2 = np.squeeze(
                 np.matmul(
@@ -355,13 +351,19 @@ class SemiParametricProportionalHazard:
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )
 
-        _,  event_count = np.unique(time[event == 1], return_counts=True)
+        _, event_count = np.unique(time[event == 1], return_counts=True)
         if (event_count > 3).any():  # efron
-            likelihood = EfronPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
+            likelihood = EfronPartialLifetimeLikelihood(
+                self.covar_effect, time, covar, event, entry
+            )
         elif (event_count <= 3).all() and (2 in event_count):  # breslow
-            likelihood = BreslowPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
+            likelihood = BreslowPartialLifetimeLikelihood(
+                self.covar_effect, time, covar, event, entry
+            )
         else:
-            likelihood = CoxPartialLifetimeLikelihood(self.covar_effect, time, covar, event, entry)
+            likelihood = CoxPartialLifetimeLikelihood(
+                self.covar_effect, time, covar, event, entry
+            )
 
         if "x0" not in optimizer_options:
             np.random.seed(1)
@@ -371,7 +373,9 @@ class SemiParametricProportionalHazard:
         optimizer_options["jac"] = likelihood.jac_negative_log
         optimizer_options["hess"] = likelihood.hess_negative_log
 
-        self.fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        self.fitting_results = likelihood.maximum_likelihood_estimation(
+            **optimizer_options
+        )
         self.covar_effect.params = self.fitting_results.optimal_params
         self._training_data = likelihood.data
 
@@ -691,3 +695,4 @@ class EfronPartialLifetimeLikelihood(
         hessian_part_2 = hessian_part_2.sum(axis=1)
 
         return hessian_part_1.sum(axis=0) - hessian_part_2.sum(axis=0)
+

@@ -23,13 +23,19 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import FittingResults
-from relife.typing import AnyFloat, NumpyBool, NumpyFloat, MaximumLikelihoodOptimizerOptions, Seed
+from relife.typing import (
+    AnyFloat,
+    MaximumLikelihoodOptimizerOptions,
+    NumpyBool,
+    NumpyFloat,
+    Seed,
+)
 from relife.utils.quadrature import laguerre_quadrature, legendre_quadrature
 
 from ._base import (
-    LifetimeLikelihood,
     FittableParametricLifetimeModel,
     LifetimeData,
+    LifetimeLikelihood,
     ParametricLifetimeModel,
     document_args,
 )
@@ -213,7 +219,9 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
 
         if "x0" not in optimizer_options:
-            optimizer_options["x0"] = init_distrib_params_from_lifetimes(self, optimizer.data)
+            optimizer_options["x0"] = init_distrib_params_from_lifetimes(
+                self, optimizer.data
+            )
         if "bounds" not in optimizer_options:
             optimizer_options["bounds"] = get_distrib_params_bounds(self)
         if "approx_hessian_method" not in optimizer_options:
@@ -230,7 +238,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
 
 def init_distrib_params_from_lifetimes(
-        model: LifetimeDistribution, data: LifetimeData
+    model: LifetimeDistribution, data: LifetimeData
 ) -> NDArray[np.float64]:
     # flatten censored_time in case it is 2D
     all_time_values = np.concatenate(
@@ -295,7 +303,7 @@ class Exponential(LifetimeDistribution):
         super().__init__(rate=rate)
 
     @property
-    def rate(self):  # optional but better for clarity and type checking
+    def rate(self) -> float:  # optional but better for clarity and type checking
         """
         Returns the rate value.
 
@@ -313,7 +321,7 @@ class Exponential(LifetimeDistribution):
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def chf(self, time: AnyFloat) -> NumpyFloat:
-        return np.asarray(self.rate, dtype=np.float64) * time
+        return np.asarray(self.rate) * time
 
     @override
     @document_args(
@@ -1127,9 +1135,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
         return self.baseline._get_params_bounds()
 
     @override
-    def _init_params_from_lifetimes(
-            self, data: LifetimeData
-    ) -> NDArray[np.float64]:
+    def _init_params_from_lifetimes(self, data: LifetimeData) -> NDArray[np.float64]:
         return self.baseline._init_params_from_lifetimes(data)
 
     @override
