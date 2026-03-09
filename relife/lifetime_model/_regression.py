@@ -9,7 +9,7 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Callable, Literal, Self, Unpack, final
+from typing import Any, Callable, Literal, Self, final
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
@@ -22,18 +22,22 @@ from relife.typing import (
     AnyFloat,
     NumpyBool,
     NumpyFloat,
-    MaximumLikelihoodOptimizerOptions,
     Seed,
 )
 
 from ._base import (
-    LifetimeLikelihood,
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     LifetimeData,
+    LifetimeLikelihood,
     document_args,
 )
-from ._distribution import LifetimeDistribution, init_distrib_params_from_lifetimes, get_distrib_params_bounds
+from ._distribution import (
+    Gamma,
+    LifetimeDistribution,
+    get_distrib_params_bounds,
+    init_distrib_params_from_lifetimes,
+)
 
 __all__: list[str] = [
     "ParametricAcceleratedFailureTime",
@@ -401,6 +405,21 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        covar: AnyFloat,
+        *,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -452,7 +471,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
+        **kwargs: Any,
     ) -> Self:
         if model_args is None:
             raise ValueError("LifetimeRegression expects covar but model_args is None")
@@ -463,26 +482,27 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
 
         optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
 
-        if "x0" not in optimizer_options:
-            optimizer_options["x0"] = init_regression_params_from_lifetimes(self, optimizer.data)
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = get_regression_params_bounds(self)
-        if "approx_hessian_method" not in optimizer_options:
-            optimizer_options["approx_hessian_method"] = self.baseline.approx_hessian_method
-
-        self.fitting_results = optimizer.maximum_likelihood_estimation(
-            **optimizer_options
+        x0 = kwargs.pop(
+            "x0", init_regression_params_from_lifetimes(self, optimizer.data)
         )
+        if "bounds" not in kwargs:
+            kwargs["bounds"] = get_regression_params_bounds(self)
+        if "covariance_method" not in kwargs:
+            kwargs["covariance_method"] = (
+                "2point" if isinstance(self.baseline, Gamma) else "cs"
+            )
+        self.fitting_results = optimizer.maximum_likelihood_estimation(x0, **kwargs)
         self.params = self.fitting_results.optimal_params
-
         return self
 
 
 def init_regression_params_from_lifetimes(
-        model: ParametricLifetimeRegression, data: LifetimeData
+    model: ParametricLifetimeRegression, data: LifetimeData
 ) -> NDArray[np.float64]:
     param0 = np.zeros_like(model.params, dtype=np.float64)
-    param0[-model.baseline.params.size:] = init_distrib_params_from_lifetimes(model.baseline, data)
+    param0[-model.baseline.params.size :] = init_distrib_params_from_lifetimes(
+        model.baseline, data
+    )
     return param0
 
 
@@ -490,7 +510,9 @@ def get_regression_params_bounds(model: ParametricLifetimeRegression) -> Bounds:
     lb = np.concatenate(
         (
             np.full(model.covar_effect.nb_params, -np.inf),
-            get_distrib_params_bounds(model.baseline).lb,  # baseline has _params_bounds according to typing
+            get_distrib_params_bounds(
+                model.baseline
+            ).lb,  # baseline has _params_bounds according to typing
         )
     )
     ub = np.concatenate(

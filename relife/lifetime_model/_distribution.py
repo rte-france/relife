@@ -10,7 +10,6 @@ from typing import (
     Self,
     TypeAlias,
     TypeVarTuple,
-    Unpack,
     final,
     overload,
 )
@@ -22,10 +21,11 @@ from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.base import FittingResults
+from relife.base import (
+    FittingResults,
+)
 from relife.typing import (
     AnyFloat,
-    MaximumLikelihoodOptimizerOptions,
     NumpyBool,
     NumpyFloat,
     Seed,
@@ -209,7 +209,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
+        **kwargs: Any,
     ) -> Self:
         if model_args is not None:
             raise ValueError(
@@ -218,20 +218,11 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
 
         optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
 
-        if "x0" not in optimizer_options:
-            optimizer_options["x0"] = init_distrib_params_from_lifetimes(
-                self, optimizer.data
-            )
-        if "bounds" not in optimizer_options:
-            optimizer_options["bounds"] = get_distrib_params_bounds(self)
-        if "approx_hessian_method" not in optimizer_options:
-            optimizer_options["approx_hessian_method"] = self.approx_hessian_method
+        x0 = kwargs.pop("x0", init_distrib_params_from_lifetimes(self, optimizer.data))
+        if "bounds" not in kwargs:
+            kwargs["bounds"] = get_distrib_params_bounds(self)
 
-        # fitting_results must be refactored (a container always initialized but empty by default)
-        self.fitting_results = optimizer.maximum_likelihood_estimation(
-            **optimizer_options
-        )
-        # TODO: type checkers perdu, confusion avec params en attribut. Passer par "set_params" (cf sklearn)
+        self.fitting_results = optimizer.maximum_likelihood_estimation(x0, **kwargs)
         self.params = self.fitting_results.optimal_params
 
         return self
@@ -690,8 +681,6 @@ class Gamma(LifetimeDistribution):
     rate
     """
 
-    approx_hessian_method = "2point"
-
     def __init__(self, shape: float | None = None, rate: float | None = None):
         super().__init__(shape=shape, rate=rate)
 
@@ -802,6 +791,21 @@ class Gamma(LifetimeDistribution):
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return super().mrl(time)
+
+    @override
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> Self:
+        if "covariance_method" not in kwargs:
+            kwargs["covariance_method"] = "2point"
+        return super().fit(
+            time, model_args=model_args, event=event, entry=entry, **kwargs
+        )
 
 
 @final
@@ -1131,21 +1135,13 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
         return super().ls_integrate(func, a, b, n, *args, deg=deg)
 
     @override
-    def _get_params_bounds(self) -> Bounds:
-        return self.baseline._get_params_bounds()
-
-    @override
-    def _init_params_from_lifetimes(self, data: LifetimeData) -> NDArray[np.float64]:
-        return self.baseline._init_params_from_lifetimes(data)
-
-    @override
     def fit(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
+        kwargs: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
         if model_args is None:
             raise ValueError(
@@ -1156,7 +1152,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
             model_args=model_args,
             event=event,
             entry=entry,
-            optimizer_options=optimizer_options,
+            kwargs=optimizer_options,
         )
 
     @override
@@ -1166,7 +1162,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
         time_sup: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
+        kwargs: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
         if model_args is None:
             raise ValueError(
@@ -1177,5 +1173,5 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
             time_sup,
             model_args=model_args,
             entry=entry,
-            optimizer_options=optimizer_options,
+            kwargs=optimizer_options,
         )

@@ -3,31 +3,30 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import (
     Any,
+    Callable,
     Generic,
     Literal,
     Self,
     TypeVar,
     TypeVarTuple,
-    Unpack,
-    final, Callable,
+    final,
 )
 
 import numpy as np
-from numpy._typing import NDArray
-from optype.numpy import Array1D, Array2D, ToFloat
+from numpy.typing import NDArray
+from optype.numpy import Array1D, Array2D, ToFloat, ToFloat1D
 from scipy import stats
-from scipy.optimize import Bounds, minimize, approx_fprime
+from scipy.optimize import approx_fprime, minimize
 from typing_extensions import overload, override
 
-from relife.typing import MethodMinimize, MaximumLikelihoodOptimizerOptions
-
-__all__ = ["ParametricModel", "FrozenParametricModel"]
+__all__ = ["ParametricModel", "FrozenParametricModel", "MaximumLikelihoodOptimizer"]
 
 
 @final
@@ -279,7 +278,7 @@ def is_frozen(
 class FittingResults:
     """Fitting results of the parametric_model core."""
 
-    nb_obversations: int  #: Number of observations (samples)
+    nb_observations: int  #: Number of observations (samples)
     optimal_params: NDArray[np.float64] = field(
         repr=False
     )  #: Optimal parameters values
@@ -306,17 +305,18 @@ class FittingResults:
         self.nb_params = self.optimal_params.size
         self.aic = 2 * self.nb_params + 2 * self.neg_log_likelihood
         self.aicc = self.aic + 2 * self.nb_params * (self.nb_params + 1) / (
-            self.nb_obversations - self.nb_params - 1
+            self.nb_observations - self.nb_params - 1
         )
         self.bic = (
-            np.log(self.nb_obversations) * self.nb_params + 2 * self.neg_log_likelihood
+            np.log(self.nb_observations) * self.nb_params + 2 * self.neg_log_likelihood
         )
         self.se = None
+        self.ic = None
         if self.covariance_matrix is not None:
             self.se = np.sqrt(np.diag(self.covariance_matrix))
             self.ic = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
                 (0.05, 0.95)
-            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_obversations)  # (p, 2)
+            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_observations)  # (p, 2)
 
     def se_estimation_function(
         self, jac_f: NDArray[np.float64]
@@ -384,20 +384,19 @@ M = TypeVar("M", bound=ParametricModel)
 D = TypeVar("D")
 
 
-class MaximumLikehoodOptimizer(Generic[M, D], ABC):
+class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
     """
     Abstract maximum likelihood optimizer.
 
     Notes
     -----
     Jacobian and hessian are not required but they can be passed as additional
-    arguments to `**optimizer_options` at runtime or in subclass implementions
+    arguments to `**kwargs` at runtime or in subclass implementions
     by overriding `maximum_likelihood_estimation`.
     """
 
     model: M
     data: D
-    scipy_method: MethodMinimize = "L-BFGS-B"
 
     @property
     @abstractmethod
@@ -410,26 +409,35 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
 
         Parameters
         ----------
-        model : parametric model
-            A parametrized model, ie. params values must be set.
+        params : 1d array
+            Parameters values.
 
         Returns
         -------
-        out : float
+        out : ToFloat
             Negative log likelihood value.
         """
 
     def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions]
+        self, x0: ToFloat | ToFloat1D, **kwargs: Any
     ) -> FittingResults:
         """
         Search parameters values that maximize the likelihood given data.
 
         Parameters
         ----------
-        **optimizer_options
-            Any additional keyword arguments corresponding to optional
-            `scipy.optimize.minimize` arguments.
+        x0 : float or 1d array
+            Initial guess.
+        **kwargs
+            Extra arguments used by `scipy.optimize.minimize
+            <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+            to search for the paremeters that minimize the negative
+            log-likelihood. `covariance_method` can also be passed to control
+            the method used to estimate parameters covariance. Values can be
+            `"cs"`, `"2point"`, `"exact"` or `False`. To skip parameters
+            covariance estimation, set `covariance_method` to `False`,
+            otherwise the default method associated to the model will be used.
+            If `covariance_method` is `"exact"` the `hess` must be passed too.
 
         Returns
         -------
@@ -437,45 +445,46 @@ class MaximumLikehoodOptimizer(Generic[M, D], ABC):
             An object that encapsulates optimal parameters and fitting
             information (AIC, variance, etc.).
         """
-        # set
-        x0 = optimizer_options.pop("x0", None)
-        method = optimizer_options.pop("method", self.scipy_method)
-        bounds = optimizer_options.pop("bounds", None)
-        jac = optimizer_options.pop("jac", None)
-        hess = optimizer_options.pop("hess", None)
-        approx_hessian_method = optimizer_options.pop("approx_hessian_method", None)
+        method = kwargs.pop("method", "L-BFGS-B")
 
         optimizer = minimize(
             self.negative_log,
-            x0=x0,
-            jac=jac,
-            hess=hess,
+            x0,
             method=method,
-            bounds=bounds,
+            **kwargs,
         )
 
-        optimal_params = np.copy(optimizer.x)
-        if hess is not None:
-            covariance_matrix = np.linalg.pinv(hess(optimal_params))
-        elif jac is not None and approx_hessian_method is not None:
-            covariance_matrix = approx_parameters_covariance(jac, optimal_params, method=approx_hessian_method)
-        else:
-            covariance_matrix = None
-
-        return FittingResults(
+        fitting_results = FittingResults(
             self.nb_observations,
-            optimal_params,
+            np.copy(optimizer.x),
             optimizer.fun,
-            covariance_matrix=covariance_matrix
         )
+
+        covariance_method = kwargs.get("covariance_method", "cs")
+        if covariance_method is False:
+            return fitting_results
+
+        jac = kwargs.get("jac", None)
+        hess = kwargs.get("hess", None)
+        if jac is not None and covariance_method != "exact":
+            fitting_results.covariance_matrix = approx_parameters_covariance(
+                jac,
+                fitting_results.optimal_params,
+                method=covariance_method,
+            )
+        if hess is not None and covariance_method == "exact":
+            fitting_results.covariance_matrix = np.linalg.pinv(
+                hess(fitting_results.optimal_params)
+            )
+        return fitting_results
 
 
 def approx_parameters_covariance(
-    jac_negative_log: Callable,
+    jac_negative_log: Callable[[Array1D[np.float64]], Array1D[np.float64]],
     optimal_params: NDArray[np.float64],
     method: Literal["2point", "cs"] = "cs",
     eps: float = 1e-6,
-) -> Array2D[np.float64]:
+) -> Array2D[np.float64] | None:
     size = optimal_params.size
     hess = np.empty((size, size))
 
@@ -493,10 +502,21 @@ def approx_parameters_covariance(
     complex_params = optimal_params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
-            hess[i, j] = (
-                np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
-            )
+            hess[i, j] = np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
             if i != j:
                 hess[j, i] = hess[i, j]
-    covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
+    covariance_matrix = None
+    try:
+        covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
+    except Exception as err:
+        warnings.warn(
+            f"""
+            Failed to compute parameters covariance due to non-invertible
+            hessian matrix. Numpy pseudo-inversion algorithm returned : {err}
+
+            You can skip parameters covariance computation by setting
+            covariance_method to False. 
+            """
+        )
+
     return covariance_matrix

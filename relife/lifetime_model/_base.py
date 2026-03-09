@@ -16,29 +16,27 @@ from typing import (
     TypedDict,
     TypeVar,
     TypeVarTuple,
-    Unpack,
-    overload,
     final,
+    overload,
 )
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ToFloat
-from scipy.optimize import newton
+from optype.numpy import Array1D, ToFloat, ToFloat1D
+from scipy.optimize import Bounds, newton
 from typing_extensions import override
 
 from relife.base import (
     FittingResults,
     FrozenParametricModel,
-    MaximumLikehoodOptimizer,
+    MaximumLikelihoodOptimizer,
     ParametricModel,
 )
 from relife.typing import (
     AnyFloat,
     NumpyBool,
     NumpyFloat,
-    MaximumLikelihoodOptimizerOptions,
     Seed,
 )
 from relife.utils import reshape_1d_arg
@@ -782,7 +780,6 @@ def document_args(
 
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     fitting_results: FittingResults | None
-    approx_hessian_method: Literal["2point", "cs"] = "cs"
 
     def __init__(self, **kwparams: float | None):
         super().__init__(**kwparams)
@@ -913,13 +910,19 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
+    def _get_x0(self, lifetime_data: LifetimeData) -> ToFloat | ToFloat1D: ...
+
+    @abstractmethod
+    def _get_params_bounds(self) -> Bounds: ...
+
+    @abstractmethod
     def fit(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions],
+        **kwargs: Any,
     ) -> Self:
         """
         Estimation of the distribution parameters from lifetime data.
@@ -934,15 +937,16 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : 1d array, default is None
             Left truncations applied to lifetime values.
-        optimizer_options : dict, default is None
-            Extra arguments used by `scipy.minimize`. Default values are:
-                - `method` : `"L-BFGS-B"`
-                - `contraints` : `()`
-                - `tol` : `None`
-                - `callback` : `None`
-                - `options` : `None`
-                - `bounds` : `self.params_bounds`
-                - `x0` : `self.init_params`
+        **kwargs
+            Extra arguments used by `scipy.optimize.minimize
+            <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+            to search for the paremeters that minimize the negative
+            log-likelihood. `covariance_method` can also be passed to control
+            the method used to estimate parameters covariance. Values can be
+            `"cs"`, `"2point"`, `"exact"` or `False`. To skip parameters
+            covariance estimation, set `covariance_method` to `False`,
+            otherwise the default method associated to the model will be used.
+            If `covariance_method` is `"exact"` the `hess` must be passed too.
 
         Returns
         -------
@@ -961,8 +965,14 @@ class LifetimeData(TypedDict):
     nb_observations: int
 
 
+M = TypeVar(
+    "M",
+    bound=FittableParametricLifetimeModel[*tuple[Any, ...]],
+)
+
+
 @final
-class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeModel, LifetimeData]):
+class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
     """
     Likelihood from lifetime data.
 
@@ -983,12 +993,12 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeMode
     nb_observations: number of samples
     """
 
-    model: FittableParametricLifetimeModel
+    model: M
     data: LifetimeData
 
     def __init__(
         self,
-        model: FittableParametricLifetimeModel,
+        model: M,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
@@ -1037,15 +1047,11 @@ class LifetimeLikelihood(MaximumLikehoodOptimizer[FittableParametricLifetimeMode
 
     @override
     def maximum_likelihood_estimation(
-        self, **optimizer_options: Unpack[MaximumLikelihoodOptimizerOptions]
+        self, x0: ToFloat | ToFloat1D, **kwargs: Any
     ) -> FittingResults:
-        if "jac" not in optimizer_options:
-            optimizer_options["jac"] = self.jac_negative_log
-        return super().maximum_likelihood_estimation(**optimizer_options)
-
-        # hessian = approx_hessian(self, fitting_results.optimal_params)
-        # fitting_results.covariance_matrix = np.linalg.pinv(hessian)
-        # return fitting_results
+        if "jac" not in kwargs:
+            kwargs["jac"] = self.jac_negative_log
+        return super().maximum_likelihood_estimation(**kwargs)
 
 
 def _init_lifetime_data(
@@ -1178,7 +1184,8 @@ def _jac_censored_time_contrib(
     else:
         # right censored time
         return np.sum(
-            model.jac_chf(data["censored_time"], *data["censored_time_args"]), axis=(1, 2)
+            model.jac_chf(data["censored_time"], *data["censored_time_args"]),
+            axis=(1, 2),
         )
 
 

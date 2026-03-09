@@ -11,11 +11,11 @@ from numpy.typing import NDArray
 from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.lifetime_model._base import (
-    LifetimeLikelihood,
     FittableParametricLifetimeModel,
+    LifetimeLikelihood,
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.typing import AnyFloat, NumpyFloat, MaximumLikelihoodOptimizerOptions
+from relife.typing import AnyFloat, NumpyFloat
 
 Ts = TypeVarTuple("Ts")
 
@@ -199,7 +199,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         last_ages: NDArray[np.float64] | None = None,
         lifetime_model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         assets_ids: Sequence[str] | NDArray[np.int64] | None = None,
-        optimizer_options: MaximumLikelihoodOptimizerOptions | None = None,
+        **kwargs: Any,
     ) -> Self:
         """
         Estimation of the process parameters from recurrent failure data.
@@ -271,9 +271,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         likelihood = LifetimeLikelihood(
             self.lifetime_model, time, args, event=event, entry=entry
         )
-        if optimizer_options is None:
-            optimizer_options = {}
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+
+        fitting_results = likelihood.maximum_likelihood_estimation(x0, **kwargs)
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
