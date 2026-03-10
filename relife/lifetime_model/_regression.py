@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import overload, override
 
-from relife.base import FittingResults, ParametricModel
+from relife.base import OptimizerConfig, ParametricModel
 from relife.typing import (
     AnyFloat,
     NumpyBool,
@@ -208,7 +208,6 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
 
     baseline: LifetimeDistribution
     covar_effect: LinearCovarEffect
-    fitting_results: FittingResults | None
 
     def __init__(
         self,
@@ -465,35 +464,76 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         return FrozenParametricLifetimeModel(self, covar)
 
     @override
-    def fit(
+    def init_optimizer(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
+    ) -> LifetimeLikelihood[Self]:
+        lifetime_data = LifetimeData(time, model_args, event, entry)
+        x0 = kwargs.get(
+            "x0", init_regression_params_from_lifetimes(self, lifetime_data)
+        )
+        config = OptimizerConfig(x0)
+        config.scipy_minimize_options["bounds"] = kwargs.get(
+            "bounds", get_regression_params_bounds(self)
+        )
+        config.scipy_minimize_options["method"] = kwargs.get("bounds", "L-BFGS-B")
+        config.covariance_method = kwargs.get(
+            "covariance_method", "2point" if isinstance(self.baseline, Gamma) else "cs"
+        )
+        optimizer = LifetimeLikelihood(self, lifetime_data, config)
+        return optimizer
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
     ) -> Self:
-        if model_args is None:
-            raise ValueError("LifetimeRegression expects covar but model_args is None")
-        covar = model_args[0]
+        r"""
+        Estimation of the regression parameters from lifetime data.
+
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        covar : 2d array
+            Covariate values. Shape is (m, k) where m is the size of time and k
+            the number of covariates.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        **kwargs
+            Extra arguments to control the parameters optimization. It can be:
+
+                - those used by `scipy.optimize.minimize
+                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+                  to search for the paremeters that minimize the negative
+                  log-likelihood.
+                - `covariance_method` to control the method used to estimate
+                  parameters covariance. Values can be `"cs"`, `"2point"`,
+                  `"exact"` or `False`. To skip parameters covariance
+                  estimation, set `covariance_method` to `False`, otherwise the
+                  default method associated to the model will be used. If
+                  `covariance_method` is `"exact"` the `hess` must be passed
+                  too.
+
+        Returns
+        -------
+        out : the object instance
+            The estimated parameters are setted inplace. Additional information
+            can be found in `fitting_results`.
+        """
         self.covar_effect = LinearCovarEffect(
             (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
-
-        optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
-
-        x0 = kwargs.pop(
-            "x0", init_regression_params_from_lifetimes(self, optimizer.data)
-        )
-        if "bounds" not in kwargs:
-            kwargs["bounds"] = get_regression_params_bounds(self)
-        if "covariance_method" not in kwargs:
-            kwargs["covariance_method"] = (
-                "2point" if isinstance(self.baseline, Gamma) else "cs"
-            )
-        self.fitting_results = optimizer.maximum_likelihood_estimation(x0, **kwargs)
-        self.params = self.fitting_results.optimal_params
-        return self
+        return self._fit(time, covar, event=event, entry=entry, **kwargs)
 
 
 def init_regression_params_from_lifetimes(

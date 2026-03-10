@@ -9,6 +9,7 @@ from typing import (
     Literal,
     Self,
     TypeAlias,
+    TypeVar,
     TypeVarTuple,
     final,
     overload,
@@ -21,9 +22,7 @@ from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.base import (
-    FittingResults,
-)
+from relife.base import OptimizerConfig
 from relife.typing import (
     AnyFloat,
     NumpyBool,
@@ -51,12 +50,16 @@ __all__: list[str] = [
 ]
 
 
+M = TypeVar(
+    "M",
+    bound=FittableParametricLifetimeModel[()],
+)
+
+
 class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     """
     Base class for distribution model.
     """
-
-    fitting_results: FittingResults | None
 
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
@@ -203,29 +206,66 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
-    def fit(
+    def init_optimizer(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
+    ) -> LifetimeLikelihood[Self]:
+        assert model_args is None
+        lifetime_data = LifetimeData(time, event=event, entry=entry)
+        x0 = kwargs.get("x0", self._get_x0(lifetime_data))
+        config = OptimizerConfig(x0)
+        config.scipy_minimize_options["bounds"] = kwargs.get(
+            "bounds", self._get_params_bounds()
+        )
+        config.scipy_minimize_options["method"] = kwargs.get("bounds", "L-BFGS-B")
+        config.covariance_method = kwargs.get("covariance_method", "cs")
+        optimizer = LifetimeLikelihood(self, lifetime_data, config)
+        return optimizer
+
+    def fit(
+        self,
+        time: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
     ) -> Self:
-        if model_args is not None:
-            raise ValueError(
-                "LifetimeDistribution does not expect additional arguments in model_args"
-            )
+        r"""
+        Estimation of the distribution parameters from lifetime data.
 
-        optimizer = LifetimeLikelihood(self, time, model_args, event, entry)
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        **kwargs
+            Extra arguments to control the parameters optimization. It can be:
 
-        x0 = kwargs.pop("x0", init_distrib_params_from_lifetimes(self, optimizer.data))
-        if "bounds" not in kwargs:
-            kwargs["bounds"] = get_distrib_params_bounds(self)
+                - those used by `scipy.optimize.minimize
+                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+                  to search for the paremeters that minimize the negative
+                  log-likelihood.
+                - `covariance_method` to control the method used to estimate
+                  parameters covariance. Values can be `"cs"`, `"2point"`,
+                  `"exact"` or `False`. To skip parameters covariance
+                  estimation, set `covariance_method` to `False`, otherwise the
+                  default method associated to the model will be used. If
+                  `covariance_method` is `"exact"` the `hess` must be passed
+                  too.
 
-        self.fitting_results = optimizer.maximum_likelihood_estimation(x0, **kwargs)
-        self.params = self.fitting_results.optimal_params
-
-        return self
+        Returns
+        -------
+        out : the object instance
+            The estimated parameters are setted inplace. Additional information
+            can be found in `fitting_results`.
+        """
+        return self._fit(time, event=event, entry=entry, **kwargs)
 
 
 def init_distrib_params_from_lifetimes(
@@ -233,7 +273,7 @@ def init_distrib_params_from_lifetimes(
 ) -> NDArray[np.float64]:
     # flatten censored_time in case it is 2D
     all_time_values = np.concatenate(
-        (data["complete_time"].flatten(), data["censored_time"].flatten())
+        (data.complete_time.flatten(), data.censored_time.flatten())
     )
     if isinstance(model, Gompertz):
         param0 = np.empty(model.nb_params, dtype=np.float64)
@@ -796,16 +836,13 @@ class Gamma(LifetimeDistribution):
     def fit(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
         if "covariance_method" not in kwargs:
             kwargs["covariance_method"] = "2point"
-        return super().fit(
-            time, model_args=model_args, event=event, entry=entry, **kwargs
-        )
+        return super().fit(time, event, entry, **kwargs)
 
 
 @final

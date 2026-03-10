@@ -279,9 +279,8 @@ class FittingResults:
     """Fitting results of the parametric_model core."""
 
     nb_observations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64] = field(
-        repr=False
-    )  #: Optimal parameters values
+    optimal_params: NDArray[np.float64]  #: Optimal parameters values
+    success: bool  #: Whether or not the optimizer exited successfully.
     neg_log_likelihood: float = field(
         repr=False
     )  #: Negative log likelihood value at optimal parameters values
@@ -384,6 +383,13 @@ M = TypeVar("M", bound=ParametricModel)
 D = TypeVar("D")
 
 
+@dataclass
+class OptimizerConfig:
+    x0: ToFloat | ToFloat1D
+    scipy_minimize_options: dict[str, Any] = field(default_factory=dict)
+    covariance_method: Literal["cs", "2point", "exact", False] = False
+
+
 class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
     """
     Abstract maximum likelihood optimizer.
@@ -397,6 +403,7 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
     model: M
     data: D
+    config: OptimizerConfig
 
     @property
     @abstractmethod
@@ -418,9 +425,7 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
             Negative log likelihood value.
         """
 
-    def maximum_likelihood_estimation(
-        self, x0: ToFloat | ToFloat1D, **kwargs: Any
-    ) -> FittingResults:
+    def optimize(self) -> FittingResults:
         """
         Search parameters values that maximize the likelihood given data.
 
@@ -445,34 +450,37 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
             An object that encapsulates optimal parameters and fitting
             information (AIC, variance, etc.).
         """
-        method = kwargs.pop("method", "L-BFGS-B")
 
         optimizer = minimize(
             self.negative_log,
-            x0,
-            method=method,
-            **kwargs,
+            self.config.x0,
+            **self.config.scipy_minimize_options,
         )
 
         fitting_results = FittingResults(
             self.nb_observations,
             np.copy(optimizer.x),
+            optimizer.success,
             optimizer.fun,
         )
 
-        covariance_method = kwargs.get("covariance_method", "cs")
-        if covariance_method is False:
+        if not fitting_results.success:
+            warnings.warn(
+                "The negative log-likelihood minimization did not exited successfully."
+            )
+
+        if self.config.covariance_method is False:
             return fitting_results
 
-        jac = kwargs.get("jac", None)
-        hess = kwargs.get("hess", None)
-        if jac is not None and covariance_method != "exact":
+        jac = self.config.scipy_minimize_options.get("jac", None)
+        hess = self.config.scipy_minimize_options.get("hess", None)
+        if jac is not None and self.config.covariance_method != "exact":
             fitting_results.covariance_matrix = approx_parameters_covariance(
                 jac,
                 fitting_results.optimal_params,
-                method=covariance_method,
+                method=self.config.covariance_method,
             )
-        if hess is not None and covariance_method == "exact":
+        if hess is not None and self.config.covariance_method == "exact":
             fitting_results.covariance_matrix = np.linalg.pinv(
                 hess(fitting_results.optimal_params)
             )

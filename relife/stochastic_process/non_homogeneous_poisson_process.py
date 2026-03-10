@@ -1,5 +1,3 @@
-# pyright: basic
-
 from __future__ import annotations
 
 import warnings
@@ -12,7 +10,6 @@ from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
 from relife.lifetime_model._base import (
     FittableParametricLifetimeModel,
-    LifetimeLikelihood,
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyFloat, NumpyFloat
@@ -267,12 +264,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
-        # noinspection PyProtectedMember
-        likelihood = LifetimeLikelihood(
-            self.lifetime_model, time, args, event=event, entry=entry
+        optimizer = self.lifetime_model.init_optimizer(
+            time, args, event, entry, **kwargs
         )
-
-        fitting_results = likelihood.maximum_likelihood_estimation(x0, **kwargs)
+        fitting_results = optimizer.optimize()
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self

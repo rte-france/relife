@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import functools
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -13,7 +14,6 @@ from typing import (
     Literal,
     ParamSpec,
     Self,
-    TypedDict,
     TypeVar,
     TypeVarTuple,
     final,
@@ -23,14 +23,15 @@ from typing import (
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ToFloat, ToFloat1D
-from scipy.optimize import Bounds, newton
+from optype.numpy import Array1D, ToFloat
+from scipy.optimize import newton
 from typing_extensions import override
 
 from relife.base import (
     FittingResults,
     FrozenParametricModel,
     MaximumLikelihoodOptimizer,
+    OptimizerConfig,
     ParametricModel,
 )
 from relife.typing import (
@@ -778,6 +779,12 @@ def document_args(
     return decorator_extend_docstring
 
 
+M = TypeVar(
+    "M",
+    bound="FittableParametricLifetimeModel[*tuple[Any, ...]]",
+)
+
+
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     fitting_results: FittingResults | None
 
@@ -910,13 +917,54 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def _get_x0(self, lifetime_data: LifetimeData) -> ToFloat | ToFloat1D: ...
+    def init_optimizer(
+        self,
+        time: NDArray[np.float64],
+        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> LifetimeLikelihood[M]:
+        r"""
+        Initialize the lifetime likelihood used to fit the parameters.
 
-    @abstractmethod
-    def _get_params_bounds(self) -> Bounds: ...
+        This method implementation is usally composed of 3 steps:
+            1. Initialize an object to preprocess and encapsulate observation values.
+            2. Create a `OptimizerConfig` config instance depending on the model needs.
+            3. Instanciate and return a LifetimeLikelihood.
 
-    @abstractmethod
-    def fit(
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        model_args : any ndarray or tuple of ndarray, default is None
+            Any additional arguments required by the model.
+            the number of covariates.
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        **kwargs
+            Extra arguments to control the parameters optimization. It can be:
+
+                - those used by `scipy.optimize.minimize
+                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+                  to search for the paremeters that minimize the negative
+                  log-likelihood.
+                - `covariance_method` to control the method used to estimate
+                  parameters covariance. Values can be `"cs"`, `"2point"`,
+                  `"exact"` or `False`. To skip parameters covariance
+                  estimation, set `covariance_method` to `False`, otherwise the
+                  default method associated to the model will be used. If
+                  `covariance_method` is `"exact"` the `hess` must be passed
+                  too.
+
+        Returns
+        -------
+        out : LifetimeLikelihood instance
+        """
+
+    def _fit(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
@@ -953,22 +1001,83 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
+        optimizer: LifetimeLikelihood[Self] = self.init_optimizer(
+            time, model_args, event, entry, **kwargs
+        )
+        self.fitting_results = optimizer.optimize()
+        self.params: NDArray[np.float64] = self.fitting_results.optimal_params
+
+        return self
 
 
-class LifetimeData(TypedDict):
-    complete_time: NDArray[np.float64]
-    censored_time: NDArray[np.float64]  # 1d array or 2d
-    left_truncations: NDArray[np.float64]
-    complete_time_args: tuple[NDArray[Any], ...]
-    censored_time_args: tuple[NDArray[Any], ...]
-    left_truncations_args: tuple[NDArray[Any], ...]
-    nb_observations: int
+@dataclass
+class LifetimeData:
+    time: NDArray[np.float64]  # 1d array or 2d
+    model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None
+    event: NDArray[np.bool_] | None = None
+    entry: NDArray[np.float64] | None = None
 
+    nb_observations: int = field(init=False)
+    complete_time: NDArray[np.float64] = field(init=False, repr=False)
+    censored_time: NDArray[np.float64] = field(init=False, repr=False)
+    left_truncations: NDArray[np.float64] = field(init=False, repr=False)
+    complete_time_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
+    censored_time_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
+    left_truncations_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
 
-M = TypeVar(
-    "M",
-    bound=FittableParametricLifetimeModel[*tuple[Any, ...]],
-)
+    def __post_init__(self) -> None:
+        time = reshape_1d_arg(self.time)
+        if time.shape[-1] == 2 and self.event is not None:
+            raise ValueError("If time is given as intervals, event must be None")
+        event = None
+        if time.shape[-1] == 1:
+            event = (
+                reshape_1d_arg(self.event)
+                if self.event is not None
+                else np.ones_like(time, dtype=np.bool_)
+            )
+        entry = (
+            reshape_1d_arg(self.entry)
+            if self.entry is not None
+            else np.zeros(len(time), dtype=np.float64)
+        )
+        if np.any(time <= entry):
+            raise ValueError("All time values must be greater than entry values")
+        if isinstance(self.model_args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in self.model_args))
+        elif isinstance(self.model_args, np.ndarray):
+            args = (reshape_1d_arg(self.model_args),)
+        else:
+            args = ()
+        sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+        if len(set(sizes)) != 1:
+            raise ValueError(
+                f"""
+                All lifetime data must have the same number of values. Fields
+                length are different. Got {tuple(sizes)}
+                """
+            )
+        non_zero_entry = np.flatnonzero(entry)
+        if event is not None:
+            non_zero_event = np.flatnonzero(event)
+            zero_event = np.flatnonzero(event == 0)
+            self.nb_observations = time.size
+            self.complete_time = time[non_zero_event]
+            self.censored_time = time[zero_event]
+            self.left_truncations = entry[non_zero_entry]
+            self.complete_time_args = tuple(arg[non_zero_event] for arg in args)
+            self.censored_time_args = tuple(arg[zero_event] for arg in args)
+            self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
+
+        complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
+        non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
+        self.nb_observations = time.size
+        self.complete_time = time[:, 1][complete_time_index]
+        self.censored_time = time[non_complete_time_index]
+        self.left_truncations = entry[non_zero_entry]
+        self.complete_time_args = tuple(arg[complete_time_index] for arg in args)
+        self.censored_time_args = tuple(arg[non_complete_time_index] for arg in args)
+        self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
 
 
 @final
@@ -999,20 +1108,18 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
     def __init__(
         self,
         model: M,
-        time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        data: LifetimeData,
+        config: OptimizerConfig,
     ):
         self.model = copy.deepcopy(model)
-        self.data = _init_lifetime_data(
-            time, model_args=model_args, event=event, entry=entry
-        )
+        self.data = data
+        self.config = config
+        self.config.scipy_minimize_options["jac"] = self.jac_negative_log
 
     @property
     @override
     def nb_observations(self) -> int:
-        return self.data["nb_observations"]
+        return self.data.nb_observations
 
     @override
     def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
@@ -1045,100 +1152,25 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
             + _jac_left_truncations_contrib(self.model, self.data)
         )
 
-    @override
-    def maximum_likelihood_estimation(
-        self, x0: ToFloat | ToFloat1D, **kwargs: Any
-    ) -> FittingResults:
-        if "jac" not in kwargs:
-            kwargs["jac"] = self.jac_negative_log
-        return super().maximum_likelihood_estimation(**kwargs)
-
-
-def _init_lifetime_data(
-    time: NDArray[np.float64],  # 1d array or 2d
-    model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-    event: NDArray[np.bool_] | None = None,
-    entry: NDArray[np.float64] | None = None,
-) -> LifetimeData:
-    time = reshape_1d_arg(time)
-    if time.shape[-1] == 2 and event is not None:
-        raise ValueError("If time is given as intervals, event must be None")
-    if time.shape[-1] == 1:
-        event = (
-            reshape_1d_arg(event)
-            if event is not None
-            else np.ones_like(time, dtype=np.bool_)
-        )
-    entry = (
-        reshape_1d_arg(entry)
-        if entry is not None
-        else np.zeros(len(time), dtype=np.float64)
-    )
-    if np.any(time <= entry):
-        raise ValueError("All time values must be greater than entry values")
-    if isinstance(model_args, tuple):
-        args = tuple((reshape_1d_arg(arg) for arg in model_args))
-    elif isinstance(model_args, np.ndarray):
-        args = (reshape_1d_arg(model_args),)
-    elif model_args is None:
-        args = ()
-    sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
-    if len(set(sizes)) != 1:
-        raise ValueError(
-            f"""
-            All lifetime data must have the same number of values. Fields
-            length are different. Got {tuple(sizes)}
-            """
-        )
-    non_zero_entry = np.flatnonzero(entry)
-    if event is not None:
-        non_zero_event = np.flatnonzero(event)
-        zero_event = np.flatnonzero(event == 0)
-        data = LifetimeData(
-            complete_time=time[non_zero_event],
-            censored_time=time[zero_event],
-            left_truncations=entry[non_zero_entry],
-            complete_time_args=tuple(arg[non_zero_event] for arg in args),
-            censored_time_args=tuple(arg[zero_event] for arg in args),
-            left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
-            nb_observations=time.size,
-        )
-        return data
-
-    complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
-    non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
-    data = LifetimeData(
-        complete_time=time[:, 1][complete_time_index],
-        censored_time=time[non_complete_time_index],
-        left_truncations=entry[non_zero_entry],
-        complete_time_args=tuple(arg[complete_time_index] for arg in args),
-        censored_time_args=tuple(arg[non_complete_time_index] for arg in args),
-        left_truncations_args=tuple(arg[non_zero_entry] for arg in args),
-        nb_observations=time.size,
-    )
-    return data
-
 
 def _complete_time_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> float:
-    if data["complete_time"].size == 0.0:
+    if data.complete_time.size == 0.0:
         return 0.0
-    return -np.sum(
-        np.log(model.pdf(data["complete_time"], *data["complete_time_args"]))
-    )
+    return -np.sum(np.log(model.pdf(data.complete_time, *data.complete_time_args)))
 
 
 def _jac_complete_time_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
-    if data["complete_time"].size == 0:
+    if data.complete_time.size == 0:
         return np.zeros_like(model.params)
-    jac = -model.jac_pdf(
-        data["complete_time"], *data["complete_time_args"]
-    ) / model.pdf(data["complete_time"], *data["complete_time_args"])
+    jac = -model.jac_pdf(data.complete_time, *data.complete_time_args) / model.pdf(
+        data.complete_time, *data.complete_time_args
+    )
 
     return np.sum(jac, axis=(1, 2))
 
@@ -1147,44 +1179,44 @@ def _censored_time_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> float:
-    if data["censored_time"].size == 0:
+    if data.censored_time.size == 0:
         return 0.0
-    if data["censored_time"].shape[-1] > 1:
+    if data.censored_time.shape[-1] > 1:
         # interval censored time
         return np.sum(
             -np.log(
                 10**-10
-                + model.cdf(data["censored_time"][:, 1], *data["censored_time_args"])
-                - model.cdf(data["censored_time"][:, 0], *data["censored_time_args"])
+                + model.cdf(data.censored_time[:, 1], *data.censored_time_args)
+                - model.cdf(data.censored_time[:, 0], *data.censored_time_args)
             ),
         )
     else:
         # right censored time
-        return np.sum(model.chf(data["censored_time"], *data["censored_time_args"]))
+        return np.sum(model.chf(data.censored_time, *data.censored_time_args))
 
 
 def _jac_censored_time_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
-    if data["censored_time"].size == 0:
+    if data.censored_time.size == 0:
         return np.zeros_like(model.params)
-    if data["censored_time"].shape[-1] > 1:
+    if data.censored_time.shape[-1] > 1:
         # interval censored time
         jac_interval_censored = (
-            model.jac_sf(data["censored_time"][:, 1], *data["censored_time_args"])
-            - model.jac_sf(data["censored_time"][:, 0], *data["censored_time_args"])
+            model.jac_sf(data.censored_time[:, 1], *data.censored_time_args)
+            - model.jac_sf(data.censored_time[:, 0], *data.censored_time_args)
         ) / (
             10**-10
-            + model.cdf(data["censored_time"][:, 1], *data["censored_time_args"])
-            - model.cdf(data["censored_time"][:, 0], *data["censored_time_args"])
+            + model.cdf(data.censored_time[:, 1], *data.censored_time_args)
+            - model.cdf(data.censored_time[:, 0], *data.censored_time_args)
         )
 
         return np.sum(jac_interval_censored, axis=(1, 2))
     else:
         # right censored time
         return np.sum(
-            model.jac_chf(data["censored_time"], *data["censored_time_args"]),
+            model.jac_chf(data.censored_time, *data.censored_time_args),
             axis=(1, 2),
         )
 
@@ -1193,16 +1225,16 @@ def _left_truncations_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> float:
-    if data["left_truncations"].size == 0.0:
+    if data.left_truncations.size == 0.0:
         return 0.0
-    return -np.sum(model.chf(data["left_truncations"], *data["left_truncations_args"]))
+    return -np.sum(model.chf(data.left_truncations, *data.left_truncations_args))
 
 
 def _jac_left_truncations_contrib(
     model: FittableParametricLifetimeModel[*tuple[Any, ...]],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
-    if data["left_truncations"].size == 0.0:
+    if data.left_truncations.size == 0.0:
         return np.zeros_like(model.params)
-    jac = -model.jac_chf(data["left_truncations"], *data["left_truncations_args"])
+    jac = -model.jac_chf(data.left_truncations, *data.left_truncations_args)
     return np.sum(jac, axis=(1, 2))
