@@ -2,13 +2,10 @@
 
 import numpy as np
 
-from relife.lifetime_model._base import LifetimeLikelihood
-
 
 class TestLikelihoodDistribution:
     def test_negative_log(self, distribution, power_transformer_data):
-        likelihood = LifetimeLikelihood(
-            distribution,
+        likelihood = distribution.init_likelihood(
             power_transformer_data["time"],
             event=power_transformer_data["event"],
             entry=power_transformer_data["entry"],
@@ -16,8 +13,7 @@ class TestLikelihoodDistribution:
         assert isinstance(likelihood.negative_log(distribution.params), float)
 
     def test_jac_negative_log(self, distribution, power_transformer_data):
-        likelihood = LifetimeLikelihood(
-            distribution,
+        likelihood = distribution.init_likelihood(
             power_transformer_data["time"],
             event=power_transformer_data["event"],
             entry=power_transformer_data["entry"],
@@ -35,8 +31,7 @@ class TestLikelihoodRegression:
                 insulator_string_data["pH2SO4"],
             )
         )
-        likelihood = LifetimeLikelihood(
-            regression,
+        likelihood = regression.init_likelihood(
             insulator_string_data["time"],
             covar,
             event=insulator_string_data["event"],
@@ -51,8 +46,7 @@ class TestLikelihoodRegression:
                 insulator_string_data["pH2SO4"],
             )
         )
-        likelihood = LifetimeLikelihood(
-            regression,
+        likelihood = regression.init_likelihood(
             insulator_string_data["time"],
             covar,
             event=insulator_string_data["event"],

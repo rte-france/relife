@@ -464,7 +464,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         return FrozenParametricLifetimeModel(self, covar)
 
     @override
-    def init_optimizer(
+    def init_likelihood(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
@@ -472,6 +472,10 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
+        assert isinstance(model_args, np.ndarray)
+        self.covar_effect = LinearCovarEffect(
+            (None,) * np.atleast_2d(np.asarray(model_args, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
         lifetime_data = LifetimeData(time, model_args, event, entry)
         x0 = kwargs.get(
             "x0", init_regression_params_from_lifetimes(self, lifetime_data)
@@ -480,7 +484,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         config.scipy_minimize_options["bounds"] = kwargs.get(
             "bounds", get_regression_params_bounds(self)
         )
-        config.scipy_minimize_options["method"] = kwargs.get("bounds", "L-BFGS-B")
+        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
         config.covariance_method = kwargs.get(
             "covariance_method", "2point" if isinstance(self.baseline, Gamma) else "cs"
         )
@@ -530,9 +534,7 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
             The estimated parameters are setted inplace. Additional information
             can be found in `fitting_results`.
         """
-        self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
+
         return self._fit(time, covar, event=event, entry=entry, **kwargs)
 
 

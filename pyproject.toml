@@ -113,7 +113,6 @@ testpaths = [
     "relife/tests",
     "relife/data/tests",
     "relife/lifetime_model/tests",
-    "relife/likelihood/tests",
     "relife/stochastic_process/tests",
     "relife/policy/tests",
 ]

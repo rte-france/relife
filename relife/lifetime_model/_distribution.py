@@ -206,7 +206,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ls_integrate(func, a, b, deg=deg)
 
     @override
-    def init_optimizer(
+    def init_likelihood(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
@@ -216,13 +216,15 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     ) -> LifetimeLikelihood[Self]:
         assert model_args is None
         lifetime_data = LifetimeData(time, event=event, entry=entry)
-        x0 = kwargs.get("x0", self._get_x0(lifetime_data))
+        x0 = kwargs.get("x0", init_distrib_params_from_lifetimes(self, lifetime_data))
         config = OptimizerConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
-            "bounds", self._get_params_bounds()
+            "bounds", get_distrib_params_bounds(self)
         )
-        config.scipy_minimize_options["method"] = kwargs.get("bounds", "L-BFGS-B")
-        config.covariance_method = kwargs.get("covariance_method", "cs")
+        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
+        config.covariance_method = kwargs.get(
+            "covariance_method", "2point" if isinstance(self, Gamma) else "cs"
+        )
         optimizer = LifetimeLikelihood(self, lifetime_data, config)
         return optimizer
 
@@ -831,18 +833,6 @@ class Gamma(LifetimeDistribution):
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def mrl(self, time: AnyFloat) -> NumpyFloat:
         return super().mrl(time)
-
-    @override
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        **kwargs: Any,
-    ) -> Self:
-        if "covariance_method" not in kwargs:
-            kwargs["covariance_method"] = "2point"
-        return super().fit(time, event, entry, **kwargs)
 
 
 @final

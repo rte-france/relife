@@ -8,7 +8,7 @@ from optype.numpy import Array1D, ToFloat, ToFloat2D
 from scipy.stats import norm
 from typing_extensions import Literal, final, overload, override
 
-from relife.base import FittingResults, MaximumLikelihoodOptimizer
+from relife.base import FittingResults, MaximumLikelihoodOptimizer, OptimizerConfig
 from relife.lifetime_model._regression import LinearCovarEffect
 from relife.utils import reshape_1d_arg
 
@@ -19,9 +19,7 @@ class CoxData:
     covar: NDArray[np.float64]
     event: NDArray[np.bool_] | None = None
     entry: NDArray[np.float64] | None = None
-    likelihood_to_use: Literal["cox"] | Literal["breslow"] | Literal["efron"] = field(
-        init=False, repr=True
-    )
+
     ordered_event_time: NDArray[np.float64] = field(init=False, repr=False)
     event_count: NDArray[np.int64] = field(init=False, repr=False)
     risk_set: NDArray[np.bool_] = field(init=False, repr=False)
@@ -364,6 +362,33 @@ class SemiParametricProportionalHazard:
         q1 = np.cumsum(d_j_on_psi * (1 / psi_values))
         return q1 + q2
 
+    def init_likelihood(
+        self,
+        time: NDArray[np.float64],
+        covar: NDArray[np.float64],
+        event: NDArray[np.bool_] | None = None,
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> "CoxPartialLifetimeLikelihood|BreslowPartialLifetimeLikelihood|EfronPartialLifetimeLikelihood":
+        # init covar_effect
+        self.covar_effect = LinearCovarEffect(
+            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        )
+
+        x0 = kwargs.get("x0", np.random.random(covar.shape[1]))
+        config = OptimizerConfig(x0)
+        config.scipy_minimize_options["method"] = kwargs.get("method", "trust-exact")
+        config.covariance_method = kwargs.get("covariance_method", "exact")
+
+        cox_data = CoxData(time, covar, event=event, entry=entry)
+        _, event_count = np.unique(time[event == 1], return_counts=True)
+        if (event_count > 3).any():  # efron
+            return EfronPartialLifetimeLikelihood(self.covar_effect, cox_data, config)
+        if (event_count <= 3).all() and (2 in event_count):  # breslow
+            return BreslowPartialLifetimeLikelihood(self.covar_effect, cox_data, config)
+
+        return CoxPartialLifetimeLikelihood(self.covar_effect, cox_data, config)
+
     def fit(
         self,
         time: NDArray[np.float64],
@@ -372,46 +397,16 @@ class SemiParametricProportionalHazard:
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ):
-        # init covar_effect
-        self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )
-
-        _, event_count = np.unique(time[event == 1], return_counts=True)
-        if (event_count > 3).any():  # efron
-            likelihood = EfronPartialLifetimeLikelihood(
-                self.covar_effect, time, covar, event, entry
-            )
-        elif (event_count <= 3).all() and (2 in event_count):  # breslow
-            likelihood = BreslowPartialLifetimeLikelihood(
-                self.covar_effect, time, covar, event, entry
-            )
-        else:
-            likelihood = CoxPartialLifetimeLikelihood(
-                self.covar_effect, time, covar, event, entry
-            )
-
-        x0 = kwargs.pop("x0", np.random.random(covar.shape[1]))
-        if "method" not in kwargs:
-            kwargs["method"] = "trust-exact"
-        if "jac" not in kwargs:
-            kwargs["jac"] = likelihood.jac_negative_log
-        if "hess" not in kwargs:
-            kwargs["hess"] = likelihood.hess_negative_log
-        if "covariance_method" not in kwargs:
-            kwargs["covariance_method"] = "exact"
-
-        self.fitting_results = likelihood.maximum_likelihood_estimation(x0, **kwargs)
+        likelihood = self.init_likelihood(time, covar, event, entry, **kwargs)
+        self.fitting_results = likelihood.optimize()
+        assert self.covar_effect is not None
         self.covar_effect.params = self.fitting_results.optimal_params
         self._training_data = likelihood.data
-
         # currently only BreslowBaseline is used to compute sf
         baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
 
         timeline = likelihood.data.ordered_event_time.copy()
-        self._sf0["timeline"] = timeline
-        self._sf0["estimation"] = baseline.sf(se=False)
-
+        self._sf0 = _SF0(timeline=timeline, estimation=baseline.sf(se=False))
         return self
 
 
@@ -421,18 +416,21 @@ class CoxPartialLifetimeLikelihood(
 ):
     data: CoxData
     model: LinearCovarEffect
-    scipy_method = "trust-exact"
+    config: OptimizerConfig
 
     def __init__(
         self,
-        covar_effect: LinearCovarEffect,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model: LinearCovarEffect,
+        data: CoxData,
+        config: OptimizerConfig,
     ):
-        self.model = copy.deepcopy(covar_effect)
-        self.data = CoxData(time, covar, event=event, entry=entry)
+        self.model = copy.deepcopy(model)
+        self.data = data
+        self.config = config
+        if "jac" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["jac"] = self.jac_negative_log
+        if "hess" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["hess"] = self.hess_negative_log
 
     @property
     @override
@@ -478,21 +476,25 @@ class CoxPartialLifetimeLikelihood(
 class BreslowPartialLifetimeLikelihood(
     MaximumLikelihoodOptimizer[LinearCovarEffect, CoxData]
 ):
-    model: LinearCovarEffect
     data: CoxData
+    model: LinearCovarEffect
+    config: OptimizerConfig
     s_j: NDArray[np.float64]
-    scipy_method = "trust-exact"
 
     def __init__(
         self,
-        covar_effect: LinearCovarEffect,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model: LinearCovarEffect,
+        data: CoxData,
+        config: OptimizerConfig,
     ):
-        self.model = copy.deepcopy(covar_effect)
-        self.data = CoxData(time, covar, event=event, entry=entry)
+        self.model = copy.deepcopy(model)
+        self.data = data
+        self.config = config
+        if "jac" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["jac"] = self.jac_negative_log
+        if "hess" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["hess"] = self.hess_negative_log
+
         self.s_j = np.dot(self.data.death_set, self.data.covar)
 
     @property
@@ -545,8 +547,9 @@ class BreslowPartialLifetimeLikelihood(
 class EfronPartialLifetimeLikelihood(
     MaximumLikelihoodOptimizer[LinearCovarEffect, CoxData]
 ):
-    model: LinearCovarEffect
     data: CoxData
+    model: LinearCovarEffect
+    config: OptimizerConfig
     s_j: NDArray[np.float64]
     discount_rates: NDArray[np.float64]
     discount_rates_mask: NDArray[np.bool_]
@@ -554,14 +557,17 @@ class EfronPartialLifetimeLikelihood(
 
     def __init__(
         self,
-        covar_effect: LinearCovarEffect,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        model: LinearCovarEffect,
+        data: CoxData,
+        config: OptimizerConfig,
     ):
-        self.model = copy.deepcopy(covar_effect)
-        self.data = CoxData(time, covar, event=event, entry=entry)
+        self.model = copy.deepcopy(model)
+        self.data = data
+        self.config = config
+        if "jac" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["jac"] = self.jac_negative_log
+        if "hess" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["hess"] = self.hess_negative_log
         self.s_j = np.dot(self.data.death_set, self.data.covar)
         self.discount_rates = (
             np.vstack(

@@ -917,7 +917,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def init_optimizer(
+    def init_likelihood(
         self,
         time: NDArray[np.float64],
         model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
@@ -928,10 +928,22 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         r"""
         Initialize the lifetime likelihood used to fit the parameters.
 
+        A `fit` method is generally present in the model interface; if
+        available, it is the preferred way to fit model parameters. However,
+        users can also interact with the likelihood returned by
+        `init_likelihood` to study the optimization process.
+
         This method implementation is usally composed of 3 steps:
             1. Initialize an object to preprocess and encapsulate observation values.
             2. Create a `OptimizerConfig` config instance depending on the model needs.
             3. Instanciate and return a LifetimeLikelihood.
+
+        Contractualize `init_likelihood` allows to reuse existing likelihood
+        parametrization in case of model composition. Any parameters
+        initialization needed by the likelihood optimizer (e.g. `x0` or
+        `bounds` as required in step 2.) are left to specific functions
+        alongside concrete model implementations. These functions are invoked
+        within `init_likelihood`.
 
         Parameters
         ----------
@@ -973,7 +985,14 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         **kwargs: Any,
     ) -> Self:
         """
-        Estimation of the distribution parameters from lifetime data.
+        Estimation of parameters from lifetime data.
+
+        The `_fit` method is private but serves as a complementary function to
+        any `fit` method defined in derived classes. Its signature accepts
+        `model_args`, accommodating a wide range of additional arguments
+        alongside `time`. In contrast, public `fit` method aims to explicitly
+        unpack `model_args`, making it more user-friendly and ensuring precise
+        control over the number of required arguments.
 
         Parameters
         ----------
@@ -1001,7 +1020,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
-        optimizer: LifetimeLikelihood[Self] = self.init_optimizer(
+        optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
             time, model_args, event, entry, **kwargs
         )
         self.fitting_results = optimizer.optimize()
@@ -1068,16 +1087,18 @@ class LifetimeData:
             self.complete_time_args = tuple(arg[non_zero_event] for arg in args)
             self.censored_time_args = tuple(arg[zero_event] for arg in args)
             self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
-
-        complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
-        non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
-        self.nb_observations = time.size
-        self.complete_time = time[:, 1][complete_time_index]
-        self.censored_time = time[non_complete_time_index]
-        self.left_truncations = entry[non_zero_entry]
-        self.complete_time_args = tuple(arg[complete_time_index] for arg in args)
-        self.censored_time_args = tuple(arg[non_complete_time_index] for arg in args)
-        self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
+        else:
+            complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
+            non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
+            self.nb_observations = time.size
+            self.complete_time = time[:, 1][complete_time_index]
+            self.censored_time = time[non_complete_time_index]
+            self.left_truncations = entry[non_zero_entry]
+            self.complete_time_args = tuple(arg[complete_time_index] for arg in args)
+            self.censored_time_args = tuple(
+                arg[non_complete_time_index] for arg in args
+            )
+            self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
 
 
 @final
@@ -1114,7 +1135,8 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
         self.model = copy.deepcopy(model)
         self.data = data
         self.config = config
-        self.config.scipy_minimize_options["jac"] = self.jac_negative_log
+        if "jac" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["jac"] = self.jac_negative_log
 
     @property
     @override
