@@ -598,6 +598,13 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ls = np.squeeze(ls)
         return ls / sf
 
+    @property
+    def plot(self):
+        """Provides access to plotting functionnalities"""
+        from ._plot import PlotParametricLifetimeModel
+
+        return PlotParametricLifetimeModel(self)
+
 
 class FrozenParametricLifetimeModel(
     FrozenParametricModel[ParametricLifetimeModel[*Ts], *Ts]

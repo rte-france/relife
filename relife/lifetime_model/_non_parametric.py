@@ -139,6 +139,12 @@ class ECDF:
             return self._cdf["timeline"], self._cdf["estimation"], self._cdf["se"]
         return self._cdf["timeline"], self._cdf["estimation"]
 
+    @property
+    def plot(self):
+        from ._plot import PlotECDF
+
+        return PlotECDF(self)
+
 
 @final
 class KaplanMeier:
@@ -276,6 +282,12 @@ class KaplanMeier:
             return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
         return self._sf["timeline"], self._sf["estimation"]
 
+    @property
+    def plot(self):
+        from ._plot import PlotKaplanMeier
+
+        return PlotKaplanMeier(self)
+
 
 @final
 class NelsonAalen:
@@ -412,3 +424,9 @@ class NelsonAalen:
         if se:
             return self._chf["timeline"], self._chf["estimation"], self._chf["se"]
         return self._chf["timeline"], self._chf["estimation"]
+
+    @property
+    def plot(self):
+        from ._plot import PlotNelsonAalen
+
+        return PlotNelsonAalen(self)
