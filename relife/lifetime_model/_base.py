@@ -7,7 +7,6 @@ import functools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Generic,
@@ -43,8 +42,12 @@ from relife.typing import (
 from relife.utils import reshape_1d_arg
 from relife.utils.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
 
-if TYPE_CHECKING:
-    pass
+__all__ = [
+    "ParametricLifetimeModel",
+    "FittableParametricLifetimeModel",
+    "LifetimeData",
+    "LifetimeLikelihood",
+]
 
 Ts = TypeVarTuple("Ts")
 

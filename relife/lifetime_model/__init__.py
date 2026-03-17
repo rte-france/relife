@@ -28,6 +28,12 @@ Lifetime regression
     ParametricProportionalHazard
     ParametricAcceleratedFailureTime
 
+Semiparametric lifetime regression
+----------------------------------
+
+    SemiParametricProportionalHazard
+
+
 Nonparametric models
 --------------------
 
@@ -40,6 +46,15 @@ Conditional models
 
     AgeReplacementModel
     LeftTruncatedModel
+
+
+Likelihoods
+-----------
+
+    LifetimeLikelihood
+    CoxPartialLifetimeLikelihood
+    BreslowPartialLifetimeLikelihood
+    EfronPartialLifetimeLikelihood
 
 """
 
@@ -56,7 +71,12 @@ from ._distribution import (
 )
 from ._non_parametric import ECDF, KaplanMeier, NelsonAalen
 from ._regression import ParametricAcceleratedFailureTime, ParametricProportionalHazard
-from ._semi_parametric import SemiParametricProportionalHazard
+from ._semi_parametric import (
+    BreslowPartialLifetimeLikelihood,
+    CoxPartialLifetimeLikelihood,
+    EfronPartialLifetimeLikelihood,
+    SemiParametricProportionalHazard,
+)
 
 __all__ = [
     "LifetimeLikelihood",
@@ -75,4 +95,7 @@ __all__ = [
     "NelsonAalen",
     "AgeReplacementModel",
     "LeftTruncatedModel",
+    "CoxPartialLifetimeLikelihood",
+    "EfronPartialLifetimeLikelihood",
+    "BreslowPartialLifetimeLikelihood",
 ]
