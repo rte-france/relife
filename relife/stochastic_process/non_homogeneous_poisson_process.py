@@ -264,7 +264,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
-        optimizer = self.lifetime_model.init_optimizer(
+        optimizer = self.lifetime_model.init_likelihood(
             time, args, event, entry, **kwargs
         )
         fitting_results = optimizer.optimize()
