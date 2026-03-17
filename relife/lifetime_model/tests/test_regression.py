@@ -237,3 +237,13 @@ def test_aft_pph_weibull_eq(insulator_string_data):
         -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.params,
         rel=1e-3,
     )
+
+
+def test_negative_log(regression_likelihood):
+    params = regression_likelihood.model.params.copy()
+    assert isinstance(regression_likelihood.negative_log(params), float)
+
+
+def test_jac_negative_log(regression_likelihood):
+    params = regression_likelihood.model.params.copy()
+    assert regression_likelihood.jac_negative_log(params).shape == (params.size,)

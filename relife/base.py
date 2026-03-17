@@ -222,7 +222,12 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     def __init__(self, model: _ParametricModel_T, *args: *Ts):
         super().__init__()
         if np.any(np.isnan(model.params)):
-            raise ValueError("Can't freeze a model with NaN params. Set params first")
+            raise ValueError(
+                f"""
+                Can't freeze a model with np.nan parameters. Model params is
+                {model.params}
+                """
+            )
         self._unfrozen_model = model
         self._args = args
 
@@ -396,9 +401,14 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
     Notes
     -----
-    Jacobian and hessian are not required but they can be passed as additional
-    arguments to `**kwargs` at runtime or in subclass implementions
-    by overriding `maximum_likelihood_estimation`.
+    Jacobian and hessian are not required but they can be implemented in
+    concrete likelihoods. To use the jacobian or hessian implementations in the
+    likelihood, pass them into `config["scipy_minimize_options"]`.
+
+    Attributes
+    ----------
+    nb_observations : int
+        The number of observations.
     """
 
     model: M
@@ -428,21 +438,6 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
     def optimize(self) -> FittingResults:
         """
         Search parameters values that maximize the likelihood given data.
-
-        Parameters
-        ----------
-        x0 : float or 1d array
-            Initial guess.
-        **kwargs
-            Extra arguments used by `scipy.optimize.minimize
-            <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
-            to search for the paremeters that minimize the negative
-            log-likelihood. `covariance_method` can also be passed to control
-            the method used to estimate parameters covariance. Values can be
-            `"cs"`, `"2point"`, `"exact"` or `False`. To skip parameters
-            covariance estimation, set `covariance_method` to `False`,
-            otherwise the default method associated to the model will be used.
-            If `covariance_method` is `"exact"` the `hess` must be passed too.
 
         Returns
         -------

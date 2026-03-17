@@ -209,12 +209,12 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def init_likelihood(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        assert model_args is None
+        assert args is None
         lifetime_data = LifetimeData(time, event=event, entry=entry)
         x0 = kwargs.get("x0", init_distrib_params_from_lifetimes(self, lifetime_data))
         config = OptimizerConfig(x0)
@@ -227,47 +227,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
         optimizer = LifetimeLikelihood(self, lifetime_data, config)
         return optimizer
-
-    def fit(
-        self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        **kwargs: Any,
-    ) -> Self:
-        r"""
-        Estimation of the distribution parameters from lifetime data.
-
-        Parameters
-        ----------
-        time : 1d array
-            Observed lifetime values.
-        event : 1d array of bool, default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        **kwargs
-            Extra arguments to control the parameters optimization. It can be:
-
-                - those used by `scipy.optimize.minimize
-                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
-                  to search for the paremeters that minimize the negative
-                  log-likelihood.
-                - `covariance_method` to control the method used to estimate
-                  parameters covariance. Values can be `"cs"`, `"2point"`,
-                  `"exact"` or `False`. To skip parameters covariance
-                  estimation, set `covariance_method` to `False`, otherwise the
-                  default method associated to the model will be used. If
-                  `covariance_method` is `"exact"` the `hess` must be passed
-                  too.
-
-        Returns
-        -------
-        out : the object instance
-            The estimated parameters are setted inplace. Additional information
-            can be found in `fitting_results`.
-        """
-        return self._fit(time, event=event, entry=entry, **kwargs)
 
 
 def init_distrib_params_from_lifetimes(
@@ -1165,40 +1124,19 @@ class MinimumDistribution(FittableParametricLifetimeModel[*tuple[AnyInt, *Ts]]):
     def fit(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         kwargs: MaximumLikelihoodOptimizerOptions | None = None,
     ) -> Self:
-        if model_args is None:
+        if args is None:
             raise ValueError(
-                "MinimumDistribution expects at least one additional argument in model_args"
+                "MinimumDistribution expects at least one additional argument in args"
             )
         return super().fit(
             time,
-            model_args=model_args,
+            args=args,
             event=event,
-            entry=entry,
-            kwargs=optimizer_options,
-        )
-
-    @override
-    def fit_from_interval_censored_lifetimes(
-        self,
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        kwargs: MaximumLikelihoodOptimizerOptions | None = None,
-    ) -> Self:
-        if model_args is None:
-            raise ValueError(
-                "MinimumDistribution expects at least one additional argument in model_args"
-            )
-        return super().fit_from_interval_censored_lifetimes(
-            time_inf,
-            time_sup,
-            model_args=model_args,
             entry=entry,
             kwargs=optimizer_options,
         )

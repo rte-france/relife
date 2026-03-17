@@ -151,6 +151,16 @@ def test_fit(distribution, power_transformer_data):
     assert distribution.params == pytest.approx(expected_params, rel=1e-3)
 
 
+def test_negative_log(distribution_likelihood):
+    params = distribution_likelihood.model.params.copy()
+    assert isinstance(distribution_likelihood.negative_log(params), float)
+
+
+def test_jac_negative_log(distribution_likelihood):
+    params = distribution_likelihood.model.params.copy()
+    assert distribution_likelihood.jac_negative_log(params).shape == (params.size,)
+
+
 class TestEquilibriumDistribution:
     # def test_args_names(self, equilibrium_distribution):
     #     assert equilibrium_distribution.args_names == ()

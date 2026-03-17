@@ -920,7 +920,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     def init_likelihood(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
@@ -928,8 +928,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         r"""
         Initialize the lifetime likelihood used to fit the parameters.
 
-        A `fit` method is generally present in the model interface; if
-        available, it is the preferred way to fit model parameters. However,
+        `fit` method is the preferred way to fit model parameters. However,
         users can also interact with the likelihood returned by
         `init_likelihood` to study the optimization process.
 
@@ -938,8 +937,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             2. Create a `OptimizerConfig` config instance depending on the model needs.
             3. Instanciate and return a LifetimeLikelihood.
 
-        Contractualize `init_likelihood` allows to reuse existing likelihood
-        parametrization in case of model composition. Any parameters
+        `init_likelihood` is separated from `fit` in order to reuse existing
+        likelihood parametrization in case of model composition. Any parameters
         initialization needed by the likelihood optimizer (e.g. `x0` or
         `bounds` as required in step 2.) are left to specific functions
         alongside concrete model implementations. These functions are invoked
@@ -949,9 +948,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         ----------
         time : 1d array
             Observed lifetime values.
-        model_args : any ndarray or tuple of ndarray, default is None
-            Any additional arguments required by the model.
-            the number of covariates.
+        args : any ndarray or tuple of ndarray, default is None
+            Additional arguments required by the model (e.g. covar).
         event : 1d array of bool, default is None
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : 1d array, default is None
@@ -976,10 +974,10 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : LifetimeLikelihood instance
         """
 
-    def _fit(
+    def fit(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
@@ -987,19 +985,12 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
         Estimation of parameters from lifetime data.
 
-        The `_fit` method is private but serves as a complementary function to
-        any `fit` method defined in derived classes. Its signature accepts
-        `model_args`, accommodating a wide range of additional arguments
-        alongside `time`. In contrast, public `fit` method aims to explicitly
-        unpack `model_args`, making it more user-friendly and ensuring precise
-        control over the number of required arguments.
-
         Parameters
         ----------
         time : 1d array
             Observed lifetime values.
-        model_args : any ndarray or tuple of ndarray, default is None
-            Any additional arguments required by the model.
+        args : any ndarray or tuple of ndarray, default is None
+            Additional arguments required by the model (e.g. covar).
         event : 1d array of bool, default is None
             Boolean indicators tagging lifetime values as right censored or complete.
         entry : 1d array, default is None
@@ -1021,8 +1012,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             The estimated parameters are setted inplace.
         """
         optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
-            time, model_args, event, entry, **kwargs
+            time, args, event, entry, **kwargs
         )
+        assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
         self.params: NDArray[np.float64] = self.fitting_results.optimal_params
 
@@ -1032,7 +1024,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 @dataclass
 class LifetimeData:
     time: NDArray[np.float64]  # 1d array or 2d
-    model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None
+    args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None
     event: NDArray[np.bool_] | None = None
     entry: NDArray[np.float64] | None = None
 
@@ -1062,10 +1054,10 @@ class LifetimeData:
         )
         if np.any(time <= entry):
             raise ValueError("All time values must be greater than entry values")
-        if isinstance(self.model_args, tuple):
-            args = tuple((reshape_1d_arg(arg) for arg in self.model_args))
-        elif isinstance(self.model_args, np.ndarray):
-            args = (reshape_1d_arg(self.model_args),)
+        if isinstance(self.args, tuple):
+            args = tuple((reshape_1d_arg(arg) for arg in self.args))
+        elif isinstance(self.args, np.ndarray):
+            args = (reshape_1d_arg(self.args),)
         else:
             args = ()
         sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
@@ -1104,23 +1096,28 @@ class LifetimeData:
 @final
 class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
     """
-    Likelihood from lifetime data.
+    Maximum likelihood estimator from lifetime data.
 
     Parameters
     ----------
     model : generic FittableParametricLifetimeModel
-        All model parameters must exist first. Its values are initialized by
-        model.fit with respect to data.
-    time: numpy array of lifetime durations
-    model_args: numpy array or tuple thereof with additional model arguments (e.g. covar)
-    event: numpy array of boolean indicating event occurrence or not
-    entry: numpy array with assets lifetime duration at the beginning of observation
+        Every model parameters must be initialized before passing it to the
+        likelihood.
+    data : LifetimeData
+        An object that encapsulate and preprocess lifetime observations and
+        truncations.
+    config : OptimizerConfig
+        An object that groups configurations used by the optimizer.
 
     Attributes
     ----------
-    model: a copy of the original model object
-    data: a LifetimeData object with processed data information for model fitting purposes
-    nb_observations: number of samples
+    model: FittableParametricLifetimeModel
+        A copy of the original model.
+    data : LifetimeData
+        An object that encapsulate and preprocess lifetime observations and
+        truncations.
+    config : OptimizerConfig
+        An object that groups configurations used by the optimizer.
     """
 
     model: M

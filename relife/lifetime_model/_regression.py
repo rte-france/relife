@@ -467,75 +467,46 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
     def init_likelihood(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        assert isinstance(model_args, np.ndarray)
-        self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(model_args, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-        lifetime_data = LifetimeData(time, model_args, event, entry)
+        assert isinstance(args, np.ndarray)
+        regression = type(self)(
+            type(self.baseline)(), coefficients=(0.0,) * np.atleast_2d(args).shape[-1]
+        )  # init new regression object with appropriate number of covar
+        lifetime_data = LifetimeData(time, args, event, entry)
         x0 = kwargs.get(
-            "x0", init_regression_params_from_lifetimes(self, lifetime_data)
+            "x0", init_regression_params_from_lifetimes(regression, lifetime_data)
         )
+        regression.params = x0
         config = OptimizerConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
-            "bounds", get_regression_params_bounds(self)
+            "bounds", get_regression_params_bounds(regression)
         )
         config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
         config.covariance_method = kwargs.get(
-            "covariance_method", "2point" if isinstance(self.baseline, Gamma) else "cs"
+            "covariance_method",
+            "2point" if isinstance(regression.baseline, Gamma) else "cs",
         )
-        optimizer = LifetimeLikelihood(self, lifetime_data, config)
+        optimizer = LifetimeLikelihood(regression, lifetime_data, config)
         return optimizer
 
+    @override
     def fit(
         self,
         time: NDArray[np.float64],
-        covar: NDArray[np.float64],
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
-        r"""
-        Estimation of the regression parameters from lifetime data.
-
-        Parameters
-        ----------
-        time : 1d array
-            Observed lifetime values.
-        covar : 2d array
-            Covariate values. Shape is (m, k) where m is the size of time and k
-            the number of covariates.
-        event : 1d array of bool, default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : 1d array, default is None
-            Left truncations applied to lifetime values.
-        **kwargs
-            Extra arguments to control the parameters optimization. It can be:
-
-                - those used by `scipy.optimize.minimize
-                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
-                  to search for the paremeters that minimize the negative
-                  log-likelihood.
-                - `covariance_method` to control the method used to estimate
-                  parameters covariance. Values can be `"cs"`, `"2point"`,
-                  `"exact"` or `False`. To skip parameters covariance
-                  estimation, set `covariance_method` to `False`, otherwise the
-                  default method associated to the model will be used. If
-                  `covariance_method` is `"exact"` the `hess` must be passed
-                  too.
-
-        Returns
-        -------
-        out : the object instance
-            The estimated parameters are setted inplace. Additional information
-            can be found in `fitting_results`.
-        """
-
-        return self._fit(time, covar, event=event, entry=entry, **kwargs)
+        assert isinstance(args, np.ndarray)
+        self.covar_effect = LinearCovarEffect(
+            (None,) * np.atleast_2d(np.asarray(args, dtype=np.float64)).shape[-1]
+        )  # changes params structure depending on number of covar
+        return super().fit(time, args, event, entry, **kwargs)
 
 
 def init_regression_params_from_lifetimes(
