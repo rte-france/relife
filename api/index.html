@@ -56,10 +56,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ParametricModel" href="base_class/relife.base.ParametricModel.html" />
-    <link rel="prev" title="Lifetime regressions" href="../user/lifetime_regressions.html" />
+    <link rel="prev" title="Cox (semiparametric proportional hazard)" href="../user/semiparametric_regression.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -371,7 +371,9 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_class/relife.base.MaximumLikelihoodOptimizer.html">MaximumLikelihoodOptimizer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.Weibull.html">Weibull</a></li>
@@ -380,18 +382,23 @@
 <li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html">ParametricAcceleratedFailureTime</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Semiparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html">SemiParametricProportionalHazard</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nonparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -423,13 +430,17 @@
 <li class="toctree-l1"><a class="reference internal" href="data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="likelihoods/relife.lifetime_model.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 <li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="routines/relife.utils.quadrature.legendre_quadrature.html">legendre_quadrature</a></li>
@@ -502,6 +513,9 @@ We divided the API documentation close to the same logic.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="base_class/relife.base.ParametricModel.html#relife.base.ParametricModel" title="relife.base.ParametricModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricModel</span></code></a></p></td>
 <td><p>Base class of every parametric models in ReLife.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="base_class/relife.base.MaximumLikelihoodOptimizer.html#relife.base.MaximumLikelihoodOptimizer" title="relife.base.MaximumLikelihoodOptimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaximumLikelihoodOptimizer</span></code></a></p></td>
+<td><p>Abstract maximum likelihood optimizer.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -533,23 +547,22 @@ We divided the API documentation close to the same logic.</p>
 <p class="rubric">Lifetime regression</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard" title="relife.lifetime_model.ProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProportionalHazard</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard" title="relife.lifetime_model.ParametricProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricProportionalHazard</span></code></a></p></td>
 <td><p>Proportional Hazard regression.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime" title="relife.lifetime_model.AcceleratedFailureTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AcceleratedFailureTime</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime" title="relife.lifetime_model.ParametricAcceleratedFailureTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricAcceleratedFailureTime</span></code></a></p></td>
 <td><p>Accelerated failure time regression.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p class="rubric">Conditional lifetime models</p>
+</section>
+<section id="semiparametric-lifetime-models">
+<h3>Semiparametric lifetime models<a class="headerlink" href="#semiparametric-lifetime-models" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel" title="relife.lifetime_model.LeftTruncatedModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a></p></td>
-<td><p>Left truncated model.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel" title="relife.lifetime_model.AgeReplacementModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementModel</span></code></a></p></td>
-<td><p>Age replacement model.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html#relife.lifetime_model.SemiParametricProportionalHazard" title="relife.lifetime_model.SemiParametricProportionalHazard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SemiParametricProportionalHazard</span></code></a></p></td>
+<td><p>Class for Cox, semi-parametric, Proportional Hazards, model</p></td>
 </tr>
 </tbody>
 </table>
@@ -559,14 +572,29 @@ We divided the API documentation close to the same logic.</p>
 <h3>Non parametric lifetime models<a class="headerlink" href="#non-parametric-lifetime-models" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier" title="relife.lifetime_model.KaplanMeier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KaplanMeier</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier" title="relife.lifetime_model.KaplanMeier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KaplanMeier</span></code></a></p></td>
 <td><p>Kaplan-Meier estimator.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen" title="relife.lifetime_model.NelsonAalen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NelsonAalen</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen" title="relife.lifetime_model.NelsonAalen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NelsonAalen</span></code></a></p></td>
 <td><p>Nelson-Aalen estimator.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF" title="relife.lifetime_model.ECDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ECDF</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="nonparametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF" title="relife.lifetime_model.ECDF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ECDF</span></code></a></p></td>
 <td><p>Empirical Cumulative Distribution Function.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="conditional-lifetime-models">
+<h3>Conditional lifetime models<a class="headerlink" href="#conditional-lifetime-models" title="Link to this heading">#</a></h3>
+<p class="rubric">Conditional lifetime models</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel" title="relife.lifetime_model.LeftTruncatedModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeftTruncatedModel</span></code></a></p></td>
+<td><p>Left truncated model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel" title="relife.lifetime_model.AgeReplacementModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgeReplacementModel</span></code></a></p></td>
+<td><p>Age replacement model.</p></td>
 </tr>
 </tbody>
 </table>
@@ -643,8 +671,8 @@ We divided the API documentation close to the same logic.</p>
 </table>
 </div>
 </section>
-<section id="built-in-dataset">
-<h2>Built-in dataset<a class="headerlink" href="#built-in-dataset" title="Link to this heading">#</a></h2>
+<section id="built-in-datasets">
+<h2>Built-in datasets<a class="headerlink" href="#built-in-datasets" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="data/relife.data.load_circuit_breaker.html#relife.data.load_circuit_breaker" title="relife.data.load_circuit_breaker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_circuit_breaker</span></code></a></p></td>
@@ -660,6 +688,26 @@ We divided the API documentation close to the same logic.</p>
 </table>
 </div>
 </section>
+<section id="likelihoods">
+<h2>Likelihoods<a class="headerlink" href="#likelihoods" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="likelihoods/relife.lifetime_model.LifetimeLikelihood.html#relife.lifetime_model.LifetimeLikelihood" title="relife.lifetime_model.LifetimeLikelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LifetimeLikelihood</span></code></a></p></td>
+<td><p>Maximum likelihood estimator from lifetime data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html#relife.lifetime_model.CoxPartialLifetimeLikelihood" title="relife.lifetime_model.CoxPartialLifetimeLikelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CoxPartialLifetimeLikelihood</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html#relife.lifetime_model.EfronPartialLifetimeLikelihood" title="relife.lifetime_model.EfronPartialLifetimeLikelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EfronPartialLifetimeLikelihood</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html#relife.lifetime_model.BreslowPartialLifetimeLikelihood" title="relife.lifetime_model.BreslowPartialLifetimeLikelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BreslowPartialLifetimeLikelihood</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="utils">
 <h2>Utils<a class="headerlink" href="#utils" title="Link to this heading">#</a></h2>
 <p>Various utilities to help with development.</p>
@@ -670,15 +718,6 @@ We divided the API documentation close to the same logic.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="routines/relife.utils.get_args_nb_assets.html#relife.utils.get_args_nb_assets" title="relife.utils.get_args_nb_assets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_args_nb_assets</span></code></a></p></td>
 <td><p>Gets the number of assets encoded in args.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="routines/relife.utils.is_frozen.html#relife.utils.is_frozen" title="relife.utils.is_frozen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_frozen</span></code></a></p></td>
-<td><p>Checks if model is frozen</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="routines/relife.utils.is_lifetime_model.html#relife.utils.is_lifetime_model" title="relife.utils.is_lifetime_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_lifetime_model</span></code></a></p></td>
-<td><p>Checks if model is a lifetime model.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="routines/relife.utils.is_non_homogeneous_poisson_process.html#relife.utils.is_non_homogeneous_poisson_process" title="relife.utils.is_non_homogeneous_poisson_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_non_homogeneous_poisson_process</span></code></a></p></td>
-<td><p>Checks if model is a non-homogeneous Poisson process.</p></td>
 </tr>
 </tbody>
 </table>
@@ -729,7 +768,9 @@ support automatic broadcasting of 2D bounds.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parametric-lifetime-models">Parametric lifetime models</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#semiparametric-lifetime-models">Semiparametric lifetime models</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-parametric-lifetime-models">Non parametric lifetime models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-lifetime-models">Conditional lifetime models</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stochastic-processes">Stochastic processes</a></li>
@@ -737,7 +778,8 @@ support automatic broadcasting of 2D bounds.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#economy">Economy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-dataset">Built-in dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-datasets">Built-in datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#likelihoods">Likelihoods</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utils">Utils</a><ul class="nav section-nav flex-column">
 </ul>
 </li>

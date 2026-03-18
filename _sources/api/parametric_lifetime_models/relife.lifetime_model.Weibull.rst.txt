@@ -34,16 +34,13 @@ Weibull
             ~Weibull.fit
         
         
-            ~Weibull.fit_from_interval_censored_lifetimes
-        
-        
-            ~Weibull.get_initial_params
-        
-        
             ~Weibull.hf
         
         
             ~Weibull.ichf
+        
+        
+            ~Weibull.init_likelihood
         
         
             ~Weibull.isf

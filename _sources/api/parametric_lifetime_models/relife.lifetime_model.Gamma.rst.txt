@@ -34,16 +34,13 @@ Gamma
             ~Gamma.fit
         
         
-            ~Gamma.fit_from_interval_censored_lifetimes
-        
-        
-            ~Gamma.get_initial_params
-        
-        
             ~Gamma.hf
         
         
             ~Gamma.ichf
+        
+        
+            ~Gamma.init_likelihood
         
         
             ~Gamma.isf

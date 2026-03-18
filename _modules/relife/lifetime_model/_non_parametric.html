@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -419,17 +419,11 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">PlotECDF</span><span class="p">,</span>
-    <span class="n">PlotKaplanMeier</span><span class="p">,</span>
-    <span class="n">PlotNelsonAalen</span><span class="p">,</span>
-<span class="p">)</span>
-
 <span class="n">__all__</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ECDF&quot;</span><span class="p">,</span> <span class="s2">&quot;KaplanMeier&quot;</span><span class="p">,</span> <span class="s2">&quot;NelsonAalen&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="ECDF">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF">[docs]</a>
 <span class="nd">@final</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ECDF</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -444,7 +438,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ECDF.fit">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the non-parametric estimations with respect to lifetime data.</span>
@@ -494,7 +488,7 @@
     <span class="p">):</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ECDF.sf">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.sf">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.sf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
@@ -542,7 +536,7 @@
     <span class="p">):</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="ECDF.cdf">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.cdf">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.ECDF.html#relife.lifetime_model.ECDF.cdf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cdf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
@@ -572,12 +566,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotECDF</span>
+
         <span class="k">return</span> <span class="n">PlotECDF</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="KaplanMeier">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier">[docs]</a>
 <span class="nd">@final</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KaplanMeier</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Kaplan-Meier estimator.</span>
@@ -623,7 +619,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_sf</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="KaplanMeier.fit">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -692,7 +688,7 @@
     <span class="p">):</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="KaplanMeier.sf">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.sf">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html#relife.lifetime_model.KaplanMeier.sf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
@@ -722,12 +718,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotKaplanMeier</span>
+
         <span class="k">return</span> <span class="n">PlotKaplanMeier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="NelsonAalen">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen">[docs]</a>
 <span class="nd">@final</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">NelsonAalen</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Nelson-Aalen estimator.</span>
@@ -773,7 +771,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_chf</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NelsonAalen.fit">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -842,7 +840,7 @@
     <span class="p">):</span> <span class="o">...</span>
 
 <div class="viewcode-block" id="NelsonAalen.chf">
-<a class="viewcode-back" href="../../../api/non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.chf">[docs]</a>
+<a class="viewcode-back" href="../../../api/nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html#relife.lifetime_model.NelsonAalen.chf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">se</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
@@ -872,6 +870,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">._plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlotNelsonAalen</span>
+
         <span class="k">return</span> <span class="n">PlotNelsonAalen</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 </pre></div>

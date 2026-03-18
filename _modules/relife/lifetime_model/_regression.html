@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -127,7 +127,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -431,20 +431,32 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span><span class="p">,</span> <span class="n">override</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerConfig</span><span class="p">,</span> <span class="n">ParametricModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AnyFloat</span><span class="p">,</span>
     <span class="n">NumpyBool</span><span class="p">,</span>
     <span class="n">NumpyFloat</span><span class="p">,</span>
-    <span class="n">ScipyMinimizeOptions</span><span class="p">,</span>
     <span class="n">Seed</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FittableParametricLifetimeModel</span><span class="p">,</span> <span class="n">document_args</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">._distribution</span><span class="w"> </span><span class="kn">import</span> <span class="n">LifetimeDistribution</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">._frozen</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenParametricLifetimeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FittableParametricLifetimeModel</span><span class="p">,</span>
+    <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span>
+    <span class="n">LifetimeData</span><span class="p">,</span>
+    <span class="n">LifetimeLikelihood</span><span class="p">,</span>
+    <span class="n">document_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._distribution</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Gamma</span><span class="p">,</span>
+    <span class="n">LifetimeDistribution</span><span class="p">,</span>
+    <span class="n">get_distrib_params_bounds</span><span class="p">,</span>
+    <span class="n">init_distrib_params_from_lifetimes</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">__all__</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AcceleratedFailureTime&quot;</span><span class="p">,</span> <span class="s2">&quot;ProportionalHazard&quot;</span><span class="p">]</span>
+<span class="n">__all__</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ParametricAcceleratedFailureTime&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ParametricProportionalHazard&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_time_covar</span><span class="p">(</span>
@@ -459,7 +471,10 @@
             <span class="n">covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">case</span> <span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span> <span class="k">if</span> <span class="n">m1</span> <span class="o">!=</span> <span class="n">m2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Incompatible time and covar. time has </span><span class="si">{</span><span class="n">m1</span><span class="si">}</span><span class="s2"> nb_assets but covar has </span><span class="si">{</span><span class="n">m2</span><span class="si">}</span><span class="s2"> nb_assets&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                Incompatible time and covar. time has </span><span class="si">{</span><span class="n">m1</span><span class="si">}</span><span class="s2"> nb_assets but</span>
+<span class="s2">                covar has </span><span class="si">{</span><span class="n">m2</span><span class="si">}</span><span class="s2"> nb_assets</span>
+<span class="s2">                &quot;&quot;&quot;</span>
             <span class="p">)</span>
         <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -485,7 +500,10 @@
         <span class="k">case</span><span class="w"> </span><span class="p">[(</span><span class="n">mt</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="k">_</span><span class="p">)]</span> <span class="k">if</span> <span class="n">mt</span> <span class="o">!=</span> <span class="n">mc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">mt</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mc</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Invalid time and covar : time got </span><span class="si">{</span><span class="n">mt</span><span class="si">}</span><span class="s2"> nb assets but covar got </span><span class="si">{</span><span class="n">mc</span><span class="si">}</span><span class="s2"> nb assets&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    Invalid time and covar : time got </span><span class="si">{</span><span class="n">mt</span><span class="si">}</span><span class="s2"> nb assets but covar</span>
+<span class="s2">                    got </span><span class="si">{</span><span class="n">mc</span><span class="si">}</span><span class="s2"> nb assets</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
                 <span class="p">)</span>
             <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">mt</span><span class="p">,</span> <span class="n">mc</span><span class="p">),</span> <span class="n">n</span>
         <span class="k">case</span><span class="w"> </span><span class="p">[(</span><span class="n">mt</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="k">_</span><span class="p">)]</span> <span class="k">if</span> <span class="n">mt</span> <span class="o">==</span> <span class="n">mc</span><span class="p">:</span>
@@ -497,7 +515,7 @@
 
 
 <span class="nd">@final</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">CovarEffect</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearCovarEffect</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Covariates effect.</span>
 
@@ -540,12 +558,19 @@
         <span class="n">arr_covar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>  <span class="c1"># (), (nb_coef,) or (m, nb_coef)</span>
         <span class="k">if</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but</span>
+<span class="s2">                got </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span>
+<span class="s2">                &quot;&quot;&quot;</span>
             <span class="p">)</span>
         <span class="n">covar_nb_coef</span> <span class="o">=</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">size</span> <span class="k">if</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">covar_nb_coef</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_coef</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid covar. Number of covar does not match number of coefficients. Got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_coef</span><span class="si">}</span><span class="s2"> nb_coef but covar shape is </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                Invalid covar. Number of covar does not match number of</span>
+<span class="s2">                coefficients. Got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_coef</span><span class="si">}</span><span class="s2"> nb_coef but covar shape is</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">arr_covar</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span>
+<span class="s2">                &quot;&quot;&quot;</span>
             <span class="p">)</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">*</span> <span class="n">arr_covar</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># (m, 1)</span>
         <span class="k">if</span> <span class="n">arr_covar</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
@@ -580,20 +605,21 @@
         <span class="s2">&quot;covar&quot;</span><span class="p">,</span>
         <span class="s2">&quot;float or np.ndarray&quot;</span><span class="p">,</span>
         <span class="p">[</span>
-            <span class="s2">&quot;Covariates values. float can only be valid if the regression has one coefficients.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Covariates values.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;float can only be valid if the regression has one coefficients.&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.&quot;</span><span class="p">,</span>
         <span class="p">],</span>
     <span class="p">),</span>
 <span class="p">]</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">LifetimeRegression</span><span class="p">(</span><span class="n">FittableParametricLifetimeModel</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParametricLifetimeRegression</span><span class="p">(</span><span class="n">FittableParametricLifetimeModel</span><span class="p">[</span><span class="n">AnyFloat</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for lifetime regression.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">baseline</span><span class="p">:</span> <span class="n">LifetimeDistribution</span>
-    <span class="n">covar_effect</span><span class="p">:</span> <span class="n">CovarEffect</span>
+    <span class="n">covar_effect</span><span class="p">:</span> <span class="n">LinearCovarEffect</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -601,7 +627,7 @@
         <span class="n">coefficients</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,),</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">LinearCovarEffect</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
 
     <span class="nd">@property</span>
@@ -790,6 +816,21 @@
         <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="n">NumpyFloat</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
+    <span class="p">):</span> <span class="o">...</span>
     <span class="nd">@override</span>
     <span class="nd">@document_args</span><span class="p">(</span>
         <span class="n">base_cls</span><span class="o">=</span><span class="n">FittableParametricLifetimeModel</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
@@ -834,87 +875,84 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
     <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">params_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params_bounds</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span>  <span class="c1"># baseline has _params_bounds according to typing</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params_bounds</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">Bounds</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
-
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_initial_params</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_likelihood</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">args</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">event</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_args</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="n">param0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-        <span class="n">param0</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">get_initial_params</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">model_args</span>
+        <span class="n">entry</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LifetimeLikelihood</span><span class="p">[</span><span class="n">Self</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="n">regression</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)(),</span> <span class="n">coefficients</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>  <span class="c1"># init new regression object with appropriate number of covar</span>
+        <span class="n">lifetime_data</span> <span class="o">=</span> <span class="n">LifetimeData</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;x0&quot;</span><span class="p">,</span> <span class="n">init_regression_params_from_lifetimes</span><span class="p">(</span><span class="n">regression</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">param0</span>
+        <span class="n">regression</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">x0</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">OptimizerConfig</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;bounds&quot;</span><span class="p">,</span> <span class="n">get_regression_params_bounds</span><span class="p">(</span><span class="n">regression</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;covariance_method&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;2point&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regression</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;cs&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">LifetimeLikelihood</span><span class="p">(</span><span class="n">regression</span><span class="p">,</span> <span class="n">lifetime_data</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">optimizer</span>
 
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">model_args</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">args</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">event</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">entry</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">optimizer_options</span><span class="p">:</span> <span class="n">ScipyMinimizeOptions</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">model_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LifetimeRegression expects covar but model_args is None&quot;</span><span class="p">)</span>
-        <span class="n">covar</span> <span class="o">=</span> <span class="n">model_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span>
-            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">LinearCovarEffect</span><span class="p">(</span>
+            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">)</span>  <span class="c1"># changes params structure depending on number of covar</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-            <span class="n">time</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span>
-            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
-            <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">,</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">init_regression_params_from_lifetimes</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LifetimeData</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="n">param0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">param0</span><span class="p">[</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">size</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">init_distrib_params_from_lifetimes</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">data</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">param0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_regression_params_bounds</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ParametricLifetimeRegression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+    <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
+            <span class="n">get_distrib_params_bounds</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">baseline</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">lb</span><span class="p">,</span>  <span class="c1"># baseline has _params_bounds according to typing</span>
         <span class="p">)</span>
-
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">time_inf</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">time_sup</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">model_args</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">entry</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">optimizer_options</span><span class="p">:</span> <span class="n">ScipyMinimizeOptions</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">model_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LifetimeRegression expects covar but model_args is None&quot;</span><span class="p">)</span>
-        <span class="n">covar</span> <span class="o">=</span> <span class="n">model_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span> <span class="o">=</span> <span class="n">CovarEffect</span><span class="p">(</span>
-            <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">covar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>  <span class="c1"># changes params structure depending on number of covar</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_from_interval_censored_lifetimes</span><span class="p">(</span>
-            <span class="n">time_inf</span><span class="p">,</span>
-            <span class="n">time_sup</span><span class="p">,</span>
-            <span class="n">model_args</span><span class="o">=</span><span class="n">model_args</span><span class="p">,</span>
-            <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="p">,</span>
-            <span class="n">optimizer_options</span><span class="o">=</span><span class="n">optimizer_options</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">nb_params</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
+            <span class="n">get_distrib_params_bounds</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span><span class="o">.</span><span class="n">ub</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Bounds</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ProportionalHazard">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard">[docs]</a>
 <span class="nd">@final</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ProportionalHazard</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParametricProportionalHazard</span><span class="p">(</span><span class="n">ParametricLifetimeRegression</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Proportional Hazard regression.</span>
 
@@ -965,42 +1003,52 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ProportionalHazard.hf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.hf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.hf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.hf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ProportionalHazard.chf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.chf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.chf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.chf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ProportionalHazard.ichf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.ichf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.ichf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.ichf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="ProportionalHazard.dhf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.dhf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.dhf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.dhf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ProportionalHazard.jac_hf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_hf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.jac_hf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.jac_hf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
@@ -1035,10 +1083,12 @@
         <span class="k">return</span> <span class="n">jac</span></div>
 
 
-<div class="viewcode-block" id="ProportionalHazard.jac_chf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ProportionalHazard.html#relife.lifetime_model.ProportionalHazard.jac_chf">[docs]</a>
+<div class="viewcode-block" id="ParametricProportionalHazard.jac_chf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html#relife.lifetime_model.ParametricProportionalHazard.jac_chf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
@@ -1074,10 +1124,10 @@
 
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime">[docs]</a>
 <span class="nd">@final</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">AcceleratedFailureTime</span><span class="p">(</span><span class="n">LifetimeRegression</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParametricAcceleratedFailureTime</span><span class="p">(</span><span class="n">ParametricLifetimeRegression</span><span class="p">):</span>
     <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accelerated failure time regression.</span>
@@ -1129,45 +1179,55 @@
 <span class="sd">    regression.ProportionalHazard : proportional hazard regression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="AcceleratedFailureTime.hf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.hf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.hf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.hf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime.chf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.chf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.chf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.chf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime.ichf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.ichf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.ichf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.ichf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ichf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cumulative_hazard_rate</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">ichf</span><span class="p">(</span><span class="n">cumulative_hazard_rate</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime.dhf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.dhf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.dhf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.dhf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dhf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span> <span class="n">covar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">dhf</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">covar_effect</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">covar</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span></div>
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime.jac_hf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_hf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.jac_hf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.jac_hf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_hf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
@@ -1205,10 +1265,12 @@
         <span class="k">return</span> <span class="n">jac</span></div>
 
 
-<div class="viewcode-block" id="AcceleratedFailureTime.jac_chf">
-<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.AcceleratedFailureTime.html#relife.lifetime_model.AcceleratedFailureTime.jac_chf">[docs]</a>
+<div class="viewcode-block" id="ParametricAcceleratedFailureTime.jac_chf">
+<a class="viewcode-back" href="../../../api/parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html#relife.lifetime_model.ParametricAcceleratedFailureTime.jac_chf">[docs]</a>
     <span class="nd">@override</span>
-    <span class="nd">@document_args</span><span class="p">(</span><span class="n">base_cls</span><span class="o">=</span><span class="n">LifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span><span class="p">)</span>
+    <span class="nd">@document_args</span><span class="p">(</span>
+        <span class="n">base_cls</span><span class="o">=</span><span class="n">ParametricLifetimeRegression</span><span class="p">,</span> <span class="n">args_docstring</span><span class="o">=</span><span class="n">_covar_docstring</span>
+    <span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jac_chf</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">time</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>

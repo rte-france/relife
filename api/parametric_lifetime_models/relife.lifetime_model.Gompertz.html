@@ -59,7 +59,7 @@
     <link rel="prev" title="Weibull" href="relife.lifetime_model.Weibull.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -371,7 +371,9 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.MaximumLikelihoodOptimizer.html">MaximumLikelihoodOptimizer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
@@ -380,18 +382,23 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricAcceleratedFailureTime.html">ParametricAcceleratedFailureTime</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Semiparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html">SemiParametricProportionalHazard</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nonparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -423,13 +430,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.legendre_quadrature.html">legendre_quadrature</a></li>
@@ -558,13 +569,7 @@ If the model is not fitted, the value is None.</p>
 <td><p>The derivate of the hazard function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.fit" title="relife.lifetime_model.Gompertz.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Estimation of the distribution parameters from lifetime data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.fit_from_interval_censored_lifetimes" title="relife.lifetime_model.Gompertz.fit_from_interval_censored_lifetimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_from_interval_censored_lifetimes</span></code></a></p></td>
-<td><p>Estimation of the distribution parameters from interval censored lifetime data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.get_initial_params" title="relife.lifetime_model.Gompertz.get_initial_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_initial_params</span></code></a></p></td>
-<td><p>Gets the inital parameters values used in before fitting.</p></td>
+<td><p>Estimation of parameters from lifetime data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.hf" title="relife.lifetime_model.Gompertz.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
 <td><p>The hazard function.</p></td>
@@ -572,52 +577,55 @@ If the model is not fitted, the value is None.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.ichf" title="relife.lifetime_model.Gompertz.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
 <td><p>Inverse cumulative hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.isf" title="relife.lifetime_model.Gompertz.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.init_likelihood" title="relife.lifetime_model.Gompertz.init_likelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_likelihood</span></code></a></p></td>
+<td><p>Initialize the lifetime likelihood used to fit the parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.isf" title="relife.lifetime_model.Gompertz.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
 <td><p>The inverse survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_cdf" title="relife.lifetime_model.Gompertz.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_cdf" title="relife.lifetime_model.Gompertz.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_chf" title="relife.lifetime_model.Gompertz.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_chf" title="relife.lifetime_model.Gompertz.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
 <td><p>The jacobian of the cumulative hazard function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_hf" title="relife.lifetime_model.Gompertz.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_hf" title="relife.lifetime_model.Gompertz.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
 <td><p>The jacobian of the hazard function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_pdf" title="relife.lifetime_model.Gompertz.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_pdf" title="relife.lifetime_model.Gompertz.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
 <td><p>The jacobian of the probability density function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_sf" title="relife.lifetime_model.Gompertz.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.jac_sf" title="relife.lifetime_model.Gompertz.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
 <td><p>The jacobian of the survival function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.ls_integrate" title="relife.lifetime_model.Gompertz.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.ls_integrate" title="relife.lifetime_model.Gompertz.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
 <td><p>Lebesgue-Stieltjes integration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.mean" title="relife.lifetime_model.Gompertz.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.mean" title="relife.lifetime_model.Gompertz.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
 <td><p>The mean of the distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.median" title="relife.lifetime_model.Gompertz.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.median" title="relife.lifetime_model.Gompertz.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
 <td><p>The median.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.moment" title="relife.lifetime_model.Gompertz.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.moment" title="relife.lifetime_model.Gompertz.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
 <td><p>n-th order moment.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.mrl" title="relife.lifetime_model.Gompertz.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.mrl" title="relife.lifetime_model.Gompertz.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
 <td><p>The mean residual life function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.pdf" title="relife.lifetime_model.Gompertz.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.pdf" title="relife.lifetime_model.Gompertz.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
 <td><p>The probability density function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.ppf" title="relife.lifetime_model.Gompertz.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.ppf" title="relife.lifetime_model.Gompertz.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
 <td><p>The percent point function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.rvs" title="relife.lifetime_model.Gompertz.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.rvs" title="relife.lifetime_model.Gompertz.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
 <td><p>Random variable sampling.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.sf" title="relife.lifetime_model.Gompertz.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.sf" title="relife.lifetime_model.Gompertz.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The survival function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.var" title="relife.lifetime_model.Gompertz.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.Gompertz.var" title="relife.lifetime_model.Gompertz.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
 <td><p>The variance of the distribution.</p></td>
 </tr>
 </tbody>
@@ -688,31 +696,27 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gompertz.fit" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of the distribution parameters from lifetime data.</p>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gompertz.fit" title="Link to this definition">#</a></dt>
+<dd><p>Estimation of parameters from lifetime data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
 </dd>
-<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
+<dt><strong>args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Additional arguments required by the model (e.g. covar).</p>
 </dd>
 <dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
 </dd>
 <dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
 </dd>
-<dt><strong>optimizer_options</strong><span class="classifier">dict, default is None</span></dt><dd><dl class="simple">
-<dt>Extra arguments used by <cite>scipy.minimize</cite>. Default values are:</dt><dd><ul class="simple">
-<li><p><cite>method</cite> : <cite>“L-BFGS-B”</cite></p></li>
-<li><p><cite>contraints</cite> : <cite>()</cite></p></li>
-<li><p><cite>tol</cite> : <cite>None</cite></p></li>
-<li><p><cite>callback</cite> : <cite>None</cite></p></li>
-<li><p><cite>options</cite> : <cite>None</cite></p></li>
-<li><p><cite>bounds</cite> : <cite>self.params_bounds</cite></p></li>
-<li><p><cite>x0</cite> : <cite>self.init_params</cite></p></li>
-</ul>
-</dd>
-</dl>
+<dt><strong>**kwargs</strong></dt><dd><p>Extra arguments used by <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">scipy.optimize.minimize</a>
+to search for the paremeters that minimize the negative
+log-likelihood. <cite>covariance_method</cite> can also be passed to control
+the method used to estimate parameters covariance. Values can be
+<cite>“cs”</cite>, <cite>“2point”</cite>, <cite>“exact”</cite> or <cite>False</cite>. To skip parameters
+covariance estimation, set <cite>covariance_method</cite> to <cite>False</cite>,
+otherwise the default method associated to the model will be used.
+If <cite>covariance_method</cite> is <cite>“exact”</cite> the <cite>hess</cite> must be passed too.</p>
 </dd>
 </dl>
 </dd>
@@ -720,71 +724,6 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 <dd class="field-even"><dl class="simple">
 <dt><strong>out</strong><span class="classifier">the object instance</span></dt><dd><p>The estimated parameters are setted inplace.</p>
 </dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.fit_from_interval_censored_lifetimes">
-<span class="sig-name descname"><span class="pre">fit_from_interval_censored_lifetimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_sup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gompertz.fit_from_interval_censored_lifetimes" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of the distribution parameters from interval censored lifetime data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>time_inf</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime lower bounds.</p>
-</dd>
-<dt><strong>time_sup</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime upper bounds.</p>
-</dd>
-<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
-</dd>
-<dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
-</dd>
-<dt><strong>optimizer_options</strong><span class="classifier">dict, default is None</span></dt><dd><dl class="simple">
-<dt>Extra arguments used by <cite>scipy.minimize</cite>. Default values are:</dt><dd><ul class="simple">
-<li><p><cite>method</cite> : <cite>“L-BFGS-B”</cite></p></li>
-<li><p><cite>contraints</cite> : <cite>()</cite></p></li>
-<li><p><cite>tol</cite> : <cite>None</cite></p></li>
-<li><p><cite>callback</cite> : <cite>None</cite></p></li>
-<li><p><cite>options</cite> : <cite>None</cite></p></li>
-<li><p><cite>bounds</cite> : <cite>self.params_bounds</cite></p></li>
-<li><p><cite>x0</cite> : <cite>self.init_params</cite></p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">the object instance</span></dt><dd><p>The estimated parameters are setted inplace.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Where <cite>time_inf == time_sup</cite>, lifetimes are complete.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.get_initial_params">
-<span class="sig-name descname"><span class="pre">get_initial_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_distribution.html#Gompertz.get_initial_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.Gompertz.get_initial_params" title="Link to this definition">#</a></dt>
-<dd><p>Gets the inital parameters values used in before fitting.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
-</dd>
-<dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.
-If it is not None, it will be used to select only complete lifetimes.</p>
-</dd>
-<dt><strong>model_args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Any additional arguments required by the model.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">1d array of float</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -827,6 +766,64 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 <dd class="field-even"><dl class="simple">
 <dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ichf values at each given cumulative hazard rate(s).</p>
 </dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.init_likelihood">
+<span class="sig-name descname"><span class="pre">init_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.Gompertz.init_likelihood" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the lifetime likelihood used to fit the parameters.</p>
+<p><cite>fit</cite> method is the preferred way to fit model parameters. However,
+users can also interact with the likelihood returned by
+<cite>init_likelihood</cite> to study the optimization process.</p>
+<dl class="simple">
+<dt>This method implementation is usally composed of 3 steps:</dt><dd><ol class="arabic simple">
+<li><p>Initialize an object to preprocess and encapsulate observation values.</p></li>
+<li><p>Create a <cite>OptimizerConfig</cite> config instance depending on the model needs.</p></li>
+<li><p>Instanciate and return a LifetimeLikelihood.</p></li>
+</ol>
+</dd>
+</dl>
+<p><cite>init_likelihood</cite> is separated from <cite>fit</cite> in order to reuse existing
+likelihood parametrization in case of model composition. Any parameters
+initialization needed by the likelihood optimizer (e.g. <cite>x0</cite> or
+<cite>bounds</cite> as required in step 2.) are left to specific functions
+alongside concrete model implementations. These functions are invoked
+within <cite>init_likelihood</cite>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
+</dd>
+<dt><strong>args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Additional arguments required by the model (e.g. covar).</p>
+</dd>
+<dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
+</dd>
+<dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Extra arguments to control the parameters optimization. It can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>those used by <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">scipy.optimize.minimize</a>
+to search for the paremeters that minimize the negative
+log-likelihood.</p></li>
+<li><p><cite>covariance_method</cite> to control the method used to estimate
+parameters covariance. Values can be <cite>“cs”</cite>, <cite>“2point”</cite>,
+<cite>“exact”</cite> or <cite>False</cite>. To skip parameters covariance
+estimation, set <cite>covariance_method</cite> to <cite>False</cite>, otherwise the
+default method associated to the model will be used. If
+<cite>covariance_method</cite> is <cite>“exact”</cite> the <cite>hess</cite> must be passed
+too.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">LifetimeLikelihood instance</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -970,11 +967,13 @@ an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.<
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output.</p>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one
+ndarray object as output.</p>
 </dd>
 <dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use
+np.inf as value.</p>
 </dd>
 <dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation.</p>
 </dd>
@@ -1086,12 +1085,6 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.params_bounds">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">params_bounds</span></span><a class="headerlink" href="#relife.lifetime_model.Gompertz.params_bounds" title="Link to this definition">#</a></dt>
-<dd><p>Parameters bounds</p>
-</dd></dl>
-
-<dl class="py property">
 <dt class="sig sig-object py" id="relife.lifetime_model.Gompertz.params_names">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.lifetime_model.Gompertz.params_names" title="Link to this definition">#</a></dt>
 <dd><p>Parameters names.</p>
@@ -1177,18 +1170,22 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 <dd class="field-odd"><dl class="simple">
 <dt><strong>size</strong><span class="classifier">int or tuple (m, n) of int</span></dt><dd><p>Size of the generated sample.</p>
 </dd>
-<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
+<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time
+values.</p>
 </dd>
-<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time
+values.</p>
 </dd>
-<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</p>
+<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If
+np.random.RandomState or np.random.Generator, use as given.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is True, returns a tuple containing
-the time values followed by event values, entry values or both.</p>
+<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is
+True, returns a tuple containing the time values followed by event
+values, entry values or both.</p>
 </dd>
 </dl>
 </dd>
@@ -1274,10 +1271,9 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.chf"><code class="docutils literal notranslate"><span class="pre">Gompertz.chf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.dhf"><code class="docutils literal notranslate"><span class="pre">Gompertz.dhf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.fit"><code class="docutils literal notranslate"><span class="pre">Gompertz.fit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.fit_from_interval_censored_lifetimes"><code class="docutils literal notranslate"><span class="pre">Gompertz.fit_from_interval_censored_lifetimes()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.get_initial_params"><code class="docutils literal notranslate"><span class="pre">Gompertz.get_initial_params()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.hf"><code class="docutils literal notranslate"><span class="pre">Gompertz.hf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.ichf"><code class="docutils literal notranslate"><span class="pre">Gompertz.ichf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.init_likelihood"><code class="docutils literal notranslate"><span class="pre">Gompertz.init_likelihood()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.isf"><code class="docutils literal notranslate"><span class="pre">Gompertz.isf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.jac_cdf"><code class="docutils literal notranslate"><span class="pre">Gompertz.jac_cdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.jac_chf"><code class="docutils literal notranslate"><span class="pre">Gompertz.jac_chf()</span></code></a></li>
@@ -1291,7 +1287,6 @@ If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.mrl"><code class="docutils literal notranslate"><span class="pre">Gompertz.mrl()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.nb_params"><code class="docutils literal notranslate"><span class="pre">Gompertz.nb_params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.params"><code class="docutils literal notranslate"><span class="pre">Gompertz.params</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.params_bounds"><code class="docutils literal notranslate"><span class="pre">Gompertz.params_bounds</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.params_names"><code class="docutils literal notranslate"><span class="pre">Gompertz.params_names</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.pdf"><code class="docutils literal notranslate"><span class="pre">Gompertz.pdf()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.Gompertz.plot"><code class="docutils literal notranslate"><span class="pre">Gompertz.plot</span></code></a></li>

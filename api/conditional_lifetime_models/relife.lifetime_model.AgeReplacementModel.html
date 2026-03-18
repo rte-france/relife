@@ -50,16 +50,16 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="KaplanMeier" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html" />
+    <link rel="next" title="RenewalProcess" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html" />
     <link rel="prev" title="LeftTruncatedModel" href="relife.lifetime_model.LeftTruncatedModel.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -371,27 +371,34 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.MaximumLikelihoodOptimizer.html">MaximumLikelihoodOptimizer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gompertz.html">Gompertz</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gamma.html">Gamma</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html">ParametricAcceleratedFailureTime</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Semiparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html">SemiParametricProportionalHazard</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nonparametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">AgeReplacementModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -423,13 +430,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.legendre_quadrature.html">legendre_quadrature</a></li>
@@ -501,8 +512,9 @@
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">AgeReplacementModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel" title="Link to this definition">#</a></dt>
 <dd><p>Age replacement model.</p>
-<p>Lifetime model where the assets are replaced at age <span class="math notranslate nohighlight">\(a_r\)</span>. This is equivalent to the model of <span class="math notranslate nohighlight">\(\min(X,a_r)\)</span> where
-<span class="math notranslate nohighlight">\(X\)</span> is a baseline lifetime and <span class="math notranslate nohighlight">\(a_r\)</span> is the age of replacement.</p>
+<p>Lifetime model where the assets are replaced at age <span class="math notranslate nohighlight">\(a_r\)</span>. This is
+equivalent to the model of <span class="math notranslate nohighlight">\(\min(X,a_r)\)</span> where <span class="math notranslate nohighlight">\(X\)</span> is a
+baseline lifetime and <span class="math notranslate nohighlight">\(a_r\)</span> is the age of replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -582,14 +594,17 @@
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.cdf">
 <span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.cdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.cdf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative density function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -608,14 +623,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.chf">
 <span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.chf" title="Link to this definition">#</a></dt>
 <dd><p>The cumulative hazard function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -656,14 +674,17 @@ as only one age of replacement per asset can be given</p>
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.hf">
 <span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.hf" title="Link to this definition">#</a></dt>
 <dd><p>The hazard function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -682,14 +703,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.ichf">
 <span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.ichf" title="Link to this definition">#</a></dt>
 <dd><p>Inverse cumulative hazard function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -708,14 +732,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.isf">
 <span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.isf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.isf" title="Link to this definition">#</a></dt>
 <dd><p>The inverse survival function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -734,17 +761,22 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.ls_integrate">
 <span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.ls_integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.ls_integrate" title="Link to this definition">#</a></dt>
 <dd><p>Lebesgue-Stieltjes integration.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output.</p>
+<dd class="field-odd"><dl>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one
+ndarray object as output.</p>
 </dd>
 <dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use
+np.inf as value.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -765,11 +797,14 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.mean">
 <span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.mean" title="Link to this definition">#</a></dt>
 <dd><p>The mean of the distribution.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dd class="field-odd"><dl>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -787,11 +822,14 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.median">
 <span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.median"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.median" title="Link to this definition">#</a></dt>
 <dd><p>The median.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dd class="field-odd"><dl>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -809,13 +847,16 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.moment">
 <span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.moment" title="Link to this definition">#</a></dt>
 <dd><p>n-th order moment.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>order of the moment, at least 1.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -833,14 +874,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.mrl">
 <span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.mrl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.mrl" title="Link to this definition">#</a></dt>
 <dd><p>The mean residual life function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -905,14 +949,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.pdf">
 <span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.pdf" title="Link to this definition">#</a></dt>
 <dd><p>The probability density function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -937,14 +984,17 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.ppf">
 <span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.ppf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.ppf" title="Link to this definition">#</a></dt>
 <dd><p>The percent point function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -963,48 +1013,56 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.rvs">
 <span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.rvs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.rvs" title="Link to this definition">#</a></dt>
 <dd><p>Random variable sampling.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>size</strong><span class="classifier">int or tuple (m, n) of int</span></dt><dd><p>Size of the generated sample.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values. If ndarray, shape can only be (m,)
-as only one age of replacement per asset can be given</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
+<dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
-<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
+<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time
+values.</p>
 </dd>
-<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time
+values.</p>
 </dd>
-<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</p>
+<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If
+np.random.RandomState or np.random.Generator, use as given.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float, ndarray or tuple of float or ndarray</dt><dd><p>The sample values. If either <code class="docutils literal notranslate"><span class="pre">return_event</span></code> or <code class="docutils literal notranslate"><span class="pre">return_entry</span></code> is True, returns a tuple containing
-the time values followed by event values, entry values or both.</p>
+<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is
+True, returns a tuple containing the time values followed by event
+values, entry values or both.</p>
 </dd>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">return_entry</span></code> is true, returned time values are not residual time. Otherwise, the times are residuals</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.sf">
 <span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.sf" title="Link to this definition">#</a></dt>
 <dd><p>The survival function.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
 If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
 </dd>
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -1023,11 +1081,14 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
 <dt class="sig sig-object py" id="relife.lifetime_model.AgeReplacementModel.var">
 <span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ar</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_conditional_model.html#AgeReplacementModel.var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.AgeReplacementModel.var" title="Link to this definition">#</a></dt>
 <dd><p>The variance of the distribution.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.
-If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacement per asset can be given.</p>
+<dd class="field-odd"><dl>
+<dt><strong>ar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Age of replacement values.</p>
+<blockquote>
+<div><p>If ndarray, shape can only be <cite>(m,)</cite> because only one age of
+replacement per asset can be given.</p>
+</div></blockquote>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
@@ -1098,7 +1159,7 @@ If ndarray, shape can only be <cite>(m,)</cite> because only one age of replacem
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/parametric_lifetime_models/relife.lifetime_model.AgeReplacementModel.rst.txt"
+      <li><a href="../../_sources/api/conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

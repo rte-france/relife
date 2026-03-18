@@ -1,6 +1,0 @@
-﻿is\_frozen
-==========
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: is_frozen

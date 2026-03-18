@@ -14,6 +14,7 @@ We divided the API documentation close to the same logic.
     :nosignatures:
 
     ParametricModel
+    MaximumLikelihoodOptimizer
 
 Lifetime models
 ---------------
@@ -28,6 +29,7 @@ Parametric lifetime models
 .. autosummary::
     :toctree: parametric_lifetime_models
     :template: class_template.rst
+    :caption: Parametric lifetime models
     :nosignatures:
 
     Exponential
@@ -43,32 +45,50 @@ Parametric lifetime models
     :template: class_template.rst
     :nosignatures:
 
-    ProportionalHazard
-    AcceleratedFailureTime
+    ParametricProportionalHazard
+    ParametricAcceleratedFailureTime
 
-.. rubric:: Conditional lifetime models
+
+Semiparametric lifetime models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-    :toctree: parametric_lifetime_models
+    :toctree: semiparametric_lifetime_models
     :template: class_template.rst
+    :caption: Semiparametric lifetime models
     :nosignatures:
 
-    LeftTruncatedModel
-    AgeReplacementModel
+    SemiParametricProportionalHazard
 
 
 Non parametric lifetime models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
-    :toctree: non_parametric_lifetime_models
+    :toctree: nonparametric_lifetime_models
     :template: class_template.rst
-    :caption: Non parametric lifetime models
+    :caption: Nonparametric lifetime models
     :nosignatures:
 
     KaplanMeier
     NelsonAalen
     ECDF
+
+
+Conditional lifetime models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rubric:: Conditional lifetime models
+
+.. autosummary::
+    :toctree: conditional_lifetime_models
+    :template: class_template.rst
+    :caption: Conditional lifetime models
+    :nosignatures:
+
+    LeftTruncatedModel
+    AgeReplacementModel
+
 
 Stochastic processes
 --------------------
@@ -129,8 +149,8 @@ Economy
     AgeReplacementReward
     ExponentialDiscounting
 
-Built-in dataset
-----------------
+Built-in datasets
+-----------------
 
 .. currentmodule:: relife.data
 
@@ -143,6 +163,24 @@ Built-in dataset
     ~load_circuit_breaker
     ~load_insulator_string
     ~load_power_transformer
+
+
+Likelihoods
+-----------
+
+.. currentmodule:: relife.lifetime_model
+
+.. autosummary::
+    :toctree: likelihoods
+    :template: class_template.rst
+    :caption: Likelihoods
+    :nosignatures:
+
+    LifetimeLikelihood
+    CoxPartialLifetimeLikelihood
+    EfronPartialLifetimeLikelihood
+    BreslowPartialLifetimeLikelihood
+
 
 Utils
 -----
@@ -159,9 +197,6 @@ Various utilities to help with development.
 
     ~reshape_1d_arg
     ~get_args_nb_assets
-    ~is_frozen
-    ~is_lifetime_model
-    ~is_non_homogeneous_poisson_process
 
 Quadrature utilities used a many computations. We don't use Scipy quadrature implementations as, to our knowledge, they don't
 support automatic broadcasting of 2D bounds.

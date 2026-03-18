@@ -1,0 +1,1504 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ParametricProportionalHazard &#8212; ReLife documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=a8af75d9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard';</script>
+    <script src="../../_static/custom-icon.js?v=74687d30"></script>
+    <link rel="icon" href="../../_static/relife_favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ParametricAcceleratedFailureTime" href="relife.lifetime_model.ParametricAcceleratedFailureTime.html" />
+    <link rel="prev" title="LogLogistic" href="relife.lifetime_model.LogLogistic.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/small_relife.gif" class="logo__image only-light" alt="ReLife documentation - Home"/>
+    <img src="../../_static/small_relife.gif" class="logo__image only-dark pst-js-only" alt="ReLife documentation - Home"/>
+  
+  
+</a></div>
+    
+      <div class="navbar-item"><!-- This will display the version of the docs -->
+2.5.3.dev1+g158fba577</div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basic/index.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../basic/index.html">
+    Basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer/index.html">
+    For developers
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.MaximumLikelihoodOptimizer.html">MaximumLikelihoodOptimizer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">ParametricProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ParametricAcceleratedFailureTime.html">ParametricAcceleratedFailureTime</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Semiparametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html">SemiParametricProportionalHazard</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nonparametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalProcess.html">RenewalProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.RenewalRewardProcess.html">RenewalRewardProcess</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_process.NonHomogeneousPoissonProcess.html">NonHomogeneousPoissonProcess</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.age_replacement_policy.html">age_replacement_policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.run_to_failure_policy.html">run_to_failure_policy</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policy.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.RunToFailureReward.html">RunToFailureReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.AgeReplacementReward.html">AgeReplacementReward</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../economy/relife.economic.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.legendre_quadrature.html">legendre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.laguerre_quadrature.html">laguerre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ParametricProportionalHazard</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="parametricproportionalhazard">
+<h1>ParametricProportionalHazard<a class="headerlink" href="#parametricproportionalhazard" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.lifetime_model.</span></span><span class="sig-name descname"><span class="pre">ParametricProportionalHazard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard" title="Link to this definition">#</a></dt>
+<dd><p>Proportional Hazard regression.</p>
+<p>The cumulative hazard function <span class="math notranslate nohighlight">\(H\)</span> is linked to the multiplier
+function <span class="math notranslate nohighlight">\(g\)</span> by the relation:</p>
+<div class="math notranslate nohighlight">
+\[H(t, x) = g(\beta, x) H_0(t) = e^{\beta \cdot x} H_0(t)\]</div>
+<p>where <span class="math notranslate nohighlight">\(x\)</span> is a vector of covariates, <span class="math notranslate nohighlight">\(\beta\)</span> is the coefficient
+vector of the effect of covariates, <span class="math notranslate nohighlight">\(H_0\)</span> is the baseline cumulative
+hazard function <a class="reference internal" href="#rc016cbbecc49-1" id="id1">[1]</a>.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>baseline</strong><span class="classifier">FittableParametricLifetimeModel</span></dt><dd><p>Any lifetime model that can be fitted.</p>
+</dd>
+<dt><strong>coefficients</strong><span class="classifier">tuple of floats (values can be None), default is (None,)</span></dt><dd><p>Coefficients values of the covariate effects.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>baseline</strong><span class="classifier">FittableParametricLifetimeModel</span></dt><dd><p>The regression baseline model (lifetime model).</p>
+</dd>
+<dt><strong>covar_effect</strong><span class="classifier">_CovarEffect</span></dt><dd><p>The regression covariate effect.</p>
+</dd>
+<dt><strong>fitting_results</strong><span class="classifier">FittingResults, default is None</span></dt><dd><p>An object containing fitting results (AIC, BIC, etc.).
+If the model is not fitted, the value is None.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.coefficients" title="relife.lifetime_model.ParametricProportionalHazard.coefficients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coefficients</span></code></a></dt><dd><p>Returns the coefficients values.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.nb_params" title="relife.lifetime_model.ParametricProportionalHazard.nb_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nb_params</span></code></a></dt><dd><p>Number of parameters.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.params" title="relife.lifetime_model.ParametricProportionalHazard.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></dt><dd><p>Parameters values.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.params_names" title="relife.lifetime_model.ParametricProportionalHazard.params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params_names</span></code></a></dt><dd><p>Parameters names.</p>
+</dd>
+<dt><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.plot" title="relife.lifetime_model.ParametricProportionalHazard.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a></dt><dd><p>Provides access to plotting functionnalities</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">regression.AFT</span></code></dt><dd><p>Accelerated Failure Time regression.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rc016cbbecc49-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Sun, J. (2006). The statistical analysis of interval-censored failure
+time data (Vol. 3, No. 1). New York: springer.</p>
+</div>
+</div>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.cdf" title="relife.lifetime_model.ParametricProportionalHazard.cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdf</span></code></a></p></td>
+<td><p>The cumulative density function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.chf" title="relife.lifetime_model.ParametricProportionalHazard.chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chf</span></code></a></p></td>
+<td><p>The cumulative hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.dhf" title="relife.lifetime_model.ParametricProportionalHazard.dhf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dhf</span></code></a></p></td>
+<td><p>The derivate of the hazard function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.fit" title="relife.lifetime_model.ParametricProportionalHazard.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Estimation of parameters from lifetime data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.freeze" title="relife.lifetime_model.ParametricProportionalHazard.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
+<td><p>Freeze regression covar.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.hf" title="relife.lifetime_model.ParametricProportionalHazard.hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hf</span></code></a></p></td>
+<td><p>The hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.ichf" title="relife.lifetime_model.ParametricProportionalHazard.ichf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ichf</span></code></a></p></td>
+<td><p>Inverse cumulative hazard function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.init_likelihood" title="relife.lifetime_model.ParametricProportionalHazard.init_likelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_likelihood</span></code></a></p></td>
+<td><p>Initialize the lifetime likelihood used to fit the parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.isf" title="relife.lifetime_model.ParametricProportionalHazard.isf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isf</span></code></a></p></td>
+<td><p>The inverse survival function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.jac_cdf" title="relife.lifetime_model.ParametricProportionalHazard.jac_cdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_cdf</span></code></a></p></td>
+<td><p>The jacobian of the cumulative density function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.jac_chf" title="relife.lifetime_model.ParametricProportionalHazard.jac_chf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_chf</span></code></a></p></td>
+<td><p>The jacobian of the cumulative hazard function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.jac_hf" title="relife.lifetime_model.ParametricProportionalHazard.jac_hf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_hf</span></code></a></p></td>
+<td><p>The jacobian of the hazard function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.jac_pdf" title="relife.lifetime_model.ParametricProportionalHazard.jac_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_pdf</span></code></a></p></td>
+<td><p>The jacobian of the probability density function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.jac_sf" title="relife.lifetime_model.ParametricProportionalHazard.jac_sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jac_sf</span></code></a></p></td>
+<td><p>The jacobian of the survival function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.ls_integrate" title="relife.lifetime_model.ParametricProportionalHazard.ls_integrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ls_integrate</span></code></a></p></td>
+<td><p>Lebesgue-Stieltjes integration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.mean" title="relife.lifetime_model.ParametricProportionalHazard.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<td><p>The mean of the distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.median" title="relife.lifetime_model.ParametricProportionalHazard.median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code></a></p></td>
+<td><p>The median.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.moment" title="relife.lifetime_model.ParametricProportionalHazard.moment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moment</span></code></a></p></td>
+<td><p>n-th order moment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.mrl" title="relife.lifetime_model.ParametricProportionalHazard.mrl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mrl</span></code></a></p></td>
+<td><p>The mean residual life function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.pdf" title="relife.lifetime_model.ParametricProportionalHazard.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<td><p>The probability density function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.ppf" title="relife.lifetime_model.ParametricProportionalHazard.ppf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppf</span></code></a></p></td>
+<td><p>The percent point function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.rvs" title="relife.lifetime_model.ParametricProportionalHazard.rvs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rvs</span></code></a></p></td>
+<td><p>Random variable sampling.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.sf" title="relife.lifetime_model.ParametricProportionalHazard.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<td><p>The survival function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_model.ParametricProportionalHazard.var" title="relife.lifetime_model.ParametricProportionalHazard.var"><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code></a></p></td>
+<td><p>The variance of the distribution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.cdf">
+<span class="sig-name descname"><span class="pre">cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.cdf" title="Link to this definition">#</a></dt>
+<dd><p>The cumulative density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>cdf values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.chf">
+<span class="sig-name descname"><span class="pre">chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.chf" title="Link to this definition">#</a></dt>
+<dd><p>The cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>chf values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.coefficients">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">coefficients</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.coefficients" title="Link to this definition">#</a></dt>
+<dd><p>Returns the coefficients values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.dhf">
+<span class="sig-name descname"><span class="pre">dhf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.dhf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.dhf" title="Link to this definition">#</a></dt>
+<dd><p>The derivate of the hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.fit" title="Link to this definition">#</a></dt>
+<dd><p>Estimation of parameters from lifetime data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
+</dd>
+<dt><strong>args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Additional arguments required by the model (e.g. covar).</p>
+</dd>
+<dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
+</dd>
+<dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Extra arguments used by <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">scipy.optimize.minimize</a>
+to search for the paremeters that minimize the negative
+log-likelihood. <cite>covariance_method</cite> can also be passed to control
+the method used to estimate parameters covariance. Values can be
+<cite>“cs”</cite>, <cite>“2point”</cite>, <cite>“exact”</cite> or <cite>False</cite>. To skip parameters
+covariance estimation, set <cite>covariance_method</cite> to <cite>False</cite>,
+otherwise the default method associated to the model will be used.
+If <cite>covariance_method</cite> is <cite>“exact”</cite> the <cite>hess</cite> must be passed too.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">the object instance</span></dt><dd><p>The estimated parameters are setted inplace.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.freeze">
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.freeze" title="Link to this definition">#</a></dt>
+<dd><p>Freeze regression covar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values. float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>out: frozen regression</dt><dd><p>The same object but with <cite>covar</cite> stored as object data. Calling methods
+from the frozen regression does not need <cite>covar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.hf">
+<span class="sig-name descname"><span class="pre">hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.hf" title="Link to this definition">#</a></dt>
+<dd><p>The hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>hf values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.ichf">
+<span class="sig-name descname"><span class="pre">ichf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cumulative_hazard_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.ichf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.ichf" title="Link to this definition">#</a></dt>
+<dd><p>Inverse cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>cumulative_hazard_rate</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Cumulative hazard rate value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ichf values at each given cumulative hazard rate(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.init_likelihood">
+<span class="sig-name descname"><span class="pre">init_likelihood</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.init_likelihood" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the lifetime likelihood used to fit the parameters.</p>
+<p><cite>fit</cite> method is the preferred way to fit model parameters. However,
+users can also interact with the likelihood returned by
+<cite>init_likelihood</cite> to study the optimization process.</p>
+<dl class="simple">
+<dt>This method implementation is usally composed of 3 steps:</dt><dd><ol class="arabic simple">
+<li><p>Initialize an object to preprocess and encapsulate observation values.</p></li>
+<li><p>Create a <cite>OptimizerConfig</cite> config instance depending on the model needs.</p></li>
+<li><p>Instanciate and return a LifetimeLikelihood.</p></li>
+</ol>
+</dd>
+</dl>
+<p><cite>init_likelihood</cite> is separated from <cite>fit</cite> in order to reuse existing
+likelihood parametrization in case of model composition. Any parameters
+initialization needed by the likelihood optimizer (e.g. <cite>x0</cite> or
+<cite>bounds</cite> as required in step 2.) are left to specific functions
+alongside concrete model implementations. These functions are invoked
+within <cite>init_likelihood</cite>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>time</strong><span class="classifier">1d array</span></dt><dd><p>Observed lifetime values.</p>
+</dd>
+<dt><strong>args</strong><span class="classifier">any ndarray or tuple of ndarray, default is None</span></dt><dd><p>Additional arguments required by the model (e.g. covar).</p>
+</dd>
+<dt><strong>event</strong><span class="classifier">1d array of bool, default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
+</dd>
+<dt><strong>entry</strong><span class="classifier">1d array, default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Extra arguments to control the parameters optimization. It can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>those used by <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">scipy.optimize.minimize</a>
+to search for the paremeters that minimize the negative
+log-likelihood.</p></li>
+<li><p><cite>covariance_method</cite> to control the method used to estimate
+parameters covariance. Values can be <cite>“cs”</cite>, <cite>“2point”</cite>,
+<cite>“exact”</cite> or <cite>False</cite>. To skip parameters covariance
+estimation, set <cite>covariance_method</cite> to <cite>False</cite>, otherwise the
+default method associated to the model will be used. If
+<cite>covariance_method</cite> is <cite>“exact”</cite> the <cite>hess</cite> must be passed
+too.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">LifetimeLikelihood instance</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.isf">
+<span class="sig-name descname"><span class="pre">isf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.isf" title="Link to this definition">#</a></dt>
+<dd><p>The inverse survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>isf values at each given probability value(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.jac_cdf">
+<span class="sig-name descname"><span class="pre">jac_cdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.jac_cdf" title="Link to this definition">#</a></dt>
+<dd><p>The jacobian of the cumulative density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.jac_chf">
+<span class="sig-name descname"><span class="pre">jac_chf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.jac_chf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.jac_chf" title="Link to this definition">#</a></dt>
+<dd><p>The jacobian of the cumulative hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.jac_hf">
+<span class="sig-name descname"><span class="pre">jac_hf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_model/_regression.html#ParametricProportionalHazard.jac_hf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.jac_hf" title="Link to this definition">#</a></dt>
+<dd><p>The jacobian of the hazard function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.jac_pdf">
+<span class="sig-name descname"><span class="pre">jac_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.jac_pdf" title="Link to this definition">#</a></dt>
+<dd><p>The jacobian of the probability density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.jac_sf">
+<span class="sig-name descname"><span class="pre">jac_sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.jac_sf" title="Link to this definition">#</a></dt>
+<dd><p>The jacobian of the survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>The derivatives with respect to each parameter. If the result is
+an <cite>np.ndarray</cite>, the first dimension holds the number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.ls_integrate">
+<span class="sig-name descname"><span class="pre">ls_integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.ls_integrate" title="Link to this definition">#</a></dt>
+<dd><p>Lebesgue-Stieltjes integration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one
+ndarray object as output.</p>
+</dd>
+<dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use
+np.inf as value.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+<dt><strong>deg</strong><span class="classifier">int, default 10</span></dt><dd><p>Degree of the polynomials interpolation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.ndarray</span></dt><dd><p>Lebesgue-Stieltjes integral of func from <cite>a</cite> to <cite>b</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.mean" title="Link to this definition">#</a></dt>
+<dd><p>The mean of the distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.median">
+<span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.median" title="Link to this definition">#</a></dt>
+<dd><p>The median.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.moment">
+<span class="sig-name descname"><span class="pre">moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.moment" title="Link to this definition">#</a></dt>
+<dd><p>n-th order moment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>order of the moment, at least 1.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.mrl">
+<span class="sig-name descname"><span class="pre">mrl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.mrl" title="Link to this definition">#</a></dt>
+<dd><p>The mean residual life function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>Function values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.nb_coef">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nb_coef</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.nb_coef" title="Link to this definition">#</a></dt>
+<dd><p>Returns the number of coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">int</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.nb_params">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nb_params</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.nb_params" title="Link to this definition">#</a></dt>
+<dd><p>Number of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Number of parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.params">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.params" title="Link to this definition">#</a></dt>
+<dd><p>Parameters values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray</dt><dd><p>Parameters values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If parameter values are not set, they are encoded as <cite>np.nan</cite> value.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.params_names">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">params_names</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.params_names" title="Link to this definition">#</a></dt>
+<dd><p>Parameters names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list of str</dt><dd><p>Parameters names</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Parameters values can be requested (a.k.a. get) by their name at instance level.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.pdf">
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.pdf" title="Link to this definition">#</a></dt>
+<dd><p>The probability density function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>pdf values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.plot">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.plot" title="Link to this definition">#</a></dt>
+<dd><p>Provides access to plotting functionnalities</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.ppf">
+<span class="sig-name descname"><span class="pre">ppf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.ppf" title="Link to this definition">#</a></dt>
+<dd><p>The percent point function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>probability</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Probability value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>ppf values at each given probability value(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.rvs">
+<span class="sig-name descname"><span class="pre">rvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.rvs" title="Link to this definition">#</a></dt>
+<dd><p>Random variable sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int or tuple (m, n) of int</span></dt><dd><p>Size of the generated sample.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time
+values.</p>
+</dd>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time
+values.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If
+np.random.RandomState or np.random.Generator, use as given.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is
+True, returns a tuple containing the time values followed by event
+values, entry values or both.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.sf">
+<span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.sf" title="Link to this definition">#</a></dt>
+<dd><p>The survival function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
+If ndarray, allowed shapes are <cite>()</cite>, <cite>(n,)</cite> or <cite>(m, n)</cite>.</p>
+</dd>
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd><p>sf values at each given time(s).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.lifetime_model.ParametricProportionalHazard.var">
+<span class="sig-name descname"><span class="pre">var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#relife.lifetime_model.ParametricProportionalHazard.var" title="Link to this definition">#</a></dt>
+<dd><p>The variance of the distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>covar</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Covariates values.
+float can only be valid if the regression has one coefficients.
+Otherwise it must be a ndarray of shape <cite>(nb_coef,)</cite> or <cite>(m, nb_coef)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">np.float64 or np.ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.cdf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.cdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.chf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.chf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.coefficients"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.coefficients</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.dhf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.dhf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.fit"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.freeze"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.freeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.hf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.hf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.ichf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.ichf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.init_likelihood"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.init_likelihood()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.isf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.isf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.jac_cdf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.jac_cdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.jac_chf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.jac_chf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.jac_hf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.jac_hf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.jac_pdf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.jac_pdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.jac_sf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.jac_sf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.ls_integrate"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.ls_integrate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.mean"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.median"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.median()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.moment"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.moment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.mrl"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.mrl()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.nb_coef"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.nb_coef</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.nb_params"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.nb_params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.params"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.params</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.params_names"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.params_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.pdf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.pdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.plot"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.ppf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.ppf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.rvs"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.rvs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.sf"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.sf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_model.ParametricProportionalHazard.var"><code class="docutils literal notranslate"><span class="pre">ParametricProportionalHazard.var()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2007 - 2026, RTE-SAGA (Apache 2.0 License).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

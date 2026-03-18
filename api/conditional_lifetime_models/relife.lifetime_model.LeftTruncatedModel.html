@@ -50,16 +50,16 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel';</script>
     <script src="../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="AgeReplacementModel" href="relife.lifetime_model.AgeReplacementModel.html" />
-    <link rel="prev" title="AcceleratedFailureTime" href="relife.lifetime_model.AcceleratedFailureTime.html" />
+    <link rel="prev" title="ECDF" href="../nonparametric_lifetime_models/relife.lifetime_model.ECDF.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -132,7 +132,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -371,27 +371,34 @@
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Base classes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.ParametricModel.html">ParametricModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base_class/relife.base.MaximumLikelihoodOptimizer.html">MaximumLikelihoodOptimizer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Parametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Exponential.html">Exponential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Weibull.html">Weibull</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Gompertz.html">Gompertz</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.Gamma.html">Gamma</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Exponential.html">Exponential</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Weibull.html">Weibull</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gompertz.html">Gompertz</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.Gamma.html">Gamma</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_model.ParametricAcceleratedFailureTime.html">ParametricAcceleratedFailureTime</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Semiparametric lifetime models</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.ProportionalHazard.html">ProportionalHazard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AcceleratedFailureTime.html">AcceleratedFailureTime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../semiparametric_lifetime_models/relife.lifetime_model.SemiParametricProportionalHazard.html">SemiParametricProportionalHazard</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Nonparametric lifetime models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">LeftTruncatedModel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_model.AgeReplacementModel.html">AgeReplacementModel</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Non parametric lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.KaplanMeier.html">KaplanMeier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.NelsonAalen.html">NelsonAalen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../non_parametric_lifetime_models/relife.lifetime_model.ECDF.html">ECDF</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
@@ -423,13 +430,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_insulator_string.html">load_insulator_string</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data/relife.data.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_model.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.reshape_1d_arg.html">reshape_1d_arg</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_args_nb_assets.html">get_args_nb_assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_frozen.html">is_frozen</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_lifetime_model.html">is_lifetime_model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.is_non_homogeneous_poisson_process.html">is_non_homogeneous_poisson_process</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.quadrature.legendre_quadrature.html">legendre_quadrature</a></li>
@@ -640,8 +651,9 @@ If ndarray, shape can only be <cite>(m,)</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If ndarray, shape can only be (m,)
-as only one age per asset can be given</p>
+<dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Conditional age values. It represents ages reached by assets. If
+ndarray, shape can only be (m,) as only one age per asset can be
+given</p>
 </dd>
 <dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
@@ -740,11 +752,13 @@ If ndarray, shape can only be <cite>(m,)</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one ndarray object as output.</p>
+<dt><strong>func</strong><span class="classifier">callable (in</span><span class="classifier">1 ndarray , out</span><span class="classifier">1 ndarray)</span></dt><dd><p>The callable must have only one ndarray object as argument and one
+ndarray object as output.</p>
 </dd>
 <dt><strong>a</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Lower bound(s) of integration.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use np.inf as value.</p>
+<dt><strong>b</strong><span class="classifier">ndarray (maximum number of dimension is 2)</span></dt><dd><p>Upper bound(s) of integration. If lower bound(s) is infinite, use
+np.inf as value.</p>
 </dd>
 <dt><strong>a0</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Current ages.
 If ndarray, shape can only be <cite>(m,)</cite>.</p>
@@ -976,18 +990,22 @@ If ndarray, shape can only be <cite>(m,)</cite>.</p>
 </dd>
 <dt><strong>*args</strong></dt><dd><p>Any other arguments needed by the model.</p>
 </dd>
-<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time values.</p>
+<dt><strong>return_event</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns event indicators along with the sample time
+values.</p>
 </dd>
-<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time values.</p>
+<dt><strong>return_entry</strong><span class="classifier">bool, default is False</span></dt><dd><p>If True, returns corresponding entry values of the sample time
+values.</p>
 </dd>
-<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If np.random.RandomState or np.random.Generator, use as given.</p>
+<dt><strong>seed</strong><span class="classifier">optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None</span></dt><dd><p>If int or BitGenerator, seed for random number generator. If
+np.random.RandomState or np.random.Generator, use as given.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is True, returns a tuple containing
-the time values followed by event values, entry values or both.</p>
+<dt><strong>out</strong><span class="classifier">float, ndarray or tuple of float or ndarray</span></dt><dd><p>The sample values. If either <cite>return_event</cite> or <cite>return_entry</cite> is
+True, returns a tuple containing the time values followed by event
+values, entry values or both.</p>
 </dd>
 </dl>
 </dd>
@@ -1099,7 +1117,7 @@ If ndarray, shape can only be <cite>(m,)</cite>.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/api/parametric_lifetime_models/relife.lifetime_model.LeftTruncatedModel.rst.txt"
+      <li><a href="../../_sources/api/conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

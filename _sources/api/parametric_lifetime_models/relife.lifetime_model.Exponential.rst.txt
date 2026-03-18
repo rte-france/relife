@@ -34,16 +34,13 @@ Exponential
             ~Exponential.fit
         
         
-            ~Exponential.fit_from_interval_censored_lifetimes
-        
-        
-            ~Exponential.get_initial_params
-        
-        
             ~Exponential.hf
         
         
             ~Exponential.ichf
+        
+        
+            ~Exponential.init_likelihood
         
         
             ~Exponential.isf

@@ -1,6 +1,0 @@
-﻿is\_non\_homogeneous\_poisson\_process
-======================================
-
-.. currentmodule:: relife.utils
-
-.. autofunction:: is_non_homogeneous_poisson_process

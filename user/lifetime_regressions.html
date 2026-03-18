@@ -56,11 +56,11 @@
     <link rel="icon" href="../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API" href="../api/index.html" />
+    <link rel="next" title="Cox (semiparametric proportional hazard)" href="semiparametric_regression.html" />
     <link rel="prev" title="Lifetime distributions" href="lifetime_distributions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.5.2" />
+  <meta name="docsearch:version" content="2.5.3.dev1+g158fba577" />
   </head>
   
   
@@ -133,7 +133,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.5.2</div>
+2.5.3.dev1+g158fba577</div>
     
   </div>
   
@@ -376,6 +376,7 @@
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models.html">Non-parametric lifetime models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lifetime_distributions.html">Lifetime distributions</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Lifetime regressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="semiparametric_regression.html">Cox (semiparametric proportional hazard)</a></li>
 </ul>
 </div>
 </nav></div>
@@ -498,7 +499,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProportionalHazard</span><span class="p">,</span> <span class="n">Gompertz</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricProportionalHazard</span><span class="p">,</span> <span class="n">Gompertz</span>
 </pre></div>
 </div>
 </div>
@@ -506,8 +507,13 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">regression</span> <span class="o">=</span> <span class="n">ProportionalHazard</span><span class="p">(</span><span class="n">Gompertz</span><span class="p">())</span>
-<span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">covar</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">],</span> <span class="n">entry</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;entry&quot;</span><span class="p">])</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">regression</span> <span class="o">=</span> <span class="n">ParametricProportionalHazard</span><span class="p">(</span><span class="n">Gompertz</span><span class="p">())</span>
+<span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
+    <span class="n">covar</span><span class="p">,</span>
+    <span class="n">event</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">],</span>
+    <span class="n">entry</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;entry&quot;</span><span class="p">]</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -517,7 +523,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;relife.lifetime_model._regression.ProportionalHazard at 0x7618ebdf3e90&gt;
+&lt;relife.lifetime_model._regression.ParametricProportionalHazard at 0x76da55fb7cd0&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -533,7 +539,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[ 4.11139839 -2.67864095  3.24298564  0.22415155  0.02944536] (&#39;coef_1&#39;, &#39;coef_2&#39;, &#39;coef_3&#39;, &#39;shape&#39;, &#39;rate&#39;)
+[ 4.10887984 -2.66050611  3.23411769  0.21810962  0.02945802] (&#39;coef_1&#39;, &#39;coef_2&#39;, &#39;coef_3&#39;, &#39;shape&#39;, &#39;rate&#39;)
 </pre></div></div>
 </div>
 <p>Notice that the regression parameters include parameters from the baseline (Gompertz) and the covariate effect.</p>
