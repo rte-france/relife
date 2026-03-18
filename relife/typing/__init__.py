@@ -10,7 +10,6 @@ using relife.
 from ._models import AnyParametricLifetimeModel
 from ._random import Seed
 from ._scalars import AnyFloat, NumpyBool, NumpyFloat
-from ._scipy import ScipyMinimizeOptions
 
 __all__ = [
     "AnyParametricLifetimeModel",
@@ -18,5 +17,4 @@ __all__ = [
     "AnyFloat",
     "NumpyBool",
     "NumpyFloat",
-    "ScipyMinimizeOptions",
 ]

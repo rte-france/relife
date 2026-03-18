@@ -17,20 +17,32 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds
 from typing_extensions import overload, override
 
-from relife.base import ParametricModel
+from relife.base import OptimizerConfig, ParametricModel
 from relife.typing import (
     AnyFloat,
     NumpyBool,
     NumpyFloat,
-    ScipyMinimizeOptions,
     Seed,
 )
 
-from ._base import FittableParametricLifetimeModel, document_args
-from ._distribution import LifetimeDistribution
-from ._frozen import FrozenParametricLifetimeModel
+from ._base import (
+    FittableParametricLifetimeModel,
+    FrozenParametricLifetimeModel,
+    LifetimeData,
+    LifetimeLikelihood,
+    document_args,
+)
+from ._distribution import (
+    Gamma,
+    LifetimeDistribution,
+    get_distrib_params_bounds,
+    init_distrib_params_from_lifetimes,
+)
 
-__all__: list[str] = ["AcceleratedFailureTime", "ProportionalHazard"]
+__all__: list[str] = [
+    "ParametricAcceleratedFailureTime",
+    "ParametricProportionalHazard",
+]
 
 
 def _broadcast_time_covar(
@@ -45,7 +57,10 @@ def _broadcast_time_covar(
             covar = np.repeat(covar, time.shape[0], axis=0)
         case (m1, m2) if m1 != m2:
             raise ValueError(
-                f"Incompatible time and covar. time has {m1} nb_assets but covar has {m2} nb_assets"
+                f"""
+                Incompatible time and covar. time has {m1} nb_assets but
+                covar has {m2} nb_assets
+                """
             )
         case _:
             pass
@@ -71,7 +86,10 @@ def _broadcast_time_covar_shapes(
         case [(mt, n), (mc, _)] if mt != mc:
             if mt != 1 and mc != 1:
                 raise ValueError(
-                    f"Invalid time and covar : time got {mt} nb assets but covar got {mc} nb assets"
+                    f"""
+                    Invalid time and covar : time got {mt} nb assets but covar
+                    got {mc} nb assets
+                    """
                 )
             return max(mt, mc), n
         case [(mt, n), (mc, _)] if mt == mc:
@@ -83,7 +101,7 @@ def _broadcast_time_covar_shapes(
 
 
 @final
-class CovarEffect(ParametricModel):
+class LinearCovarEffect(ParametricModel):
     """
     Covariates effect.
 
@@ -126,12 +144,19 @@ class CovarEffect(ParametricModel):
         arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         if arr_covar.ndim > 2:
             raise ValueError(
-                f"Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but got {arr_covar.shape}"
+                f"""
+                Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but
+                got {arr_covar.shape}
+                """
             )
         covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
         if covar_nb_coef != self.nb_coef:
             raise ValueError(
-                f"Invalid covar. Number of covar does not match number of coefficients. Got {self.nb_coef} nb_coef but covar shape is {arr_covar.shape}"
+                f"""
+                Invalid covar. Number of covar does not match number of
+                coefficients. Got {self.nb_coef} nb_coef but covar shape is
+                {arr_covar.shape}
+                """
             )
         g = np.exp(np.sum(self.params * arr_covar, axis=-1, keepdims=True))  # (m, 1)
         if arr_covar.ndim <= 1:
@@ -166,20 +191,21 @@ _covar_docstring = [
         "covar",
         "float or np.ndarray",
         [
-            "Covariates values. float can only be valid if the regression has one coefficients.",
+            "Covariates values.",
+            "float can only be valid if the regression has one coefficients.",
             "Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.",
         ],
     ),
 ]
 
 
-class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
+class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
     """
     Base class for lifetime regression.
     """
 
     baseline: LifetimeDistribution
-    covar_effect: CovarEffect
+    covar_effect: LinearCovarEffect
 
     def __init__(
         self,
@@ -187,7 +213,7 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         coefficients: tuple[float | None, ...] = (None,),
     ):
         super().__init__()
-        self.covar_effect = CovarEffect(coefficients)
+        self.covar_effect = LinearCovarEffect(coefficients)
         self.baseline = baseline
 
     @property
@@ -376,6 +402,21 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         return_entry: Literal[True],
         seed: Seed | None = None,
     ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
+    @overload
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        covar: AnyFloat,
+        *,
+        return_event: bool = False,
+        return_entry: bool = False,
+        seed: Seed | None = None,
+    ) -> (
+        NumpyFloat
+        | tuple[NumpyFloat, NumpyBool]
+        | tuple[NumpyFloat, NumpyFloat]
+        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
+    ): ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -420,85 +461,82 @@ class LifetimeRegression(FittableParametricLifetimeModel[AnyFloat], ABC):
         """
         return FrozenParametricLifetimeModel(self, covar)
 
-    @property
     @override
-    def params_bounds(self) -> Bounds:
-        lb = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, -np.inf),
-                self.baseline.params_bounds.lb,  # baseline has _params_bounds according to typing
-            )
-        )
-        ub = np.concatenate(
-            (
-                np.full(self.covar_effect.nb_params, np.inf),
-                self.baseline.params_bounds.ub,
-            )
-        )
-        return Bounds(lb, ub)
-
-    @override
-    def get_initial_params(
+    def init_likelihood(
         self,
         time: NDArray[np.float64],
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-    ) -> NDArray[np.float64]:
-        param0 = np.zeros_like(self.params, dtype=np.float64)
-        param0[-self.baseline.params.size :] = self.baseline.get_initial_params(
-            time, event, model_args
+        entry: NDArray[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> LifetimeLikelihood[Self]:
+        assert isinstance(args, np.ndarray)
+        regression = type(self)(
+            type(self.baseline)(), coefficients=(0.0,) * np.atleast_2d(args).shape[-1]
+        )  # init new regression object with appropriate number of covar
+        lifetime_data = LifetimeData(time, args, event, entry)
+        x0 = kwargs.get(
+            "x0", init_regression_params_from_lifetimes(regression, lifetime_data)
         )
-        return param0
+        regression.params = x0
+        config = OptimizerConfig(x0)
+        config.scipy_minimize_options["bounds"] = kwargs.get(
+            "bounds", get_regression_params_bounds(regression)
+        )
+        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
+        config.covariance_method = kwargs.get(
+            "covariance_method",
+            "2point" if isinstance(regression.baseline, Gamma) else "cs",
+        )
+        optimizer = LifetimeLikelihood(regression, lifetime_data, config)
+        return optimizer
 
     @override
     def fit(
         self,
         time: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
+        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         event: NDArray[np.bool_] | None = None,
         entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        **kwargs: Any,
     ) -> Self:
-        if model_args is None:
-            raise ValueError("LifetimeRegression expects covar but model_args is None")
-        covar = model_args[0]
-        self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
+        assert isinstance(args, np.ndarray)
+        self.covar_effect = LinearCovarEffect(
+            (None,) * np.atleast_2d(np.asarray(args, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
-        return super().fit(
-            time,
-            model_args=model_args,
-            event=event,
-            entry=entry,
-            optimizer_options=optimizer_options,
-        )
+        return super().fit(time, args, event, entry, **kwargs)
 
-    @override
-    def fit_from_interval_censored_lifetimes(
-        self,
-        time_inf: NDArray[np.float64],
-        time_sup: NDArray[np.float64],
-        model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        entry: NDArray[np.float64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
-    ) -> Self:
-        if model_args is None:
-            raise ValueError("LifetimeRegression expects covar but model_args is None")
-        covar = model_args[0]
-        self.covar_effect = CovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-        return super().fit_from_interval_censored_lifetimes(
-            time_inf,
-            time_sup,
-            model_args=model_args,
-            entry=entry,
-            optimizer_options=optimizer_options,
+
+def init_regression_params_from_lifetimes(
+    model: ParametricLifetimeRegression, data: LifetimeData
+) -> NDArray[np.float64]:
+    param0 = np.zeros_like(model.params, dtype=np.float64)
+    param0[-model.baseline.params.size :] = init_distrib_params_from_lifetimes(
+        model.baseline, data
+    )
+    return param0
+
+
+def get_regression_params_bounds(model: ParametricLifetimeRegression) -> Bounds:
+    lb = np.concatenate(
+        (
+            np.full(model.covar_effect.nb_params, -np.inf),
+            get_distrib_params_bounds(
+                model.baseline
+            ).lb,  # baseline has _params_bounds according to typing
         )
+    )
+    ub = np.concatenate(
+        (
+            np.full(model.covar_effect.nb_params, np.inf),
+            get_distrib_params_bounds(model.baseline).ub,
+        )
+    )
+    return Bounds(lb, ub)
 
 
 @final
-class ProportionalHazard(LifetimeRegression):
+class ParametricProportionalHazard(ParametricLifetimeRegression):
     r"""
     Proportional Hazard regression.
 
@@ -550,27 +588,37 @@ class ProportionalHazard(LifetimeRegression):
     """
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def hf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.covar_effect.g(covar) * self.baseline.hf(time)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def chf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.covar_effect.g(covar) * self.baseline.chf(time)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def ichf(self, cumulative_hazard_rate: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar))
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def dhf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.covar_effect.g(covar) * self.baseline.dhf(time)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def jac_hf(
         self,
         time: AnyFloat,
@@ -605,7 +653,9 @@ class ProportionalHazard(LifetimeRegression):
         return jac
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def jac_chf(
         self,
         time: AnyFloat,
@@ -640,7 +690,7 @@ class ProportionalHazard(LifetimeRegression):
 
 
 @final
-class AcceleratedFailureTime(LifetimeRegression):
+class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     # noinspection PyUnresolvedReferences
     r"""
     Accelerated failure time regression.
@@ -693,30 +743,40 @@ class AcceleratedFailureTime(LifetimeRegression):
     """
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def hf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.hf(t0) / self.covar_effect.g(covar)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def chf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.chf(t0)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def ichf(self, cumulative_hazard_rate: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate)
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def dhf(self, time: AnyFloat, covar: AnyFloat) -> NumpyFloat:
         t0 = time / self.covar_effect.g(covar)
         return self.baseline.dhf(t0) / self.covar_effect.g(covar) ** 2
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def jac_hf(
         self,
         time: AnyFloat,
@@ -754,7 +814,9 @@ class AcceleratedFailureTime(LifetimeRegression):
         return jac
 
     @override
-    @document_args(base_cls=LifetimeRegression, args_docstring=_covar_docstring)
+    @document_args(
+        base_cls=ParametricLifetimeRegression, args_docstring=_covar_docstring
+    )
     def jac_chf(
         self,
         time: AnyFloat,

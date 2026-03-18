@@ -5,12 +5,6 @@ from typing import Literal, Self, final, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from ._plot import (
-    PlotECDF,
-    PlotKaplanMeier,
-    PlotNelsonAalen,
-)
-
 __all__: list[str] = ["ECDF", "KaplanMeier", "NelsonAalen"]
 
 
@@ -147,6 +141,8 @@ class ECDF:
 
     @property
     def plot(self):
+        from ._plot import PlotECDF
+
         return PlotECDF(self)
 
 
@@ -288,6 +284,8 @@ class KaplanMeier:
 
     @property
     def plot(self):
+        from ._plot import PlotKaplanMeier
+
         return PlotKaplanMeier(self)
 
 
@@ -429,4 +427,6 @@ class NelsonAalen:
 
     @property
     def plot(self):
+        from ._plot import PlotNelsonAalen
+
         return PlotNelsonAalen(self)

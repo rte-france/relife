@@ -4,8 +4,12 @@ import numpy as np
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
-from relife.lifetime_model import AcceleratedFailureTime, ProportionalHazard, Weibull
-from relife.lifetime_model._regression import CovarEffect
+from relife.lifetime_model import (
+    ParametricAcceleratedFailureTime,
+    ParametricProportionalHazard,
+    Weibull,
+)
+from relife.lifetime_model._regression import LinearCovarEffect
 
 
 def expected_shape(**kwargs):
@@ -41,7 +45,7 @@ def test_covar_effect():
     => jac_g : (nb_coef, m, 1)
     """
 
-    covar_effect = CovarEffect(coefficients=(2.4, 5.5))
+    covar_effect = LinearCovarEffect(coefficients=(2.4, 5.5))
     z1 = np.array([1, 2, 3])
     z2 = np.array([0.8, 0.7, 0.5])
     assert covar_effect.g(np.column_stack((z1, z2))) == approx(
@@ -215,15 +219,15 @@ def test_aft_pph_weibull_eq(insulator_string_data):
             )
         )
     )
-    weibull_aft = AcceleratedFailureTime(Weibull()).fit(
+    weibull_aft = ParametricAcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
-        model_args=covar_data,
+        covar_data,
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
-    weibull_pph = ProportionalHazard(Weibull()).fit(
+    weibull_pph = ParametricProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
-        model_args=covar_data,
+        covar_data,
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
@@ -233,3 +237,13 @@ def test_aft_pph_weibull_eq(insulator_string_data):
         -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.params,
         rel=1e-3,
     )
+
+
+def test_negative_log(regression_likelihood):
+    params = regression_likelihood.model.params.copy()
+    assert isinstance(regression_likelihood.negative_log(params), float)
+
+
+def test_jac_negative_log(regression_likelihood):
+    params = regression_likelihood.model.params.copy()
+    assert regression_likelihood.jac_negative_log(params).shape == (params.size,)

@@ -6,9 +6,8 @@ from typing import Any, Generic, Self, TypeVarTuple
 
 import numpy as np
 
-from relife.base import FrozenParametricModel, ParametricModel
+from relife.base import FrozenParametricModel, ParametricModel, FittingResults
 from relife.lifetime_model._base import FittableParametricLifetimeModel
-from relife.likelihood._base import FittingResults
 from relife.stochastic_process._sample import StochasticSampleMapping
 
 Ts = TypeVarTuple("Ts")

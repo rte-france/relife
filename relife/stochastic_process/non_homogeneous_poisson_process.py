@@ -1,5 +1,3 @@
-# pyright: basic
-
 from __future__ import annotations
 
 import warnings
@@ -8,13 +6,13 @@ from typing import Any, Generic, Self, Sequence, TypeVarTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from relife.base import FrozenParametricModel, ParametricModel
+from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.data import NHPPData
-from relife.lifetime_model._base import FittableParametricLifetimeModel
-from relife.likelihood import DefaultLifetimeLikelihood
-from relife.likelihood._base import FittingResults
+from relife.lifetime_model._base import (
+    FittableParametricLifetimeModel,
+)
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.typing import AnyFloat, NumpyFloat, ScipyMinimizeOptions
+from relife.typing import AnyFloat, NumpyFloat
 
 Ts = TypeVarTuple("Ts")
 
@@ -88,7 +86,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
+        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, seed=None
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -124,7 +122,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         )
 
     def generate_failure_data(
-        self, nb_samples: int, time_window: tuple[float, float], *args, seed=None
+        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, seed=None
     ) -> dict[str, Any]:
         r"""
         .. warning:: Not implemented yet
@@ -198,7 +196,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         last_ages: NDArray[np.float64] | None = None,
         lifetime_model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
         assets_ids: Sequence[str] | NDArray[np.int64] | None = None,
-        optimizer_options: ScipyMinimizeOptions | None = None,
+        **kwargs: Any,
     ) -> Self:
         """
         Estimation of the process parameters from recurrent failure data.
@@ -243,8 +241,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         With additional information and model args (regression of 2 coefficients)
 
-        >>> from relife.lifetime_model import ProportionalHazard
-        >>> nhpp = NonHomogeneousPoissonProcess(ProportionalHazard())
+        >>> from relife.lifetime_model import ParametricProportionalHazard
+        >>> nhpp = NonHomogeneousPoissonProcess(ParametricProportionalHazard())
         >>> nhpp.fit(
             np.array([11., 13., 21., 25., 27.]),
             ("AB2", "CX13", "AB2", "AB2", "CX13"),
@@ -266,13 +264,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
-        # noinspection PyProtectedMember
-        likelihood = DefaultLifetimeLikelihood(
-            self.lifetime_model, time, args, event=event, entry=entry
+        optimizer = self.lifetime_model.init_likelihood(
+            time, args, event, entry, **kwargs
         )
-        if optimizer_options is None:
-            optimizer_options = {}
-        fitting_results = likelihood.maximum_likelihood_estimation(**optimizer_options)
+        fitting_results = optimizer.optimize()
         self.params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
@@ -367,3 +362,14 @@ class FrozenNonHomogeneousPoissonProcess(
         return self._unfrozen_model.generate_failure_data(
             nb_samples, time_window, *self.args, seed=seed
         )
+
+
+def is_non_homogeneous_poisson_process(model):
+    """
+    Checks if model is a non-homogeneous Poisson process.
+    """
+    # local import to avoid circular import
+
+    return isinstance(
+        model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)
+    )

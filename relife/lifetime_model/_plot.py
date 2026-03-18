@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, Optional, TypeVarTuple
+from typing import TYPE_CHECKING, Generic, Optional, TypeAlias, TypeVarTuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +10,8 @@ import scipy.stats as stats
 from matplotlib.axes import Axes
 from numpy.ma.core import zeros_like
 from numpy.typing import NDArray
+
+from relife.lifetime_model import ECDF, KaplanMeier, NelsonAalen
 
 if TYPE_CHECKING:
     from ._base import (
@@ -135,6 +137,9 @@ class PlotParametricLifetimeModel(Generic[*Args]):
         ax.set_ylim(bottom=0)
         ax.set_xlim(left=0, right=end_time)
         return ax
+
+
+NonParametricLifetimeModel: TypeAlias = ECDF | KaplanMeier | NelsonAalen
 
 
 class PlotNonParametricLifetimeModel:

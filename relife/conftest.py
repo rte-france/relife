@@ -1,63 +1,23 @@
+# pyright: basic
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
 from relife.data import load_insulator_string, load_power_transformer
 from relife.lifetime_model import (
-    AcceleratedFailureTime,
     AgeReplacementModel,
     Exponential,
     Gamma,
     Gompertz,
     LogLogistic,
-    ProportionalHazard,
+    ParametricAcceleratedFailureTime,
+    ParametricProportionalHazard,
     Weibull,
 )
 
-DISTRIBUTION_INSTANCES = [
-    Exponential(0.00795203),
-    Weibull(3.46597395, 0.01227849),
-    Gompertz(0.00865741, 0.06062632),
-    Gamma(5.3571091, 0.06622822),
-    LogLogistic(3.92614064, 0.0133325),
-]
-
-NB_COEF = 2
-
-REGRESSION_INSTANCES = [
-    ProportionalHazard(Exponential(0.00795203), coefficients=(np.log(2), np.log(2))),
-    ProportionalHazard(
-        Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))
-    ),
-    ProportionalHazard(
-        Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))
-    ),
-    ProportionalHazard(
-        Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))
-    ),
-    ProportionalHazard(
-        LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))
-    ),
-    AcceleratedFailureTime(
-        Exponential(0.00795203), coefficients=(np.log(2), np.log(2))
-    ),
-    AcceleratedFailureTime(
-        Weibull(3.46597395, 0.01227849), coefficients=(np.log(2), np.log(2))
-    ),
-    AcceleratedFailureTime(
-        Gompertz(0.00865741, 0.06062632), coefficients=(np.log(2), np.log(2))
-    ),
-    AcceleratedFailureTime(
-        Gamma(5.3571091, 0.06622822), coefficients=(np.log(2), np.log(2))
-    ),
-    AcceleratedFailureTime(
-        LogLogistic(3.92614064, 0.0133325), coefficients=(np.log(2), np.log(2))
-    ),
-]
-
-########################################################################################################################
+#######################################################################################
 # DATA FIXTURES
-########################################################################################################################
+#######################################################################################
 
 
 @pytest.fixture
@@ -70,63 +30,160 @@ def insulator_string_data():
     return load_insulator_string()
 
 
-########################################################################################################################
+#######################################################################################
 # LIFETIME MODEL FIXTURES
-########################################################################################################################
+#######################################################################################
 
 
-@pytest.fixture(
-    params=DISTRIBUTION_INSTANCES,
-    ids=["Exponential", "Weibull", "Gompertz", "Gamma", "LogLogistic"],
-)
+def exponential():
+    return Exponential(0.00795203)
+
+
+def weibull():
+    return Weibull(3.46597395, 0.01227849)
+
+
+def gompertz():
+    return Gompertz(0.00865741, 0.06062632)
+
+
+def gamma():
+    return Gamma(5.3571091, 0.06622822)
+
+
+def loglogistic():
+    return LogLogistic(3.92614064, 0.0133325)
+
+
+COEFFICIENTS = (np.log(2), np.log(2))
+
+
+def pph_exponential():
+    return ParametricProportionalHazard(exponential(), coefficients=COEFFICIENTS)
+
+
+def pph_weibull():
+    return ParametricProportionalHazard(weibull(), coefficients=COEFFICIENTS)
+
+
+def pph_gompertz():
+    return ParametricProportionalHazard(gompertz(), coefficients=COEFFICIENTS)
+
+
+def pph_gamma():
+    return ParametricProportionalHazard(gamma(), coefficients=COEFFICIENTS)
+
+
+def pph_loglogistic():
+    return ParametricProportionalHazard(loglogistic(), coefficients=COEFFICIENTS)
+
+
+def aft_exponential():
+    return ParametricAcceleratedFailureTime(exponential(), coefficients=COEFFICIENTS)
+
+
+def aft_weibull():
+    return ParametricAcceleratedFailureTime(weibull(), coefficients=COEFFICIENTS)
+
+
+def aft_gompertz():
+    return ParametricAcceleratedFailureTime(gompertz(), coefficients=COEFFICIENTS)
+
+
+def aft_gamma():
+    return ParametricAcceleratedFailureTime(gamma(), coefficients=COEFFICIENTS)
+
+
+def aft_loglogistic():
+    return ParametricAcceleratedFailureTime(loglogistic(), coefficients=COEFFICIENTS)
+
+
+@pytest.fixture(params=[exponential(), weibull(), gompertz(), gamma(), loglogistic()])
 def distribution(request):
-    return request.param
+    yield request.param
 
 
 @pytest.fixture(
-    params=REGRESSION_INSTANCES,
-    ids=lambda reg: f"{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
+    params=[
+        pph_exponential(),
+        pph_weibull(),
+        pph_gompertz(),
+        pph_gamma(),
+        pph_loglogistic(),
+        aft_exponential(),
+        aft_weibull(),
+        aft_gompertz(),
+        aft_gamma(),
+        aft_loglogistic(),
+    ]
 )
 def regression(request):
-    return request.param
+    yield request.param
 
 
-########################################################################################################################
-# FROZEN LIFETIME FIXTURES
-########################################################################################################################
+#######################################################################################
+# LIFETIME LIKELIHOOD FIXTURES
+#######################################################################################
 
 
-@pytest.fixture(
-    params=REGRESSION_INSTANCES,
-    ids=lambda reg: f"Frozen{reg.__class__.__name__}({reg.baseline.__class__.__name__})",
-)
-def frozen_regression(request):
-    covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return request.param.freeze(covar)
-
-
-@pytest.fixture(
-    params=DISTRIBUTION_INSTANCES,
-    ids=lambda distri: f"FrozenAgeReplacementModel({distri.__class__.__name__})",
-)
-def frozen_ar_distribution(request):
-    return AgeReplacementModel(request.param).freeze(request.param.isf(0.75))
-
-
-@pytest.fixture(
-    params=REGRESSION_INSTANCES,
-    ids=lambda reg: f"FrozenAgeReplacementModel({reg.__class__.__name__}({reg.baseline.__class__.__name__}))",
-)
-def frozen_ar_regression(request):
-    covar = np.arange(0.0, 0.6, 0.1).reshape(3, 2)
-    return AgeReplacementModel(request.param).freeze(
-        request.param.isf(0.75, covar), covar
+@pytest.fixture
+def distribution_likelihood(distribution, power_transformer_data):
+    return distribution.init_likelihood(
+        power_transformer_data["time"],
+        event=power_transformer_data["event"],
+        entry=power_transformer_data["entry"],
     )
 
 
-########################################################################################################################
+@pytest.fixture
+def regression_likelihood(regression, insulator_string_data):
+    covar = np.column_stack(
+        (
+            insulator_string_data["pHCl"],
+            insulator_string_data["pH2SO4"],
+        )
+    )
+    return regression.init_likelihood(
+        insulator_string_data["time"],
+        covar,
+        event=insulator_string_data["event"],
+        entry=insulator_string_data["entry"],
+    )
+
+
+#######################################################################################
+# FROZEN LIFETIME FIXTURES
+#######################################################################################
+
+NB_ASSETS = 3
+
+
+@pytest.fixture
+def frozen_regression(regression):
+    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * regression.nb_coef).reshape(
+        NB_ASSETS, regression.nb_coef
+    )
+    return regression.freeze(covar)
+
+
+@pytest.fixture
+def frozen_ar_distribution(distribution):
+    ar = distribution.isf(0.75)
+    return AgeReplacementModel(distribution).freeze(ar)
+
+
+@pytest.fixture
+def frozen_ar_regression(regression):
+    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * regression.nb_coef).reshape(
+        NB_ASSETS, regression.nb_coef
+    )
+    ar = regression.isf(0.75, covar)
+    return AgeReplacementModel(regression).freeze(ar, covar)
+
+
+#######################################################################################
 # LIFETIME MODEL VARIABLES FIXTURES
-########################################################################################################################
+#######################################################################################
 
 M = 3  # nb assets
 N = 10  # nb points
@@ -166,9 +223,9 @@ def probability(request):
 
 @pytest.fixture(
     params=[
-        np.ones((NB_COEF,), dtype=np.float64),
-        np.ones((1, NB_COEF), dtype=np.float64),
-        np.ones((M, NB_COEF), dtype=np.float64),
+        np.ones((len(COEFFICIENTS),), dtype=np.float64),
+        np.ones((1, len(COEFFICIENTS)), dtype=np.float64),
+        np.ones((M, len(COEFFICIENTS)), dtype=np.float64),
     ],
     ids=lambda covar: f"covar:{covar.shape}",
 )
@@ -240,9 +297,9 @@ def rvs_size(request):
     return request.param
 
 
-########################################################################################################################
+#######################################################################################
 # ECONOMIC FIXTURES
-########################################################################################################################
+#######################################################################################
 
 
 @pytest.fixture(
@@ -280,9 +337,9 @@ def discounting_rate(request):
     return request.param
 
 
-########################################################################################################################
+#######################################################################################
 # FACTORY FIXTURE TO CONTROL IO SHAPES
-########################################################################################################################
+#######################################################################################
 
 
 @pytest.fixture

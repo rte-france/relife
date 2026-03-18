@@ -25,8 +25,14 @@ Lifetime distribution
 Lifetime regression
 -------------------
 
-    ProportionalHazard
-    AcceleratedFailureTime
+    ParametricProportionalHazard
+    ParametricAcceleratedFailureTime
+
+Semiparametric lifetime regression
+----------------------------------
+
+    SemiParametricProportionalHazard
+
 
 Nonparametric models
 --------------------
@@ -41,8 +47,18 @@ Conditional models
     AgeReplacementModel
     LeftTruncatedModel
 
+
+Likelihoods
+-----------
+
+    LifetimeLikelihood
+    CoxPartialLifetimeLikelihood
+    BreslowPartialLifetimeLikelihood
+    EfronPartialLifetimeLikelihood
+
 """
 
+from ._base import LifetimeLikelihood
 from ._conditional_model import AgeReplacementModel, LeftTruncatedModel
 from ._distribution import (
     EquilibriumDistribution,
@@ -54,9 +70,16 @@ from ._distribution import (
     Weibull,
 )
 from ._non_parametric import ECDF, KaplanMeier, NelsonAalen
-from ._regression import AcceleratedFailureTime, ProportionalHazard
+from ._regression import ParametricAcceleratedFailureTime, ParametricProportionalHazard
+from ._semi_parametric import (
+    BreslowPartialLifetimeLikelihood,
+    CoxPartialLifetimeLikelihood,
+    EfronPartialLifetimeLikelihood,
+    SemiParametricProportionalHazard,
+)
 
 __all__ = [
+    "LifetimeLikelihood",
     "Exponential",
     "Weibull",
     "Gompertz",
@@ -64,11 +87,15 @@ __all__ = [
     "LogLogistic",
     "MinimumDistribution",
     "EquilibriumDistribution",
-    "ProportionalHazard",
-    "AcceleratedFailureTime",
+    "ParametricProportionalHazard",
+    "ParametricAcceleratedFailureTime",
+    "SemiParametricProportionalHazard",
     "KaplanMeier",
     "ECDF",
     "NelsonAalen",
     "AgeReplacementModel",
     "LeftTruncatedModel",
+    "CoxPartialLifetimeLikelihood",
+    "EfronPartialLifetimeLikelihood",
+    "BreslowPartialLifetimeLikelihood",
 ]

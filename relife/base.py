@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import inspect
+import warnings
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from dataclasses import dataclass, field
 from itertools import chain
 from typing import (
     Any,
+    Callable,
     Generic,
-    Iterator,
+    Literal,
     Self,
     TypeVar,
     TypeVarTuple,
@@ -16,9 +21,12 @@ from typing import (
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import override
+from optype.numpy import Array1D, Array2D, ToFloat, ToFloat1D
+from scipy import stats
+from scipy.optimize import approx_fprime, minimize
+from typing_extensions import overload, override
 
-__all__ = ["ParametricModel", "FrozenParametricModel"]
+__all__ = ["ParametricModel", "FrozenParametricModel", "MaximumLikelihoodOptimizer"]
 
 
 @final
@@ -94,7 +102,9 @@ class _Parameters:
     def update_tree(self) -> None:
         """update names and values of current and parent nodes"""
 
-        def items_walk(parameters: _Parameters) -> Iterator[tuple[str, float]]:
+        def items_walk(
+            parameters: _Parameters,
+        ) -> Iterator[tuple[tuple[str, float], ...]]:
             yield tuple(parameters._mapping.items())
             for leaf in parameters._leaves.values():
                 yield tuple(chain.from_iterable(items_walk(leaf)))
@@ -202,8 +212,8 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     """
     Class of every frozen parametric models.
 
-    Frozen models encapsulate additional arguments values allowing to request the object without
-    giving them.
+    Frozen models encapsulate additional arguments values allowing to request
+    the object without giving them.
     """
 
     _args: tuple[*Ts]
@@ -212,7 +222,12 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     def __init__(self, model: _ParametricModel_T, *args: *Ts):
         super().__init__()
         if np.any(np.isnan(model.params)):
-            raise ValueError("Can't freeze a model with NaN params. Set params first")
+            raise ValueError(
+                f"""
+                Can't freeze a model with np.nan parameters. Model params is
+                {model.params}
+                """
+            )
         self._unfrozen_model = model
         self._args = args
 
@@ -233,7 +248,7 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
     def __getattr__(self, key: str) -> Any:
         frozen_type = self._unfrozen_model.__class__.__name__
         if key == "fit":
-            raise AttributeError(f"Frozen model can't be fit")
+            raise AttributeError("Frozen model can't be fit")
         try:
             attr = getattr(self._unfrozen_model, key)
         except AttributeError:
@@ -247,49 +262,264 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
         return attr
 
 
-# class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
-#     """
-#     Class of every frozen parametric models.
+@overload
+def is_frozen(model: FrozenParametricModel[ParametricModel, *Ts]) -> Literal[True]: ...
+@overload
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool: ...
+def is_frozen(
+    model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
+) -> bool:
+    """
+    Checks if model is frozen
+    """
+    from relife.base import FrozenParametricModel
 
-#     Frozen models encapsulate additional arguments values allowing to request the object without
-#     giving them.
-#     """
+    return isinstance(model, FrozenParametricModel)
 
-#     _args: tuple[*Ts]
-#     _unfrozen_model: _ParametricModel_T
 
-#     def __init__(self, model: _ParametricModel_T, *args: *Ts):
-#         super().__init__()
-#         if np.any(np.isnan(model.params)):
-#             raise ValueError("Can't freeze a model with NaN params. Set params first")
-#         self._unfrozen_model = model
-#         self._args = args
+@dataclass
+class FittingResults:
+    """Fitting results of the parametric_model core."""
 
-#     @property
-#     def args(self) -> tuple[*Ts]:
-#         return self._args
+    nb_observations: int  #: Number of observations (samples)
+    optimal_params: NDArray[np.float64]  #: Optimal parameters values
+    success: bool  #: Whether or not the optimizer exited successfully.
+    neg_log_likelihood: float = field(
+        repr=False
+    )  #: Negative log likelihood value at optimal parameters values
 
-#     @args.setter
-#     def args(self, value: tuple[*Ts]) -> None:
-#         if len(value) != len(self._args):
-#             raise ValueError
-#         self._args = value
+    covariance_matrix: Array2D[np.float64] | None = field(
+        repr=False, default=None
+    )  #: Covariance matrix (computed as the inverse of the Hessian matrix).
 
-#     def unfreeze(self) -> _ParametricModel_T:
-#         return self._unfrozen_model
+    nb_params: int = field(init=False, repr=False)  #: Number of parameters.
+    aic: float = field(init=False)  #: Akaike Information Criterion.
+    aicc: float = field(
+        init=False
+    )  #: Akaike Information Criterion with a correction for small sample sizes.
+    bic: float = field(init=False)  #: Bayesian Information Criterion.
+    se: NDArray[np.float64] | None = field(
+        init=False, repr=False
+    )  #: Standard error, square root of the diagonal of the covariance matrix
+    ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
 
-#     def __getattr__(self, key: str) -> Any:
-#         frozen_type = self._unfrozen_model.__class__.__name__
-#         if key == "fit":
-#             raise AttributeError(f"Frozen model can't be fit")
-#         try:
-#             attr = getattr(self._unfrozen_model, key)
-#         except AttributeError:
-#             raise AttributeError(f"Frozen {frozen_type} has no attribute {key}")
+    def __post_init__(self):
+        self.nb_params = self.optimal_params.size
+        self.aic = 2 * self.nb_params + 2 * self.neg_log_likelihood
+        self.aicc = self.aic + 2 * self.nb_params * (self.nb_params + 1) / (
+            self.nb_observations - self.nb_params - 1
+        )
+        self.bic = (
+            np.log(self.nb_observations) * self.nb_params + 2 * self.neg_log_likelihood
+        )
+        self.se = None
+        self.ic = None
+        if self.covariance_matrix is not None:
+            self.se = np.sqrt(np.diag(self.covariance_matrix))
+            self.ic = self.optimal_params.reshape(-1, 1) + stats.norm.ppf(
+                (0.05, 0.95)
+            ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_observations)  # (p, 2)
 
-#         def wrapper(*args: Any, **kwargs: Any):
-#             return attr(*(*args, *self.args), **kwargs)
+    def se_estimation_function(
+        self, jac_f: NDArray[np.float64]
+    ) -> np.float64 | NDArray[np.float64]:
+        """Standard error estimation function.
 
-#         if inspect.ismethod(attr):
-#             return wrapper
-#         return attr
+        Parameters
+        ----------
+        jac_f : 1D, 2D or 3D array
+            The Jacobian of a function f with respect to params.
+
+        Returns
+        -------
+        1D array
+            Standard error for f(params).
+
+        References
+        ----------
+        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
+            Statistical methods for reliability data. John Wiley & Sons.
+        """
+        # [1] equation B.10 in Appendix
+        # jac_f : (p,), (p, n) or (p, m, n)
+        # self.var : (p, p)
+        if self.covariance_matrix is not None:
+            if jac_f.ndim == 1:  # jac_f : (p,)
+                return np.sqrt(
+                    np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f)
+                )  # ()
+            if jac_f.ndim == 2:  # jac_f : (p, n)
+                return np.sqrt(
+                    np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f)
+                )  # (n,)
+            if (
+                jac_f.ndim == 3
+            ):  # jac_f : (p, m, n) if regression with more than one asset
+                return np.sqrt(
+                    np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)
+                )  # (m,n)
+            raise ValueError("Invalid jac_f ndim")
+        raise ValueError("Can't compute if var is None")
+
+    @override
+    def __str__(self) -> str:
+        fields = {
+            "fitted params": self.optimal_params,
+            "AIC": self.aic,
+            "AICc": self.aicc,
+            "BIC": self.bic,
+        }
+        # Find the maximum field name length for alignment
+        max_name_length = max(len(name) for name, _ in fields.items())
+        lines: list[str] = []
+        for name, value in fields.items():
+            # Format arrays to be more compact
+            if isinstance(value, np.ndarray):
+                value_str = f"[{', '.join(f'{x:.6g}' for x in value)}]"
+            else:
+                value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
+            lines.append(f"{name:<{max_name_length}} : {value_str}")
+        return "\n".join(lines)
+
+
+M = TypeVar("M", bound=ParametricModel)
+D = TypeVar("D")
+
+
+@dataclass
+class OptimizerConfig:
+    x0: ToFloat | ToFloat1D
+    scipy_minimize_options: dict[str, Any] = field(default_factory=dict)
+    covariance_method: Literal["cs", "2point", "exact", False] = False
+
+
+class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
+    """
+    Abstract maximum likelihood optimizer.
+
+    Notes
+    -----
+    Jacobian and hessian are not required but they can be implemented in
+    concrete likelihoods. To use the jacobian or hessian implementations in the
+    likelihood, pass them into `config["scipy_minimize_options"]`.
+
+    Attributes
+    ----------
+    nb_observations : int
+        The number of observations.
+    """
+
+    model: M
+    data: D
+    config: OptimizerConfig
+
+    @property
+    @abstractmethod
+    def nb_observations(self) -> int: ...
+
+    @abstractmethod
+    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
+        """
+        Negative log likelihood.
+
+        Parameters
+        ----------
+        params : 1d array
+            Parameters values.
+
+        Returns
+        -------
+        out : ToFloat
+            Negative log likelihood value.
+        """
+
+    def optimize(self) -> FittingResults:
+        """
+        Search parameters values that maximize the likelihood given data.
+
+        Returns
+        -------
+        out : FittingResults
+            An object that encapsulates optimal parameters and fitting
+            information (AIC, variance, etc.).
+        """
+
+        optimizer = minimize(
+            self.negative_log,
+            self.config.x0,
+            **self.config.scipy_minimize_options,
+        )
+
+        fitting_results = FittingResults(
+            self.nb_observations,
+            np.copy(optimizer.x),
+            optimizer.success,
+            optimizer.fun,
+        )
+
+        if not fitting_results.success:
+            warnings.warn(
+                "The negative log-likelihood minimization did not exited successfully."
+            )
+
+        if self.config.covariance_method is False:
+            return fitting_results
+
+        jac = self.config.scipy_minimize_options.get("jac", None)
+        hess = self.config.scipy_minimize_options.get("hess", None)
+        if jac is not None and self.config.covariance_method != "exact":
+            fitting_results.covariance_matrix = approx_parameters_covariance(
+                jac,
+                fitting_results.optimal_params,
+                method=self.config.covariance_method,
+            )
+        if hess is not None and self.config.covariance_method == "exact":
+            fitting_results.covariance_matrix = np.linalg.pinv(
+                hess(fitting_results.optimal_params)
+            )
+        return fitting_results
+
+
+def approx_parameters_covariance(
+    jac_negative_log: Callable[[Array1D[np.float64]], Array1D[np.float64]],
+    optimal_params: NDArray[np.float64],
+    method: Literal["2point", "cs"] = "cs",
+    eps: float = 1e-6,
+) -> Array2D[np.float64] | None:
+    size = optimal_params.size
+    hess = np.empty((size, size))
+
+    # hessian 2 point
+    if method == "2point":
+        for i in range(size):
+            hess[i] = approx_fprime(
+                optimal_params,
+                lambda x: jac_negative_log(x)[i],
+                eps,
+            )
+        return hess
+    # hessian cs
+    u = eps * 1j * np.eye(size)
+    complex_params = optimal_params.astype(np.complex64)  # change params to complex
+    for i in range(size):
+        for j in range(i, size):
+            hess[i, j] = np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
+            if i != j:
+                hess[j, i] = hess[i, j]
+    covariance_matrix = None
+    try:
+        covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
+    except Exception as err:
+        warnings.warn(
+            f"""
+            Failed to compute parameters covariance due to non-invertible
+            hessian matrix. Numpy pseudo-inversion algorithm returned : {err}
+
+            You can skip parameters covariance computation by setting
+            covariance_method to False. 
+            """
+        )
+
+    return covariance_matrix
