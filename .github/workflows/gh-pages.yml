@@ -20,9 +20,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install relife locally in dev mode
-        run: | # dev version with sphinx 
-          python -m pip install ".[dev]" 
+      - name: Install relife locally with doc dependencies
+        run: |
+          python -m pip install . --group doc
 
       - name: Extra installs
         # pandoc is required by sphinx extensions

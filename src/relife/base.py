@@ -5,18 +5,18 @@ from __future__ import annotations
 import inspect
 import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import (
     Any,
-    Callable,
     Generic,
     Literal,
     Self,
     TypeVar,
     TypeVarTuple,
     final,
+    overload,
 )
 
 import numpy as np
@@ -24,7 +24,7 @@ from numpy.typing import NDArray
 from optype.numpy import Array1D, Array2D, ToFloat, ToFloat1D
 from scipy import stats
 from scipy.optimize import approx_fprime, minimize
-from typing_extensions import overload, override
+from typing_extensions import override
 
 __all__ = ["ParametricModel", "FrozenParametricModel", "MaximumLikelihoodOptimizer"]
 
@@ -86,7 +86,7 @@ class _Parameters:
                 self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])
             )
         )
-        self._all_values = tuple((np.nan if v is None else v for v in values))
+        self._all_values = tuple(np.nan if v is None else v for v in values)
         for leaf in self._leaves.values():
             leaf.set_all_values(values[pos : pos + leaf.size])
             pos += leaf.size
@@ -199,7 +199,7 @@ class ParametricModel:
         # automatically add params of new baseline model
         if isinstance(value, ParametricModel):
             self._baseline_models[name] = value
-            self._params.set_leaf(f"{name}.params", getattr(value, "_params"))
+            self._params.set_leaf(f"{name}.params", value._params)
         super().__setattr__(name, value)
 
 
@@ -519,7 +519,8 @@ def approx_parameters_covariance(
 
             You can skip parameters covariance computation by setting
             covariance_method to False. 
-            """
+            """,
+            stacklevel=2,
         )
 
     return covariance_matrix

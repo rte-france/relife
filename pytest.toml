@@ -1,0 +1,10 @@
+[pytest]
+minversion = "9.0"
+addopts = ["-rxXs"]
+testpaths = [
+    "src/relife/tests",
+    "src/relife/data/tests",
+    "src/relife/lifetime_model/tests",
+    "src/relife/stochastic_process/tests",
+    "src/relife/policy/tests",
+]

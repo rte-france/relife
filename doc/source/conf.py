@@ -30,7 +30,6 @@ extensions = [
     "sphinx_copybutton",  # copy button in code block
     "nbsphinx",  # to insert notebook
     "sphinx_design",  # advanced design tools
-    "myst_parser",  # to use markdown pages
 ]
 
 myst_enable_extensions = ["colon_fence"]  # required by sphinx design with myst-parser

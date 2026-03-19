@@ -1,0 +1,16 @@
+{
+	"include": [
+	"src"
+	],
+	"exclude": [
+	"doc"
+	],
+	"reportAny": false,
+	"reportExplicitAny": false,
+	"strict": [
+		"src/relife/lifetime_model/**",
+		"src/relife/likelihood/**",
+		"src/relife/base.py",
+		"src/relife/utils/quadrature.py"
+	]
+}

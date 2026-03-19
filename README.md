@@ -2,7 +2,7 @@
   <img src="doc/source/_static/small_relife.gif" />
 </h1></br>
 
-An open-source Python library for asset management
+An open-source Python library for optimizing large-scale infrastructure investment decisions.
 
 - **Documentation:** http://opensource.rte-france.com/relife/
 - **Source code:** https://github.com/rte-france/relife
@@ -16,7 +16,7 @@ Some explanations might be missing until we finish the documentation properly, s
 **From PyPi**
 
 ```bash
-$ pip install relife
+$ python -m pip install relife
 ```
 
 **From source**
@@ -24,16 +24,34 @@ $ pip install relife
 ```bash
 $ git clone https://github.com/rte-france/relife.git
 $ cd relife
-$ pip install .
+$ python -m pip install .
 ```
 
 **For developpers**
 
+The project has two dependency groups, `dev` and `doc`.
+
+If you wish to work on the codebase, install ReLife with the packages included in the `dev` group.
+Using the editable mode (`-e`) is recommanded.
+
 ```bash
 $ git clone https://github.com/rte-france/relife.git
 $ cd relife
-$ pip install -e ".[dev]"
+$ python -m pip install -e . --group dev
 ```
+
+If you wish to work on the documentation, install ReLife with the packages included in the `doc` group.
+
+```bash
+$ git clone https://github.com/rte-france/relife.git
+$ cd relife
+$ python -m pip install . --group doc
+```
+
+## Development tools
+
+We use [ruff](https://docs.astral.sh/ruff/) as linter and formatter.
+We currently use [basedpyright](https://docs.basedpyright.com/latest/) as Python type checker and LSP server. In a near future, we may move to [ty](https://docs.astral.sh/ty/).
 
 ## Citing
 

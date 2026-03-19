@@ -21,9 +21,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies
-        run: | # dev version with sphinx 
-          pip install ".[dev]" 
+      - name: Install ReLife with dev dependencies
+        run: | 
+          pip install . --group dev
 
       - name: Running pytest
-        run: pytest relife
+        run: pytest
