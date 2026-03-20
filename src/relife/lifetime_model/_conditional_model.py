@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from typing import Callable, Literal, TypeVarTuple, overload
+from collections.abc import Callable
+from typing import TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.base import is_frozen
 from relife.typing import (
     AnyFloat,
     AnyParametricLifetimeModel,
-    NumpyBool,
     NumpyFloat,
     Seed,
 )
@@ -146,61 +145,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        ar: AnyFloat,
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
+    # TODO : besoin d'override ?
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def rvs(
@@ -208,40 +153,14 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int | tuple[int, int],
         ar: AnyFloat,
         *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
         seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
-        ar = reshape_1d_arg(ar)
-        baseline_rvs = self.baseline.rvs(
+    ) -> NumpyFloat:
+        args_add_ar = (ar, *args)
+        return super().rvs(
             size,
-            *args,
-            return_event=return_event,
-            return_entry=return_entry,
+            *args_add_ar,
             seed=seed,
         )
-        time = baseline_rvs[0] if isinstance(baseline_rvs, tuple) else baseline_rvs
-        time = np.minimum(time, ar)  # it may change time shape by broadcasting
-        if not return_event and not return_entry:
-            return time
-        elif return_event and not return_entry:
-            event = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            event = np.where(time != ar, event, ~event)
-            return time, event
-        elif not return_event and return_entry:
-            entry = np.broadcast_to(baseline_rvs[1], time.shape).copy()
-            return time, entry
-        else:
-            event, entry = baseline_rvs[1:]
-            event = np.broadcast_to(event, time.shape).copy()
-            entry = np.broadcast_to(entry, time.shape).copy()
-            event = np.where(time != ar, event, ~event)
-            return time, event, entry
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
@@ -407,61 +326,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             - a0
         )
 
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        a0: AnyFloat,
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
+    # TODO : besoin d'override ?
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def rvs(
@@ -469,48 +334,15 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         size: int | tuple[int, int],
         a0: AnyFloat,
         *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
         seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
+    ) -> NumpyFloat:
         a0 = reshape_1d_arg(a0)
-        super_rvs = super().rvs(
+        args_add_a0 = (a0, *args)
+        return super().rvs(
             size,
-            *(a0, *args),
-            return_event=return_event,
-            return_entry=return_entry,
+            *args_add_a0,
             seed=seed,
         )
-        time = super_rvs[0] if isinstance(super_rvs, tuple) else super_rvs
-        complete_ages = time + a0
-        output = [
-            time,
-        ]  # at least time in output
-        if return_event:
-            event = super_rvs[1]  # event always at index 1
-            # reconstruct event for AgeReplacementModel c omposition as super skips this info
-            if isinstance(self.baseline, AgeReplacementModel):
-                ar = reshape_1d_arg(args[0])
-                event = np.where(complete_ages < ar, event, ~event)
-            if is_frozen(self.baseline) and isinstance(
-                self.baseline.unfreeze(), AgeReplacementModel
-            ):
-                ar = reshape_1d_arg(self.baseline.args[0])
-                event = np.where(complete_ages < ar, event, ~event)
-            output.append(event)
-        if return_entry:
-            output[0] = complete_ages  # don't return residual ages
-            entry = super_rvs[-1]  # entry always at last index
-            entry = np.broadcast_to(a0, entry.shape).copy()
-            output.append(entry)
-        if len(output) > 1:
-            return tuple(output)  # return tuple, not list
-        return output[0]
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)

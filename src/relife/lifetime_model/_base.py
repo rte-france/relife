@@ -5,10 +5,10 @@ from __future__ import annotations
 import copy
 import functools
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import (
     Any,
-    Callable,
     Generic,
     Literal,
     ParamSpec,
@@ -35,7 +35,6 @@ from relife.base import (
 )
 from relife.typing import (
     AnyFloat,
-    NumpyBool,
     NumpyFloat,
     Seed,
 )
@@ -304,69 +303,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             x0=np.zeros_like(cumulative_hazard_rate),
         )
 
-    @overload
     def rvs(
         self,
         size: int | tuple[int, int],
         *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[False],
         seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
+    ) -> NumpyFloat:
         """
         Random variable sampling.
 
@@ -376,46 +318,20 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             Size of the generated sample.
         *args
             Any additonal args.
-        return_event : bool, default is False
-            If True, returns event indicators along with the sample time
-            values.
-        return_entry : bool, default is False
-            If True, returns corresponding entry values of the sample time
-            values.
         seed : optional int, np.random.BitGenerator, np.random.Generator, np.random.RandomState, default is None
             If int or BitGenerator, seed for random number generator. If
             np.random.RandomState or np.random.Generator, use as given.
 
         Returns
         -------
-        out : float, ndarray or tuple of float or ndarray
-            The sample values. If either `return_event` or `return_entry` is
-            True, returns a tuple containing the time values followed by event
-            values, entry values or both.
+        out : float or ndarray
+            The sample values.
         """
         rng = np.random.default_rng(seed)
         probability = rng.uniform(size=size)
         if size == 1:
             probability = np.squeeze(probability)
-        time = self.isf(probability, *args)
-        event = (
-            np.ones_like(time, dtype=np.bool_)
-            if isinstance(time, np.ndarray)
-            else np.bool_(True)
-        )
-        entry = (
-            np.zeros_like(time, dtype=np.float64)
-            if isinstance(time, np.ndarray)
-            else np.float64(0)
-        )
-        if not return_event and not return_entry:
-            return time
-        elif return_event and not return_entry:
-            return time, event
-        elif not return_event and return_entry:
-            return time, entry
-        else:
-            return time, event, entry
+        return self.isf(probability, *args)
 
     def ls_integrate(
         self,
@@ -642,68 +558,14 @@ class FrozenParametricLifetimeModel(
     def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
         return self._unfrozen_model.ichf(cumulative_hazard_rate, *self._args)
 
-    @overload
     def rvs(
         self,
         size: int | tuple[int, int],
-        return_event: Literal[False],
-        return_entry: Literal[False],
         seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
+    ) -> NumpyFloat:
         return self._unfrozen_model.rvs(
             size,
             *self._args,
-            return_event=return_event,
-            return_entry=return_entry,
             seed=seed,
         )
 
@@ -1065,7 +927,7 @@ class LifetimeData:
         if np.any(time <= entry):
             raise ValueError("All time values must be greater than entry values")
         if isinstance(self.args, tuple):
-            args = tuple((reshape_1d_arg(arg) for arg in self.args))
+            args = tuple(reshape_1d_arg(arg) for arg in self.args)
         elif isinstance(self.args, np.ndarray):
             args = (reshape_1d_arg(self.args),)
         else:
