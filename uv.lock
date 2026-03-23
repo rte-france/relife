@@ -1396,6 +1396,20 @@ wheels = [
 ]
 
 [[package]]
+name = "matplotlib-stubs"
+version = "0.3.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/c3/b9436e86a6f4cf3e613156100d0cdc6cbf98805ceede4d2df103ace3a88e/matplotlib_stubs-0.3.11.tar.gz", hash = "sha256:f6ba6f9fa5988b78c373284f26e785034e3360d66b2ca41c65a9d627206f7c8b", size = 216355, upload-time = "2025-10-24T01:04:23.857Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/ab/6c77aeea4522cd11517150668693388a4b9f2f2e77f0b112429190e457c1/matplotlib_stubs-0.3.11-py3-none-any.whl", hash = "sha256:e9905056252b02462f4ee1e8de470179b7f11d9e008309b186ad08d2869b0f0a", size = 122856, upload-time = "2025-10-24T01:04:22.963Z" },
+]
+
+[[package]]
 name = "mistune"
 version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2220,6 +2234,7 @@ name = "relife"
 version = "2.6.1"
 source = { editable = "." }
 dependencies = [
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "numpydoc" },
     { name = "optype", extra = ["numpy"] },
@@ -2232,6 +2247,7 @@ dev = [
     { name = "ipython", version = "9.10.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "ipython", version = "9.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "lifelines" },
+    { name = "matplotlib-stubs" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -2249,6 +2265,7 @@ doc = [
 
 [package.metadata]
 requires-dist = [
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "numpy", specifier = ">=2.4.3" },
     { name = "numpydoc", specifier = ">=1.10.0" },
     { name = "optype", extras = ["numpy"], specifier = ">=0.17.0" },
@@ -2260,6 +2277,7 @@ dev = [
     { name = "basedpyright", specifier = ">=1.38.3" },
     { name = "ipython", specifier = ">=9.10.0" },
     { name = "lifelines", specifier = ">=0.30.3" },
+    { name = "matplotlib-stubs", specifier = ">=0.3.11" },
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "ruff", specifier = ">=0.15.6" },

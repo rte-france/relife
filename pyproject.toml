@@ -17,6 +17,7 @@ requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICEN[CS]E*"]
 dependencies = [
+    "matplotlib>=3.10.8",
     "numpy>=2.4.3",
     "numpydoc>=1.10.0",
     "optype[numpy]>=0.17.0",
@@ -33,6 +34,7 @@ dev = [
     "basedpyright>=1.38.3",
     "ipython>=9.10.0",
     "lifelines>=0.30.3",
+    "matplotlib-stubs>=0.3.11",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "ruff>=0.15.6",
