@@ -22,6 +22,7 @@ dependencies = [
     "numpydoc>=1.10.0",
     "optype[numpy]>=0.17.0",
     "scipy>=1.17.1",
+    "typing-extensions>=4.15.0",
 ]
 
 [project.urls]

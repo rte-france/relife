@@ -2239,6 +2239,7 @@ dependencies = [
     { name = "numpydoc" },
     { name = "optype", extra = ["numpy"] },
     { name = "scipy" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -2270,6 +2271,7 @@ requires-dist = [
     { name = "numpydoc", specifier = ">=1.10.0" },
     { name = "optype", extras = ["numpy"], specifier = ">=0.17.0" },
     { name = "scipy", specifier = ">=1.17.1" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
 
 [package.metadata.requires-dev]
