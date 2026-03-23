@@ -408,8 +408,8 @@ class Kijima1ProcessIterator(VirtualAgeProcessIterator):
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.ages += residual_time
         self.virtual_ages = self.ages + self.process.q * residual_time
+        self.ages += residual_time
 
         if self.ar:
             self.ages[self.ages >= self.ar] = 0
@@ -425,9 +425,9 @@ class Kijima2ProcessIterator(VirtualAgeProcessIterator):
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.ages += residual_time
         self.virtual_ages = self.process.q * (self.ages + residual_time)
-
+        self.ages += residual_time
+        
         if self.ar:
             self.ages[self.ages >= self.ar] = 0
             self.virtual_ages[self.ages >= self.ar] = 0
