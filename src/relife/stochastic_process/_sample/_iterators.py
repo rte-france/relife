@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.base import is_frozen
-from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model import LeftTruncatedModel
 from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.lifetime_model._distribution import (
@@ -97,9 +96,7 @@ class TimeWindowObserver:
     ):
         entry = np.where(
             self.just_crossed_t0,
-            sample_step.entry
-            + self.t0
-            - (timeline - sample_step.residual_time),
+            sample_step.entry + self.t0 - (timeline - sample_step.residual_time),
             sample_step.entry,
         )
 
@@ -165,6 +162,19 @@ class StructArrayBuilder:
             asrecarray=False,
         )
         return struct_arr
+
+    @staticmethod
+    def add_field(
+        struct_arr: NDArray[np.void], new_label: str, new_values: NDArray[np.float64]
+    ):
+        return rfn.append_fields(
+            struct_arr,
+            new_label,
+            new_values,
+            np.float64,
+            usemask=False,
+            asrecarray=False,
+        )  # type: ignore
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -261,10 +271,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         self.time_window_observer.update(self.timeline)
 
         # Apply observation window conditions
-        sample_step, self.timeline = (
-            self.time_window_observer.apply_observation_window(
-                sample_step, self.timeline
-            )
+        sample_step, self.timeline = self.time_window_observer.apply_observation_window(
+            sample_step, self.timeline
         )
         return sample_step
 
@@ -317,6 +325,8 @@ class RenewalProcessIterator(StochasticDataIterator):
             self._expanded_first_lifetime_model = _expand_lifetime_model(
                 self.process.first_lifetime_model, nb_samples
             )
+            if self._expanded_first_lifetime_model.unfreeze() is LeftTruncatedModel:
+                self.ages = self._expanded_first_lifetime_model.args[0].copy()
 
     @property
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
@@ -334,24 +344,19 @@ class RenewalProcessIterator(StochasticDataIterator):
         """
         In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
         """
-        pass
+        self.ages = np.zeros(self.sample_size, dtype=np.float64)
 
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
-
     @override
     def __next__(self) -> NDArray[np.void]:
         struct_arr = super().__next__()
-        # may be type hint error in rfn.append_fields overload
-        return rfn.append_fields(
+        return StructArrayBuilder.add_field(
             struct_arr,
             "reward",
             self.process.reward.sample(struct_arr["time"])
             * self.process.discounting.factor(struct_arr["timeline"]),
-            np.float64,
-            usemask=False,
-            asrecarray=False,
-        )  # type: ignore
+        )
 
 
 class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
@@ -398,6 +403,15 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         virtual_ages = self.virtual_ages.copy()
         return LeftTruncatedModel(self._expanded_lifetime_model).freeze(virtual_ages)
 
+    @override
+    def __next__(self) -> NDArray[np.void]:
+        struct_arr = super().__next__()
+        return StructArrayBuilder.add_field(
+            struct_arr,
+            "virtual_age",
+            self.virtual_ages[self.time_window_observer.observed_step],
+        )
+
 
 class Kijima1ProcessIterator(VirtualAgeProcessIterator):
     def update_ages(
@@ -427,7 +441,7 @@ class Kijima2ProcessIterator(VirtualAgeProcessIterator):
         # Update asset ages
         self.virtual_ages = self.process.q * (self.ages + residual_time)
         self.ages += residual_time
-        
+
         if self.ar:
             self.ages[self.ages >= self.ar] = 0
             self.virtual_ages[self.ages >= self.ar] = 0
