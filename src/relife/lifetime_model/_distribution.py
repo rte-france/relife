@@ -120,76 +120,16 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         jac_hf, hf = self.jac_hf(time), self.hf(time)
         jac_sf, sf = self.jac_sf(time), self.sf(time)
         return jac_hf * sf + jac_sf * hf
-
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
+    
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
         self,
         size: int | tuple[int, int],
-        *,
-        return_event: bool = False,
-        return_entry: bool = False,
         seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
+    ) -> NumpyFloat:
         return super().rvs(
             size,
-            return_event=return_event,
-            return_entry=return_entry,
             seed=seed,
         )
 

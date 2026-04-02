@@ -209,13 +209,17 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         )
 
         if not a0:
-            a0 = np.zeros((nb_assets, 1), dtype=np.float64)
+            a0 = 0
+        a0 = np.broadcast_to(a0, (nb_assets,)).astype(np.float64)
         self.ages = np.repeat(a0, nb_samples, axis=0)
-        self.ar = (
-            np.broadcast_to(ar, self.sample_size, dtype=np.float64) if ar else None
-        )
 
-        self.timeline = np.zeros(self.sample_size, dtype=np.float64)
+        if ar :
+            ar = np.broadcast_to(ar, (nb_assets,)).astype(np.float64)
+            self.ar = np.repeat(ar, nb_samples)
+        else:
+            self.ar = None
+
+        self.timeline = np.zeros(self.sample_size)
 
         self.replacement_cycle = 0
         self.seed = np.random.default_rng(seed)
@@ -249,7 +253,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         event = np.ones_like(residual_time, dtype=np.bool_)
         entry = self.ages.copy()
 
-        if self.ar:
+        if self.ar is not None:
             preventive_replacements = self.ages + residual_time >= self.ar
             residual_time[preventive_replacements] = (
                 self.ar[preventive_replacements] - self.ages[preventive_replacements]
@@ -324,7 +328,7 @@ class RenewalProcessIterator(StochasticDataIterator):
         first_lifetime_model = (
             _expand_lifetime_model(self.process.first_lifetime_model, nb_samples)
             if self.process.first_lifetime_model is not None
-            else self._expanded_dynamic_lifetime_model
+            else self._expanded_lifetime_model
         )
         self._expanded_first_lifetime_model = LeftTruncatedModel(
             first_lifetime_model
@@ -379,7 +383,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
         # Update asset ages
         self.ages += residual_time
 
-        if self.ar:
+        if self.ar is not None:
             self.ages[self.ages >= self.ar] = 0
 
 
@@ -436,7 +440,7 @@ class Kijima1ProcessIterator(VirtualAgeProcessIterator):
         self.virtual_ages = self.ages + self.process.q * residual_time
         self.ages += residual_time
 
-        if self.ar:
+        if self.ar is not None:
             self.ages[self.ages >= self.ar] = 0
             self.virtual_ages[self.ages >= self.ar] = 0
 
@@ -453,6 +457,6 @@ class Kijima2ProcessIterator(VirtualAgeProcessIterator):
         self.virtual_ages = self.process.q * (self.ages + residual_time)
         self.ages += residual_time
 
-        if self.ar:
+        if self.ar is not None:
             self.ages[self.ages >= self.ar] = 0
             self.virtual_ages[self.ages >= self.ar] = 0

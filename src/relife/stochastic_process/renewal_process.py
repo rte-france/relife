@@ -13,6 +13,7 @@ from relife.lifetime_model import (
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
+from relife.typing._scalars import NumpyFloat
 from relife.utils import get_model_nb_assets
 
 from ._renewal_equations import (
@@ -169,7 +170,7 @@ class RenewalProcess(ParametricModel):
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], seed=None
+        self, nb_samples: int, time_window: tuple[float, float], a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -188,7 +189,7 @@ class RenewalProcess(ParametricModel):
 
         from ._sample import RenewalProcessIterable
 
-        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window, a0=a0, ar=ar, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
             struct_array, order=("asset_id", "sample_id", "timeline")
@@ -198,7 +199,7 @@ class RenewalProcess(ParametricModel):
         )
 
     def generate_failure_data(
-        self, nb_samples: int, time_window: tuple[float, float], seed=None
+        self, nb_samples: int, time_window: tuple[float, float], a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
     ) -> dict[str, Any]:
         """Generate lifetime data
 
@@ -239,7 +240,7 @@ class RenewalProcess(ParametricModel):
                 raise ValueError(
                     "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
                 )
-        iterable = RenewalProcessIterable(self, nb_samples, time_window, seed=seed)
+        iterable = RenewalProcessIterable(self, nb_samples, time_window, a0=a0, ar=ar, seed=seed)
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
             struct_array, order=("sample_id", "asset_id", "timeline")

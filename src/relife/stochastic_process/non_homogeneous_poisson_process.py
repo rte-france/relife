@@ -86,7 +86,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, seed=None
+        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -111,7 +111,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         frozen_nhpp = self.freeze(*args)
         iterable = NonHomogeneousPoissonProcessIterable(
-            frozen_nhpp, nb_samples, time_window=time_window, seed=seed
+            frozen_nhpp, nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
@@ -317,7 +317,7 @@ class FrozenNonHomogeneousPoissonProcess(
         return self._unfrozen_model.cumulative_intensity(time, *self.args)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], seed=None
+        self, nb_samples: int, time_window: tuple[float, float], a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -336,7 +336,7 @@ class FrozenNonHomogeneousPoissonProcess(
 
         """
         return self._unfrozen_model.sample(
-            nb_samples, time_window, *self.args, seed=seed
+            nb_samples, time_window, *self.args, a0=a0, ar=ar, seed=seed
         )
 
     def generate_failure_data(
