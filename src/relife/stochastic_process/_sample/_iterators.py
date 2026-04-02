@@ -213,7 +213,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         a0 = np.broadcast_to(a0, (nb_assets,)).astype(np.float64)
         self.ages = np.repeat(a0, nb_samples, axis=0)
 
-        if ar :
+        if ar:
             ar = np.broadcast_to(ar, (nb_assets,)).astype(np.float64)
             self.ar = np.repeat(ar, nb_samples)
         else:

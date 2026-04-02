@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Generic, Self, Sequence, TypeVarTuple
+from collections.abc import Sequence
+from typing import Any, Generic, Self, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -86,7 +87,13 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         return FrozenNonHomogeneousPoissonProcess(self, *args)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        *args: *Ts,
+        a0: NumpyFloat | None = None,
+        ar: NumpyFloat | None = None,
+        seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -317,7 +324,12 @@ class FrozenNonHomogeneousPoissonProcess(
         return self._unfrozen_model.cumulative_intensity(time, *self.args)
 
     def sample(
-        self, nb_samples: int, time_window: tuple[float, float], a0:NumpyFloat|None=None, ar:NumpyFloat|None=None, seed=None
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
+        ar: NumpyFloat | None = None,
+        seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
