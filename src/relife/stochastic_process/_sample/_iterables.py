@@ -12,6 +12,8 @@ from typing_extensions import override
 from relife.typing._scalars import NumpyFloat
 from relife.utils import get_model_nb_assets
 
+from relife.lifetime_model._conditional_model import AgeReplacementModel, LeftTruncatedModel
+
 from ._iterators import (
     Kijima1ProcessIterator,
     Kijima2ProcessIterator,
@@ -29,16 +31,25 @@ __all__ = [
     "Kijima2ProcessIterable",
 ]
 
-
 class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __init__(
         self,
+        process,
         nb_samples: int,
         time_window: tuple[float, float],
         a0: NumpyFloat | None = None,
         ar: NumpyFloat | None = None,
         seed: int | None = None,
     ):
+        self.process = process
+
+        trial_model = self.process.lifetime_model
+        if ar is not None :
+            trial_model = AgeReplacementModel(trial_model).freeze(ar)
+        if a0 is not None :
+            trial_model = LeftTruncatedModel(trial_model).freeze(a0)
+        self.nb_assets = get_model_nb_assets(trial_model)
+
         t0, tf = time_window
         if t0 < 0 or tf < 0 or t0 > tf:
             raise ValueError(
@@ -50,6 +61,8 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         self.nb_samples = nb_samples
         self.seed = seed
 
+    def
+
     @property
     def t0(self) -> float:
         return self.time_window[0]
@@ -58,27 +71,29 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def tf(self) -> float:
         return self.time_window[1]
 
+
     @override
     @abstractmethod
-    def __iter__(self) -> StochasticDataIterator: ...
+    def __iter__(self) -> StochasticDataIterator:
+
+
 
 
 class RenewalProcessIterable(StochasticDataIterable):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
-        seed: int | None = None,
-    ):
-        super().__init__(nb_samples, time_window, a0=a0, ar=ar, seed=seed)
-        self.process = process
 
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
+        if isinstance(self.process, RenewalRewardProcess):
+            return RenewalRewardProcessIterator(
+                self.process,
+                self.nb_samples,
+                self.time_window,
+                self.a0,
+                self.ar,
+                nb_assets=get_model_nb_assets(self.process),
+                seed=self.seed,
+            )
         if isinstance(self.process, RenewalProcess):
             return RenewalProcessIterator(
                 self.process,
@@ -89,31 +104,10 @@ class RenewalProcessIterable(StochasticDataIterable):
                 nb_assets=get_model_nb_assets(self.process),
                 seed=self.seed,
             )
-        if isinstance(self.process, RenewalRewardProcess):
-            return RenewalRewardProcessIterator(
-                self.process,
-                self.nb_samples,
-                self.time_window,
-                a0=self.a0,
-                ar=self.ar,
-                nb_assets=get_model_nb_assets(self.process),
-                seed=self.seed,
-            )
         raise ValueError
 
 
 class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
-        seed: int | None = None,
-    ):
-        super().__init__(nb_samples, time_window, a0=a0, ar=ar, seed=seed)
-        self.process = process
 
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
@@ -122,23 +116,12 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=get_model_nb_assets(self.process),
+            nb_assets=self.nb_assets,
             seed=self.seed,
         )
 
 
 class Kijima1ProcessIterable(StochasticDataIterable):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
-        seed: int | None = None,
-    ):
-        super().__init__(nb_samples, time_window, a0=a0, ar=ar, seed=seed)
-        self.process = process
 
     def __iter__(self) -> Kijima1ProcessIterator:
         return Kijima1ProcessIterator(
@@ -147,23 +130,12 @@ class Kijima1ProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=get_model_nb_assets(self.process),
+            nb_assets=self.nb_assets,
             seed=self.seed,
         )
 
 
 class Kijima2ProcessIterable(StochasticDataIterable):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
-        seed: int | None = None,
-    ):
-        super().__init__(nb_samples, time_window, a0=a0, ar=ar, seed=seed)
-        self.process = process
 
     def __iter__(self) -> Kijima2ProcessIterator:
         return Kijima2ProcessIterator(
@@ -172,6 +144,6 @@ class Kijima2ProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=get_model_nb_assets(self.process),
+            nb_assets=self.nb_assets,
             seed=self.seed,
         )

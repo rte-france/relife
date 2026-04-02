@@ -202,7 +202,7 @@ class RenewalProcess(ParametricModel):
             struct_array, order=("asset_id", "sample_id", "timeline")
         )
         return StochasticSampleMapping.from_struct_array(
-            struct_array, get_model_nb_assets(self), nb_samples
+            struct_array, iterable.nb_assets, nb_samples
         )
 
     def generate_failure_data(

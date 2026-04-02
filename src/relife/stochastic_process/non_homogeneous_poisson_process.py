@@ -125,7 +125,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             struct_array, order=("asset_id", "sample_id", "timeline")
         )
         return StochasticSampleMapping.from_struct_array(
-            struct_array, get_model_nb_assets(frozen_nhpp), nb_samples
+            struct_array, iterable.nb_assets, nb_samples
         )
 
     def generate_failure_data(
