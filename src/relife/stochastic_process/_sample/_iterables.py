@@ -61,8 +61,6 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         self.nb_samples = nb_samples
         self.seed = seed
 
-    def
-
     @property
     def t0(self) -> float:
         return self.time_window[0]
@@ -75,6 +73,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     @override
     @abstractmethod
     def __iter__(self) -> StochasticDataIterator:
+        ...
 
 
 
