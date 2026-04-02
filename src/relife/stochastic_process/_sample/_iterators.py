@@ -94,20 +94,27 @@ class TimeWindowObserver:
     def apply_observation_window(
         self, sample_step: SampleStep, timeline: NDArray[np.float64]
     ) -> tuple[SampleStep, NDArray[np.float64]]:
+        
+        last_date = timeline - sample_step.residual_time
+        installation_date = last_date - sample_step.entry
+
         entry = np.where(
             self.just_crossed_t0,
-            sample_step.entry + self.t0 - (timeline - sample_step.residual_time),
+            self.t0 - installation_date,
             sample_step.entry,
+        )
+        residual_time = np.where(
+            self.just_crossed_t0,
+            timeline - self.t0,
+            sample_step.residual_time
         )
 
         residual_time = np.where(
             self.just_crossed_tf,
-            self.tf - entry,
-            sample_step.residual_time,
+            residual_time - (timeline[self.just_crossed_tf] - self.tf),
+            residual_time
         )
-
         event = np.where(self.just_crossed_tf, False, sample_step.event)
-
         timeline[self.just_crossed_tf] = self.tf
 
         return SampleStep(residual_time, event, entry), timeline
@@ -208,12 +215,12 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             nb_assets=nb_assets, nb_samples=nb_samples
         )
 
-        if not a0:
+        if a0 is None:
             a0 = 0
         a0 = np.broadcast_to(a0, (nb_assets,)).astype(np.float64)
         self.ages = np.repeat(a0, nb_samples, axis=0)
 
-        if ar:
+        if ar is not None:
             ar = np.broadcast_to(ar, (nb_assets,)).astype(np.float64)
             self.ar = np.repeat(ar, nb_samples)
         else:
