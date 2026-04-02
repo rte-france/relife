@@ -268,8 +268,6 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     ) -> SampleStep:
         """Collect observed time, event, entry inside during the time window"""
 
-        sample_step = self.sample_step()
-
         # Timeline increases by residual time
         self.timeline += sample_step.residual_time
         self.time_window_observer.update(self.timeline)
@@ -284,12 +282,14 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         sample_step = self.sample_step()
         sample_step = self.apply_observation_bias(sample_step)
 
+        struct_arr = self.structarray_builder.build_structarray(
+            self.time_window_observer.observed_step, self.timeline, sample_step
+        )
+
         self.update_ages(sample_step.residual_time)
         self.replacement_cycle += 1
 
-        return self.structarray_builder.build_structarray(
-            self.time_window_observer.observed_step, self.timeline, sample_step
-        )
+        return struct_arr
 
     def __next__(self) -> NDArray[np.void]:
         """function to iterate"""
@@ -419,13 +419,23 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         )
 
     @override
-    def __next__(self) -> NDArray[np.void]:
-        struct_arr = super().__next__()
-        return StructArrayBuilder.add_field(
+    def make_one_step(self):
+        sample_step = self.sample_step()
+        sample_step = self.apply_observation_bias(sample_step)
+
+        struct_arr = self.structarray_builder.build_structarray(
+            self.time_window_observer.observed_step, self.timeline, sample_step
+        )
+        struct_arr = StructArrayBuilder.add_field(
             struct_arr,
             "virtual_age",
-            self.virtual_ages[self.time_window_observer.observed_step],
+            self.virtual_ages[self.time_window_observer.observed_step]
         )
+
+        self.update_ages(sample_step.residual_time)
+        self.replacement_cycle += 1
+
+        return struct_arr
 
 
 class Kijima1ProcessIterator(VirtualAgeProcessIterator):
@@ -437,7 +447,7 @@ class Kijima1ProcessIterator(VirtualAgeProcessIterator):
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.virtual_ages = self.ages + self.process.q * residual_time
+        self.virtual_ages += self.process.q * residual_time
         self.ages += residual_time
 
         if self.ar is not None:
@@ -454,7 +464,7 @@ class Kijima2ProcessIterator(VirtualAgeProcessIterator):
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.virtual_ages = self.process.q * (self.ages + residual_time)
+        self.virtual_ages = self.process.q * (self.virtual_ages + residual_time)
         self.ages += residual_time
 
         if self.ar is not None:
