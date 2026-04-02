@@ -93,7 +93,7 @@ class TimeWindowObserver:
 
     def apply_observation_window(
         self, sample_step: SampleStep, timeline: NDArray[np.float64]
-    ):
+    ) -> tuple[SampleStep, NDArray[np.float64]]:
         entry = np.where(
             self.just_crossed_t0,
             sample_step.entry + self.t0 - (timeline - sample_step.residual_time),
@@ -188,6 +188,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
         ar: NumpyFloat | None = None,
         nb_assets: int = 1,
         seed=None,
@@ -207,14 +208,13 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             nb_assets=nb_assets, nb_samples=nb_samples
         )
 
-        # Assets ages restart at 0 when replacements are done.
-        # Used to identify the current ages of the assets in the process
-        self.ages = np.zeros(self.sample_size, dtype=np.float64)
-        if ar:
-            self.ar = np.broadcast_to(ar, self.sample_size, dtype=np.float64)
+        if not a0:
+            a0 = np.zeros((nb_assets, 1), dtype=np.float64)
+        self.ages = np.repeat(a0, nb_samples, axis=0)
+        self.ar = (
+            np.broadcast_to(ar, self.sample_size, dtype=np.float64) if ar else None
+        )
 
-        # Full timeline never restarts, sums at each iteration
-        # Used to identify current time for the observer
         self.timeline = np.zeros(self.sample_size, dtype=np.float64)
 
         self.replacement_cycle = 0
@@ -307,6 +307,7 @@ class RenewalProcessIterator(StochasticDataIterator):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
         ar: NumpyFloat | None = None,
         nb_assets: int = 1,
         seed=None,
@@ -315,34 +316,34 @@ class RenewalProcessIterator(StochasticDataIterator):
             process=process,
             nb_samples=nb_samples,
             time_window=time_window,
+            a0=a0,
             ar=ar,
             nb_assets=nb_assets,
             seed=seed,
         )
-
-        self._expanded_first_lifetime_model = None
-        if self.process.first_lifetime_model is not None:
-            self._expanded_first_lifetime_model = _expand_lifetime_model(
-                self.process.first_lifetime_model, nb_samples
-            )
-            if self._expanded_first_lifetime_model.unfreeze() is LeftTruncatedModel:
-                self.ages = self._expanded_first_lifetime_model.args[0].copy()
+        first_lifetime_model = (
+            _expand_lifetime_model(self.process.first_lifetime_model, nb_samples)
+            if self.process.first_lifetime_model is not None
+            else self._expanded_dynamic_lifetime_model
+        )
+        self._expanded_first_lifetime_model = LeftTruncatedModel(
+            first_lifetime_model
+        ).freeze(self.ages.copy())
 
     @property
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
-        if (
-            self.replacement_cycle == 0
-            and self._expanded_first_lifetime_model is not None
-        ):
-            return self._expanded_first_lifetime_model
-        return self._expanded_lifetime_model
+        return (
+            self._expanded_first_lifetime_model
+            if self.replacement_cycle == 0
+            else self._expanded_lifetime_model
+        )
 
     def update_ages(
         self,
         residual_time: NDArray[np.float64],
     ):
         """
-        In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
+        In a Renewal process, ages are reset to 0 after each iteration.
         """
         self.ages = np.zeros(self.sample_size, dtype=np.float64)
 
@@ -364,8 +365,9 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        ages = self.ages.copy()
-        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
+        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
+            self.ages.copy()
+        )
 
     def update_ages(
         self,
@@ -387,12 +389,20 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
         ar: NumpyFloat | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
+        # TODO: peut-être bloquer le a0 ici
         super().__init__(
-            process, nb_samples, time_window, ar=ar, nb_assets=nb_assets, seed=seed
+            process,
+            nb_samples,
+            time_window,
+            ar=ar,
+            a0=a0,
+            nb_assets=nb_assets,
+            seed=seed,
         )
         self.virtual_ages = self.ages.copy()
 
@@ -400,8 +410,9 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        virtual_ages = self.virtual_ages.copy()
-        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(virtual_ages)
+        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
+            self.virtual_ages.copy()
+        )
 
     @override
     def __next__(self) -> NDArray[np.void]:
