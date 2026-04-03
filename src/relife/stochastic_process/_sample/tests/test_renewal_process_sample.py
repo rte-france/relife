@@ -36,14 +36,19 @@ def test_age_replacement_sampling(distribution, ar):
 
 
 def test_left_truncated_sampling(distribution, a0):
-    first_lifetime_model = LeftTruncatedModel(distribution).freeze(a0)
+
     renewal_process = RenewalProcess(
-        distribution, first_lifetime_model=first_lifetime_model
+        distribution,
+        first_lifetime_model=EquilibriumDistribution(distribution),
     )
+
+    trial_model = LeftTruncatedModel(distribution).freeze(a0)
+    a0_reshaped = trial_model.args[0]
+
     tf = 10 * distribution.ppf(0.75)
     nb_samples = 100
 
-    iterable = RenewalProcessIterable(renewal_process, nb_samples, (0, tf))
+    iterable = RenewalProcessIterable(renewal_process, nb_samples, (0, tf), a0=a0)
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -51,9 +56,9 @@ def test_left_truncated_sampling(distribution, a0):
     for i in range(nb_samples):
         select_sample = select_from_struct(struct_array, sample_id=i)
         first_entries = select_sample["entry"][select_sample["entry"] > 0].reshape(
-            a0.shape
+            a0_reshaped.shape
         )
-        np.testing.assert_equal(first_entries, a0)
+        np.testing.assert_equal(first_entries, a0_reshaped)
 
 
 def test_age_replacement_regression_sampling(frozen_regression, ar):
