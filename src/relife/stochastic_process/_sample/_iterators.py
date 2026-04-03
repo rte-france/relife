@@ -49,6 +49,23 @@ def _expand_lifetime_model(
     return expanded_lifetime_model
 
 
+def _reshape_arr_to_assets(x: NumpyFloat | None, nb_assets: int) -> NumpyFloat | None:
+
+    if x is None:
+        return None
+
+    x = np.asarray(x)
+
+    if x.size == 0:
+        return None
+
+    if x.size == 1:
+        return np.full(nb_assets, x.item())
+
+    if x.size == nb_assets:
+        return x.reshape(nb_assets)
+
+
 @dataclass
 class SampleStep:
     residual_time: NDArray[np.float64]
@@ -94,7 +111,7 @@ class TimeWindowObserver:
     def apply_observation_window(
         self, sample_step: SampleStep, timeline: NDArray[np.float64]
     ) -> tuple[SampleStep, NDArray[np.float64]]:
-        
+
         last_date = timeline - sample_step.residual_time
         installation_date = last_date - sample_step.entry
 
@@ -104,15 +121,11 @@ class TimeWindowObserver:
             sample_step.entry,
         )
         residual_time = np.where(
-            self.just_crossed_t0,
-            timeline - self.t0,
-            sample_step.residual_time
+            self.just_crossed_t0, timeline - self.t0, sample_step.residual_time
         )
 
         residual_time = np.where(
-            self.just_crossed_tf,
-            residual_time - (timeline[self.just_crossed_tf] - self.tf),
-            residual_time
+            self.just_crossed_tf, residual_time - (timeline - self.tf), residual_time
         )
         event = np.where(self.just_crossed_tf, False, sample_step.event)
         timeline[self.just_crossed_tf] = self.tf
@@ -215,16 +228,13 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             nb_assets=nb_assets, nb_samples=nb_samples
         )
 
+        a0 = _reshape_arr_to_assets(a0, nb_assets)
         if a0 is None:
-            a0 = 0
-        a0 = np.broadcast_to(a0, (nb_assets,)).astype(np.float64)
+            a0 = np.zeros(nb_assets, dtype=np.float64)
         self.ages = np.repeat(a0, nb_samples, axis=0)
 
-        if ar is not None:
-            ar = np.broadcast_to(ar, (nb_assets,)).astype(np.float64)
-            self.ar = np.repeat(ar, nb_samples)
-        else:
-            self.ar = None
+        ar = _reshape_arr_to_assets(ar, nb_assets)
+        self.ar = np.repeat(ar, nb_samples, axis=0) if ar is not None else None
 
         self.timeline = np.zeros(self.sample_size)
 
@@ -436,7 +446,7 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         struct_arr = StructArrayBuilder.add_field(
             struct_arr,
             "virtual_age",
-            self.virtual_ages[self.time_window_observer.observed_step]
+            self.virtual_ages[self.time_window_observer.observed_step],
         )
 
         self.update_ages(sample_step.residual_time)

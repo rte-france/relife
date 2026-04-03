@@ -9,10 +9,12 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
+from relife.lifetime_model._conditional_model import (
+    AgeReplacementModel,
+    LeftTruncatedModel,
+)
 from relife.typing._scalars import NumpyFloat
 from relife.utils import get_model_nb_assets
-
-from relife.lifetime_model._conditional_model import AgeReplacementModel, LeftTruncatedModel
 
 from ._iterators import (
     Kijima1ProcessIterator,
@@ -31,6 +33,7 @@ __all__ = [
     "Kijima2ProcessIterable",
 ]
 
+
 class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __init__(
         self,
@@ -44,9 +47,10 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         self.process = process
 
         trial_model = self.process.lifetime_model
-        if ar is not None :
+
+        if ar is not None:
             trial_model = AgeReplacementModel(trial_model).freeze(ar)
-        if a0 is not None :
+        if a0 is not None:
             trial_model = LeftTruncatedModel(trial_model).freeze(a0)
         self.nb_assets = get_model_nb_assets(trial_model)
 
@@ -69,17 +73,12 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def tf(self) -> float:
         return self.time_window[1]
 
-
     @override
     @abstractmethod
-    def __iter__(self) -> StochasticDataIterator:
-        ...
-
-
+    def __iter__(self) -> StochasticDataIterator: ...
 
 
 class RenewalProcessIterable(StochasticDataIterable):
-
     def __iter__(self) -> RenewalProcessIterator:
         from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
 
@@ -107,7 +106,6 @@ class RenewalProcessIterable(StochasticDataIterable):
 
 
 class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
-
     def __iter__(self) -> NonHomogeneousPoissonProcessIterator:
         return NonHomogeneousPoissonProcessIterator(
             self.process,
@@ -121,7 +119,6 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
 
 
 class Kijima1ProcessIterable(StochasticDataIterable):
-
     def __iter__(self) -> Kijima1ProcessIterator:
         return Kijima1ProcessIterator(
             self.process,
@@ -135,7 +132,6 @@ class Kijima1ProcessIterable(StochasticDataIterable):
 
 
 class Kijima2ProcessIterable(StochasticDataIterable):
-
     def __iter__(self) -> Kijima2ProcessIterator:
         return Kijima2ProcessIterator(
             self.process,
