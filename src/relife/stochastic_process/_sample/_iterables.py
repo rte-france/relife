@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 from typing_extensions import override
 
 from relife.typing._scalars import NumpyFloat
-from relife.utils import get_model_nb_assets
 from relife.utils._array_utils import get_args_nb_assets, reshape_1d_arg
 
 from ._iterators import (
@@ -85,7 +84,7 @@ class RenewalProcessIterable(StochasticDataIterable):
                 self.time_window,
                 self.a0,
                 self.ar,
-                nb_assets=get_model_nb_assets(self.process),
+                nb_assets=self.nb_assets,
                 seed=self.seed,
             )
         if isinstance(self.process, RenewalProcess):
@@ -95,7 +94,7 @@ class RenewalProcessIterable(StochasticDataIterable):
                 self.time_window,
                 self.a0,
                 self.ar,
-                nb_assets=get_model_nb_assets(self.process),
+                nb_assets=self.nb_assets,
                 seed=self.seed,
             )
         raise ValueError
