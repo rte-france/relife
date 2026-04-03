@@ -9,12 +9,9 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.lifetime_model._conditional_model import (
-    AgeReplacementModel,
-    LeftTruncatedModel,
-)
 from relife.typing._scalars import NumpyFloat
 from relife.utils import get_model_nb_assets
+from relife.utils._array_utils import get_args_nb_assets, reshape_1d_arg
 
 from ._iterators import (
     Kijima1ProcessIterator,
@@ -46,13 +43,12 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     ):
         self.process = process
 
-        trial_model = self.process.lifetime_model
-
+        args = list(getattr(self.process.lifetime_model, "args", []))
         if ar is not None:
-            trial_model = AgeReplacementModel(trial_model).freeze(ar)
+            args += [reshape_1d_arg(ar)]
         if a0 is not None:
-            trial_model = LeftTruncatedModel(trial_model).freeze(a0)
-        self.nb_assets = get_model_nb_assets(trial_model)
+            args += [reshape_1d_arg(a0)]
+        self.nb_assets = get_args_nb_assets(*args)
 
         t0, tf = time_window
         if t0 < 0 or tf < 0 or t0 > tf:
