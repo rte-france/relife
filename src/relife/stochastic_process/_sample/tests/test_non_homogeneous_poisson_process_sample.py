@@ -52,7 +52,7 @@ def test_age_replacement_sampling(distribution, ar):
 def test_regression_sampling(frozen_regression):
     nhpp = NonHomogeneousPoissonProcess(frozen_regression)
     nb_assets = frozen_regression.args[0].shape[0]
-    t0 = frozen_regression.ppf(0.25).min()
+    t0 = 0.
     tf = frozen_regression.ppf(0.95).min()
     nb_samples = 10
 
