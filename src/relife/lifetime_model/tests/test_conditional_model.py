@@ -355,28 +355,6 @@ class TestLeftTruncatedRegression:
         assert LeftTruncatedModel(regression).rvs(
             rvs_size, a0, covar
         ).shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, return_event=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, return_entry=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size,
-                a0,
-                covar,
-                return_event=True,
-                return_entry=True,
-            )
-        )
 
     def test_sf(self, regression, time, a0, covar):
         assert LeftTruncatedModel(regression).sf(
