@@ -145,7 +145,6 @@ class AgeReplacementModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         ar = reshape_1d_arg(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
-    # TODO : besoin d'override ?
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def rvs(
@@ -326,7 +325,6 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
             - a0
         )
 
-    # TODO : besoin d'override ?
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def rvs(

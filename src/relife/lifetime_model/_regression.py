@@ -362,15 +362,15 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         ) * self.hf(time, covar)
         return jac
 
-    # TODO : besoin d'override ?
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
     )
-    def rvs(  # TODO : pourquoi le warning ?
+    def rvs(
         self,
         size: int | tuple[int, int],
         covar: AnyFloat,
+        *,
         seed: Seed | None = None,
     ) -> NumpyFloat:
         return super().rvs(

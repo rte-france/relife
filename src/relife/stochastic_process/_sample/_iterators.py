@@ -44,7 +44,7 @@ def _expand_lifetime_model(
         )
         expanded_lifetime_model = lifetime_model.unfreeze().freeze(
             *broadcasted_args
-        )  # TODO: use a copy method of parametric models
+        )
 
     return expanded_lifetime_model
 
@@ -415,7 +415,6 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         nb_assets: int = 1,
         seed=None,
     ) -> None:
-        # TODO: peut-être bloquer le a0 ici
         super().__init__(
             process,
             nb_samples,
