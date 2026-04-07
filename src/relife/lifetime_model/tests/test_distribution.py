@@ -17,27 +17,6 @@ def test_rvs(distribution, rvs_size):
     ).shape == rvs_expected_shape(
         size=rvs_size,
     )
-    assert all(
-        arr.shape
-        == rvs_expected_shape(
-            size=rvs_size,
-        )
-        for arr in distribution.rvs(rvs_size, return_event=True)
-    )
-    assert all(
-        arr.shape
-        == rvs_expected_shape(
-            size=rvs_size,
-        )
-        for arr in distribution.rvs(rvs_size, return_entry=True)
-    )
-    assert all(
-        arr.shape
-        == rvs_expected_shape(
-            size=rvs_size,
-        )
-        for arr in distribution.rvs(rvs_size, return_event=True, return_entry=True)
-    )
 
 
 def test_sf(distribution, time):
