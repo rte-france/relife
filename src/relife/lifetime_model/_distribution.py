@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
-    Literal,
     Self,
     TypeAlias,
     TypeVar,
     TypeVarTuple,
     final,
-    overload,
 )
 
 import numpy as np
@@ -25,7 +23,6 @@ from typing_extensions import override
 from relife.base import OptimizerConfig
 from relife.typing import (
     AnyFloat,
-    NumpyBool,
     NumpyFloat,
     Seed,
 )
@@ -120,12 +117,13 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         jac_hf, hf = self.jac_hf(time), self.hf(time)
         jac_sf, sf = self.jac_sf(time), self.sf(time)
         return jac_hf * sf + jac_sf * hf
-    
+
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
         self,
         size: int | tuple[int, int],
+        *,
         seed: Seed | None = None,
     ) -> NumpyFloat:
         return super().rvs(

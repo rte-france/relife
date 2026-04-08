@@ -24,6 +24,7 @@ from relife.typing import (
     NumpyFloat,
     Seed,
 )
+from relife.utils._array_utils import reshape_1d_arg
 
 from ._base import (
     FittableParametricLifetimeModel,
@@ -406,9 +407,11 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        assert isinstance(args, np.ndarray)
+        if not isinstance(args, np.ndarray):
+            raise ValueError("args is expected to be covar only.")
+        args = reshape_1d_arg(args)
         regression = type(self)(
-            type(self.baseline)(), coefficients=(0.0,) * np.atleast_2d(args).shape[-1]
+            type(self.baseline)(), coefficients=(0.0,) * args.shape[-1]
         )  # init new regression object with appropriate number of covar
         lifetime_data = LifetimeData(time, args, event, entry)
         x0 = kwargs.get(
@@ -436,9 +439,10 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
-        assert isinstance(args, np.ndarray)
+        if not isinstance(args, np.ndarray):
+            raise ValueError("args is expected to be covar only.")
         self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(args, dtype=np.float64)).shape[-1]
+            (None,) * reshape_1d_arg(np.asarray(args, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
         return super().fit(time, args, event, entry, **kwargs)
 
