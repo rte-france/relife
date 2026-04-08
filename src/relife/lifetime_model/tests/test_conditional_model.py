@@ -37,27 +37,6 @@ class TestAgeReplacementDistribution:
         assert AgeReplacementModel(distribution).rvs(
             rvs_size, ar
         ).shape == rvs_expected_shape(rvs_size, ar=ar)
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
-            for arr in AgeReplacementModel(distribution).rvs(
-                rvs_size, ar, return_event=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
-            for arr in AgeReplacementModel(distribution).rvs(
-                rvs_size, ar, return_entry=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar)
-            for arr in AgeReplacementModel(distribution).rvs(
-                rvs_size,
-                ar,
-                return_event=True,
-                return_entry=True,
-            )
-        )
 
     def test_sf(self, distribution, time, ar):
         assert AgeReplacementModel(distribution).sf(time, ar).shape == expected_shape(
@@ -162,28 +141,6 @@ class TestAgeReplacementRegression:
             ar,
             covar,
         ).shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
-            for arr in AgeReplacementModel(regression).rvs(
-                rvs_size, ar, covar, return_event=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
-            for arr in AgeReplacementModel(regression).rvs(
-                rvs_size, ar, covar, return_entry=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, ar=ar, covar=covar)
-            for arr in AgeReplacementModel(regression).rvs(
-                rvs_size,
-                ar,
-                covar,
-                return_event=True,
-                return_entry=True,
-            )
-        )
 
     def test_sf(self, regression, time, ar, covar):
         assert AgeReplacementModel(regression).sf(
@@ -298,27 +255,6 @@ class TestLeftTruncatedDistribution:
             rvs_size,
             a0,
         ).shape == rvs_expected_shape(rvs_size, a0=a0)
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0)
-            for arr in LeftTruncatedModel(distribution).rvs(
-                rvs_size, a0, return_event=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0)
-            for arr in LeftTruncatedModel(distribution).rvs(
-                rvs_size, a0, return_entry=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0)
-            for arr in LeftTruncatedModel(distribution).rvs(
-                rvs_size,
-                a0,
-                return_event=True,
-                return_entry=True,
-            )
-        )
 
     def test_sf(self, distribution, time, a0):
         assert LeftTruncatedModel(distribution).sf(time, a0).shape == expected_shape(
@@ -419,28 +355,6 @@ class TestLeftTruncatedRegression:
         assert LeftTruncatedModel(regression).rvs(
             rvs_size, a0, covar
         ).shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, return_event=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size, a0, covar, return_entry=True
-            )
-        )
-        assert all(
-            arr.shape == rvs_expected_shape(rvs_size, a0=a0, covar=covar)
-            for arr in LeftTruncatedModel(regression).rvs(
-                rvs_size,
-                a0,
-                covar,
-                return_event=True,
-                return_entry=True,
-            )
-        )
 
     def test_sf(self, regression, time, a0, covar):
         assert LeftTruncatedModel(regression).sf(

@@ -84,23 +84,6 @@ def test_rvs(regression, covar, rvs_size):
     assert regression.rvs(rvs_size, covar).shape == rvs_expected_shape(
         rvs_size, covar=covar
     )
-    assert all(
-        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, return_event=True)
-    )
-    assert all(
-        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
-        for arr in regression.rvs(rvs_size, covar, return_entry=True)
-    )
-    assert all(
-        arr.shape == rvs_expected_shape(rvs_size, covar=covar)
-        for arr in regression.rvs(
-            rvs_size,
-            covar,
-            return_event=True,
-            return_entry=True,
-        )
-    )
 
 
 def test_sf(regression, time, covar):

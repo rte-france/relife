@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Iterator, Sequence, TypedDict
+from collections.abc import Iterator, Mapping, Sequence
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray

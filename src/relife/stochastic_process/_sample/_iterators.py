@@ -2,19 +2,20 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from dataclasses import dataclass
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
 from numpy.typing import NDArray
 from typing_extensions import override
 
-from relife.economic import ExponentialDiscounting, Reward
+from relife.base import is_frozen
 from relife.lifetime_model import LeftTruncatedModel
 from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.lifetime_model._distribution import (
     EquilibriumDistribution,
 )
-from relife.base import is_frozen
+from relife.typing._scalars import NumpyFloat
 
 __all__ = [
     "StochasticDataIterator",
@@ -43,9 +44,157 @@ def _expand_lifetime_model(
         )
         expanded_lifetime_model = lifetime_model.unfreeze().freeze(
             *broadcasted_args
-        )  # TODO: use a copy method of parametric models
+        )
 
     return expanded_lifetime_model
+
+
+def _reshape_arr_to_assets(x: NumpyFloat | None, nb_assets: int) -> NumpyFloat | None:
+
+    if x is None:
+        return None
+
+    x = np.asarray(x)
+
+    if x.size == 0:
+        return None
+
+    if x.size == 1:
+        return np.full(nb_assets, x.item())
+
+    if x.size == nb_assets:
+        return x.reshape(nb_assets)
+
+
+@dataclass
+class SampleStep:
+    residual_time: NDArray[np.float64]
+    event: NDArray[np.bool_]
+    entry: NDArray[np.float64]
+
+
+class TimeWindowObserver:
+    def __init__(self, sample_size: int, time_window: tuple[float, float]):
+
+        self.t0, self.tf = time_window
+
+        self._crossed_t0_counter: NDArray[np.int_] = np.zeros(
+            sample_size, dtype=np.int64
+        )
+        self._crossed_tf_counter: NDArray[np.int_] = np.zeros(
+            sample_size, dtype=np.int64
+        )
+
+    def update(self, timeline: NDArray[np.float64]):
+
+        self._crossed_t0_counter[timeline > self.t0] += 1
+        self._crossed_tf_counter[timeline > self.tf] += 1
+
+    @property
+    def just_crossed_t0(self):
+        return self._crossed_t0_counter == 1
+
+    @property
+    def just_crossed_tf(self):
+        return self._crossed_tf_counter == 1
+
+    @property
+    def observed_step(self):
+        return np.logical_and(
+            self._crossed_t0_counter >= 1, self._crossed_tf_counter <= 1
+        )
+
+    @property
+    def all_finished(self):
+        return np.all(self._crossed_tf_counter >= 1)
+
+    def apply_observation_window(
+        self, sample_step: SampleStep, timeline: NDArray[np.float64]
+    ) -> tuple[SampleStep, NDArray[np.float64]]:
+
+        last_date = timeline - sample_step.residual_time
+        installation_date = last_date - sample_step.entry
+
+        entry = np.where(
+            self.just_crossed_t0,
+            self.t0 - installation_date,
+            sample_step.entry,
+        )
+        residual_time = np.where(
+            self.just_crossed_t0, timeline - self.t0, sample_step.residual_time
+        )
+
+        residual_time = np.where(
+            self.just_crossed_tf, residual_time - (timeline - self.tf), residual_time
+        )
+        event = np.where(self.just_crossed_tf, False, sample_step.event)
+        timeline[self.just_crossed_tf] = self.tf
+
+        return SampleStep(residual_time, event, entry), timeline
+
+
+class StructArrayBuilder:
+    def __init__(self, nb_assets: int, nb_samples: int):
+        self.nb_assets = nb_assets
+        self.nb_samples = nb_samples
+
+    def _init_structarray(self, observed_step: NDArray[np.bool_]) -> NDArray[np.void]:
+        """Construct the struct array to return"""
+        observed_index = np.where(observed_step)[0]
+
+        asset_id = observed_index // self.nb_samples
+        sample_id = observed_index % self.nb_samples
+
+        struct_array = np.zeros(
+            sample_id.size,
+            dtype=np.dtype(
+                [
+                    ("asset_id", np.uint32),  #  unsigned 32bit integer
+                    ("sample_id", np.uint32),  #  unsigned 32bit integer
+                ]
+            ),
+        )
+
+        struct_array["asset_id"] = asset_id.astype(np.uint32)
+        struct_array["sample_id"] = sample_id.astype(np.uint32)
+        return struct_array
+
+    def build_structarray(
+        self,
+        observed_step: NDArray[np.bool_],
+        timeline: NDArray[np.float64],
+        sample_step: SampleStep,
+    ) -> NDArray[np.void]:
+
+        base_struct_array = self._init_structarray(observed_step)
+        struct_arr = rfn.append_fields(  #  works on structured_array too
+            base_struct_array,
+            ("timeline", "time", "event", "entry"),
+            (
+                timeline[observed_step],
+                sample_step.residual_time[observed_step]
+                + sample_step.entry[observed_step],
+                sample_step.event[observed_step],
+                sample_step.entry[observed_step],
+            ),
+            (np.float64, np.float64, np.bool_, np.float64),
+            usemask=False,
+            asrecarray=False,
+        )
+        return struct_arr
+
+    @staticmethod
+    def add_field(
+        struct_arr: NDArray[np.void], new_label: str, new_values: NDArray[np.float64]
+    ):
+        return rfn.append_fields(
+            struct_arr,
+            new_label,
+            new_values,
+            np.float64,
+            usemask=False,
+            asrecarray=False,
+        )  # type: ignore
 
 
 class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
@@ -59,46 +208,38 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
+        ar: NumpyFloat | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
         self.process = process
-        self.nb_samples = nb_samples
-        self.nb_assets = nb_assets
-
-        self.sample_size = self.nb_assets * self.nb_samples
+        self.sample_size = nb_assets * nb_samples
 
         self._expanded_lifetime_model = _expand_lifetime_model(
-            self.process.lifetime_model, self.nb_samples
+            self.process.lifetime_model, nb_samples
         )
 
-        self.t0, self.tf = time_window  # t0, tf are checked in iterable
+        self.time_window_observer = TimeWindowObserver(
+            sample_size=self.sample_size, time_window=time_window
+        )
 
-        self.seed = np.random.default_rng(seed)
+        self.structarray_builder = StructArrayBuilder(
+            nb_assets=nb_assets, nb_samples=nb_samples
+        )
 
-        # Assets ages restart at 0 when replacements are done.
-        # Used to identify the current ages of the assets in the process
-        self.ages = np.zeros(self.sample_size, dtype=np.float64)
-        # Full timeline never restarts, sums at each iteration
-        # Used to identify current time for the observer
-        self.timeline = np.zeros(self.sample_size, dtype=np.float64)
+        a0 = _reshape_arr_to_assets(a0, nb_assets)
+        if a0 is None:
+            a0 = np.zeros(nb_assets, dtype=np.float64)
+        self.ages = np.repeat(a0, nb_samples, axis=0)
+
+        ar = _reshape_arr_to_assets(ar, nb_assets)
+        self.ar = np.repeat(ar, nb_samples, axis=0) if ar is not None else None
+
+        self.timeline = np.zeros(self.sample_size)
 
         self.replacement_cycle = 0
-
-        self._crossed_t0_counter = np.zeros(self.sample_size, dtype=np.uint32)
-        self._crossed_tf_counter = np.zeros(self.sample_size, dtype=np.uint32)
-
-        self._time_window_mask = np.zeros(
-            self.sample_size,
-            dtype=np.dtype(
-                [
-                    ("observed_step", np.bool_),
-                    ("just_crossed_t0", np.bool_),
-                    ("just_crossed_tf", np.bool_),
-                    ("crossed_tf", np.bool_),
-                ]
-            ),
-        )
+        self.seed = np.random.default_rng(seed)
 
     @property
     @abstractmethod
@@ -111,144 +252,74 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     def update_ages(
         self,
         time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
     ) -> None:
         """
         Update ages at each iteration according to each stochastic process specific properties
         """
 
-    def sample_time_event_entry(
+    def sample_step(
         self,
-    ) -> tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]:
-        """
-        Routine that samples time, event, entry at each step
-        IMPORTANT: time, event, entry must be 1D.
-        """
+    ) -> SampleStep:
 
-        time, event, entry = self._expanded_dynamic_lifetime_model.rvs(
+        residual_time = self._expanded_dynamic_lifetime_model.rvs(
             (self.sample_size, 1),
-            return_event=True,
-            return_entry=True,
             seed=self.seed,
         )
+        residual_time = residual_time.flatten()
 
-        time = time.flatten()
-        event = event.flatten()
-        entry = entry.flatten()
+        event = np.ones_like(residual_time, dtype=np.bool_)
+        entry = self.ages.copy()
 
-        return time, event, entry
+        if self.ar is not None:
+            preventive_replacements = self.ages + residual_time >= self.ar
+            residual_time[preventive_replacements] = (
+                self.ar[preventive_replacements] - self.ages[preventive_replacements]
+            )
+            event = ~preventive_replacements
+
+        return SampleStep(residual_time, event, entry)
+
+    def apply_observation_bias(
+        self,
+        sample_step: SampleStep,
+    ) -> SampleStep:
+        """Collect observed time, event, entry inside during the time window"""
+
+        # Timeline increases by residual time
+        self.timeline += sample_step.residual_time
+        self.time_window_observer.update(self.timeline)
+
+        # Apply observation window conditions
+        sample_step, self.timeline = self.time_window_observer.apply_observation_window(
+            sample_step, self.timeline
+        )
+        return sample_step
+
+    def make_one_step(self):
+        sample_step = self.sample_step()
+        sample_step = self.apply_observation_bias(sample_step)
+
+        struct_arr = self.structarray_builder.build_structarray(
+            self.time_window_observer.observed_step, self.timeline, sample_step
+        )
+
+        self.update_ages(sample_step.residual_time)
+        self.replacement_cycle += 1
+
+        return struct_arr
 
     def __next__(self) -> NDArray[np.void]:
         """function to iterate"""
-        if not np.all(self._time_window_mask["crossed_tf"]):
-            time, event, entry = self.sample_time_event_entry()
-            struct_arr = self._collect_time_window_observations(time, event, entry)
-            self.update_ages(time, event, entry)
+        if not self.time_window_observer.all_finished:
+            struct_arr = self.make_one_step()
             while (
                 struct_arr.size == 0
             ):  # skip cycles while arrays are empty (if t0 != 0.)
-                time, event, entry = self.sample_time_event_entry()
-                struct_arr = self._collect_time_window_observations(time, event, entry)
-                self.update_ages(time, event, entry)
-                if np.all(self._time_window_mask["crossed_tf"]) and struct_arr.size > 0:
+                struct_arr = self.make_one_step()
+                if self.time_window_observer.all_finished and struct_arr.size > 0:
                     return struct_arr
             return struct_arr
         raise StopIteration
-
-    def _collect_time_window_observations(
-        self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
-    ) -> NDArray[np.void]:
-        """Collect observed time, event, entry inside during the time window"""
-        if time.ndim > 1:
-            raise ValueError(
-                f"sample_time_event_entry must return 1d entry. Got {time.ndim} dim for time"
-            )
-        if event.ndim > 1:
-            raise ValueError(
-                f"sample_time_event_entry must return 1d entry. Got {event.ndim} dim for event"
-            )
-        if entry.ndim > 1:
-            raise ValueError(
-                f"sample_time_event_entry must return 1d entry. Got {entry.ndim} dim for entry"
-            )
-
-        residual_time = time - entry
-
-        # Timeline increases by residual time
-        self.timeline += residual_time
-        self._update_time_window_mask()
-
-        # Replace times that exceeds tf with right censorings at tf
-        time = np.where(
-            self._time_window_mask["just_crossed_tf"],
-            time - (self.timeline - self.tf),
-            time,
-        )
-        self.timeline[self._time_window_mask["just_crossed_tf"]] = self.tf
-        event[self._time_window_mask["just_crossed_tf"]] = False
-
-        # Replace entries to take account of the left truncation at t0
-        entry = np.where(
-            self._time_window_mask["just_crossed_t0"],
-            time - (self.timeline - self.t0),
-            entry,
-        )
-
-        self.replacement_cycle += 1
-
-        struct_arr = rfn.append_fields(  #  works on structured_array too
-            self._init_structarray(),
-            ("time", "event", "entry"),
-            (
-                time[self._time_window_mask["observed_step"]],
-                event[self._time_window_mask["observed_step"]],
-                entry[self._time_window_mask["observed_step"]],
-            ),
-            (np.float64, np.bool_, np.float64),
-            usemask=False,
-            asrecarray=False,
-        )
-        return struct_arr
-
-    def _update_time_window_mask(self) -> None:
-        """Update mask to keep track of the observed and non observed events"""
-        self._crossed_t0_counter[self.timeline > self.t0] += 1
-        self._crossed_tf_counter[self.timeline > self.tf] += 1
-        self._time_window_mask["just_crossed_t0"] = self._crossed_t0_counter == 1
-        self._time_window_mask["just_crossed_tf"] = self._crossed_tf_counter == 1
-        self._time_window_mask["crossed_tf"] = self._crossed_tf_counter >= 1
-        self._time_window_mask["observed_step"] = np.logical_and(
-            self._crossed_t0_counter >= 1, self._crossed_tf_counter <= 1
-        )
-
-    def _init_structarray(self) -> NDArray[np.void]:
-        """Construct the struct array to return"""
-        observed_index = np.where(self._time_window_mask["observed_step"])[0]
-
-        asset_id = observed_index // self.nb_samples
-        sample_id = observed_index % self.nb_samples
-
-        struct_array = np.zeros(
-            sample_id.size,
-            dtype=np.dtype(
-                [
-                    ("asset_id", np.uint32),  #  unsigned 32bit integer
-                    ("sample_id", np.uint32),  #  unsigned 32bit integer
-                    ("timeline", np.float64),  #  64bit float
-                ]
-            ),
-        )
-
-        struct_array["asset_id"] = asset_id.astype(np.uint32)
-        struct_array["sample_id"] = sample_id.astype(np.uint32)
-        struct_array["timeline"] = self.timeline[
-            self._time_window_mask["observed_step"]
-        ]
-        return struct_array
 
 
 class RenewalProcessIterator(StochasticDataIterator):
@@ -257,6 +328,8 @@ class RenewalProcessIterator(StochasticDataIterator):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
+        ar: NumpyFloat | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
@@ -264,126 +337,152 @@ class RenewalProcessIterator(StochasticDataIterator):
             process=process,
             nb_samples=nb_samples,
             time_window=time_window,
+            a0=a0,
+            ar=ar,
             nb_assets=nb_assets,
             seed=seed,
         )
-
-        self._expanded_first_lifetime_model = None
-        if self.process.first_lifetime_model is not None:
-            self._expanded_first_lifetime_model = _expand_lifetime_model(
-                self.process.first_lifetime_model, self.nb_samples
-            )
+        first_lifetime_model = (
+            _expand_lifetime_model(self.process.first_lifetime_model, nb_samples)
+            if self.process.first_lifetime_model is not None
+            else self._expanded_lifetime_model
+        )
+        self._expanded_first_lifetime_model = LeftTruncatedModel(
+            first_lifetime_model
+        ).freeze(self.ages.copy())
 
     @property
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
-        if (
-            self.replacement_cycle == 0
-            and self._expanded_first_lifetime_model is not None
-        ):
-            return self._expanded_first_lifetime_model
-        return self._expanded_lifetime_model
+        return (
+            self._expanded_first_lifetime_model
+            if self.replacement_cycle == 0
+            else self._expanded_lifetime_model
+        )
 
     def update_ages(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
+        residual_time: NDArray[np.float64],
     ):
         """
-        In a Renewal process, ages are reset to 0 after each iteration. The ages array remains constant.
+        In a Renewal process, ages are reset to 0 after each iteration.
         """
-        pass
+        self.ages = np.zeros(self.sample_size, dtype=np.float64)
 
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
-    reward: Reward
-    discounting: ExponentialDiscounting
-
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        nb_assets: int = 1,
-        seed: int | None = None,
-    ) -> None:
-        super().__init__(
-            process, nb_samples, time_window, nb_assets=nb_assets, seed=seed
-        )
-        self.reward = self.process.reward
-        self.discounting = self.process.discounting
-
     @override
     def __next__(self) -> NDArray[np.void]:
-        struct_array = super().__next__()
-        # may be type hint error in rfn.append_fields overload
-        return rfn.append_fields(
-            struct_array,
+        struct_arr = super().__next__()
+        return StructArrayBuilder.add_field(
+            struct_arr,
             "reward",
-            self.reward.sample(struct_array["time"])
-            * self.discounting.factor(struct_array["timeline"]),
-            np.float64,
-            usemask=False,
-            asrecarray=False,
-        )  # type: ignore
+            self.process.reward.sample(struct_arr["time"])
+            * self.process.discounting.factor(struct_arr["timeline"]),
+        )
 
 
-class StochasticAgesProcessIterator(StochasticDataIterator):
-    """
-    Abstract class for all stochastic process iterators that involve an age or virtual age for the iterative sampling
-    """
-
+class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     @property
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        ages = self.ages.copy()
-        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(ages)
+        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
+            self.ages.copy()
+        )
 
-
-class NonHomogeneousPoissonProcessIterator(StochasticAgesProcessIterator):
     def update_ages(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
+        residual_time: NDArray[np.float64],
     ):
         """
         In a NHPP, ages are reset to 0 only when a replacement is made
         """
         # Update asset ages
-        self.ages += time - entry
-        # If no events (replacement), restarts age for next step
-        self.ages[~event] = 0
+        self.ages += residual_time
+
+        if self.ar is not None:
+            self.ages[self.ages >= self.ar] = 0
 
 
-class Kijima1ProcessIterator(StochasticAgesProcessIterator):
+class VirtualAgeProcessIterator(StochasticDataIterator):
+    def __init__(
+        self,
+        process,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
+        ar: NumpyFloat | None = None,
+        nb_assets: int = 1,
+        seed=None,
+    ) -> None:
+        super().__init__(
+            process,
+            nb_samples,
+            time_window,
+            ar=ar,
+            a0=a0,
+            nb_assets=nb_assets,
+            seed=seed,
+        )
+        self.virtual_ages = self.ages.copy()
+
+    @property
+    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
+        # Apply a Left truncation based on current ages on the model
+        # self.ages is always 1d in LeftTruncatedModel
+        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
+            self.virtual_ages.copy()
+        )
+
+    @override
+    def make_one_step(self):
+        sample_step = self.sample_step()
+        sample_step = self.apply_observation_bias(sample_step)
+
+        struct_arr = self.structarray_builder.build_structarray(
+            self.time_window_observer.observed_step, self.timeline, sample_step
+        )
+        struct_arr = StructArrayBuilder.add_field(
+            struct_arr,
+            "virtual_age",
+            self.virtual_ages[self.time_window_observer.observed_step],
+        )
+
+        self.update_ages(sample_step.residual_time)
+        self.replacement_cycle += 1
+
+        return struct_arr
+
+
+class Kijima1ProcessIterator(VirtualAgeProcessIterator):
     def update_ages(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
+        residual_time: NDArray[np.float64],
     ):
         """
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.ages = self.ages + self.process.q * (time - entry)
-        # If no events (replacement), restarts age for next step
-        self.ages[~event] = 0
+        self.virtual_ages += self.process.q * residual_time
+        self.ages += residual_time
+
+        if self.ar is not None:
+            self.ages[self.ages >= self.ar] = 0
+            self.virtual_ages[self.ages >= self.ar] = 0
 
 
-class Kijima2ProcessIterator(StochasticAgesProcessIterator):
+class Kijima2ProcessIterator(VirtualAgeProcessIterator):
     def update_ages(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_],
-        entry: NDArray[np.float64],
+        residual_time: NDArray[np.float64],
     ):
         """
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
         """
         # Update asset ages
-        self.ages = self.process.q * (self.ages + time - entry)
-        # If no events (replacement), restarts age for next step
-        self.ages[~event] = 0
+        self.virtual_ages = self.process.q * (self.virtual_ages + residual_time)
+        self.ages += residual_time
+
+        if self.ar is not None:
+            self.ages[self.ages >= self.ar] = 0
+            self.virtual_ages[self.ages >= self.ar] = 0
