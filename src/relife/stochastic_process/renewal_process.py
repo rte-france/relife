@@ -370,7 +370,6 @@ class RenewalRewardProcess(RenewalProcess):
 
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
-        # TODO: comprendre le delayed solver ici
         z = renewal_equation_solver(
             timeline,
             self.lifetime_model,
