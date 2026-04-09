@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -35,10 +35,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=7f76b32a3354e82990f2"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -48,6 +48,7 @@
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/relife/lifetime_model/_conditional_model';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="../../../_static/custom-icon.js?v=74687d30"></script>
     <link rel="icon" href="../../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -55,14 +56,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.6.3" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
   </head>
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
-
+  <body data-default-mode="">
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
   
   <div id="pst-scroll-pixel-helper"></div>
   
@@ -94,7 +99,7 @@
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
   <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
@@ -414,18 +419,17 @@
   <h1>Source code for relife.lifetime_model._conditional_model</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeVarTuple</span><span class="p">,</span> <span class="n">overload</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVarTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpydoc.docscrape</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">docscrape</span>  <span class="c1"># pyright: ignore[reportMissingTypeStubs]</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_frozen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AnyFloat</span><span class="p">,</span>
     <span class="n">AnyParametricLifetimeModel</span><span class="p">,</span>
-    <span class="n">NumpyBool</span><span class="p">,</span>
     <span class="n">NumpyFloat</span><span class="p">,</span>
     <span class="n">Seed</span><span class="p">,</span>
 <span class="p">)</span>
@@ -592,61 +596,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
-        <span class="n">NumpyFloat</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-    <span class="p">):</span> <span class="o">...</span>
 <div class="viewcode-block" id="AgeReplacementModel.rvs">
 <a class="viewcode-back" href="../../../api/conditional_lifetime_models/relife.lifetime_model.AgeReplacementModel.html#relife.lifetime_model.AgeReplacementModel.rvs">[docs]</a>
     <span class="nd">@override</span>
@@ -656,40 +605,14 @@
         <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">ar</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
-        <span class="n">NumpyFloat</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-    <span class="p">):</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
-        <span class="n">baseline_rvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
+        <span class="n">args_add_ar</span> <span class="o">=</span> <span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
-            <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args_add_ar</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">baseline_rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline_rvs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">baseline_rvs</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ar</span><span class="p">)</span>  <span class="c1"># it may change time shape by broadcasting</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_event</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">time</span>
-        <span class="k">elif</span> <span class="n">return_event</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">baseline_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">!=</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="n">return_event</span> <span class="ow">and</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">baseline_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">entry</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">event</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">baseline_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">time</span> <span class="o">!=</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span></div>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AgeReplacementModel.ls_integrate">
@@ -895,61 +818,6 @@
         <span class="p">)</span></div>
 
 
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]:</span> <span class="o">...</span>
-    <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rvs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
-        <span class="n">NumpyFloat</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-    <span class="p">):</span> <span class="o">...</span>
 <div class="viewcode-block" id="LeftTruncatedModel.rvs">
 <a class="viewcode-back" href="../../../api/conditional_lifetime_models/relife.lifetime_model.LeftTruncatedModel.html#relife.lifetime_model.LeftTruncatedModel.rvs">[docs]</a>
     <span class="nd">@override</span>
@@ -959,48 +827,15 @@
         <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">AnyFloat</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">Ts</span><span class="p">,</span>
-        <span class="n">return_event</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">return_entry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
-        <span class="n">NumpyFloat</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NumpyFloat</span><span class="p">,</span> <span class="n">NumpyBool</span><span class="p">,</span> <span class="n">NumpyFloat</span><span class="p">]</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyFloat</span><span class="p">:</span>
         <span class="n">a0</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">a0</span><span class="p">)</span>
-        <span class="n">super_rvs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
+        <span class="n">args_add_a0</span> <span class="o">=</span> <span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span>
             <span class="n">size</span><span class="p">,</span>
-            <span class="o">*</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
-            <span class="n">return_event</span><span class="o">=</span><span class="n">return_event</span><span class="p">,</span>
-            <span class="n">return_entry</span><span class="o">=</span><span class="n">return_entry</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args_add_a0</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">super_rvs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">super_rvs</span>
-        <span class="n">complete_ages</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">a0</span>
-        <span class="n">output</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">time</span><span class="p">,</span>
-        <span class="p">]</span>  <span class="c1"># at least time in output</span>
-        <span class="k">if</span> <span class="n">return_event</span><span class="p">:</span>
-            <span class="n">event</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># event always at index 1</span>
-            <span class="c1"># reconstruct event for AgeReplacementModel c omposition as super skips this info</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span> <span class="n">AgeReplacementModel</span><span class="p">):</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_frozen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">unfreeze</span><span class="p">(),</span> <span class="n">AgeReplacementModel</span>
-            <span class="p">):</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">reshape_1d_arg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">complete_ages</span> <span class="o">&lt;</span> <span class="n">ar</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">~</span><span class="n">event</span><span class="p">)</span>
-            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">return_entry</span><span class="p">:</span>
-            <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">complete_ages</span>  <span class="c1"># don&#39;t return residual ages</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">super_rvs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># entry always at last index</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>  <span class="c1"># return tuple, not list</span>
-        <span class="k">return</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LeftTruncatedModel.ls_integrate">
@@ -1121,8 +956,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1156,7 +991,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.0.
 </p></div>
       
     </div>
