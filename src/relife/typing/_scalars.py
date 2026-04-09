@@ -16,3 +16,10 @@ __all__ = [
 AnyFloat: TypeAlias = float | NDArray[np.float64]
 NumpyFloat: TypeAlias = np.float64 | NDArray[np.float64]
 NumpyBool: TypeAlias = np.bool | NDArray[np.bool_]
+
+# ToFloat64 | ToFloat64_1D | ToFloat64_2D
+# AnyNumberArray
+# a generic type variable bound to any numerical numpy scalar type.
+# remplacer _T par npc.number ???
+# _T = TypeVar("_T", bound=np.number)
+# _T | ArrayND[_T]

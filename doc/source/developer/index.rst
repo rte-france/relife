@@ -306,17 +306,28 @@ The documentation is built with `PyData Sphinx Theme <https://pydata-sphinx-them
 NumPy documentation style. Here are important points to have in mind if you want to **contribute to the documentation** :
 
 * Read the `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_
-* Classes documentation .rst files are generated using `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ template engine.
-  The template is written in ``class_template.rst`` of the ``doc/source/_templates``.
-  A guide to Jinja2 templating is given in
-  `Sphinx autosummary documentation <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_.
-  Basically, one can catch usefull variables like ``methods`` and create nice autosummary
-  tables inside an ``autoclass``. We chose this style because it creates very clean and
-  comprehension interface documentation of the class.
-* Take a special care to attributes class documentation. Sphinx does not handle
-  attribute instances easily, especially when they are **inherited**. One must reference
-  them manually in the object class under the ``Attributes`` field of the docstring.
-  As it is mentionned in `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_,
-  property methods (getter and/or setter) can be listed there. Their attached docstring
-  will be loaded automatically. One more thing, some IDE (like PyCharm) may raise
-  warnings about unreferenced variables. It is a bug... ignore or disable it at the statement level.
+* Classes documentation .rst files are generated using `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ template engine.The template is written in ``class_template.rst`` of the ``doc/source/_templates``. A guide to Jinja2 templating is given in `Sphinx autosummary documentation <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_.
+Basically, one can catch usefull variables like ``methods`` and create nice autosummary tables inside an ``autoclass``. We chose this style because it creates very clean and comprehension interface documentation of the class.
+* Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are **inherited**. One must reference them manually in the object class under the `Attributes` field of the docstring. As it is mentionned in `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`__, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug... ignore or disable it at the statement level.
+
+
+Typing
+------
+
+Most of ReLife methods a Numpy compatible. For typing, we use `optype <https://github.com/jorenham/optype>`__. It offers more functionnalities to type numpy code and it is compatible with scipy-stubs.
+
+By default, many methods are typed like:
+
+.. code-block:: python
+
+    T: TypeAlias = np.uint | np.floating
+    Ts = TypeVarTuple("Ts")
+    
+    def sf(
+        self, time: int | float | ArrayND[T], *args: *Ts
+    ) -> np.floating | ArrayND[T]: ...
+
+
+``T`` is a type alias corresponding to any unsigned numpy integers or any numpy floating.
+Every output is always an array of 
+

@@ -19,10 +19,13 @@ from typing import (
     overload,
 )
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
+from matplotlib.axes import Axes
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ToFloat
+from optype.numpy import Array1D, ArrayND, ToFloat, ToFloat1D
+from scipy import stats
 from scipy.optimize import newton
 from typing_extensions import override
 
@@ -74,7 +77,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     """
 
     @abstractmethod
-    def sf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def sf(
+        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The survival function.
 
@@ -99,7 +104,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
                 )
             )
         elif hasattr(self, "pdf") and hasattr(self, "hf"):
-            return self.pdf(time, *args) / self.hf(time, *args)
+            return np.divide(self.pdf(time, *args), self.hf(time, *args))
         else:
             class_name = type(self).__name__
             raise NotImplementedError(
@@ -109,7 +114,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             )
 
     @abstractmethod
-    def hf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def hf(
+        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The hazard function.
 
@@ -127,17 +134,19 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             hf values at each given time(s).
         """
         if hasattr(self, "pdf") and hasattr(self, "sf"):
-            return self.pdf(time, *args) / self.sf(time, *args)
+            return np.divide(self.pdf(time, *args), self.sf(time, *args))
         else:
             class_name = type(self).__name__
             raise NotImplementedError(
                 f"""
-                    {class_name} must implement concrete hf function
-                    """
+                {class_name} must implement concrete hf function.
+                """
             )
 
     @abstractmethod
-    def chf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def chf(
+        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The cumulative hazard function.
 
@@ -162,12 +171,15 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             class_name = type(self).__name__
             raise NotImplementedError(
                 f"""
-                {class_name} must implement concrete chf or at least concrete hf function
+                {class_name} must implement concrete chf or at least concrete
+                hf function.
                 """
             )
 
     @abstractmethod
-    def pdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def pdf(
+        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The probability density function.
 
@@ -194,7 +206,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             """
             ) from err
 
-    def cdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def cdf(
+        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The cumulative density function.
 
@@ -213,7 +227,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return 1 - self.sf(time, *args)
 
-    def ppf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ppf(
+        self, probability: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The percent point function.
 
@@ -233,7 +249,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         probability = np.asarray(probability)
         return self.isf(1 - probability, *args)
 
-    def median(self, *args: *Ts) -> NumpyFloat:
+    def median(self, *args: *Ts) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The median.
 
@@ -248,7 +264,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return self.ppf(0.5, *args)
 
-    def isf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def isf(
+        self, probability: int | float | ArrayND[np.uint | np.floating], *args: *Ts
+    ) -> np.floating | ArrayND[np.uint | np.floating]:
         """
         The inverse survival function.
 
@@ -266,15 +284,18 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             isf values at each given probability value(s).
         """
 
-        def func(x: NDArray[np.float64]) -> NumpyFloat:
-            return self.sf(x, *args) - probability
+        # def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
+        #     return np.asarray(self.sf(x, *args) - probability, dtype=float)
 
-        # no idea on how to type func
-        return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
-            func,  # pyright: ignore[reportArgumentType]
-            x0=np.zeros_like(probability),
-            args=args,
-        )
+        def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
+            return -2 * x + 1
+
+        return newton(func, x0=np.zeros((2, 4), dtype=float))
+        # return newton(
+        #     func,
+        #     x0=np.zeros_like(probability, dtype=float),
+        #     args=args,
+        # )
 
     def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat:
         """
@@ -514,12 +535,28 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ls = np.squeeze(ls)
         return ls / sf
 
-    @property
-    def plot(self):
-        """Provides access to plotting functionnalities"""
-        from ._plot import PlotParametricLifetimeModel
-
-        return PlotParametricLifetimeModel(self)
+    def plot(
+        self,
+        fname: str,
+        time: ToFloat1D,
+        *args: *Ts,
+        ax: Axes | None = None,
+        **kwargs: Any,
+    ) -> Axes:
+        allowed_f = ("sf", "cdf", "chf", "hf", "pdf")
+        if fname not in allowed_f:
+            raise ValueError(
+                f"{fname} not available for plotting. Only {allowed_f} are allowed."
+            )
+        if kwargs.get("ci", False) is True:
+            raise ValueError
+        y = getattr(self, fname)(time, *args)
+        if ax is None:
+            ax = plt.gca()
+        ax.plot(time, y, **kwargs)
+        if kwargs.get("label") is not None:
+            ax.legend()
+        return ax
 
 
 class FrozenParametricLifetimeModel(
@@ -891,6 +928,93 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         self.params: NDArray[np.float64] = self.fitting_results.optimal_params
 
         return self
+
+    @override
+    def plot(
+        self,
+        fname: str,
+        time: ToFloat1D,
+        *args: *Ts,
+        ax: Axes | None = None,
+        **kwargs: Any,
+    ) -> Axes:
+        """
+        Plot function.
+
+        Parameters
+        ----------
+        fname : str
+            The function name to plot. Allowed names are sf, cdf, chf, hf, pdf.
+        time : 1d array
+            The timeline used for x-axis.
+        *args
+            Any additional args required to compute the function.
+        ax : plt.Axes, optional
+            An optional existing matplotlib.axes.
+        **kwargs
+            Extra arguments to configure the plot:
+                - ci : bool, default is True, if False the CI is not plotted
+                - alpha_ci :
+                - any arguments allowed by matplotlib.plot
+        """
+        ci = kwargs.pop("ci", True)
+        ax = super().plot(fname, time, *args, **kwargs)
+        if ci:
+            ci_bounds = (0.0, np.inf)
+            if fname in ("sf", "chf"):
+                ci_bounds = (0.0, 1.0)
+            alpha_ci = kwargs.get("alpha_ci", 0.95)
+            se = np.zeros_like(time)
+            se[1:] = ci_estimation(self, fname, time[1:], *args)
+            if se is not None:
+                z = stats.norm.ppf((1 + alpha_ci) / 2)
+                y = getattr(self, fname)(time, *args)
+                yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
+                yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
+                drawstyle = kwargs.get("drawstyle", "default")
+                step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
+                _ = ax.fill_between(
+                    time,
+                    yl,
+                    yu,
+                    facecolors=[ax.lines[-1].get_color()],
+                    step=step,
+                    alpha=0.25,
+                    label=f"IC-{alpha_ci}",
+                )
+        return ax
+
+
+def ci_estimation(
+    model: FittableParametricLifetimeModel[*Ts],
+    fname: str,
+    time: ToFloat1D,
+    *args: *Ts,
+) -> np.float64 | NDArray[np.float64] | None:
+    """
+
+    References
+    ----------
+    .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
+        Statistical methods for reliability data. John Wiley & Sons.
+    """
+    # [1] equation B.10 in Appendix
+    # jac_f : (p,), (p, n) or (p, m, n)
+    # self.var : (p, p)
+    if (
+        model.fitting_results is not None
+        and model.fitting_results.covariance_matrix is not None
+    ):
+        jac_f = getattr(model, f"jac_{fname}")(time, *args)
+        return np.sqrt(
+            np.einsum(
+                "i...,ij,j...->...",
+                jac_f,
+                model.fitting_results.covariance_matrix,
+                jac_f,
+            )
+        )  # ()
+    return None
 
 
 @dataclass

@@ -322,47 +322,6 @@ class FittingResults:
                 (0.05, 0.95)
             ) * self.se.reshape(-1, 1) / np.sqrt(self.nb_observations)  # (p, 2)
 
-    def se_estimation_function(
-        self, jac_f: NDArray[np.float64]
-    ) -> np.float64 | NDArray[np.float64]:
-        """Standard error estimation function.
-
-        Parameters
-        ----------
-        jac_f : 1D, 2D or 3D array
-            The Jacobian of a function f with respect to params.
-
-        Returns
-        -------
-        1D array
-            Standard error for f(params).
-
-        References
-        ----------
-        .. [1] Meeker, W. Q., Escobar, L. A., & Pascual, F. G. (2022).
-            Statistical methods for reliability data. John Wiley & Sons.
-        """
-        # [1] equation B.10 in Appendix
-        # jac_f : (p,), (p, n) or (p, m, n)
-        # self.var : (p, p)
-        if self.covariance_matrix is not None:
-            if jac_f.ndim == 1:  # jac_f : (p,)
-                return np.sqrt(
-                    np.einsum("i,ij,j->", jac_f, self.covariance_matrix, jac_f)
-                )  # ()
-            if jac_f.ndim == 2:  # jac_f : (p, n)
-                return np.sqrt(
-                    np.einsum("in,ij,jn->n", jac_f, self.covariance_matrix, jac_f)
-                )  # (n,)
-            if (
-                jac_f.ndim == 3
-            ):  # jac_f : (p, m, n) if regression with more than one asset
-                return np.sqrt(
-                    np.einsum("imn,ij,jmn->mn", jac_f, self.covariance_matrix, jac_f)
-                )  # (m,n)
-            raise ValueError("Invalid jac_f ndim")
-        raise ValueError("Can't compute if var is None")
-
     @override
     def __str__(self) -> str:
         fields = {
