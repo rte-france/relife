@@ -28,12 +28,10 @@ def get_model_nb_assets(model):
 
     if isinstance(model, RenewalProcess):
         lifetime_model_nb_assets = get_model_nb_assets(model.lifetime_model)
-        if model.first_lifetime_model is not None:
-            first_lifetime_model_nb_assets = get_model_nb_assets(
+        first_lifetime_model_nb_assets = get_model_nb_assets(
                 model.first_lifetime_model
             )
-            return max(lifetime_model_nb_assets, first_lifetime_model_nb_assets)
-        return lifetime_model_nb_assets
+        return max(lifetime_model_nb_assets, first_lifetime_model_nb_assets)
 
     if isinstance(model, FrozenParametricModel):
         if isinstance(model._unfrozen_model, NonHomogeneousPoissonProcess):
