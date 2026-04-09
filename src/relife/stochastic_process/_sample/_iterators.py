@@ -344,8 +344,6 @@ class RenewalProcessIterator(StochasticDataIterator):
         )
         first_lifetime_model = (
             _expand_lifetime_model(self.process.first_lifetime_model, nb_samples)
-            if self.process.first_lifetime_model is not None
-            else self._expanded_lifetime_model
         )
         self._expanded_first_lifetime_model = LeftTruncatedModel(
             first_lifetime_model
