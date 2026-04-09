@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
-from relife.lifetime_model._conditional_model import LeftTruncatedModel, build_conditional_lifetime_model
+from relife.lifetime_model._conditional_model import LeftTruncatedModel, get_conditional_lifetime_model
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
 from relife.typing._scalars import NumpyFloat
@@ -112,7 +112,7 @@ class RenewalProcess(ParametricModel):
 
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
-            timeline, build_conditional_lifetime_model(self.lifetime_model, ar=ar), build_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf
+            timeline, get_conditional_lifetime_model(self.lifetime_model, ar=ar), get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
@@ -157,7 +157,7 @@ class RenewalProcess(ParametricModel):
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
-            timeline, build_conditional_lifetime_model(self.lifetime_model, ar=ar), build_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf
+            timeline, get_conditional_lifetime_model(self.lifetime_model, ar=ar), get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
@@ -288,8 +288,6 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """
 
-    lifetime_model: AnyParametricLifetimeModel[()]
-    first_lifetime_model: AnyParametricLifetimeModel[()]
     reward: Reward
     first_reward: Reward
     discounting: ExponentialDiscounting
@@ -321,7 +319,7 @@ class RenewalRewardProcess(RenewalProcess):
         self.discounting.rate = value
 
     def expected_total_reward(
-        self, tf: float, nb_steps: int
+        self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The expected total reward.
 
@@ -371,10 +369,12 @@ class RenewalRewardProcess(RenewalProcess):
 
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
+
+        lifetime_model_applied = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
         z = renewal_equation_solver(
             timeline,
-            self.lifetime_model,
-            lambda t: self.lifetime_model.ls_integrate(
+            lifetime_model_applied,
+            lambda t: lifetime_model_applied.ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x) * self.discounting.factor(x)
                 ),
@@ -384,11 +384,13 @@ class RenewalRewardProcess(RenewalProcess):
             ),  # reward partial expectation
             discounting=self.discounting,
         )
+
+        first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
         z = delayed_renewal_equation_solver(
             timeline,
             z,
-            self.first_lifetime_model,
-            lambda t: self.first_lifetime_model.ls_integrate(
+            first_lifetime_model_applied,
+            lambda t: first_lifetime_model_applied.ls_integrate(
                 lambda x: (
                     self.first_reward.conditional_expectation(x)
                     * self.discounting.factor(x)
@@ -403,7 +405,7 @@ class RenewalRewardProcess(RenewalProcess):
             z
         )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_total_reward(self) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_total_reward(self, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> np.float64 | NDArray[np.float64]:
         r"""Asymptotic expected total reward.
 
         The asymptotic expected total reward is:
@@ -435,7 +437,9 @@ class RenewalRewardProcess(RenewalProcess):
         ndarray
             The assymptotic expected total reward of the process.
         """
-        lf = self.lifetime_model.ls_integrate(
+
+        lifetime_model_applied = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
+        lf = lifetime_model_applied.ls_integrate(
             lambda x: self.discounting.factor(x),
             np.float64(0.0),
             np.asarray(np.inf),
@@ -443,7 +447,7 @@ class RenewalRewardProcess(RenewalProcess):
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
-        ly = self.lifetime_model.ls_integrate(
+        ly = lifetime_model_applied.ls_integrate(
             lambda x: (
                 self.discounting.factor(x) * self.reward.conditional_expectation(x)
             ),
@@ -452,14 +456,15 @@ class RenewalRewardProcess(RenewalProcess):
             deg=100,
         )  # () or (m, 1)
         z = np.squeeze(ly / (1 - lf))  # () or (m,)
-
+        
+        first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
         lf1 = np.squeeze(
-            self.first_lifetime_model.ls_integrate(
+                first_lifetime_model_applied.ls_integrate(
                 lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
             )
         )  # () or (m,)
         ly1 = np.squeeze(
-            self.first_lifetime_model.ls_integrate(
+                first_lifetime_model_applied.ls_integrate(
                 lambda x: (
                     self.discounting.factor(x)
                     * self.first_reward.conditional_expectation(x)
@@ -473,7 +478,7 @@ class RenewalRewardProcess(RenewalProcess):
         return z  # () or (m,)
 
     def expected_equivalent_annual_worth(
-        self, tf: float, nb_steps: int
+        self, tf: float, nb_steps: int, a0 : NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         """Expected equivalent annual worth.
 
@@ -496,7 +501,7 @@ class RenewalRewardProcess(RenewalProcess):
             A tuple containing the timeline and the computed values.
         """
         timeline, z = self.expected_total_reward(
-            tf, nb_steps
+            tf, nb_steps, a0=a0, ar=ar
         )  # timeline : (nb_steps,) z : (nb_steps,) or (m, nb_steps)
         af = self.discounting.annuity_factor(timeline)  # (nb_steps,)
         if z.ndim == 2 and af.shape != z.shape:  # (m, nb_steps)
@@ -513,7 +518,7 @@ class RenewalRewardProcess(RenewalProcess):
         )  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
     def asymptotic_expected_equivalent_annual_worth(
-        self,
+        self, a0 : NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
         """Asymptotic expected equivalent annual worth.
 
@@ -522,10 +527,12 @@ class RenewalRewardProcess(RenewalProcess):
         ndarray
             The assymptotic expected equivalent annual worth.
         """
+
+        lifetime_model_applied = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
         if self.discounting_rate == 0.0:
             return np.squeeze(
                 np.asarray(
-                    self.lifetime_model.ls_integrate(
+                    lifetime_model_applied.ls_integrate(
                         lambda x: self.reward.conditional_expectation(x),
                         np.float64(0.0),
                         np.asarray(np.inf),
@@ -533,8 +540,8 @@ class RenewalRewardProcess(RenewalProcess):
                     ),
                     dtype=float,
                 )
-                / self.lifetime_model.mean()
+                / lifetime_model_applied.mean()
             )  # () or (m,)
         return (
-            self.discounting_rate * self.asymptotic_expected_total_reward()
+            self.discounting_rate * self.asymptotic_expected_total_reward(a0, ar)
         )  # () or (m,)

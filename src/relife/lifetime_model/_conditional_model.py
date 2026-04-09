@@ -415,7 +415,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return FrozenParametricLifetimeModel(self, a0, *args)
 
 
-def build_conditional_lifetime_model(lifetime_model: AnyParametricLifetimeModel[*Ts], a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> AnyParametricLifetimeModel[*Ts]:
+def get_conditional_lifetime_model(lifetime_model: AnyParametricLifetimeModel[*Ts], a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> AnyParametricLifetimeModel[*Ts]:
     # TODO: use copy method of parametricmodel
     applied_model = deepcopy(lifetime_model)
     if ar is not None:
