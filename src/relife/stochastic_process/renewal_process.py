@@ -8,13 +8,9 @@ from numpy.typing import NDArray
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
-from relife.lifetime_model import (
-    LeftTruncatedModel,
-)
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
 from relife.typing._scalars import NumpyFloat
-from relife.utils import get_model_nb_assets
 
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
@@ -115,9 +111,7 @@ class RenewalProcess(ParametricModel):
 
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
-            timeline,
-            self.lifetime_model,
-            self.first_lifetime_model.cdf
+            timeline, self.lifetime_model, self.first_lifetime_model.cdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
@@ -162,9 +156,7 @@ class RenewalProcess(ParametricModel):
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
-            timeline,
-            self.lifetime_model,
-            self.first_lifetime_model.pdf
+            timeline, self.lifetime_model, self.first_lifetime_model.pdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
@@ -230,13 +222,10 @@ class RenewalProcess(ParametricModel):
         A dict of time, event, entry and args (covariates)
 
         """
-        from relife.base import FrozenParametricModel
 
         from ._sample import RenewalProcessIterable
 
-        if (
-            self.first_lifetime_model != self.lifetime_model
-        ):
+        if self.first_lifetime_model != self.lifetime_model:
             raise ValueError(
                 "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
             )

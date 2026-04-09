@@ -42,9 +42,7 @@ def _expand_lifetime_model(
         broadcasted_args = list(
             np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
         )
-        expanded_lifetime_model = lifetime_model.unfreeze().freeze(
-            *broadcasted_args
-        )
+        expanded_lifetime_model = lifetime_model.unfreeze().freeze(*broadcasted_args)
 
     return expanded_lifetime_model
 
@@ -342,8 +340,8 @@ class RenewalProcessIterator(StochasticDataIterator):
             nb_assets=nb_assets,
             seed=seed,
         )
-        first_lifetime_model = (
-            _expand_lifetime_model(self.process.first_lifetime_model, nb_samples)
+        first_lifetime_model = _expand_lifetime_model(
+            self.process.first_lifetime_model, nb_samples
         )
         self._expanded_first_lifetime_model = LeftTruncatedModel(
             first_lifetime_model
