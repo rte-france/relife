@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from typing import TypeVarTuple
 
 import numpy as np
@@ -412,3 +413,13 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         FrozenLeftTruncatedModel
         """
         return FrozenParametricLifetimeModel(self, a0, *args)
+
+
+def build_conditional_lifetime_model(lifetime_model: AnyParametricLifetimeModel[*Ts], a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> AnyParametricLifetimeModel[*Ts]:
+    # TODO: use copy method of parametricmodel
+    applied_model = deepcopy(lifetime_model)
+    if ar is not None:
+        applied_model = AgeReplacementModel(applied_model).freeze(ar)
+    if a0 is not None:
+        applied_model = LeftTruncatedModel(applied_model).freeze(a0)
+    return applied_model

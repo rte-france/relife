@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
+from relife.lifetime_model._conditional_model import LeftTruncatedModel, build_conditional_lifetime_model
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
 from relife.typing._scalars import NumpyFloat
@@ -70,7 +71,7 @@ class RenewalProcess(ParametricModel):
         self.first_lifetime_model = first_lifetime_model
 
     def renewal_function(
-        self, tf: float, nb_steps: int
+        self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal function.
 
@@ -111,12 +112,12 @@ class RenewalProcess(ParametricModel):
 
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
-            timeline, self.lifetime_model, self.first_lifetime_model.cdf
+            timeline, build_conditional_lifetime_model(self.lifetime_model, ar=ar), build_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
     def renewal_density(
-        self, tf: float, nb_steps: int
+        self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         r"""The renewal density.
 
@@ -156,7 +157,7 @@ class RenewalProcess(ParametricModel):
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
-            timeline, self.lifetime_model, self.first_lifetime_model.pdf
+            timeline, build_conditional_lifetime_model(self.lifetime_model, ar=ar), build_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
