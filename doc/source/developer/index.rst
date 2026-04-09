@@ -70,39 +70,52 @@ This should display:
 
 Make sure Python ``3.11+`` is installed on your machine. Using this Python, create
 a `Python virtual environment <https://docs.python.org/3/library/venv.html>`_ with
-the name of your choice. **Activate your virtual environment**. Intall ReLife in
+the name of your choice. **Activate your virtual environment**. Install ReLife in
 `editable mode <https://setuptools.pypa.io/en/latest/userguide/development_mode.html>`_
-from the source code with the developpers dependencies.
+from the source code with the **dev** or **doc** dependencies depending on your plan to contribute to 
+the development or the documentation.
 
 .. code-block::
 
     $ (YourEnv) cd relife
-    $ (YourEnv) python -m pip install -e ".[dev]"
+    $ (YourEnv) python -m pip install -e ".[dev]"  # For development dependencies
+    $ (YourEnv) python -m pip install -e ".[doc]"  # For documentation dependencies
 
+For **uv** users, it is possible to install ReLife in developer or documentation mode with the following commands.
+Note that uv uses `editable installation <https://docs.astral.sh/uv/concepts/projects/dependencies/#editable-dependencies>`_  
+for workspace packages by default.
+
+.. code-block::
+
+    $ (YourEnv) cd relife
+    $ (YourEnv) uv sync --group dev  # For development dependencies
+    $ (YourEnv) uv sync --no-dev --group doc  # For documentation dependencies
 
 4. Configure your IDE
 
-The last command above should have installed the following dependencies:
+If you installed the **dev** dependencies group, the commands above should have installed `ruff <https://docs.astral.sh/ruff/>`_.
+Ruff is a powerful all-in-one tool for code linting and formatting.
 
-- `Black <https://github.com/psf/black>`_ and `Isort <https://github.com/PyCQA/isort>`_.
-  These tools allow you to automatically `format your code 
+- The `Ruff formatter <https://docs.astral.sh/ruff/formatter/>`_ is an extremely fast Python code formatter designed as a drop-in replacement for Black.
+  This tool allows you to automatically `format your code 
   <https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code>`_.
   Ensure that your IDE is configured to call them to format on save so that you don't have
   to call them manually.
-- `Pylint <https://github.com/PyCQA/pylint>`_.
+- The `Ruff Linter <https://docs.astral.sh/ruff/linter/>`_ is an extremely fast Python linter designed as a drop-in replacement 
+  for Flake8 (plus dozens of plugins), isort, pydocstyle, pyupgrade, autoflake, and more.
   This software is a Python `linter <https://en.wikipedia.org/wiki/Lint_(software)>`_.
   Ensure that your IDE captures diagnostics from this tool while you are coding.
   Although their default configurations can be quite aggressive, we refrain from
   providing generic configurations as it may overlook critical errors in some cases.
   Aim to resolve all warnings; if necessary, disable warnings locally by adding
   specific configurations for these tools on your machine. Do not commit these configurations,
-  as they remain personal to your environment. The base configuration that you 
+  as they remain personal to your environment.
 
 
 Static type checking
 --------------------
 
-Addtionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
+Additionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
 have been installed:
 
 - `Pyright <https://github.com/microsoft/pyright>`_.
@@ -280,7 +293,15 @@ e.g. *only because you think it is more readable*.
 Build the documentation
 -----------------------
 
-To build the documentation locally run the following commands :
+Before being able to build the documentation, you need to install `Pandoc <https://pandoc.org/index.html>`_ 
+which is a powerful file converter between many different formats. You can either download the installer from their website
+for Windows or run the following command for UNIX systems :
+
+.. code-block::
+
+    $ sudo apt install pandoc
+
+Then, to build the documentation locally run the following commands :
 
 .. code-block::
 
