@@ -373,8 +373,8 @@ class RenewalRewardProcess(RenewalProcess):
         # TODO: comprendre le delayed solver ici
         z = renewal_equation_solver(
             timeline,
-            self.first_lifetime_model,
-            lambda t: self.first_lifetime_model.ls_integrate(
+            self.lifetime_model,
+            lambda t: self.lifetime_model.ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x) * self.discounting.factor(x)
                 ),
@@ -384,22 +384,21 @@ class RenewalRewardProcess(RenewalProcess):
             ),  # reward partial expectation
             discounting=self.discounting,
         )
-        if self.first_lifetime_model is not None:
-            z = delayed_renewal_equation_solver(
-                timeline,
-                z,
-                self.first_lifetime_model,
-                lambda t: self.first_lifetime_model.ls_integrate(
-                    lambda x: (
-                        self.first_reward.conditional_expectation(x)
-                        * self.discounting.factor(x)
-                    ),
-                    np.zeros_like(t),
-                    np.asarray(t),
-                    deg=15,
-                ),  # reward partial expectation
-                discounting=self.discounting,
-            )
+        z = delayed_renewal_equation_solver(
+            timeline,
+            z,
+            self.first_lifetime_model,
+            lambda t: self.first_lifetime_model.ls_integrate(
+                lambda x: (
+                    self.first_reward.conditional_expectation(x)
+                    * self.discounting.factor(x)
+                ),
+                np.zeros_like(t),
+                np.asarray(t),
+                deg=15,
+            ),  # reward partial expectation
+            discounting=self.discounting,
+        )
         return np.squeeze(timeline), np.squeeze(
             z
         )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
