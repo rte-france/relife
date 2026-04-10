@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Literal, Optional, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,7 +17,7 @@ from relife.typing import (
     AnyParametricLifetimeModel,
     NumpyFloat,
 )
-from relife.utils import flatten_if_possible, reshape_1d_arg
+from relife.utils import flatten_if_possible, to_2d_if_possible
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
 
@@ -80,7 +80,7 @@ def run_to_failure_policy(
 
 class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
     _cost_structure: dict[str, NumpyFloat]
-    _a0: Optional[NumpyFloat]
+    _a0: NumpyFloat | None
     discounting_rate: float
 
     def __init__(
@@ -88,17 +88,17 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         lifetime_model: AnyParametricLifetimeModel[()],
         cf: AnyFloat,
         discounting_rate: float = 0.0,
-        a0: Optional[AnyFloat] = None,
+        a0: AnyFloat | None = None,
     ):
         super().__init__(
             lifetime_model,
-            {"cf": reshape_1d_arg(cf)},
+            {"cf": to_2d_if_possible(cf)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
+        self._a0 = to_2d_if_possible(a0) if a0 is not None else a0
 
     @property
-    def a0(self) -> Optional[NumpyFloat]:
+    def a0(self) -> NumpyFloat | None:
         """Current ages of the assets.
 
         Returns
@@ -123,7 +123,7 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
 
     @cf.setter
     def cf(self, value: AnyFloat) -> None:
-        self._cost_structure["cf"] = reshape_1d_arg(value)
+        self._cost_structure["cf"] = to_2d_if_possible(value)
 
 
 class OneCycleRunToFailurePolicy(BaseRunToFailure):
@@ -158,7 +158,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         lifetime_model: AnyParametricLifetimeModel[()],
         cf: AnyFloat,
         discounting_rate: float = 0.0,
-        a0: Optional[AnyFloat] = None,
+        a0: AnyFloat | None = None,
         period_before_discounting: float = 1.0,
     ) -> None:
         super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)

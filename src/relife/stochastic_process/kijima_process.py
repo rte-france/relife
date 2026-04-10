@@ -35,7 +35,7 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
 
     @property
     def q(self):
-        return self.params[0]
+        return self.set_params[0]
 
     def freeze(self, *args: *Ts) -> FrozenKijima1Process[*Ts]:
         """
@@ -129,8 +129,6 @@ class FrozenKijima1Process(FrozenParametricModel[Kijima1Process[*Ts], *Ts]):
 
         """
 
-        from relife.utils import get_model_nb_assets
-
         from ._sample import Kijima1ProcessIterable
 
         iterable = Kijima1ProcessIterable(
@@ -172,7 +170,7 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
 
     @property
     def q(self):
-        return self.params[0]
+        return self.set_params[0]
 
     def freeze(self, *args: *Ts) -> FrozenKijima2Process[*Ts]:
         """
@@ -265,8 +263,6 @@ class FrozenKijima2Process(FrozenParametricModel[Kijima2Process[*Ts], *Ts]):
             Random seed, by default None.
 
         """
-
-        from relife.utils import get_model_nb_assets
 
         from ._sample import Kijima2ProcessIterable
 

@@ -216,8 +216,8 @@ def test_aft_pph_weibull_eq(insulator_string_data):
     )
 
     assert weibull_pph.baseline.params == approx(weibull_aft.baseline.params, rel=1e-3)
-    assert weibull_pph.covar_effect.params == approx(
-        -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.params,
+    assert weibull_pph.covar_effect.set_params == approx(
+        -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.set_params,
         rel=1e-3,
     )
 

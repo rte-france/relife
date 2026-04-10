@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC
-from typing import Any, Literal, Optional, Self, overload
+from typing import Any, Literal, Self, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,7 +25,7 @@ from relife.typing import (
 )
 from relife.utils import (
     flatten_if_possible,
-    reshape_1d_arg,
+    to_2d_if_possible,
 )
 from relife.utils.quadrature import legendre_quadrature
 
@@ -127,8 +127,8 @@ def age_replacement_policy(
 
 class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
     _cost_structure: dict[str, NumpyFloat]
-    _ar: Optional[NumpyFloat]
-    _a0: Optional[NumpyFloat]
+    _ar: NumpyFloat | None
+    _a0: NumpyFloat | None
     discounting_rate: float
 
     def __init__(
@@ -137,19 +137,19 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         cf: AnyFloat,
         cp: AnyFloat,
         discounting_rate: float = 0.0,
-        a0: Optional[AnyFloat] = None,
-        ar: Optional[AnyFloat] = None,
+        a0: AnyFloat | None = None,
+        ar: AnyFloat | None = None,
     ):
         super().__init__(
             lifetime_model,
-            {"cf": reshape_1d_arg(cf), "cp": reshape_1d_arg(cp)},
+            {"cf": to_2d_if_possible(cf), "cp": to_2d_if_possible(cp)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-        self._ar = reshape_1d_arg(ar) if ar is not None else ar
+        self._a0 = to_2d_if_possible(a0) if a0 is not None else a0
+        self._ar = to_2d_if_possible(ar) if ar is not None else ar
 
     @property
-    def a0(self) -> Optional[NumpyFloat]:
+    def a0(self) -> NumpyFloat | None:
         """Current ages of the assets.
 
         Returns
@@ -174,7 +174,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
 
     @cf.setter
     def cf(self, value: AnyFloat) -> None:
-        self._cost_structure["cf"] = reshape_1d_arg(value)
+        self._cost_structure["cf"] = to_2d_if_possible(value)
 
     @property
     def cp(self) -> NumpyFloat:
@@ -189,10 +189,10 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
 
     @cp.setter
     def cp(self, value: AnyFloat) -> None:
-        self._cost_structure["cp"] = reshape_1d_arg(value)
+        self._cost_structure["cp"] = to_2d_if_possible(value)
 
     @property
-    def ar(self) -> Optional[NumpyFloat]:
+    def ar(self) -> NumpyFloat | None:
         """Preventive ages of replacement.
 
         Returns
@@ -205,14 +205,14 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         return flatten_if_possible(self._ar)
 
     @ar.setter
-    def ar(self, value: Optional[AnyFloat]) -> None:
+    def ar(self, value: AnyFloat | None) -> None:
         if value is not None:
-            self._ar = reshape_1d_arg(value)
+            self._ar = to_2d_if_possible(value)
         else:
             self._ar = None
 
     @property
-    def tr1(self) -> Optional[NumpyFloat]:
+    def tr1(self) -> NumpyFloat | None:
         """Times before the first replacement.
 
         Returns
@@ -279,8 +279,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         cp: AnyFloat,
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        a0: Optional[AnyFloat] = None,
-        ar: Optional[AnyFloat] = None,
+        a0: AnyFloat | None = None,
+        ar: AnyFloat | None = None,
     ):
         super().__init__(
             lifetime_model, cf, cp, discounting_rate=discounting_rate, a0=a0, ar=ar
@@ -765,7 +765,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def __init__(self, nhpp, cr, cp, discounting_rate=0.0, ar=None):
         super().__init__(
             nhpp,
-            cost_structure={"cr": reshape_1d_arg(cr), "cp": reshape_1d_arg(cp)},
+            cost_structure={"cr": to_2d_if_possible(cr), "cp": to_2d_if_possible(cp)},
             discounting_rate=discounting_rate,
         )
         self.ar = ar
@@ -782,7 +782,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
 
     @cp.setter
     def cp(self, value):
-        self._cost_structure["cp"] = reshape_1d_arg(value)
+        self._cost_structure["cp"] = to_2d_if_possible(value)
 
     @property
     def cr(self):
@@ -796,7 +796,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
 
     @cr.setter
     def cr(self, value):
-        self._cost_structure["cr"] = reshape_1d_arg(value)
+        self._cost_structure["cr"] = to_2d_if_possible(value)
 
     @property
     def ar(self):
@@ -813,19 +813,19 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     @ar.setter
     def ar(self, value):
         if value is not None:
-            value = reshape_1d_arg(value)
+            value = to_2d_if_possible(value)
             self._ar = value
         else:
             self._ar = None
 
     def expected_net_present_value(self, tf, nb_steps, total_sum=False):
-        raise NotImplemented("implementation will come in a future release")
+        raise NotImplementedError("implementation will come in a future release")
 
     def asymptotic_expected_net_present_value(self, total_sum=False):
-        raise NotImplemented("implementation will come in a future release")
+        raise NotImplementedError("implementation will come in a future release")
 
     def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
-        raise NotImplemented("implementation will come in a future release")
+        raise NotImplementedError("implementation will come in a future release")
 
     def asymptotic_expected_equivalent_annual_cost(self):
         discounting = ExponentialDiscounting(self.discounting_rate)
@@ -848,8 +848,9 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
                     self.cp * discounting.factor(self._ar)
                     + self.cr
                     * legendre_quadrature(
-                        lambda t: discounting.factor(t)
-                        * self.baseline_model.intensity(t),
+                        lambda t: (
+                            discounting.factor(t) * self.baseline_model.intensity(t)
+                        ),
                         0,
                         self._ar,
                     )
@@ -878,8 +879,9 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
                     / self.discounting_rate
                     * self.baseline_model.intensity(a)
                     - legendre_quadrature(
-                        lambda t: discounting.factor(t)
-                        * self.baseline_model.intensity(t),
+                        lambda t: (
+                            discounting.factor(t) * self.baseline_model.intensity(t)
+                        ),
                         np.array(0.0),
                         a,
                     )

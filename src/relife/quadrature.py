@@ -1,9 +1,9 @@
-from typing import Callable, overload
+from collections.abc import Callable
+from typing import overload
 
 import numpy as np
 from numpy.typing import NDArray
-
-from relife.typing import AnyFloat, NumpyFloat
+from optype.numpy import Array, AtMost2D
 
 __all__ = [
     "legendre_quadrature",
@@ -13,7 +13,9 @@ __all__ = [
 ]
 
 
-def _control_shape(bound: AnyFloat) -> NDArray[np.float64]:
+def _control_shape(
+    bound: int | float | Array[AtMost2D, np.float64],
+) -> NDArray[np.float64]:
     arr = np.asarray(bound, dtype=np.float64)
     if np.any(arr < 0):
         raise ValueError("Bound values of the integral can't be lower than 0")
@@ -23,13 +25,17 @@ def _control_shape(bound: AnyFloat) -> NDArray[np.float64]:
 
 
 @overload
-def broadcast_bounds(a: AnyFloat) -> NDArray[np.float64]: ...
+def broadcast_bounds(
+    a: int | float | Array[AtMost2D, np.float64],
+) -> NDArray[np.float64]: ...
 @overload
 def broadcast_bounds(
-    a: AnyFloat, b: AnyFloat
+    a: int | float | Array[AtMost2D, np.float64],
+    b: int | float | Array[AtMost2D, np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
 def broadcast_bounds(
-    a: AnyFloat, b: AnyFloat | None = None
+    a: int | float | Array[AtMost2D, np.float64],
+    b: int | float | Array[AtMost2D, np.float64] | None = None,
 ) -> NDArray[np.float64] | tuple[NDArray[np.float64], NDArray[np.float64]]:
     a = _control_shape(a)
     if b is not None:
@@ -46,10 +52,10 @@ def broadcast_bounds(
 
 def legendre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: AnyFloat,
-    b: AnyFloat,
+    a: int | float | Array[AtMost2D, np.float64],
+    b: int | float | Array[AtMost2D, np.float64],
     deg: int = 10,
-) -> NumpyFloat:
+) -> np.float64 | Array[AtMost2D, np.float64]:
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a,b]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -84,7 +90,7 @@ def legendre_quadrature(
         _ = np.broadcast_shapes(fvalues.shape[-len(u.shape) :], u.shape)
     except ValueError:
         raise ValueError(
-            f"""
+            """
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
             Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
             """
@@ -97,9 +103,9 @@ def legendre_quadrature(
 
 def laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: AnyFloat,
+    a: int | float | Array[AtMost2D, np.float64],
     deg: int = 10,
-) -> NumpyFloat:
+) -> np.float64 | Array[AtMost2D, np.float64]:
     r"""Numerical integration of :math:`f(x) * exp(-x)` over the interval :math:`[a, \infty]`
 
     `func` must accept (deg,), (deg, n) or (deg, m, n) array shapes
@@ -125,7 +131,7 @@ def laguerre_quadrature(
     except ValueError:
         # func est une fonction réel univariée et pas multivariée
         raise ValueError(
-            f"""
+            """
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
             Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
             """
@@ -139,7 +145,7 @@ def laguerre_quadrature(
 
 def unweighted_laguerre_quadrature(
     func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-    a: AnyFloat,
+    a: int | float | Array[AtMost2D, np.float64],
     deg: int = 10,
 ):
     r"""Numerical integration of :math:`f(x)` over the interval :math:`[a, \infty]`
@@ -167,7 +173,7 @@ def unweighted_laguerre_quadrature(
         _ = np.broadcast_shapes(fvalues.shape[-len(shifted_x.shape) :], shifted_x.shape)
     except ValueError:
         raise ValueError(
-            f"""
+            """
             func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
             Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
             """

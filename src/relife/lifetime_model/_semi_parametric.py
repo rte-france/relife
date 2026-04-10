@@ -1,16 +1,15 @@
 import copy
-from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict, final, overload
 
 import numpy as np
 from numpy._typing import NDArray
-from optype.numpy import Array1D, ToFloat, ToFloat2D
+from optype.numpy import Array, Array1D, Array2D, AtMost2D
 from scipy.stats import norm
-from typing_extensions import Literal, final, overload, override
+from typing_extensions import override
 
 from relife.base import FittingResults, MaximumLikelihoodOptimizer, OptimizerConfig
 from relife.lifetime_model._regression import LinearCovarEffect
-from relife.utils import reshape_1d_arg
+from relife.utils import to_2d_if_possible
 
 __all__ = [
     "SemiParametricProportionalHazard",
@@ -20,31 +19,37 @@ __all__ = [
 ]
 
 
-@dataclass
 class CoxData:
-    time: NDArray[np.float64]
-    covar: NDArray[np.float64]
-    event: NDArray[np.bool_] | None = None
-    entry: NDArray[np.float64] | None = None
+    time: Array[tuple[int, Literal[1]], np.float64]
+    covar: Array2D[np.float64]
+    event: Array[tuple[int, Literal[1]], np.bool_] | None = None
+    entry: Array[tuple[int, Literal[1]], np.float64] | None = None
 
-    ordered_event_time: NDArray[np.float64] = field(init=False, repr=False)
-    event_count: NDArray[np.int64] = field(init=False, repr=False)
-    risk_set: NDArray[np.bool_] = field(init=False, repr=False)
-    death_set: NDArray[np.bool_] = field(init=False, repr=False)
-    ordered_event_covar: NDArray[np.float64] = field(init=False, repr=False)
+    ordered_event_time: Array1D[np.float64]
+    event_count: Array1D[np.int64]
+    risk_set: Array2D[np.bool_]
+    death_set: Array2D[np.bool_]
+    ordered_event_covar: Array2D[np.float64]
 
-    def __post_init__(self):
-        self.time = reshape_1d_arg(self.time)
+    def __init__(
+        self,
+        time: Array1D[np.float64],
+        covar: Array1D[np.float64] | Array2D[np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+    ) -> None:
+        self.time = to_2d_if_possible(time)
         self.event = (
-            reshape_1d_arg(self.event)
-            if self.event is not None
+            to_2d_if_possible(event)
+            if event is not None
             else np.ones_like(self.time, dtype=np.bool_)
         )
         self.entry = (
-            reshape_1d_arg(self.entry)
-            if self.entry is not None
+            to_2d_if_possible(entry)
+            if entry is not None
             else np.zeros_like(self.time, dtype=np.float64)
         )
+        self.covar = to_2d_if_possible(covar)
         sizes = [len(x) for x in (self.time, self.event, self.entry, self.covar)]
 
         if len(set(sizes)) != 1:
@@ -371,16 +376,15 @@ class SemiParametricProportionalHazard:
 
     def init_likelihood(
         self,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        covar: Array1D[np.float64] | Array2D[np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> "CoxPartialLifetimeLikelihood|BreslowPartialLifetimeLikelihood|EfronPartialLifetimeLikelihood":
         # init covar_effect
-        self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(covar, dtype=np.float64)).shape[-1]
-        )
+        covar = to_2d_if_possible(covar)
+        self.covar_effect = LinearCovarEffect((None,) * covar.shape[-1])
 
         x0 = kwargs.get("x0", np.random.random(covar.shape[1]))
         config = OptimizerConfig(x0)
@@ -398,16 +402,16 @@ class SemiParametricProportionalHazard:
 
     def fit(
         self,
-        time: NDArray[np.float64],
-        covar: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        covar: Array[AtMost2D, np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ):
         likelihood = self.init_likelihood(time, covar, event, entry, **kwargs)
         self.fitting_results = likelihood.optimize()
         assert self.covar_effect is not None
-        self.covar_effect.params = self.fitting_results.optimal_params
+        self.covar_effect.set_params(self.fitting_results.optimal_params)
         self._training_data = likelihood.data
         # currently only BreslowBaseline is used to compute sf
         baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
@@ -445,15 +449,15 @@ class CoxPartialLifetimeLikelihood(
         return len(self.data.time)
 
     @override
-    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
-        self.model.params = params
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        self.model.set_params(params)
         return -(
             np.log(self.model.g(self.data.ordered_event_covar)).sum()
             - np.log(psi(self.model, self.data)).sum()
         )
 
     def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
-        self.model.params = params  # changes model params
+        self.model.set_params(params)  # changes model params
 
         return -(
             self.data.ordered_event_covar.sum(axis=0)
@@ -462,8 +466,8 @@ class CoxPartialLifetimeLikelihood(
             )
         )
 
-    def hess_negative_log(self, params: Array1D[np.float64]) -> ToFloat2D:
-        self.model.params = params  # changes model params
+    def hess_negative_log(self, params: Array1D[np.float64]) -> Array2D[np.float64]:
+        self.model.set_params(params)  # changes model params
 
         psi_order_0 = psi(self.model, self.data)
         psi_order_1 = psi(self.model, self.data, order=1)
@@ -510,8 +514,8 @@ class BreslowPartialLifetimeLikelihood(
         return len(self.data.time)
 
     @override
-    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
-        self.model.params = params  # changes model params
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        self.model.set_params(params)  # changes model params
 
         return -(
             np.log(self.model.g(self.s_j)).sum()
@@ -521,7 +525,7 @@ class BreslowPartialLifetimeLikelihood(
         )
 
     def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
-        self.model.params = params  # changes model params
+        self.model.set_params(params)  # changes model params
 
         return -(
             self.s_j.sum(axis=0)
@@ -531,8 +535,8 @@ class BreslowPartialLifetimeLikelihood(
             ).sum(axis=0)
         )
 
-    def hess_negative_log(self, params: Array1D[np.float64]) -> ToFloat2D:
-        self.model.params = params  # changes model params
+    def hess_negative_log(self, params: Array1D[np.float64]) -> Array2D[np.float64]:
+        self.model.set_params(params)  # changes model params
 
         psi_order_0 = psi(self.model, self.data)
         psi_order_1 = psi(self.model, self.data, order=1)
@@ -631,11 +635,8 @@ class EfronPartialLifetimeLikelihood(
             )
 
     @override
-    def negative_log(
-        self,
-        params: NDArray[np.float64],
-    ) -> float:
-        self.model.params = params  # changes model params
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        self.model.set_params(params)  # changes model params
 
         # .sum(axis=1, keepdims=True) --> sum on alpha to d_j
         # .sum() --> sum on j
@@ -650,7 +651,7 @@ class EfronPartialLifetimeLikelihood(
         return neg_L
 
     def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
-        self.model.params = params  # changes model params
+        self.model.set_params(params)  # changes model params
         # .sum(axis=1) --> sum on alpha to d_j
         # .sum(axis=0) --> sum on j
         # using where in np.divide allows to avoid 0. masked elements
@@ -663,8 +664,8 @@ class EfronPartialLifetimeLikelihood(
             .sum(axis=0)
         )
 
-    def hess_negative_log(self, params: Array1D[np.float64]) -> ToFloat2D:
-        self.model.params = params  # changes model params
+    def hess_negative_log(self, params: Array1D[np.float64]) -> Array2D[np.float64]:
+        self.model.set_params(params)  # changes model params
 
         psi_order_0 = self._psi_efron()
         psi_order_1 = self._psi_efron(order=1)

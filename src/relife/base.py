@@ -20,8 +20,7 @@ from typing import (
 )
 
 import numpy as np
-from numpy.typing import NDArray
-from optype.numpy import Array1D, Array2D, ToFloat, ToFloat1D
+from optype.numpy import Array, Array1D, Array2D, ToFloat, ToFloat1D
 from scipy import stats
 from scipy.optimize import approx_fprime, minimize
 from typing_extensions import override
@@ -83,7 +82,9 @@ class _Parameters:
         pos = len(self._mapping.items())
         self._mapping.update(
             zip(
-                self._mapping.keys(), (np.nan if v is None else v for v in values[:pos])
+                self._mapping.keys(),
+                (np.nan if v is None else v for v in values[:pos]),
+                strict=False,
             )
         )
         self._all_values = tuple(np.nan if v is None else v for v in values)
@@ -96,8 +97,8 @@ class _Parameters:
     def __getitem__(self, name: str) -> float:
         try:
             return self._mapping[name]
-        except KeyError:
-            raise ValueError(f"Parameter {name} does not exist")
+        except KeyError as err:
+            raise ValueError(f"Parameter {name} does not exist") from err
 
     def update_tree(self) -> None:
         """update names and values of current and parent nodes"""
@@ -111,7 +112,7 @@ class _Parameters:
 
         generator = chain.from_iterable(items_walk(self))
         try:
-            _k, _v = zip(*generator)
+            _k, _v = zip(*generator, strict=False)
             self._all_names = _k
             self._all_values = _v
             # self._allnames, self._allvalues = zip(*generator)
@@ -135,27 +136,43 @@ class ParametricModel:
         self._baseline_models = {}
 
     @property
-    def params(self) -> NDArray[np.float64]:
+    def params(self) -> Array1D[np.float64]:
         """
-        Parameters values.
+        Get the parameters of this model.
 
         Returns
         -------
-        ndarray
-            Parameters values
+        out : 1darray of number
+            Model parameters.
 
         Notes
         -----
-        If parameter values are not set, they are encoded as `np.nan` value.
+        If parameter values are not set, they default to `np.nan` values.
         """
+        # np.number includes complex types
         return np.array(self._params.all_values)
 
-    @params.setter
-    def params(self, new_params: NDArray[np.float64]) -> None:
-        if new_params.ndim > 1:
-            raise ValueError(
-                f"Expected params values to be 1d array. Got {new_params.ndim} ndim"
-            )
+    def set_params(self, new_params: ToFloat1D) -> None:
+        """
+        Set the parameters of this model.
+
+        Parameters
+        ----------
+        new_params : array-like of floats
+            Model parameters.
+
+
+        Notes
+        -----
+        `set_params` definition expects an array-like of floats. At runtime,
+        complex parameters might be setted temporarily to approximate fitted
+        parameters covariance. This is contradictory to the given typing. At
+        the moment, we don't see a better solution and we believe that this is
+        actually a limitation of what be expressed in the static typesystem.
+        """
+        # not @params.setter to allow a different type for the values to set
+        new_params = np.asarray(new_params)
+        assert new_params.ndim == 1
         self._params.set_all_values(tuple(v.item() for v in new_params))
 
     @property
@@ -225,7 +242,7 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
             raise ValueError(
                 f"""
                 Can't freeze a model with np.nan parameters. Model params is
-                {model.params}
+                {model.set_params}
                 """
             )
         self._unfrozen_model = model
@@ -251,8 +268,10 @@ class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
             raise AttributeError("Frozen model can't be fit")
         try:
             attr = getattr(self._unfrozen_model, key)
-        except AttributeError:
-            raise AttributeError(f"Frozen {frozen_type} has no attribute {key}")
+        except AttributeError as err:
+            raise AttributeError(
+                f"Frozen {frozen_type} has no attribute {key}"
+            ) from err
 
         def wrapper(*args: Any, **kwargs: Any):
             return attr(*(*args, *self.args), **kwargs)
@@ -284,7 +303,7 @@ class FittingResults:
     """Fitting results of the parametric_model core."""
 
     nb_observations: int  #: Number of observations (samples)
-    optimal_params: NDArray[np.float64]  #: Optimal parameters values
+    optimal_params: Array1D[np.float64]  #: Optimal parameters values
     success: bool  #: Whether or not the optimizer exited successfully.
     neg_log_likelihood: float = field(
         repr=False
@@ -300,10 +319,12 @@ class FittingResults:
         init=False
     )  #: Akaike Information Criterion with a correction for small sample sizes.
     bic: float = field(init=False)  #: Bayesian Information Criterion.
-    se: NDArray[np.float64] | None = field(
+    se: Array1D[np.float64] | None = field(
         init=False, repr=False
     )  #: Standard error, square root of the diagonal of the covariance matrix
-    ic: NDArray[np.float64] | None = field(init=False, repr=False)  #: 95% IC
+    ic: Array[tuple[int, Literal[2]], np.float64] | None = field(
+        init=False, repr=False
+    )  #: 95% IC
 
     def __post_init__(self):
         self.nb_params = self.optimal_params.size
@@ -379,7 +400,7 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
     def nb_observations(self) -> int: ...
 
     @abstractmethod
-    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
+    def negative_log(self, params: Array1D[np.float64]) -> float:
         """
         Negative log likelihood.
 
@@ -390,7 +411,7 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
         Returns
         -------
-        out : ToFloat
+        out : np.float64
             Negative log likelihood value.
         """
 
@@ -420,7 +441,8 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
         if not fitting_results.success:
             warnings.warn(
-                "The negative log-likelihood minimization did not exited successfully."
+                "The negative log-likelihood minimization did not exited successfully.",
+                stacklevel=2,
             )
 
         if self.config.covariance_method is False:
@@ -430,8 +452,8 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
         hess = self.config.scipy_minimize_options.get("hess", None)
         if jac is not None and self.config.covariance_method != "exact":
             fitting_results.covariance_matrix = approx_parameters_covariance(
-                jac,
                 fitting_results.optimal_params,
+                jac,
                 method=self.config.covariance_method,
             )
         if hess is not None and self.config.covariance_method == "exact":
@@ -442,26 +464,39 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
 
 def approx_parameters_covariance(
-    jac_negative_log: Callable[[Array1D[np.float64]], Array1D[np.float64]],
-    optimal_params: NDArray[np.float64],
+    params: Array1D[np.float64],
+    jac_negative_log: Callable[[Array1D[np.number]], Array1D[np.number]],
     method: Literal["2point", "cs"] = "cs",
-    eps: float = 1e-6,
 ) -> Array2D[np.float64] | None:
-    size = optimal_params.size
-    hess = np.empty((size, size))
+    """
+    Approximate parameters covariance.
+
+    Parameters
+    ----------
+    params : 1darray of float
+        The parameters values.
+    jac_negative_log : callable
+        A function taking 1d array of numbers and returning 1d array of numbers.
+    method : "2point" or "cs", default to "cs"
+        The approximation method to use.
+    """
+
+    size = params.size
+    eps = 1e-6
+    hess = np.empty((size, size), dtype=np.float64)
 
     # hessian 2 point
     if method == "2point":
         for i in range(size):
             hess[i] = approx_fprime(
-                optimal_params,
+                params,
                 lambda x: jac_negative_log(x)[i],
                 eps,
             )
         return hess
     # hessian cs
     u = eps * 1j * np.eye(size)
-    complex_params = optimal_params.astype(np.complex64)  # change params to complex
+    complex_params = params.astype(np.complex64)  # change params to complex
     for i in range(size):
         for j in range(i, size):
             hess[i, j] = np.imag(jac_negative_log(complex_params + u[i])[j]) / eps

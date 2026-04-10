@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.typing import AnyFloat
-from relife.utils import reshape_1d_arg
+from relife.utils import to_2d_if_possible
 
 
 class Reward(ABC):
@@ -48,7 +48,7 @@ class RunToFailureReward(Reward):
     cf: np.float64 | NDArray[np.float64]
 
     def __init__(self, cf: AnyFloat) -> None:
-        self.cf = reshape_1d_arg(cf)
+        self.cf = to_2d_if_possible(cf)
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.ones_like(time) * self.cf
@@ -79,9 +79,9 @@ class AgeReplacementReward(Reward):
     ar: np.float64 | NDArray[np.float64]
 
     def __init__(self, cf: AnyFloat, cp: AnyFloat, ar: AnyFloat) -> None:
-        self.cf = reshape_1d_arg(cf)
-        self.cp = reshape_1d_arg(cp)
-        self.ar = reshape_1d_arg(ar)
+        self.cf = to_2d_if_possible(cf)
+        self.cp = to_2d_if_possible(cp)
+        self.ar = to_2d_if_possible(ar)
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
         return np.where(time < self.ar, self.cf, self.cp)

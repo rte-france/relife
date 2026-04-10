@@ -112,8 +112,6 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
 
         """
 
-        from relife.utils import get_model_nb_assets
-
         from ._sample import NonHomogeneousPoissonProcessIterable
 
         frozen_nhpp = self.freeze(*args)
@@ -275,7 +273,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             time, args, event, entry, **kwargs
         )
         fitting_results = optimizer.optimize()
-        self.params = fitting_results.optimal_params
+        self.set_params = fitting_results.optimal_params
         self.fitting_results = fitting_results
         return self
 

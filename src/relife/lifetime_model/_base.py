@@ -12,6 +12,7 @@ from typing import (
     Generic,
     Literal,
     ParamSpec,
+    Protocol,
     Self,
     TypeVar,
     TypeVarTuple,
@@ -24,7 +25,14 @@ import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ArrayND, ToFloat, ToFloat1D
+from optype.numpy import (
+    Array,
+    Array1D,
+    Array2D,
+    ArrayND,
+    AtMost2D,
+    is_array_1d,
+)
 from scipy import stats
 from scipy.optimize import newton
 from typing_extensions import override
@@ -36,13 +44,8 @@ from relife.base import (
     OptimizerConfig,
     ParametricModel,
 )
-from relife.typing import (
-    AnyFloat,
-    NumpyFloat,
-    Seed,
-)
-from relife.utils import reshape_1d_arg
-from relife.utils.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
+from relife.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
+from relife.utils import to_2d_if_possible
 
 __all__ = [
     "ParametricLifetimeModel",
@@ -52,6 +55,60 @@ __all__ = [
 ]
 
 Ts = TypeVarTuple("Ts")
+
+
+@overload
+def plot_probability_function(
+    x: Array1D[np.float64],
+    y: Array1D[np.float64],
+    se: Literal[None],
+    ci_bounds: Literal[None],
+    ax: Axes | None = None,
+    **kwargs: Any,
+) -> Axes: ...
+@overload
+def plot_probability_function(
+    x: Array1D[np.float64],
+    y: Array1D[np.float64],
+    se: Array1D[np.float64],
+    ci_bounds: tuple[float, float],
+    ax: Axes | None = None,
+    **kwargs: Any,
+) -> Axes: ...
+def plot_probability_function(
+    x: Array1D[np.float64],
+    y: Array1D[np.float64],
+    se: Array1D[np.float64] | None = None,
+    ci_bounds: tuple[float, float] | None = None,
+    ax: Axes | None = None,
+    **kwargs: Any,
+) -> Axes:
+    if ax is None:
+        ax = plt.gca()
+    ax.plot(x, y, **kwargs)
+    if se is not None and ci_bounds is not None:
+        alpha_ci = kwargs.get("alpha_ci", 0.95)
+        assert isinstance(alpha_ci, float)
+        z = stats.norm.ppf((1 + alpha_ci) / 2)
+        yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
+        yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
+        drawstyle = kwargs.get("drawstyle", "default")
+        step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
+        _ = ax.fill_between(
+            x,
+            yl,
+            yu,
+            facecolors=[ax.lines[-1].get_color()],
+            step=step,
+            alpha=0.25,
+            label=f"IC-{alpha_ci}",
+        )
+        ax.legend()
+    if kwargs.get("label") is not None:
+        ax.legend()
+    ax.set_ylim(bottom=0.0)
+    ax.set_xlim(left=0.0, right=np.max(x))
+    return ax
 
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
@@ -78,8 +135,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def sf(
-        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The survival function.
 
@@ -115,8 +172,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def hf(
-        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The hazard function.
 
@@ -145,8 +202,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def chf(
-        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The cumulative hazard function.
 
@@ -178,8 +235,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def pdf(
-        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The probability density function.
 
@@ -207,8 +264,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ) from err
 
     def cdf(
-        self, time: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The cumulative density function.
 
@@ -228,8 +285,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return 1 - self.sf(time, *args)
 
     def ppf(
-        self, probability: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The percent point function.
 
@@ -249,7 +306,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         probability = np.asarray(probability)
         return self.isf(1 - probability, *args)
 
-    def median(self, *args: *Ts) -> np.floating | ArrayND[np.uint | np.floating]:
+    def median(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The median.
 
@@ -265,8 +322,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return self.ppf(0.5, *args)
 
     def isf(
-        self, probability: int | float | ArrayND[np.uint | np.floating], *args: *Ts
-    ) -> np.floating | ArrayND[np.uint | np.floating]:
+        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The inverse survival function.
 
@@ -284,20 +341,20 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             isf values at each given probability value(s).
         """
 
-        # def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
-        #     return np.asarray(self.sf(x, *args) - probability, dtype=float)
-
         def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
-            return -2 * x + 1
+            return np.asarray(self.sf(x, *args) - probability, dtype=float)
 
-        return newton(func, x0=np.zeros((2, 4), dtype=float))
-        # return newton(
-        #     func,
-        #     x0=np.zeros_like(probability, dtype=float),
-        #     args=args,
-        # )
+        return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+            func,  # pyright: ignore[reportArgumentType]
+            x0=np.zeros_like(probability, dtype=float),
+            args=args,
+        )
 
-    def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def ichf(
+        self,
+        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
+        *args: *Ts,
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         Inverse cumulative hazard function.
 
@@ -315,7 +372,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ichf values at each given cumulative hazard rate(s).
         """
 
-        def func(x: NDArray[np.float64]) -> NumpyFloat:
+        def func(x: NDArray[np.float64]) -> np.float64 | Array[AtMost2D, np.float64]:
             return self.chf(x, *args) - cumulative_hazard_rate
 
         # no idea on how to type func
@@ -328,8 +385,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         self,
         size: int | tuple[int, int],
         *args: *Ts,
-        seed: Seed | None = None,
-    ) -> NumpyFloat:
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         Random variable sampling.
 
@@ -356,12 +417,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def ls_integrate(
         self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: AnyFloat,
-        b: AnyFloat,
+        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
+        a: int | float | Array[AtMost2D, np.float64],
+        b: int | float | Array[AtMost2D, np.float64],
         *args: *Ts,
         deg: int = 10,
-    ) -> NumpyFloat:
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         Lebesgue-Stieltjes integration.
 
@@ -448,7 +509,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             integration,
         )
 
-    def moment(self, n: int, *args: *Ts) -> NumpyFloat:
+    def moment(self, n: int, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         n-th order moment.
 
@@ -466,7 +527,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
 
-        def func(x: NDArray[np.float64]) -> NDArray[np.float64]:
+        def func(x: np.float64 | Array[AtMost2D, np.float64]) -> NDArray[np.float64]:
             return np.power(x, n)
 
         return self.ls_integrate(
@@ -477,7 +538,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             deg=100,
         )  #  high degree of polynome to ensure high precision
 
-    def mean(self, *args: *Ts) -> NumpyFloat:
+    def mean(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The mean of the distribution.
 
@@ -492,7 +553,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return self.moment(1, *args)
 
-    def var(self, *args: *Ts) -> NumpyFloat:
+    def var(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The variance of the distribution.
 
@@ -507,7 +568,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
-    def mrl(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def mrl(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The mean residual life function.
 
@@ -527,7 +590,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         sf = self.sf(time, *args)
 
-        def func(x: NDArray[np.float64]) -> NDArray[np.float64]:
+        def func(x: np.float64 | Array[AtMost2D, np.float64]) -> NDArray[np.float64]:
             return np.asarray(x) - time
 
         ls = self.ls_integrate(func, time, np.inf, *args)
@@ -537,26 +600,17 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def plot(
         self,
-        fname: str,
-        time: ToFloat1D,
+        fname: Literal["sf", "cdf", "chf", "hf", "pdf"],
+        time: Array1D[np.float64],
         *args: *Ts,
         ax: Axes | None = None,
         **kwargs: Any,
     ) -> Axes:
-        allowed_f = ("sf", "cdf", "chf", "hf", "pdf")
-        if fname not in allowed_f:
-            raise ValueError(
-                f"{fname} not available for plotting. Only {allowed_f} are allowed."
-            )
         if kwargs.get("ci", False) is True:
-            raise ValueError
+            raise ValueError("ci is available for fitted models only.")
         y = getattr(self, fname)(time, *args)
-        if ax is None:
-            ax = plt.gca()
-        ax.plot(time, y, **kwargs)
-        if kwargs.get("label") is not None:
-            ax.legend()
-        return ax
+        assert is_array_1d(y)  # typeguards
+        return plot_probability_function(time, y, ax=ax, **kwargs)
 
 
 class FrozenParametricLifetimeModel(
@@ -568,38 +622,58 @@ class FrozenParametricLifetimeModel(
     def __init__(self, model: ParametricLifetimeModel[*Ts], *args: *Ts) -> None:
         super().__init__(model, *args)
 
-    def sf(self, time: AnyFloat) -> NumpyFloat:
+    def sf(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.sf(time, *self._args)
 
-    def hf(self, time: AnyFloat) -> NumpyFloat:
+    def hf(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.hf(time, *self._args)
 
-    def chf(self, time: AnyFloat) -> NumpyFloat:
+    def chf(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.chf(time, *self._args)
 
-    def pdf(self, time: AnyFloat) -> NumpyFloat:
+    def pdf(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.pdf(time, *self._args)
 
-    def cdf(self, time: AnyFloat) -> NumpyFloat:
+    def cdf(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.cdf(time, *self._args)
 
-    def ppf(self, probability: AnyFloat) -> NumpyFloat:
+    def ppf(
+        self, probability: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.ppf(probability, *self._args)
 
-    def median(self) -> NumpyFloat:
+    def median(self) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.median(*self._args)
 
-    def isf(self, probability: AnyFloat) -> NumpyFloat:
+    def isf(
+        self, probability: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.isf(probability, *self._args)
 
-    def ichf(self, cumulative_hazard_rate: AnyFloat) -> NumpyFloat:
+    def ichf(
+        self, cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.ichf(cumulative_hazard_rate, *self._args)
 
     def rvs(
         self,
         size: int | tuple[int, int],
-        seed: Seed | None = None,
-    ) -> NumpyFloat:
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.rvs(
             size,
             *self._args,
@@ -608,25 +682,86 @@ class FrozenParametricLifetimeModel(
 
     def ls_integrate(
         self,
-        func: Callable[[NDArray[np.float64]], NDArray[np.float64]],
-        a: NumpyFloat,
-        b: NumpyFloat,
+        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
+        a: np.float64 | Array[AtMost2D, np.float64],
+        b: np.float64 | Array[AtMost2D, np.float64],
         *,
         deg: int = 10,
-    ) -> NumpyFloat:
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.ls_integrate(func, a, b, *self._args, deg=deg)
 
-    def moment(self, n: int) -> NumpyFloat:
+    def moment(self, n: int) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.moment(n, *self._args)
 
-    def mean(self) -> NumpyFloat:
+    def mean(self) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.mean(*self._args)
 
-    def var(self) -> NumpyFloat:
+    def var(self) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.var(*self._args)
 
-    def mrl(self, time: AnyFloat) -> NumpyFloat:
+    def mrl(
+        self, time: int | float | Array[AtMost2D, np.float64]
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         return self._unfrozen_model.mrl(time, *self._args)
+
+
+class AnyParametricLifetimeModel(Protocol[*Ts]):
+    """
+    Structural type for any parametric lifetime model.
+    It is particularly needed where an parameter can expect
+    ParametricLifetimeModel[*Ts] or FrozenParametricLifetimeModel[*Ts]
+    Their interfaces are different (the first expects args but the second
+    doesn't). See conditional_model.py.
+    """
+
+    def sf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def hf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def chf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def pdf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def cdf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def ppf(
+        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def median(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def isf(
+        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def ichf(
+        self,
+        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
+        *args: *Ts,
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        *args: *Ts,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def ls_integrate(
+        self,
+        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
+        a: int | float | Array[AtMost2D, np.float64],
+        b: int | float | Array[AtMost2D, np.float64],
+        *args: *Ts,
+        deg: int = 10,
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    def moment(
+        self, n: int, *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
 
 
 @overload
@@ -704,9 +839,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     @abstractmethod
     def jac_hf(
         self,
-        time: AnyFloat,
+        time: int | float | Array[AtMost2D, np.float64],
         *args: *Ts,
-    ) -> NumpyFloat:
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The jacobian of the hazard function.
 
@@ -726,7 +861,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def jac_chf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def jac_chf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The jacobian of the cumulative hazard function.
 
@@ -746,7 +883,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def jac_sf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def jac_sf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The jacobian of the survival function.
 
@@ -765,7 +904,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             an `np.ndarray`, the first dimension holds the number of parameters.
         """
 
-    def jac_cdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def jac_cdf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The jacobian of the cumulative density function.
 
@@ -786,7 +927,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         return -self.jac_sf(time, *args)
 
     @abstractmethod
-    def jac_pdf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def jac_pdf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The jacobian of the probability density function.
 
@@ -807,7 +950,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     @abstractmethod
-    def dhf(self, time: AnyFloat, *args: *Ts) -> NumpyFloat:
+    def dhf(
+        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
+    ) -> np.float64 | Array[AtMost2D, np.float64]:
         """
         The derivate of the hazard function.
 
@@ -828,10 +973,13 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     @abstractmethod
     def init_likelihood(
         self,
-        time: NDArray[np.float64],
-        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        args: Array1D[Any]
+        | Array2D[Any]
+        | tuple[Array1D[Any] | Array2D[Any], ...]
+        | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[M]:
         r"""
@@ -885,10 +1033,13 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     def fit(
         self,
-        time: NDArray[np.float64],
-        args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        args: Array1D[Any]
+        | Array2D[Any]
+        | tuple[Array1D[Any] | Array2D[Any], ...]
+        | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
         """
@@ -925,15 +1076,15 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         )
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
-        self.params: NDArray[np.float64] = self.fitting_results.optimal_params
+        self.set_params(self.fitting_results.optimal_params)
 
         return self
 
     @override
     def plot(
         self,
-        fname: str,
-        time: ToFloat1D,
+        fname: Literal["sf", "cdf", "chf", "hf", "pdf"],
+        time: Array1D[np.float64],
         *args: *Ts,
         ax: Axes | None = None,
         **kwargs: Any,
@@ -957,40 +1108,28 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
                 - alpha_ci :
                 - any arguments allowed by matplotlib.plot
         """
+        y = getattr(self, fname)(time, *args)
+        assert is_array_1d(y)  # typeguards
         ci = kwargs.pop("ci", True)
-        ax = super().plot(fname, time, *args, **kwargs)
         if ci:
-            ci_bounds = (0.0, np.inf)
-            if fname in ("sf", "chf"):
-                ci_bounds = (0.0, 1.0)
-            alpha_ci = kwargs.get("alpha_ci", 0.95)
-            se = np.zeros_like(time)
-            se[1:] = ci_estimation(self, fname, time[1:], *args)
+            time = np.asarray(time, dtype=float)
+            se = estimate_se(self, fname, time, *args)
             if se is not None:
-                z = stats.norm.ppf((1 + alpha_ci) / 2)
-                y = getattr(self, fname)(time, *args)
-                yl = np.clip(y - z * se, ci_bounds[0], ci_bounds[1])
-                yu = np.clip(y + z * se, ci_bounds[0], ci_bounds[1])
-                drawstyle = kwargs.get("drawstyle", "default")
-                step = drawstyle.split("-")[1] if "steps-" in drawstyle else None
-                _ = ax.fill_between(
-                    time,
-                    yl,
-                    yu,
-                    facecolors=[ax.lines[-1].get_color()],
-                    step=step,
-                    alpha=0.25,
-                    label=f"IC-{alpha_ci}",
+                ci_bounds = (0.0, np.inf)
+                if fname in ("sf", "chf"):
+                    ci_bounds = (0.0, 1.0)
+                return plot_probability_function(
+                    time, y, se=se, ci_bounds=ci_bounds, ax=ax, **kwargs
                 )
-        return ax
+        return plot_probability_function(time, y, ax=ax, **kwargs)
 
 
-def ci_estimation(
+def estimate_se(
     model: FittableParametricLifetimeModel[*Ts],
     fname: str,
-    time: ToFloat1D,
+    time: Array1D[np.float64],
     *args: *Ts,
-) -> np.float64 | NDArray[np.float64] | None:
+) -> Array1D[np.float64] | None:
     """
 
     References
@@ -999,61 +1138,70 @@ def ci_estimation(
         Statistical methods for reliability data. John Wiley & Sons.
     """
     # [1] equation B.10 in Appendix
-    # jac_f : (p,), (p, n) or (p, m, n)
-    # self.var : (p, p)
     if (
         model.fitting_results is not None
         and model.fitting_results.covariance_matrix is not None
     ):
-        jac_f = getattr(model, f"jac_{fname}")(time, *args)
-        return np.sqrt(
+        se = np.zeros_like(time)
+        jac_f = getattr(model, f"jac_{fname}")(time[1:], *args)
+        se[1:] = np.sqrt(
             np.einsum(
                 "i...,ij,j...->...",
                 jac_f,
                 model.fitting_results.covariance_matrix,
                 jac_f,
             )
-        )  # ()
+        )
+        return se
     return None
 
 
 @dataclass
 class LifetimeData:
-    time: NDArray[np.float64]  # 1d array or 2d
-    args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None
-    event: NDArray[np.bool_] | None = None
-    entry: NDArray[np.float64] | None = None
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64]
+    args: (
+        Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None
+    ) = None
+    event: Array1D[np.bool_] | None = None
+    entry: Array1D[np.float64] | None = None
 
     nb_observations: int = field(init=False)
-    complete_time: NDArray[np.float64] = field(init=False, repr=False)
-    censored_time: NDArray[np.float64] = field(init=False, repr=False)
-    left_truncations: NDArray[np.float64] = field(init=False, repr=False)
-    complete_time_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
-    censored_time_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
-    left_truncations_args: tuple[NDArray[Any], ...] = field(init=False, repr=False)
+    complete_time: Array[tuple[int, Literal[1]], np.float64] = field(
+        init=False, repr=False
+    )
+    censored_time: (
+        Array[tuple[int, Literal[1]], np.float64]
+        | Array[tuple[int, Literal[2]], np.float64]
+    ) = field(init=False, repr=False)
+    left_truncations: Array[tuple[int, Literal[1]], np.float64] = field(
+        init=False, repr=False
+    )
+    complete_time_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
+    censored_time_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
+    left_truncations_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        time = reshape_1d_arg(self.time)
+        time = to_2d_if_possible(self.time)
         if time.shape[-1] == 2 and self.event is not None:
             raise ValueError("If time is given as intervals, event must be None")
         event = None
         if time.shape[-1] == 1:
             event = (
-                reshape_1d_arg(self.event)
+                to_2d_if_possible(self.event)
                 if self.event is not None
                 else np.ones_like(time, dtype=np.bool_)
             )
         entry = (
-            reshape_1d_arg(self.entry)
+            to_2d_if_possible(self.entry)
             if self.entry is not None
             else np.zeros(len(time), dtype=np.float64)
         )
         if np.any(time <= entry):
             raise ValueError("All time values must be greater than entry values")
         if isinstance(self.args, tuple):
-            args = tuple(reshape_1d_arg(arg) for arg in self.args)
+            args = tuple(to_2d_if_possible(arg) for arg in self.args)
         elif isinstance(self.args, np.ndarray):
-            args = (reshape_1d_arg(self.args),)
+            args = (to_2d_if_possible(self.args),)
         else:
             args = ()
         sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
@@ -1137,8 +1285,8 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
         return self.data.nb_observations
 
     @override
-    def negative_log(self, params: Array1D[np.float64]) -> ToFloat:
-        self.model.params = params
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        self.model.set_params(params)
         return (
             _complete_time_contrib(self.model, self.data)
             + _censored_time_contrib(self.model, self.data)
@@ -1160,7 +1308,7 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
         -------
         out : ndarray
         """
-        self.model.params = params
+        self.model.set_params(params)
         return (
             _jac_complete_time_contrib(self.model, self.data)
             + _jac_censored_time_contrib(self.model, self.data)

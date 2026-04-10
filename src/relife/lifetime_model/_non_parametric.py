@@ -1,153 +1,117 @@
 """Nonparametric lifetime models."""
 
-from typing import Literal, Self, final, overload
+from typing import Any, Generic, Literal, NamedTuple, Self, TypeVar, final
 
 import numpy as np
-from numpy.typing import NDArray
+from matplotlib.axes import Axes
+from optype.numpy import Array1D
 
-__all__: list[str] = ["ECDF", "KaplanMeier", "NelsonAalen"]
+from relife.lifetime_model._base import plot_probability_function
+
+__all__: list[str] = [
+    "NonParametricLifetimeModel",
+    "ECDF",
+    "KaplanMeier",
+    "NelsonAalen",
+]
+
+
+class NonParametricEstimation(NamedTuple):
+    timeline: Array1D[np.float64]
+    values: Array1D[np.float64]
+    se: Array1D[np.float64]
+
+
+KT = TypeVar("KT", bound=str)
+
+
+class NonParametricLifetimeModel(Generic[KT]):
+    _ci_bounds: tuple[float, float] = (0.0, 1.0)
+    _estimations: dict[KT, NonParametricEstimation | None]
+
+    def __init__(self) -> None:
+        self._estimations = {}
+
+    def plot(
+        self,
+        fname: KT,
+        ax: Axes | None = None,
+        **kwargs: Any,
+    ) -> Axes | None:
+        ci = kwargs.pop("ci", True)
+        drawstyle = kwargs.get("drawstyle", "steps-post")
+        estimations = self._estimations.get(fname, None)
+        if estimations is not None:
+            time, y, se = estimations
+            if ci:
+                return plot_probability_function(
+                    time,
+                    y,
+                    se=se,
+                    ci_bounds=self._ci_bounds,
+                    ax=ax,
+                    drawstyle=drawstyle,
+                    **kwargs,
+                )
+            return plot_probability_function(
+                time,
+                y,
+                ax=ax,
+                drawstyle=drawstyle,
+                **kwargs,
+            )
 
 
 @final
-class ECDF:
+class ECDF(NonParametricLifetimeModel[Literal["sf", "cdf"]]):
     """
     Empirical Cumulative Distribution Function.
     """
 
-    _sf: NDArray[np.void] | None
-    _cdf: NDArray[np.void] | None
-
-    def __init__(self) -> None:
-        self._sf = None
-        self._cdf = None
-
-    def fit(self, time: NDArray[np.float64]) -> Self:
+    def fit(self, time: Array1D[np.float64]) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
 
         Parameters
         ----------
-        time : ndarray
+        time : 1darray
             Observed lifetime values.
         """
         timeline, counts = np.unique(time, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
-
-        dtype = np.dtype(
-            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
-        )
-        self._sf = np.empty((timeline.size,), dtype=dtype)
-        self._cdf = np.empty((timeline.size,), dtype=dtype)
-
-        self._sf["timeline"] = timeline
-        self._cdf["timeline"] = timeline
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
-        self._cdf["estimation"] = cdf
-        self._sf["estimation"] = 1 - cdf
         se = np.sqrt((1 - cdf) / len(time))
-        self._sf["se"] = se
-        self._cdf["se"] = se
+        self._estimations["sf"] = NonParametricEstimation(timeline, 1 - cdf, se)
+        self._estimations["cdf"] = NonParametricEstimation(timeline, cdf, se)
         return self
 
-    @overload
-    def sf(
-        self, se: Literal[False]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
-    @overload
-    def sf(
-        self, se: Literal[True]
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
-    ): ...
-    @overload
-    def sf(
-        self, se: bool
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ): ...
-
-    def sf(
-        self, se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ):
+    def sf(self) -> NonParametricEstimation | None:
         """
-        The survival functions estimated values
-
-        Parameters
-        ----------
-        se : bool, default is False
-            If true, the estimated standard errors are returned too.
+        The estimation of the survival function.
 
         Returns
         -------
-        tuple of 2 or 3 ndarrays
-            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        out : tuple of 3 1darray
+            A tuple containing the timeline, the estimated values and the
+            estimated standard errors.
         """
-        if self._sf is None:
-            return None
-        if se:
-            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
-        return self._sf["timeline"], self._sf["estimation"]
+        return self._estimations.get("sf", None)
 
-    @overload
-    def cdf(
-        self, se: Literal[False]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
-    @overload
-    def cdf(
-        self, se: Literal[True]
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
-    ): ...
-    @overload
-    def cdf(
-        self, se: bool
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ): ...
-
-    def cdf(
-        self, se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ):
+    def cdf(self) -> NonParametricEstimation | None:
         """
-        The cumulative distribution function estimated values
-
-        Parameters
-        ----------
-        se : bool, default is False
-            If true, the estimated standard errors are returned too.
+        The estimation of the cumulative distribution function.
 
         Returns
         -------
-        tuple of 2 or 3 ndarrays
-            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        out : tuple of 3 1darray
+            A tuple containing the timeline, the estimated values and the
+            estimated standard errors.
         """
-        if self._cdf is None:
-            return None
-        if se:
-            return self._cdf["timeline"], self._cdf["estimation"], self._cdf["se"]
-        return self._cdf["timeline"], self._cdf["estimation"]
-
-    @property
-    def plot(self):
-        from ._plot import PlotECDF
-
-        return PlotECDF(self)
+        return self._estimations.get("cdf", None)
 
 
 @final
-class KaplanMeier:
+class KaplanMeier(NonParametricLifetimeModel[Literal["sf"]]):
     r"""Kaplan-Meier estimator.
 
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
@@ -185,16 +149,11 @@ class KaplanMeier:
 
     """
 
-    _sf: NDArray[np.void] | None
-
-    def __init__(self) -> None:
-        self._sf = None
-
     def fit(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
     ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
@@ -228,69 +187,28 @@ class KaplanMeier:
             var = (sf**2) * (d / (n * (n - d))).cumsum()
             var = np.where(n > d, var, 0)
 
-        dtype = np.dtype(
-            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        self._estimations["sf"] = NonParametricEstimation(
+            np.insert(timeline, 0, 0),
+            np.insert(sf, 0, 1),
+            np.insert(np.sqrt(var), 0, 0),
         )
-        self._sf = np.empty((timeline.size + 1,), dtype=dtype)
-        self._sf["timeline"] = np.insert(timeline, 0, 0)
-        self._sf["estimation"] = np.insert(sf, 0, 1)
-        self._sf["se"] = np.insert(np.sqrt(var), 0, 0)
         return self
 
-    @overload
-    def sf(
-        self, se: Literal[False]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
-    @overload
-    def sf(
-        self, se: Literal[True]
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
-    ): ...
-    @overload
-    def sf(
-        self, se: bool
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ): ...
-
-    def sf(
-        self, se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ):
+    def sf(self) -> NonParametricEstimation | None:
         """
-        The survival function estimation
-
-        Parameters
-        ----------
-        se : bool, default is False
-            If true, the estimated standard errors are returned too.
+        The estimation of the survival function.
 
         Returns
         -------
-        tuple of 2 or 3 ndarrays
-            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        out : tuple of 3 1darray
+            A tuple containing the timeline, the estimated values and the
+            estimated standard errors.
         """
-        if self._sf is None:
-            return None
-        if se:
-            return self._sf["timeline"], self._sf["estimation"], self._sf["se"]
-        return self._sf["timeline"], self._sf["estimation"]
-
-    @property
-    def plot(self):
-        from ._plot import PlotKaplanMeier
-
-        return PlotKaplanMeier(self)
+        return self._estimations.get("sf", None)
 
 
 @final
-class NelsonAalen:
+class NelsonAalen(NonParametricLifetimeModel[Literal["chf"]]):
     r"""Nelson-Aalen estimator.
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
@@ -328,16 +246,13 @@ class NelsonAalen:
         data. John Wiley & Sons.
     """
 
-    _chf: NDArray[np.void] | None
-
-    def __init__(self) -> None:
-        self._chf = None
+    _ci_bounds: tuple[float, float] = (0.0, np.inf)
 
     def fit(
         self,
-        time: NDArray[np.float64],
-        event: NDArray[np.bool_] | None = None,
-        entry: NDArray[np.float64] | None = None,
+        time: Array1D[np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
     ) -> Self:
         """
         Compute the non-parametric estimations with respect to lifetime data.
@@ -371,62 +286,21 @@ class NelsonAalen:
         with np.errstate(divide="ignore"):
             var = (d / n**2).cumsum()
 
-        dtype = np.dtype(
-            [("timeline", np.float64), ("estimation", np.float64), ("se", np.float64)]
+        self._estimations["chf"] = NonParametricEstimation(
+            np.insert(timeline, 0, 0),
+            np.insert(chf, 0, 0),
+            np.insert(np.sqrt(var), 0, 0),
         )
-        self._chf = np.empty((timeline.size + 1,), dtype=dtype)
-        self._chf["timeline"] = np.insert(timeline, 0, 0)
-        self._chf["estimation"] = np.insert(chf, 0, 0)
-        self._chf["se"] = np.insert(np.sqrt(var), 0, 0)
         return self
 
-    @overload
-    def chf(
-        self, se: Literal[False]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]] | None: ...
-    @overload
-    def chf(
-        self, se: Literal[True]
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None
-    ): ...
-    @overload
-    def chf(
-        self, se: bool
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ): ...
-
-    def chf(
-        self, se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        | None
-    ):
+    def chf(self) -> NonParametricEstimation | None:
         """
-        The cumulative hazard function estimation
-
-        Parameters
-        ----------
-        se : bool, default is False
-            If true, the estimated standard errors are returned too.
+        The estimation of the cumulative hazard function.
 
         Returns
         -------
-        tuple of 2 or 3 ndarrays
-            A tuple containing the timeline, the estimated values and optionally the estimated standard errors (if se is set to true)
+        out : tuple of 3 1darray
+            A tuple containing the timeline, the estimated values and the
+            estimated standard errors.
         """
-        if self._chf is None:
-            return None
-        if se:
-            return self._chf["timeline"], self._chf["estimation"], self._chf["se"]
-        return self._chf["timeline"], self._chf["estimation"]
-
-    @property
-    def plot(self):
-        from ._plot import PlotNelsonAalen
-
-        return PlotNelsonAalen(self)
+        return self._estimations.get("chf", None)
