@@ -1,11 +1,12 @@
 # pyright: basic
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array, Array1D
 
-from relife.typing import AnyFloat
 from relife.utils import to_2d_if_possible
 
 
@@ -45,9 +46,9 @@ class RunToFailureReward(Reward):
     cf
     """
 
-    cf: np.float64 | NDArray[np.float64]
+    cf: np.float64 | Array[tuple[int, Literal[1]], np.float64]
 
-    def __init__(self, cf: AnyFloat) -> None:
+    def __init__(self, cf: int | float | Array1D[np.float64]) -> None:
         self.cf = to_2d_if_possible(cf)
 
     def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -74,11 +75,16 @@ class AgeReplacementReward(Reward):
     ar
     """
 
-    cf: np.float64 | NDArray[np.float64]
-    cp: np.float64 | NDArray[np.float64]
-    ar: np.float64 | NDArray[np.float64]
+    cf: np.float64 | Array[tuple[int, Literal[1]], np.float64]
+    cp: np.float64 | Array[tuple[int, Literal[1]], np.float64]
+    ar: np.float64 | Array[tuple[int, Literal[1]], np.float64]
 
-    def __init__(self, cf: AnyFloat, cp: AnyFloat, ar: AnyFloat) -> None:
+    def __init__(
+        self,
+        cf: int | float | Array1D[np.float64],
+        cp: int | float | Array1D[np.float64],
+        ar: int | float | Array1D[np.float64],
+    ) -> None:
         self.cf = to_2d_if_possible(cf)
         self.cp = to_2d_if_possible(cp)
         self.ar = to_2d_if_possible(ar)

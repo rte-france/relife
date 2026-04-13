@@ -52,6 +52,7 @@ __all__ = [
     "FittableParametricLifetimeModel",
     "LifetimeData",
     "LifetimeLikelihood",
+    "AnyParametricLifetimeModel",
 ]
 
 Ts = TypeVarTuple("Ts")
