@@ -22,7 +22,7 @@ jobs:
 
       - name: Install relife locally with doc dependencies
         run: |
-          python -m pip install . --group doc
+          python -m pip install . --group dev
 
       - name: Extra installs
         # pandoc is required by sphinx extensions
