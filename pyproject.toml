@@ -42,10 +42,10 @@ dev = [
     "scipy-stubs>=1.17.1.2",
     "jupyterlab>=4.5.6",
     "nbsphinx>=0.9.8",
-    "pydata-sphinx-theme>=0.16.1",
     "sphinx>=9.0.4",
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.7.0",
+    "pydata-sphinx-theme>=0.17.0",
 ]
 
 [tool.setuptools.packages.find]
