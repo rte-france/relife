@@ -57,7 +57,7 @@
     <link rel="prev" title="unweighted_laguerre_quadrature" href="../api/routines/relife.utils.quadrature.unweighted_laguerre_quadrature.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.7.0" />
+  <meta name="docsearch:version" content="2.7.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -134,7 +134,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.7.0</div>
+2.7.1</div>
     
   </div>
   
@@ -218,7 +218,7 @@
           
           
           
-          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
@@ -344,7 +344,7 @@
           
           
           
-          <a href="https://github.com/rte-france/relife/tree/refactoring" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
@@ -444,14 +444,11 @@ It explains how to set up a local clone of your forked git repository.</p>
 <p>Clone your fork of the ReLife repo from your GitHub account to your
 local disk. The url to use with the clone command can be found by clicking on the green
 ‘Code’ button of the GitHub repo. When you clone a project, you get a local copy of an
-existing git repository that is uploaded on a server. The above command will create a
+existing git repository that is uploaded on a server. The command below will create a
 relife directory on your computer with the codebase and every version of every file for
 the history of the project:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/YourLogin/relife.git  # add --depth 1 if your connection is slow
-</pre></div>
-</div>
-<p>and change into that directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd relife
+$ cd relife # go into the directory
 </pre></div>
 </div>
 <p id="upstream">Next, add the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> remote. This saves a reference to the main ReLife
@@ -477,45 +474,45 @@ upstream  https://github.com/rte-france/relife.git (push)
 </ol>
 <p>Make sure Python <code class="docutils literal notranslate"><span class="pre">3.11+</span></code> is installed on your machine. Using this Python, create
 a <a class="reference external" href="https://docs.python.org/3/library/venv.html">Python virtual environment</a> with
-the name of your choice. <strong>Activate your virtual environment</strong>. Intall ReLife in
+the name of your choice. <strong>Activate your virtual environment</strong>. Install ReLife in
 <a class="reference external" href="https://setuptools.pypa.io/en/latest/userguide/development_mode.html">editable mode</a>
-from the source code with the developpers dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ (YourEnv) cd relife
-$ (YourEnv) python -m pip install -e &quot;.[dev]&quot;
+from the source code with the <strong>dev</strong> or <strong>doc</strong> dependencies depending on your plan to contribute to
+the development or the documentation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ (YourEnv) python -m pip install -e . --group dev
+</pre></div>
+</div>
+<p>For <strong>uv</strong> users, it is possible to install ReLife in developer or documentation mode with the following commands.
+Note that uv uses <a class="reference external" href="https://docs.astral.sh/uv/concepts/projects/dependencies/#editable-dependencies">editable installation</a>
+for workspace packages by default.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ (YourEnv) uv sync --group dev
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
 <li><p>Configure your IDE</p></li>
 </ol>
-<p>The last command above should have installed the following dependencies:</p>
+<p>If you installed the <strong>dev</strong> dependencies group, the commands above should have installed <a class="reference external" href="https://docs.astral.sh/ruff/">ruff</a>.
+Ruff is a powerful all-in-one tool for code linting and formatting.</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/psf/black">Black</a> and <a class="reference external" href="https://github.com/PyCQA/isort">Isort</a>.
-These tools allow you to automatically <a class="reference external" href="https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code">format your code</a>.
+<li><p>The <a class="reference external" href="https://docs.astral.sh/ruff/formatter/">Ruff formatter</a> is an extremely fast Python code formatter designed as a drop-in replacement for Black.
+This tool allows you to automatically <a class="reference external" href="https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code">format your code</a>.
 Ensure that your IDE is configured to call them to format on save so that you don’t have
 to call them manually.</p></li>
-<li><p><a class="reference external" href="https://github.com/PyCQA/pylint">Pylint</a>.
-This software is a Python <a class="reference external" href="https://en.wikipedia.org/wiki/Lint_(software)">linter</a>.
-Ensure that your IDE captures diagnostics from this tool while you are coding.
-Although their default configurations can be quite aggressive, we refrain from
-providing generic configurations as it may overlook critical errors in some cases.
-Aim to resolve all warnings; if necessary, disable warnings locally by adding
-specific configurations for these tools on your machine. Do not commit these configurations,
-as they remain personal to your environment. The base configuration that you</p></li>
+<li><p>The <a class="reference external" href="https://docs.astral.sh/ruff/linter/">Ruff Linter</a> is an extremely fast Python <a class="reference external" href="https://en.wikipedia.org/wiki/Lint_(software)">linter</a> designed as a drop-in replacement of well-known linters like flake8. Ensure that your IDE captures diagnostics from this tool while you are coding.</p></li>
 </ul>
 </section>
 <section id="static-type-checking">
 <h2>Static type checking<a class="headerlink" href="#static-type-checking" title="Link to this heading">#</a></h2>
-<p>Addtionally, <a class="reference external" href="https://en.wikipedia.org/wiki/Type_system#Type_checking">static type checkers</a>.
+<p>Additionally, <a class="reference external" href="https://en.wikipedia.org/wiki/Type_system#Type_checking">static type checkers</a>.
 have been installed:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/microsoft/pyright">Pyright</a>.
-Again, ensure that your IDE communicates with the Pyright language server (<a class="reference external" href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a>)
+<li><p><a class="reference external" href="https://github.com/detachhead/basedpyright">basedpyright</a>.
+Again, ensure that your IDE communicates with the basedpyright language server (<a class="reference external" href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a>)
 to receive feedback on your type annotations. Type checking can be challenging and may
 not be desired at first, so consider flagging your modules with <code class="docutils literal notranslate"><span class="pre">#pyright:</span> <span class="pre">basic</span></code> to start.
 Once you feel comfortable, gradually enhance your type annotations by removing <code class="docutils literal notranslate"><span class="pre">#pyright:</span> <span class="pre">basic</span></code>
-and enabling strict mode in Pyright configurations.</p></li>
-<li><p>After successfully passing all Pyright analyses, use <a class="reference external" href="https://github.com/python/mypy">Mypy</a>
-to validate or supplement the diagnostics provided by Pyright.</p></li>
+and enabling strict mode in basedpyright configurations.</p></li>
+<li><p>After successfully passing all Pyright analyses, use <a class="reference external" href="https://github.com/python/mypy">mypy</a>
+to validate or supplement the diagnostics provided by basedyright.</p></li>
 </ul>
 </section>
 <section id="development-workflow">
@@ -653,14 +650,14 @@ quality in the right direction.</p>
 </section>
 <section id="build-the-documentation">
 <span id="build-the-doc"></span><h2>Build the documentation<a class="headerlink" href="#build-the-documentation" title="Link to this heading">#</a></h2>
+<p>Before being able to build the documentation, you need to install <a class="reference external" href="https://pandoc.org/index.html">Pandoc</a>
+which is a powerful file converter between many different formats.</p>
 <p>To build the documentation locally run the following commands :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
-$ make html
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make html -C doc
 </pre></div>
 </div>
 <p>To run a local documentation server and read your built documentation :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd doc
-$ python -m http.server -d build/html/
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m http.server -d doc/build/html/
 </pre></div>
 </div>
 <p>Then go to <a class="reference external" href="http://localhost:8000">http://localhost:8000</a></p>
