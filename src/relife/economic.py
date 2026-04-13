@@ -1,23 +1,29 @@
 # pyright: basic
 
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import Array, Array1D
+from optype.numpy import Array1D, ArrayND
 
-from relife.utils import to_2d_if_possible
+from relife.utils import to_numpy_float
+
+Ts = TypeVarTuple("Ts")
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
 
 
 class Reward(ABC):
     @abstractmethod
-    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def conditional_expectation(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         """Conditional expected reward"""
         pass
 
     @abstractmethod
-    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sample(self, time: ST | NumpyST | ArrayND[NumpyST]) -> NDArray[np.float64]:
         """Reward conditional sampling.
 
         Parameters
@@ -46,15 +52,21 @@ class RunToFailureReward(Reward):
     cf
     """
 
-    cf: np.float64 | Array[tuple[int, Literal[1]], np.float64]
+    cf: np.float64 | ArrayND[np.float64]
 
-    def __init__(self, cf: int | float | Array1D[np.float64]) -> None:
-        self.cf = to_2d_if_possible(cf)
+    def __init__(self, cf: ST | NumpyST | ArrayND[NumpyST]) -> None:
+        self.cf = to_numpy_float(cf)
 
-    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
-        return np.ones_like(time) * self.cf
+    def conditional_expectation(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
+        if isinstance(time, np.ndarray):
+            return np.ones_like(time) * self.cf
+        return self.cf
 
-    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sample(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         return self.conditional_expectation(time)
 
 
@@ -75,9 +87,9 @@ class AgeReplacementReward(Reward):
     ar
     """
 
-    cf: np.float64 | Array[tuple[int, Literal[1]], np.float64]
-    cp: np.float64 | Array[tuple[int, Literal[1]], np.float64]
-    ar: np.float64 | Array[tuple[int, Literal[1]], np.float64]
+    cf: np.float64 | ArrayND[np.float64]
+    cp: np.float64 | ArrayND[np.float64]
+    ar: np.float64 | ArrayND[np.float64]
 
     def __init__(
         self,
@@ -85,23 +97,31 @@ class AgeReplacementReward(Reward):
         cp: int | float | Array1D[np.float64],
         ar: int | float | Array1D[np.float64],
     ) -> None:
-        self.cf = to_2d_if_possible(cf)
-        self.cp = to_2d_if_possible(cp)
-        self.ar = to_2d_if_possible(ar)
+        self.cf = to_numpy_float(cf)
+        self.cp = to_numpy_float(cp)
+        self.ar = to_numpy_float(ar)
 
-    def conditional_expectation(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def conditional_expectation(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         return np.where(time < self.ar, self.cf, self.cp)
 
-    def sample(self, time: NDArray[np.float64]) -> NDArray[np.float64]:
+    def sample(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         return self.conditional_expectation(time)
 
 
 class Discounting(ABC):
     @abstractmethod
-    def factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def factor(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]: ...
 
     @abstractmethod
-    def annuity_factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def annuity_factor(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]: ...
 
 
 class ExponentialDiscounting(Discounting):
@@ -119,14 +139,20 @@ class ExponentialDiscounting(Discounting):
     def __init__(self, rate: float = 0.0) -> None:
         self.rate = rate
 
-    def factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+    def factor(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         if self.rate != 0.0:
-            return np.exp(-self.rate * timeline)
-        else:
-            return np.ones_like(timeline)
+            return np.exp(-self.rate * time, dtype=np.float64)
+        if isinstance(time, np.ndarray):
+            return np.ones_like(time, dtype=np.float64)
+        return np.float64(1)
 
-    def annuity_factor(self, timeline: NDArray[np.float64]) -> NDArray[np.float64]:
+    def annuity_factor(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         if self.rate != 0.0:
-            return (1 - np.exp(-self.rate * timeline)) / self.rate
-        else:
-            return timeline
+            return (1 - np.exp(-self.rate * time, dtype=np.float64)) / self.rate
+        if isinstance(time, np.ndarray):
+            return time.astype(np.float64)
+        return np.float64(time)

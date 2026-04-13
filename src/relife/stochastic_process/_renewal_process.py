@@ -1,11 +1,10 @@
 # pyright: basic
 
 import copy
-from typing import Any, TypedDict
+from typing import Any, Literal, TypeAlias, TypedDict
 
 import numpy as np
-from numpy.typing import NDArray
-from optype.numpy import Array1D
+from optype.numpy import Array, Array1D, Array2D, AtMost2D
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
@@ -17,21 +16,31 @@ from ._renewal_equations import (
     renewal_equation_solver,
 )
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
 
-def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
+
+__all__ = [
+    "RenewalProcess",
+    "RenewalRewardProcess",
+]
+
+
+def _make_timeline(
+    tf: float, nb_steps: int
+) -> Array[tuple[Literal[1], int], np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
     return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
 
 
 class LifetimeFitArgs(TypedDict):
-    time: NDArray[np.floating]
-    event: NDArray[np.bool_]
-    entry: NDArray[np.floating]
-    args: tuple[NDArray[np.floating], ...]
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64]
+    event: Array1D[np.bool_]
+    entry: Array1D[np.float64]
+    args: Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...]
 
 
 class RenewalProcess(ParametricModel):
-    # noinspection PyUnresolvedReferences
     """Renewal process.
 
     Parameters
@@ -52,7 +61,7 @@ class RenewalProcess(ParametricModel):
     nb_params
     params
     params_names
-    """
+    """  # noqa: E501
 
     lifetime_model: AnyParametricLifetimeModel[()]
     first_lifetime_model: AnyParametricLifetimeModel[()] | None
@@ -68,11 +77,11 @@ class RenewalProcess(ParametricModel):
 
     def renewal_function(
         self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         r"""The renewal function.
 
-        The renewal function gives the expected total number of renewals. It is computed  by solving the
-        renewal equation:
+        The renewal function gives the expected total number of renewals.
+        It is computed  by solving the renewal equation:
 
         .. math::
 
@@ -118,7 +127,7 @@ class RenewalProcess(ParametricModel):
 
     def renewal_density(
         self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         r"""The renewal density.
 
         The renewal density corresponds to the derivative of the renewal function with
@@ -169,8 +178,8 @@ class RenewalProcess(ParametricModel):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: int | float | Array1D[np.float64] | None = None,
-        ar: int | float | Array1D[np.float64] | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
@@ -205,10 +214,10 @@ class RenewalProcess(ParametricModel):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: int | float | Array1D[np.float64] | None = None,
-        ar: int | float | Array1D[np.float64] | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed=None,
-    ) -> dict[str, Any]:
+    ) -> LifetimeFitArgs:
         """Generate lifetime data
 
         This function will generate lifetime data that can be used to fit a lifetime model.
@@ -226,7 +235,7 @@ class RenewalProcess(ParametricModel):
         -------
         A dict of time, event, entry and args (covariates)
 
-        """
+        """  # noqa: E501
         from relife.base import FrozenParametricModel
 
         from ._sample import RenewalProcessIterable
@@ -246,7 +255,7 @@ class RenewalProcess(ParametricModel):
                     pass
             else:
                 raise ValueError(
-                    "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."
+                    "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."  # noqa: E501
                 )
         iterable = RenewalProcessIterable(
             self, nb_samples, time_window, a0=a0, ar=ar, seed=seed
@@ -264,17 +273,15 @@ class RenewalProcess(ParametricModel):
             for arg in args_2d
         )
 
-        returned_dict = {
-            "time": struct_array["time"].copy(),
-            "event": struct_array["event"].copy(),
-            "entry": struct_array["entry"].copy(),
-            "args": tuple_args_arr,
-        }
-        return returned_dict
+        return LifetimeFitArgs(
+            time=struct_array["time"].copy(),
+            event=struct_array["event"].copy(),
+            entry=struct_array["entry"].copy(),
+            args=tuple_args_arr,
+        )
 
 
 class RenewalRewardProcess(RenewalProcess):
-    # noinspection PyUnresolvedReferences
     """Renewal reward process.
 
     Parameters
@@ -304,7 +311,7 @@ class RenewalRewardProcess(RenewalProcess):
     nb_params
     params
     params_names
-    """
+    """  # noqa: E501
 
     lifetime_model: AnyParametricLifetimeModel[()]
     first_lifetime_model: AnyParametricLifetimeModel[()] | None
@@ -340,7 +347,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def expected_total_reward(
         self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         r"""The expected total reward.
 
         The renewal equation solved to compute the expected reward is:
@@ -422,7 +429,7 @@ class RenewalRewardProcess(RenewalProcess):
             z
         )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
-    def asymptotic_expected_total_reward(self) -> np.float64 | NDArray[np.float64]:
+    def asymptotic_expected_total_reward(self) -> np.float64 | Array1D[np.float64]:
         r"""Asymptotic expected total reward.
 
         The asymptotic expected total reward is:
@@ -453,7 +460,7 @@ class RenewalRewardProcess(RenewalProcess):
         -------
         ndarray
             The assymptotic expected total reward of the process.
-        """
+        """  # noqa: E501
         lf = self.lifetime_model.ls_integrate(
             lambda x: self.discounting.factor(x),
             np.float64(0.0),
@@ -493,7 +500,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def expected_equivalent_annual_worth(
         self, tf: float, nb_steps: int
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         """Expected equivalent annual worth.
 
         Gives the equivalent annual worth of the expected total reward of the
@@ -538,7 +545,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def asymptotic_expected_equivalent_annual_worth(
         self,
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         """Asymptotic expected equivalent annual worth.
 
         Returns

@@ -5,19 +5,15 @@ from abc import ABC
 from typing import Any, Literal, overload
 
 import numpy as np
-from numpy.typing import NDArray
+from optype.numpy import Array, Array1D, AtMost2D
 
 from relife.economic import RunToFailureReward
 from relife.lifetime_model import (
+    AnyParametricLifetimeModel,
     LeftTruncatedModel,
 )
 from relife.stochastic_process import RenewalRewardProcess
-from relife.typing import (
-    AnyFloat,
-    AnyParametricLifetimeModel,
-    NumpyFloat,
-)
-from relife.utils import flatten_if_possible, to_2d_if_possible
+from relife.utils import flatten_if_at_least_2d, to_column_2d
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
 
@@ -25,27 +21,27 @@ from ._base import OneCycleExpectedCosts, ReplacementPolicy
 @overload
 def run_to_failure_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cf: AnyFloat,
+    cf: int | float | Array1D[np.float64],
     one_cycle: Literal[True],
     **kwargs: Any,
 ) -> OneCycleRunToFailurePolicy: ...
 @overload
 def run_to_failure_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cf: AnyFloat,
+    cf: int | float | Array1D[np.float64],
     one_cycle: Literal[False],
     **kwargs: Any,
 ) -> RunToFailurePolicy: ...
 @overload
 def run_to_failure_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cf: AnyFloat,
+    cf: int | float | Array1D[np.float64],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> OneCycleRunToFailurePolicy | RunToFailurePolicy: ...
 def run_to_failure_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cf: AnyFloat,
+    cf: int | float | Array1D[np.float64],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> OneCycleRunToFailurePolicy | RunToFailurePolicy:
@@ -79,26 +75,25 @@ def run_to_failure_policy(
 
 
 class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
-    _cost_structure: dict[str, NumpyFloat]
-    _a0: NumpyFloat | None
     discounting_rate: float
+    _a0: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
 
     def __init__(
         self,
         lifetime_model: AnyParametricLifetimeModel[()],
-        cf: AnyFloat,
+        cf: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
-        a0: AnyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
     ):
         super().__init__(
             lifetime_model,
-            {"cf": to_2d_if_possible(cf)},
+            {"cf": to_column_2d(cf)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = to_2d_if_possible(a0) if a0 is not None else a0
+        self._a0 = to_column_2d(a0) if a0 is not None else a0
 
     @property
-    def a0(self) -> NumpyFloat | None:
+    def a0(self) -> np.float64 | Array1D[np.float64] | None:
         """Current ages of the assets.
 
         Returns
@@ -108,10 +103,10 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         # _a0 is (m, 1) but exposed cf is (m,)
         if self._a0 is None:
             return self._a0
-        return flatten_if_possible(self._a0)
+        return flatten_if_at_least_2d(self._a0)
 
     @property
-    def cf(self) -> NumpyFloat:
+    def cf(self) -> np.float64 | Array1D[np.float64]:
         """Cost of failure.
 
         Returns
@@ -119,11 +114,11 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         np.ndarray
         """
         # _cf is (m, 1) but exposed cf is (m,)
-        return flatten_if_possible(self._cost_structure["cf"])
+        return flatten_if_at_least_2d(self._cost_structure["cf"])
 
     @cf.setter
     def cf(self, value: AnyFloat) -> None:
-        self._cost_structure["cf"] = to_2d_if_possible(value)
+        self._cost_structure["cf"] = to_column_2d(value)
 
 
 class OneCycleRunToFailurePolicy(BaseRunToFailure):
@@ -156,9 +151,9 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     def __init__(
         self,
         lifetime_model: AnyParametricLifetimeModel[()],
-        cf: AnyFloat,
+        cf: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
-        a0: AnyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
         period_before_discounting: float = 1.0,
     ) -> None:
         super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)
@@ -182,7 +177,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
 
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         timeline, npv = self._expected_costs.expected_net_present_value(tf, nb_steps)
         if total_sum and npv.ndim == 2:
             return timeline, np.sum(npv, axis=0)
@@ -191,7 +186,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
@@ -199,10 +194,10 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value()
         if total_sum:
             return np.sum(asymptotic_npv)
@@ -210,7 +205,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
             tf, nb_steps
         )
@@ -221,7 +216,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
@@ -229,10 +224,10 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         asymptotic_eeac = (
             self._expected_costs.asymptotic_expected_equivalent_annual_cost()
         )
@@ -288,7 +283,7 @@ class RunToFailurePolicy(BaseRunToFailure):
 
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
@@ -297,7 +292,7 @@ class RunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
@@ -305,10 +300,10 @@ class RunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()
         if total_sum:
             return np.sum(asymptotic_npv)
@@ -316,7 +311,7 @@ class RunToFailurePolicy(BaseRunToFailure):
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
             tf, nb_steps
         )
@@ -327,7 +322,7 @@ class RunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
@@ -335,10 +330,10 @@ class RunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | Array1D[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         asymptotic_eeac = (
             self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
         )

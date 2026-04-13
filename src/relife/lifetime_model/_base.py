@@ -6,7 +6,7 @@ import copy
 import functools
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import (
     Any,
     Generic,
@@ -14,6 +14,7 @@ from typing import (
     ParamSpec,
     Protocol,
     Self,
+    TypeAlias,
     TypeVar,
     TypeVarTuple,
     final,
@@ -30,7 +31,6 @@ from optype.numpy import (
     Array1D,
     Array2D,
     ArrayND,
-    AtMost2D,
     is_array_1d,
 )
 from scipy import stats
@@ -45,7 +45,7 @@ from relife.base import (
     ParametricModel,
 )
 from relife.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
-from relife.utils import to_2d_if_possible
+from relife.utils import to_column_2d
 
 __all__ = [
     "ParametricLifetimeModel",
@@ -56,6 +56,8 @@ __all__ = [
 ]
 
 Ts = TypeVarTuple("Ts")
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
 
 
 @overload
@@ -136,8 +138,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def sf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The survival function.
 
@@ -173,8 +175,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def hf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The hazard function.
 
@@ -203,8 +205,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def chf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative hazard function.
 
@@ -236,8 +238,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     @abstractmethod
     def pdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The probability density function.
 
@@ -265,8 +267,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ) from err
 
     def cdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative density function.
 
@@ -286,8 +288,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return 1 - self.sf(time, *args)
 
     def ppf(
-        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The percent point function.
 
@@ -307,7 +309,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         probability = np.asarray(probability)
         return self.isf(1 - probability, *args)
 
-    def median(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
+    def median(self, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The median.
 
@@ -323,8 +325,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return self.ppf(0.5, *args)
 
     def isf(
-        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The inverse survival function.
 
@@ -353,9 +355,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def ichf(
         self,
-        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
+        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         Inverse cumulative hazard function.
 
@@ -373,7 +375,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             ichf values at each given cumulative hazard rate(s).
         """
 
-        def func(x: NDArray[np.float64]) -> np.float64 | Array[AtMost2D, np.float64]:
+        def func(x: NDArray[np.float64]) -> np.float64 | ArrayND[np.float64]:
             return self.chf(x, *args) - cumulative_hazard_rate
 
         # no idea on how to type func
@@ -391,7 +393,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         Random variable sampling.
 
@@ -409,7 +411,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         -------
         out : float or ndarray
             The sample values.
-        """
+        """  # noqa: E501
         rng = np.random.default_rng(seed)
         probability = rng.uniform(size=size)
         if size == 1:
@@ -418,12 +420,15 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def ls_integrate(
         self,
-        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
-        a: int | float | Array[AtMost2D, np.float64],
-        b: int | float | Array[AtMost2D, np.float64],
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
         deg: int = 10,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         Lebesgue-Stieltjes integration.
 
@@ -448,21 +453,23 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             Lebesgue-Stieltjes integral of func from `a` to `b`.
         """
 
-        def integrand(x: NDArray[np.float64]) -> NDArray[np.float64]:
+        def integrand(
+            x: ST | NumpyST | ArrayND[NumpyST],
+        ) -> np.float64 | ArrayND[np.float64]:
             #  x.shape == (deg,), (deg, n) or (deg, m, n), ie points of quadratures
-            # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+            # fx : (d_1, ..., d_i, deg), (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)  # noqa: E501
             x = np.asarray(x)
             fx = func(x)
 
             try:
                 _ = np.broadcast_shapes(fx.shape[-len(x.shape) :], x.shape)
-            except ValueError:
+            except ValueError as err:
                 raise ValueError(
                     """
                     func can't squeeze input dimensions. If x has shape (d_1, ..., d_i), func(x) must have shape (..., d_1, ..., d_i).
                     Ex : if x.shape == (m, n), func(x).shape == (..., m, n).
-                    """
-                )
+                    """  # noqa: E501
+                ) from err
             if (
                 x.ndim == 3
             ):  # reshape because model.pdf is tested only for input ndim <= 2
@@ -474,11 +481,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
                 pdf = self.pdf(x, *args)  # (m, deg*n)
                 pdf = np.rollaxis(pdf.reshape(m, xdeg, n), 1, 0)  #  (deg, m, n)
             else:  # ndim == 1 | 2
-                # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args
+                # reshape to (1, deg*n) or (1, deg), ie place 1 on axis 0 to allow broadcasting with m of args  # noqa: E501
                 pdf = self.pdf(x.reshape(1, -1), *args)  # (1, deg*n) or (1, deg)
                 pdf = pdf.reshape(x.shape)  # (deg, n) or (deg,)
 
-            # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)
+            # (d_1, ..., d_i, deg) or (d_1, ..., d_i, deg, n) or (d_1, ..., d_i, deg, m, n)  # noqa: E501
             return fx * pdf
 
         arr_a, arr_b = np.broadcast_arrays(a, b)  # (), (n,) or (m, n)
@@ -510,7 +517,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             integration,
         )
 
-    def moment(self, n: int, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
+    def moment(self, n: int, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         n-th order moment.
 
@@ -528,8 +535,10 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if n < 1:
             raise ValueError("order of the moment must be at least 1")
 
-        def func(x: np.float64 | Array[AtMost2D, np.float64]) -> NDArray[np.float64]:
-            return np.power(x, n)
+        def func(
+            x: ST | NumpyST | ArrayND[NumpyST],
+        ) -> np.float64 | ArrayND[np.float64]:
+            return np.power(x, n, dtype=np.float64)
 
         return self.ls_integrate(
             func,
@@ -539,7 +548,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             deg=100,
         )  #  high degree of polynome to ensure high precision
 
-    def mean(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
+    def mean(self, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The mean of the distribution.
 
@@ -554,7 +563,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return self.moment(1, *args)
 
-    def var(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]:
+    def var(self, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The variance of the distribution.
 
@@ -570,8 +579,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return self.moment(2, *args) - self.moment(1, *args) ** 2
 
     def mrl(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The mean residual life function.
 
@@ -591,8 +600,10 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
         sf = self.sf(time, *args)
 
-        def func(x: np.float64 | Array[AtMost2D, np.float64]) -> NDArray[np.float64]:
-            return np.asarray(x) - time
+        def func(
+            x: ST | NumpyST | ArrayND[NumpyST],
+        ) -> np.float64 | ArrayND[np.float64]:
+            return np.asarray(x, dtype=np.float64) - time
 
         ls = self.ls_integrate(func, time, np.inf, *args)
         if sf.ndim < 2:  # 2d to 1d or 0d
@@ -624,46 +635,46 @@ class FrozenParametricLifetimeModel(
         super().__init__(model, *args)
 
     def sf(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.sf(time, *self._args)
 
     def hf(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.hf(time, *self._args)
 
     def chf(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.chf(time, *self._args)
 
     def pdf(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.pdf(time, *self._args)
 
     def cdf(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.cdf(time, *self._args)
 
     def ppf(
-        self, probability: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, probability: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.ppf(probability, *self._args)
 
-    def median(self) -> np.float64 | Array[AtMost2D, np.float64]:
+    def median(self) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.median(*self._args)
 
     def isf(
-        self, probability: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, probability: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.isf(probability, *self._args)
 
     def ichf(
-        self, cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.ichf(cumulative_hazard_rate, *self._args)
 
     def rvs(
@@ -674,7 +685,7 @@ class FrozenParametricLifetimeModel(
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.rvs(
             size,
             *self._args,
@@ -683,26 +694,29 @@ class FrozenParametricLifetimeModel(
 
     def ls_integrate(
         self,
-        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
-        a: np.float64 | Array[AtMost2D, np.float64],
-        b: np.float64 | Array[AtMost2D, np.float64],
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
         *,
         deg: int = 10,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.ls_integrate(func, a, b, *self._args, deg=deg)
 
-    def moment(self, n: int) -> np.float64 | Array[AtMost2D, np.float64]:
+    def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.moment(n, *self._args)
 
-    def mean(self) -> np.float64 | Array[AtMost2D, np.float64]:
+    def mean(self) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.mean(*self._args)
 
-    def var(self) -> np.float64 | Array[AtMost2D, np.float64]:
+    def var(self) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.var(*self._args)
 
     def mrl(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         return self._unfrozen_model.mrl(time, *self._args)
 
 
@@ -716,32 +730,32 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     """
 
     def sf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def hf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def chf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def pdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def cdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def ppf(
-        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
-    def median(self, *args: *Ts) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
+    def median(self, *args: *Ts) -> np.float64 | ArrayND[NumpyST]: ...
     def isf(
-        self, probability: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def ichf(
         self,
-        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
+        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def rvs(
         self,
         size: int | tuple[int, int],
@@ -751,18 +765,19 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def ls_integrate(
         self,
-        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
-        a: int | float | Array[AtMost2D, np.float64],
-        b: int | float | Array[AtMost2D, np.float64],
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
         deg: int = 10,
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
-    def moment(
-        self, n: int, *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
+    def moment(self, n: int, *args: *Ts) -> np.float64 | ArrayND[np.float64]: ...
 
 
 @overload
@@ -833,16 +848,16 @@ M = TypeVar(
 class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     fitting_results: FittingResults | None
 
-    def __init__(self, **kwparams: float | None):
+    def __init__(self, **kwparams: ST | None):
         super().__init__(**kwparams)
         self.fitting_results = None
 
     @abstractmethod
     def jac_hf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> ArrayND[np.float64]:
         """
         The jacobian of the hazard function.
 
@@ -863,8 +878,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     @abstractmethod
     def jac_chf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
         """
         The jacobian of the cumulative hazard function.
 
@@ -885,8 +900,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     @abstractmethod
     def jac_sf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
         """
         The jacobian of the survival function.
 
@@ -906,8 +921,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         """
 
     def jac_cdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
         """
         The jacobian of the cumulative density function.
 
@@ -929,8 +944,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     @abstractmethod
     def jac_pdf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
         """
         The jacobian of the probability density function.
 
@@ -952,8 +967,8 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     @abstractmethod
     def dhf(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
         """
         The derivate of the hazard function.
 
@@ -1157,15 +1172,7 @@ def estimate_se(
     return None
 
 
-@dataclass
 class LifetimeData:
-    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64]
-    args: (
-        Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None
-    ) = None
-    event: Array1D[np.bool_] | None = None
-    entry: Array1D[np.float64] | None = None
-
     nb_observations: int = field(init=False)
     complete_time: Array[tuple[int, Literal[1]], np.float64] = field(
         init=False, repr=False
@@ -1181,31 +1188,43 @@ class LifetimeData:
     censored_time_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
     left_truncations_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
 
-    def __post_init__(self) -> None:
-        time = to_2d_if_possible(self.time)
-        if time.shape[-1] == 2 and self.event is not None:
+    def __init__(
+        self,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: (
+            Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None
+        ) = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+    ) -> None:
+        column_time = to_column_2d(time)
+        if column_time.shape[-1] == 2 and event is not None:
             raise ValueError("If time is given as intervals, event must be None")
-        event = None
-        if time.shape[-1] == 1:
-            event = (
-                to_2d_if_possible(self.event)
-                if self.event is not None
+        column_event = None
+        if column_time.shape[-1] == 1:
+            column_event = (
+                to_column_2d(event)
+                if event is not None
                 else np.ones_like(time, dtype=np.bool_)
             )
-        entry = (
-            to_2d_if_possible(self.entry)
-            if self.entry is not None
+        column_entry = (
+            to_column_2d(entry)
+            if entry is not None
             else np.zeros(len(time), dtype=np.float64)
         )
-        if np.any(time <= entry):
+        if np.any(column_time <= column_entry):
             raise ValueError("All time values must be greater than entry values")
-        if isinstance(self.args, tuple):
-            args = tuple(to_2d_if_possible(arg) for arg in self.args)
-        elif isinstance(self.args, np.ndarray):
-            args = (to_2d_if_possible(self.args),)
+        if isinstance(args, tuple):
+            column_args = tuple(to_column_2d(arg) for arg in args)
+        elif isinstance(args, np.ndarray):
+            column_args = (to_column_2d(args),)
         else:
-            args = ()
-        sizes = [len(x) for x in (time, event, entry, *args) if x is not None]
+            column_args = ()
+        sizes = [
+            len(x)
+            for x in (column_time, column_event, column_entry, *column_args)
+            if x is not None
+        ]
         if len(set(sizes)) != 1:
             raise ValueError(
                 f"""
@@ -1213,29 +1232,37 @@ class LifetimeData:
                 length are different. Got {tuple(sizes)}
                 """
             )
-        non_zero_entry = np.flatnonzero(entry)
-        if event is not None:
-            non_zero_event = np.flatnonzero(event)
-            zero_event = np.flatnonzero(event == 0)
-            self.nb_observations = time.size
-            self.complete_time = time[non_zero_event]
-            self.censored_time = time[zero_event]
-            self.left_truncations = entry[non_zero_entry]
-            self.complete_time_args = tuple(arg[non_zero_event] for arg in args)
-            self.censored_time_args = tuple(arg[zero_event] for arg in args)
-            self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
-        else:
-            complete_time_index = np.flatnonzero(time[:, 0] == time[:, 1])
-            non_complete_time_index = np.flatnonzero(time[:, 0] != time[:, 1])
-            self.nb_observations = time.size
-            self.complete_time = time[:, 1][complete_time_index]
-            self.censored_time = time[non_complete_time_index]
-            self.left_truncations = entry[non_zero_entry]
-            self.complete_time_args = tuple(arg[complete_time_index] for arg in args)
-            self.censored_time_args = tuple(
-                arg[non_complete_time_index] for arg in args
+        non_zero_entry = np.flatnonzero(column_entry)
+        if column_event is not None:
+            non_zero_event = np.flatnonzero(column_event)
+            zero_event = np.flatnonzero(column_event == 0)
+            self.nb_observations = len(time)
+            self.complete_time = column_time[non_zero_event]
+            self.censored_time = column_time[zero_event]
+            self.left_truncations = column_entry[non_zero_entry]
+            self.complete_time_args = tuple(arg[non_zero_event] for arg in column_args)
+            self.censored_time_args = tuple(arg[zero_event] for arg in column_args)
+            self.left_truncations_args = tuple(
+                arg[non_zero_entry] for arg in column_args
             )
-            self.left_truncations_args = tuple(arg[non_zero_entry] for arg in args)
+        else:
+            complete_time_index = np.flatnonzero(column_time[:, 0] == column_time[:, 1])
+            non_complete_time_index = np.flatnonzero(
+                column_time[:, 0] != column_time[:, 1]
+            )
+            self.nb_observations = len(time)
+            self.complete_time = column_time[:, 1][complete_time_index]
+            self.censored_time = column_time[non_complete_time_index]
+            self.left_truncations = column_entry[non_zero_entry]
+            self.complete_time_args = tuple(
+                arg[complete_time_index] for arg in column_args
+            )
+            self.censored_time_args = tuple(
+                arg[non_complete_time_index] for arg in column_args
+            )
+            self.left_truncations_args = tuple(
+                arg[non_zero_entry] for arg in column_args
+            )
 
 
 @final

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVarTuple
+from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
-from numpy.typing import NDArray
-from optype.numpy import Array, AtMost2D
+from optype.numpy import ArrayND
 from typing_extensions import override
 
-from relife.utils import to_2d_if_possible
+from relife.utils import to_column_2d
 
 from ._base import (
     AnyParametricLifetimeModel,
@@ -21,6 +20,8 @@ from ._base import (
 __all__: list[str] = ["AgeReplacementModel", "LeftTruncatedModel"]
 
 Ts = TypeVarTuple("Ts")
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
 
 _ar_args_docstring = [
     docscrape.Parameter(
@@ -45,7 +46,7 @@ _ar_args_docstring = [
 
 
 class AgeReplacementModel(
-    ParametricLifetimeModel[*tuple[int | float | Array[AtMost2D, np.float64], *Ts]]
+    ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]
 ):
     r"""
     Age replacement model.
@@ -78,88 +79,88 @@ class AgeReplacementModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def sf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def hf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def cdf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return super().cdf(time, *(ar, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def chf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def isf(
         self,
-        probability: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        probability: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ichf(
         self,
-        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def pdf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def mrl(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
         mask = time >= ar  # (m, 1) or (m, n)
@@ -177,19 +178,19 @@ class AgeReplacementModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ppf(
         self,
-        probability: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        probability: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return self.isf(1 - probability, ar, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def median(
-        self, ar: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
     @override
@@ -197,14 +198,14 @@ class AgeReplacementModel(
     def rvs(
         self,
         size: int | tuple[int, int],
-        ar: int | float | Array[AtMost2D, np.float64],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
         seed: int
         | np.random.Generator
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         args_add_ar = (ar, *args)
         return super().rvs(
             size,
@@ -216,14 +217,17 @@ class AgeReplacementModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def ls_integrate(
         self,
-        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
-        a: int | float | Array[AtMost2D, np.float64],
-        b: int | float | Array[AtMost2D, np.float64],
-        ar: int | float | Array[AtMost2D, np.float64],
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
         deg: int = 10,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         if func(ar).ndim == 2 and integration.ndim == 1:
@@ -235,9 +239,9 @@ class AgeReplacementModel(
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def moment(
-        self, n: int, ar: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+        self, n: int, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return self.ls_integrate(
             lambda x: np.asarray(x**n, dtype=float),
             np.float64(0),
@@ -250,24 +254,22 @@ class AgeReplacementModel(
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def mean(
-        self, ar: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return self.moment(1, ar, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def var(
-        self, ar: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        ar = to_2d_if_possible(ar)
+        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        ar = to_column_2d(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def freeze(
-        self, ar: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> FrozenParametricLifetimeModel[
-        *tuple[int | float | Array[AtMost2D, np.float64], *Ts]
-    ]:
+        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]:
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -306,7 +308,7 @@ _a0_args_docstring = [
 
 
 class LeftTruncatedModel(
-    ParametricLifetimeModel[*tuple[int | float | Array[AtMost2D, np.float64], *Ts]]
+    ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]
 ):
     r"""Left truncated model.
 
@@ -340,78 +342,78 @@ class LeftTruncatedModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def sf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().sf(time, a0, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def pdf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().pdf(time, a0, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def isf(
         self,
-        probability: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        probability: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
-        a0 = to_2d_if_possible(a0)
+        a0 = to_column_2d(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def chf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def cdf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().cdf(time, *(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def hf(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return self.baseline.hf(a0 + time, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ichf(
         self,
-        cumulative_hazard_rate: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return (
             self.baseline.ichf(
                 cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
@@ -424,11 +426,15 @@ class LeftTruncatedModel(
     def rvs(
         self,
         size: int | tuple[int, int],
-        a0: int | float | Array[AtMost2D, np.float64],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-        seed: Seed | None = None,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         args_add_a0 = (a0, *args)
         return super().rvs(
             size,
@@ -440,75 +446,76 @@ class LeftTruncatedModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ls_integrate(
         self,
-        func: Callable[[np.float64 | Array[AtMost2D, np.float64]], NDArray[np.float64]],
-        a: int | float | Array[AtMost2D, np.float64],
-        b: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
         deg: int = 10,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def mean(
-        self, a0: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+        self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().mean(*(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def median(
-        self, a0: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+        self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().median(*(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def var(
-        self, a0: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+        self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().var(*(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def moment(
-        self, n: int, a0: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+        self, n: int, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().moment(n, *(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def mrl(
         self,
-        time: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().mrl(time, *(a0, *args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def ppf(
         self,
-        probability: int | float | Array[AtMost2D, np.float64],
-        a0: int | float | Array[AtMost2D, np.float64],
+        probability: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
-        a0 = to_2d_if_possible(a0)
+    ) -> np.float64 | ArrayND[np.float64]:
+        a0 = to_column_2d(a0)
         return super().ppf(probability, *(a0, *args))
 
     def freeze(
-        self, a0: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> FrozenParametricLifetimeModel[
-        *tuple[int | float | Array[AtMost2D, np.float64], *Ts]
-    ]:
+        self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> FrozenParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]:
         """
         Freeze conditional age values and other arguments into the object data.
 

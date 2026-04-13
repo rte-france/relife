@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from relife.data import NHPPData
+from ..non_homogeneous_poisson_process import NHPPData
 
 
 @pytest.fixture

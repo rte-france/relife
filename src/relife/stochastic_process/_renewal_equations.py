@@ -3,9 +3,10 @@ from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array, AtMost2D
 
 from relife.economic import ExponentialDiscounting
-from relife.typing import AnyFloat, AnyParametricLifetimeModel, NumpyFloat
+from relife.lifetime_model import AnyParametricLifetimeModel
 
 __all__ = ["renewal_equation_solver", "delayed_renewal_equation_solver"]
 
@@ -13,7 +14,10 @@ __all__ = ["renewal_equation_solver", "delayed_renewal_equation_solver"]
 def renewal_equation_solver(
     timeline: NDArray[np.float64],
     lifetime_model: AnyParametricLifetimeModel[()],
-    evaluated_func: Callable[[AnyFloat], NumpyFloat],
+    evaluated_func: Callable[
+        [int | float | Array[AtMost2D, np.float64]],
+        np.float64 | Array[AtMost2D, np.float64],
+    ],
     discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)
@@ -52,7 +56,10 @@ def delayed_renewal_equation_solver(
     timeline: NDArray[np.float64],
     z: NDArray[np.float64],
     first_lifetime_model: AnyParametricLifetimeModel[()],
-    evaluated_func: Callable[[AnyFloat], NumpyFloat],
+    evaluated_func: Callable[
+        [int | float | Array[AtMost2D, np.float64]],
+        np.float64 | Array[AtMost2D, np.float64],
+    ],
     discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)

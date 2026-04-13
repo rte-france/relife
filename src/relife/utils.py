@@ -1,25 +1,34 @@
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, Literal, TypeAlias, overload
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import Array, Array0D, Array1D, Array2D, AtMost2D, is_array_2d
+from optype.numpy import (
+    Array,
+    Array0D,
+    Array1D,
+    ArrayND,
+    is_array_0d,
+    is_array_1d,
+)
 
 __all__ = [
-    "to_2d_if_possible",
+    "to_column_2d",
     "to_numpy_float",
-    "flatten_if_possible",
+    "flatten_if_at_least_2d",
     "get_args_nb_assets",
     "get_model_nb_assets",
 ]
 
 
 @overload
-def to_numpy_float(v: int | float) -> np.float64: ...
+def to_numpy_float(v: float | np.floating | np.uint) -> np.float64: ...
 @overload
-def to_numpy_float(v: Array[AtMost2D, np.float64]) -> Array[AtMost2D, np.float64]: ...
 def to_numpy_float(
-    v: int | float | Array[AtMost2D, np.float64],
-) -> np.float64 | Array[AtMost2D, np.float64]:
+    v: ArrayND[np.floating | np.uint],
+) -> ArrayND[np.float64]: ...
+def to_numpy_float(
+    v: float | np.uint | np.floating | ArrayND[np.floating | np.uint],
+) -> np.float64 | ArrayND[np.float64]:
     """
     Convert the input to np.float64 if it is a scalar or an array of np.float64
     otherwise.
@@ -29,22 +38,36 @@ def to_numpy_float(
     return np.asarray(v, dtype=np.float64)
 
 
-_T = TypeVar("_T", bound=np.generic)
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint | np.bool
 
 
 @overload
-def to_2d_if_possible(arg: int) -> np.float64: ...
+def to_column_2d(arg: ST | NumpyST) -> np.float64: ...
 @overload
-def to_2d_if_possible(arg: float) -> np.float64: ...
+def to_column_2d(
+    arg: Array0D[NumpyST],
+) -> Array[tuple[Literal[1], Literal[1]], np.float64]: ...
 @overload
-def to_2d_if_possible(arg: Array0D[_T]) -> Array[tuple[Literal[1], Literal[1]], _T]: ...
+def to_column_2d(
+    arg: Array1D[NumpyST],
+) -> Array[tuple[int, Literal[1]], np.float64]: ...
 @overload
-def to_2d_if_possible(arg: Array1D[_T]) -> Array[tuple[int, Literal[1]], _T]: ...
-@overload
-def to_2d_if_possible(arg: Array2D[_T]) -> Array2D[_T]: ...
-def to_2d_if_possible(
-    arg: int | float | Array[AtMost2D, _T],
-) -> np.float64 | np.bool_ | Array2D[_T]:
+def to_column_2d(
+    arg: Array[tuple[int, int, *tuple[int, ...]], NumpyST],
+) -> Array[tuple[int, int, *tuple[int, ...]], np.float64]: ...
+def to_column_2d(
+    arg: ST
+    | NumpyST
+    | Array0D[NumpyST]
+    | Array1D[NumpyST]
+    | Array[tuple[int, int, *tuple[int, ...]], NumpyST],
+) -> (
+    np.float64
+    | Array[tuple[Literal[1], Literal[1]], np.float64]
+    | Array[tuple[int, Literal[1]], np.float64]
+    | Array[tuple[int, int, *tuple[int, ...]], np.float64]
+):
     """
     Reshapes ReLife arguments that are expected to be 0d or 1d.
 
@@ -57,19 +80,32 @@ def to_2d_if_possible(
     np.float64 or (m, 1) shaped array
         Reshaped array used to ensure broadcasting compatibility in computations.
     """
-    if isinstance(arg, (int, float)):  # np.float64 is float
-        return np.float64(arg)
-    if arg.ndim == 1:
-        return arg.reshape(-1, 1)
-    if arg.ndim > 2:
-        raise ValueError("arg can't be more than 2d")
-    assert is_array_2d(arg)  # typeguards
-    return arg
+    if isinstance(arg, np.ndarray):
+        if arg.ndim <= 1:
+            return arg.reshape(-1, 1).astype(np.float64)
+        # typeguards
+        assert not is_array_0d(arg) and not is_array_1d(arg)
+        return arg.astype(np.float64)
+    return np.float64(arg)
 
 
-def flatten_if_possible(
-    value: np.float64 | Array[AtMost2D, np.float64],
-) -> np.float64 | Array[AtMost2D, np.float64]:
+@overload
+def flatten_if_at_least_2d(value: ST | NumpyST) -> np.float64: ...
+@overload
+def flatten_if_at_least_2d(value: Array0D[NumpyST]) -> Array0D[np.float64]: ...
+@overload
+def flatten_if_at_least_2d(value: Array1D[NumpyST]) -> Array1D[np.float64]: ...
+@overload
+def flatten_if_at_least_2d(
+    value: Array[tuple[int, int, *tuple[int, ...]], NumpyST],
+) -> Array1D[np.float64]: ...
+def flatten_if_at_least_2d(
+    value: ST
+    | NumpyST
+    | Array0D[NumpyST]
+    | Array1D[NumpyST]
+    | Array[tuple[int, int, *tuple[int, ...]], NumpyST],
+) -> np.float64 | Array0D[np.float64] | Array1D[np.float64]:
     """
     Flatten array-like object when possible.
 
@@ -82,9 +118,13 @@ def flatten_if_possible(
     np.ndarray
         Flattened array.
     """
-    if value.ndim != 0:
-        return value.flatten()
-    return value
+    if isinstance(value, np.ndarray):
+        if value.ndim >= 1:
+            return value.astype(np.float64).flatten()
+        # typeguards
+        assert is_array_0d(value)
+        return value.astype(np.float64)
+    return np.float64(value)
 
 
 def get_args_nb_assets(*args: NDArray[Any]) -> int:
@@ -135,9 +175,9 @@ def get_model_nb_assets(model):
         if isinstance(model._unfrozen_model, ParametricLifetimeRegression):
             # specific covar reshape
             reshaped_args = [np.atleast_2d(model.args[0])]
-            reshaped_args += [to_2d_if_possible(arg) for arg in model.args[1:]]
+            reshaped_args += [to_column_2d(arg) for arg in model.args[1:]]
         else:
-            reshaped_args = [to_2d_if_possible(arg) for arg in model.args]
+            reshaped_args = [to_column_2d(arg) for arg in model.args]
         return get_args_nb_assets(*reshaped_args)
 
     return 1

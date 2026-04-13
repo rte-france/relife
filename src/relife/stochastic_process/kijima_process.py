@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import Any, Generic, Self, TypeVarTuple
 
 import numpy as np
+from optype.numpy import Array1D
 
 from relife.base import FittingResults, FrozenParametricModel, ParametricModel
 from relife.lifetime_model._base import FittableParametricLifetimeModel
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.typing._scalars import NumpyFloat
 
 Ts = TypeVarTuple("Ts")
 
@@ -56,8 +56,8 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
         *args,
         seed=None,
     ) -> StochasticSampleMapping:
@@ -79,7 +79,7 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
         """
         frozen_kijima = self.freeze(*args)
         return frozen_kijima.sample(
-            nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=None
+            nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
         )
 
     def generate_failure_data(self) -> dict[str, Any]:
@@ -108,8 +108,8 @@ class FrozenKijima1Process(FrozenParametricModel[Kijima1Process[*Ts], *Ts]):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
         seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
@@ -192,8 +192,8 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
         nb_samples: int,
         time_window: tuple[float, float],
         *args,
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
         seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
@@ -214,7 +214,7 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
         """
         frozen_kijima = self.freeze(*args)
         return frozen_kijima.sample(
-            nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=None
+            nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
         )
 
     def generate_failure_data(self) -> dict[str, Any]:
@@ -243,8 +243,8 @@ class FrozenKijima2Process(FrozenParametricModel[Kijima2Process[*Ts], *Ts]):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
         seed=None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.

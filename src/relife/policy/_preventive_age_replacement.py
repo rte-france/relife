@@ -7,27 +7,24 @@ from typing import Any, Literal, Self, overload
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array, Array1D, AtMost1D
 from scipy.optimize import newton
 
 from relife.economic import AgeReplacementReward, ExponentialDiscounting
 from relife.lifetime_model import (
     AgeReplacementModel,
+    AnyParametricLifetimeModel,
     LeftTruncatedModel,
 )
+from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process.non_homogeneous_poisson_process import (
     FrozenNonHomogeneousPoissonProcess,
 )
-from relife.typing import (
-    AnyFloat,
-    AnyParametricLifetimeModel,
-    NumpyFloat,
-)
 from relife.utils import (
-    flatten_if_possible,
-    to_2d_if_possible,
+    flatten_if_at_least_2d,
+    to_column_2d,
 )
-from relife.utils.quadrature import legendre_quadrature
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
 
@@ -41,21 +38,21 @@ __all__ = [
 @overload
 def age_replacement_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cost_structure: dict[str, AnyFloat],
+    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
     one_cycle: Literal[True],
     **kwargs: Any,
 ) -> OneCycleAgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
     baseline_model: AnyParametricLifetimeModel[()],
-    cost_structure: dict[str, AnyFloat],
+    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
     one_cycle: Literal[False],
     **kwargs: Any,
 ) -> AgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
     baseline_model: FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, AnyFloat],
+    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> NonHomogeneousPoissonAgeReplacementPolicy: ...
@@ -63,7 +60,7 @@ def age_replacement_policy(
 def age_replacement_policy(
     baseline_model: AnyParametricLifetimeModel[()]
     | FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, AnyFloat],
+    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> (
@@ -74,7 +71,7 @@ def age_replacement_policy(
 def age_replacement_policy(
     baseline_model: AnyParametricLifetimeModel[()]
     | FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, AnyFloat],
+    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> (
@@ -126,30 +123,29 @@ def age_replacement_policy(
 
 
 class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
-    _cost_structure: dict[str, NumpyFloat]
-    _ar: NumpyFloat | None
-    _a0: NumpyFloat | None
+    _ar: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
+    _a0: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
     discounting_rate: float
 
     def __init__(
         self,
         lifetime_model: AnyParametricLifetimeModel[()],
-        cf: AnyFloat,
-        cp: AnyFloat,
+        cf: int | float | Array1D[np.float64],
+        cp: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
-        a0: AnyFloat | None = None,
-        ar: AnyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
     ):
         super().__init__(
             lifetime_model,
-            {"cf": to_2d_if_possible(cf), "cp": to_2d_if_possible(cp)},
+            {"cf": to_column_2d(cf), "cp": to_column_2d(cp)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = to_2d_if_possible(a0) if a0 is not None else a0
-        self._ar = to_2d_if_possible(ar) if ar is not None else ar
+        self._a0 = to_column_2d(a0) if a0 is not None else a0
+        self._ar = to_column_2d(ar) if ar is not None else ar
 
     @property
-    def a0(self) -> NumpyFloat | None:
+    def a0(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
         """Current ages of the assets.
 
         Returns
@@ -159,10 +155,10 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         # _a0 is (m, 1) but exposed cf is (m,)
         if self._a0 is None:
             return self._a0
-        return flatten_if_possible(self._a0)
+        return flatten_if_at_least_2d(self._a0)
 
     @property
-    def cf(self) -> NumpyFloat:
+    def cf(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
         """Cost of failure.
 
         Returns
@@ -170,14 +166,14 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         np.ndarray
         """
         # _cf is (m, 1) but exposed cf is (m,)
-        return flatten_if_possible(self._cost_structure["cf"])
+        return flatten_if_at_least_2d(self._cost_structure["cf"])
 
     @cf.setter
-    def cf(self, value: AnyFloat) -> None:
-        self._cost_structure["cf"] = to_2d_if_possible(value)
+    def cf(self, value: int | float | Array1D[np.float64]) -> None:
+        self._cost_structure["cf"] = to_column_2d(value)
 
     @property
-    def cp(self) -> NumpyFloat:
+    def cp(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
         """Costs of preventive replacements.
 
         Returns
@@ -185,14 +181,14 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         np.ndarray
         """
         # _cp is (m, 1) but exposed cp is (m,)
-        return flatten_if_possible(self._cost_structure["cp"])
+        return flatten_if_at_least_2d(self._cost_structure["cp"])
 
     @cp.setter
-    def cp(self, value: AnyFloat) -> None:
-        self._cost_structure["cp"] = to_2d_if_possible(value)
+    def cp(self, value: int | float | Array1D[np.float64]) -> None:
+        self._cost_structure["cp"] = to_column_2d(value)
 
     @property
-    def ar(self) -> NumpyFloat | None:
+    def ar(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
         """Preventive ages of replacement.
 
         Returns
@@ -202,17 +198,17 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         # _ar is (m, 1) but exposed ar is (m,)
         if self._ar is None:
             return self._ar
-        return flatten_if_possible(self._ar)
+        return flatten_if_at_least_2d(self._ar)
 
     @ar.setter
-    def ar(self, value: AnyFloat | None) -> None:
+    def ar(self, value: int | float | Array1D[np.float64] | None) -> None:
         if value is not None:
-            self._ar = to_2d_if_possible(value)
+            self._ar = to_column_2d(value)
         else:
             self._ar = None
 
     @property
-    def tr1(self) -> NumpyFloat | None:
+    def tr1(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
         """Times before the first replacement.
 
         Returns
@@ -221,7 +217,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         """
         if self._a0 is not None and self._ar is not None:
             tr = np.maximum(self._ar - self._a0, 0)
-            return flatten_if_possible(tr)
+            return flatten_if_at_least_2d(tr)
         return self.ar
 
 
@@ -253,8 +249,9 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         Current ages of the assets. If it is given, left truncations of ``a0`` will
         be take into account for the first cycle.
     ar : float or 1darray, optional
-        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
-        and access to the rest of the object interface.
+        Ages of preventive replacements, by default None. If not given, one
+        must call ``optimize`` to set ``ar`` values and access to the rest of
+        the object interface.
 
     Attributes
     ----------
@@ -275,12 +272,12 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def __init__(
         self,
         lifetime_model: AnyParametricLifetimeModel[()],
-        cf: AnyFloat,
-        cp: AnyFloat,
+        cf: int | float | Array1D[np.float64],
+        cp: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
         period_before_discounting: float = 1.0,
-        a0: AnyFloat | None = None,
-        ar: AnyFloat | None = None,
+        a0: int | float | Array1D[np.float64] | None = None,
+        ar: int | float | Array1D[np.float64] | None = None,
     ):
         super().__init__(
             lifetime_model, cf, cp, discounting_rate=discounting_rate, a0=a0, ar=ar
@@ -765,7 +762,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def __init__(self, nhpp, cr, cp, discounting_rate=0.0, ar=None):
         super().__init__(
             nhpp,
-            cost_structure={"cr": to_2d_if_possible(cr), "cp": to_2d_if_possible(cp)},
+            cost_structure={"cr": to_column_2d(cr), "cp": to_column_2d(cp)},
             discounting_rate=discounting_rate,
         )
         self.ar = ar
@@ -778,11 +775,11 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
         -------
         np.ndarray
         """
-        return flatten_if_possible(self._cost_structure["cp"])
+        return flatten_if_at_least_2d(self._cost_structure["cp"])
 
     @cp.setter
     def cp(self, value):
-        self._cost_structure["cp"] = to_2d_if_possible(value)
+        self._cost_structure["cp"] = to_column_2d(value)
 
     @property
     def cr(self):
@@ -792,11 +789,11 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
         -------
         np.ndarray
         """
-        return flatten_if_possible(self._cost_structure["cr"])
+        return flatten_if_at_least_2d(self._cost_structure["cr"])
 
     @cr.setter
     def cr(self, value):
-        self._cost_structure["cr"] = to_2d_if_possible(value)
+        self._cost_structure["cr"] = to_column_2d(value)
 
     @property
     def ar(self):
@@ -808,12 +805,12 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
         """
         if self._ar is None:
             return self._ar
-        return flatten_if_possible(self._ar)
+        return flatten_if_at_least_2d(self._ar)
 
     @ar.setter
     def ar(self, value):
         if value is not None:
-            value = to_2d_if_possible(value)
+            value = to_column_2d(value)
             self._ar = value
         else:
             self._ar = None
