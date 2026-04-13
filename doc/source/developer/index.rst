@@ -26,19 +26,14 @@ It explains how to set up a local clone of your forked git repository.
 Clone your fork of the ReLife repo from your GitHub account to your
 local disk. The url to use with the clone command can be found by clicking on the green
 'Code' button of the GitHub repo. When you clone a project, you get a local copy of an
-existing git repository that is uploaded on a server. The above command will create a 
+existing git repository that is uploaded on a server. The command below will create a 
 relife directory on your computer with the codebase and every version of every file for
 the history of the project:
 
 .. code-block::
 
   $ git clone https://github.com/YourLogin/relife.git  # add --depth 1 if your connection is slow
-
-and change into that directory:
-
-.. code-block::
-
-  $ cd relife
+  $ cd relife # go into the directory
 
 .. _upstream:
 
@@ -77,9 +72,7 @@ the development or the documentation.
 
 .. code-block::
 
-    $ (YourEnv) cd relife
-    $ (YourEnv) python -m pip install -e ".[dev]"  # For development dependencies
-    $ (YourEnv) python -m pip install -e ".[doc]"  # For documentation dependencies
+    $ (YourEnv) python -m pip install -e . --group dev
 
 For **uv** users, it is possible to install ReLife in developer or documentation mode with the following commands.
 Note that uv uses `editable installation <https://docs.astral.sh/uv/concepts/projects/dependencies/#editable-dependencies>`_  
@@ -87,9 +80,7 @@ for workspace packages by default.
 
 .. code-block::
 
-    $ (YourEnv) cd relife
-    $ (YourEnv) uv sync --group dev  # For development dependencies
-    $ (YourEnv) uv sync --no-dev --group doc  # For documentation dependencies
+    $ (YourEnv) uv sync --group dev
 
 4. Configure your IDE
 
@@ -101,16 +92,7 @@ Ruff is a powerful all-in-one tool for code linting and formatting.
   <https://en.wikipedia.org/wiki/Pretty-printing#Formatting_of_program_source_code>`_.
   Ensure that your IDE is configured to call them to format on save so that you don't have
   to call them manually.
-- The `Ruff Linter <https://docs.astral.sh/ruff/linter/>`_ is an extremely fast Python linter designed as a drop-in replacement 
-  for Flake8 (plus dozens of plugins), isort, pydocstyle, pyupgrade, autoflake, and more.
-  This software is a Python `linter <https://en.wikipedia.org/wiki/Lint_(software)>`_.
-  Ensure that your IDE captures diagnostics from this tool while you are coding.
-  Although their default configurations can be quite aggressive, we refrain from
-  providing generic configurations as it may overlook critical errors in some cases.
-  Aim to resolve all warnings; if necessary, disable warnings locally by adding
-  specific configurations for these tools on your machine. Do not commit these configurations,
-  as they remain personal to your environment.
-
+- The `Ruff Linter <https://docs.astral.sh/ruff/linter/>`_ is an extremely fast Python `linter <https://en.wikipedia.org/wiki/Lint_(software)>`_ designed as a drop-in replacement of well-known linters like flake8. Ensure that your IDE captures diagnostics from this tool while you are coding.
 
 Static type checking
 --------------------
@@ -118,14 +100,14 @@ Static type checking
 Additionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
 have been installed:
 
-- `Pyright <https://github.com/microsoft/pyright>`_.
-  Again, ensure that your IDE communicates with the Pyright language server (`LSP <https://en.wikipedia.org/wiki/Language_Server_Protocol>`_)
+- `basedpyright <https://github.com/detachhead/basedpyright>`_.
+  Again, ensure that your IDE communicates with the basedpyright language server (`LSP <https://en.wikipedia.org/wiki/Language_Server_Protocol>`_)
   to receive feedback on your type annotations. Type checking can be challenging and may
   not be desired at first, so consider flagging your modules with ``#pyright: basic`` to start.
   Once you feel comfortable, gradually enhance your type annotations by removing ``#pyright: basic``
-  and enabling strict mode in Pyright configurations.
-- After successfully passing all Pyright analyses, use `Mypy <https://github.com/python/mypy>`_
-  to validate or supplement the diagnostics provided by Pyright.
+  and enabling strict mode in basedpyright configurations.
+- After successfully passing all Pyright analyses, use `mypy <https://github.com/python/mypy>`_
+  to validate or supplement the diagnostics provided by basedyright.
 
 .. _development_workflow:
 
@@ -294,26 +276,19 @@ Build the documentation
 -----------------------
 
 Before being able to build the documentation, you need to install `Pandoc <https://pandoc.org/index.html>`_ 
-which is a powerful file converter between many different formats. You can either download the installer from their website
-for Windows or run the following command for UNIX systems :
+which is a powerful file converter between many different formats.
+
+To build the documentation locally run the following commands :
 
 .. code-block::
 
-    $ sudo apt install pandoc
-
-Then, to build the documentation locally run the following commands :
-
-.. code-block::
-
-    $ cd doc
-    $ make html
+    $ make html -C doc
 
 To run a local documentation server and read your built documentation :
 
 .. code-block::
 
-    $ cd doc
-    $ python -m http.server -d build/html/
+    $ python -m http.server -d doc/build/html/
 
 Then go to `http://localhost:8000 <http://localhost:8000>`_
 
