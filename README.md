@@ -29,8 +29,6 @@ $ python -m pip install .
 
 **For developpers**
 
-The project has two dependency groups, `dev` and `doc`.
-
 If you wish to work on the codebase, install ReLife with the packages included in the `dev` group.
 Using the editable mode (`-e`) is recommanded.
 
@@ -38,14 +36,6 @@ Using the editable mode (`-e`) is recommanded.
 $ git clone https://github.com/rte-france/relife.git
 $ cd relife
 $ python -m pip install -e . --group dev
-```
-
-If you wish to work on the documentation, install ReLife with the packages included in the `doc` group.
-
-```bash
-$ git clone https://github.com/rte-france/relife.git
-$ cd relife
-$ python -m pip install . --group doc
 ```
 
 ## Development tools
