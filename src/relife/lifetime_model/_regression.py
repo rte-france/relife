@@ -9,21 +9,22 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Callable, Literal, Self, final
+from collections.abc import Callable
+from typing import Any, Self, final
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
 from scipy.optimize import Bounds
-from typing_extensions import overload, override
+from typing_extensions import override
 
 from relife.base import OptimizerConfig, ParametricModel
 from relife.typing import (
     AnyFloat,
-    NumpyBool,
     NumpyFloat,
     Seed,
 )
+from relife.utils._array_utils import reshape_1d_arg
 
 from ._base import (
     FittableParametricLifetimeModel,
@@ -362,61 +363,6 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         ) * self.hf(time, covar)
         return jac
 
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        covar: AnyFloat,
-        *,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        covar: AnyFloat,
-        *,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        covar: AnyFloat,
-        *,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        covar: AnyFloat,
-        *,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        covar: AnyFloat,
-        *,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
@@ -426,20 +372,11 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         size: int | tuple[int, int],
         covar: AnyFloat,
         *,
-        return_event: bool = False,
-        return_entry: bool = False,
         seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ):
+    ) -> NumpyFloat:
         return super().rvs(
             size,
             covar,
-            return_event=return_event,
-            return_entry=return_entry,
             seed=seed,
         )
 
@@ -470,9 +407,11 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        assert isinstance(args, np.ndarray)
+        if not isinstance(args, np.ndarray):
+            raise ValueError("args is expected to be covar only.")
+        args = reshape_1d_arg(args)
         regression = type(self)(
-            type(self.baseline)(), coefficients=(0.0,) * np.atleast_2d(args).shape[-1]
+            type(self.baseline)(), coefficients=(0.0,) * args.shape[-1]
         )  # init new regression object with appropriate number of covar
         lifetime_data = LifetimeData(time, args, event, entry)
         x0 = kwargs.get(
@@ -500,9 +439,10 @@ class ParametricLifetimeRegression(FittableParametricLifetimeModel[AnyFloat], AB
         entry: NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
-        assert isinstance(args, np.ndarray)
+        if not isinstance(args, np.ndarray):
+            raise ValueError("args is expected to be covar only.")
         self.covar_effect = LinearCovarEffect(
-            (None,) * np.atleast_2d(np.asarray(args, dtype=np.float64)).shape[-1]
+            (None,) * reshape_1d_arg(np.asarray(args, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
         return super().fit(time, args, event, entry, **kwargs)
 

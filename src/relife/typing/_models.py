@@ -38,68 +38,13 @@ class AnyParametricLifetimeModel(Protocol[*Ts]):
     def median(self, *args: *Ts) -> NumpyFloat: ...
     def isf(self, probability: AnyFloat, *args: *Ts) -> NumpyFloat: ...
     def ichf(self, cumulative_hazard_rate: AnyFloat, *args: *Ts) -> NumpyFloat: ...
-    @overload
     def rvs(
         self,
         size: int | Sequence[int],
         *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> NumpyFloat: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[False],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: Literal[False],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: Literal[True],
-        return_entry: Literal[True],
-        seed: Seed | None = None,
-    ) -> tuple[NumpyFloat, NumpyBool, NumpyFloat]: ...
-    @overload
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
         seed: Seed | None = None,
     ) -> (
         NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
-    ): ...
-    def rvs(
-        self,
-        size: int | Sequence[int],
-        *args: *Ts,
-        return_event: bool = False,
-        return_entry: bool = False,
-        seed: Seed | None = None,
-    ) -> (
-        NumpyFloat
-        | tuple[NumpyFloat, NumpyBool]
-        | tuple[NumpyFloat, NumpyFloat]
-        | tuple[NumpyFloat, NumpyBool, NumpyFloat]
     ): ...
     def ls_integrate(
         self,

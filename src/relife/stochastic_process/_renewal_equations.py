@@ -1,5 +1,5 @@
 # pyright: basic
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,7 +14,7 @@ def renewal_equation_solver(
     timeline: NDArray[np.float64],
     lifetime_model: AnyParametricLifetimeModel[()],
     evaluated_func: Callable[[AnyFloat], NumpyFloat],
-    discounting: Optional[ExponentialDiscounting] = None,
+    discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (
@@ -53,7 +53,7 @@ def delayed_renewal_equation_solver(
     z: NDArray[np.float64],
     first_lifetime_model: AnyParametricLifetimeModel[()],
     evaluated_func: Callable[[AnyFloat], NumpyFloat],
-    discounting: Optional[ExponentialDiscounting] = None,
+    discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
     # timeline : (nb_steps,) or (m, nb_steps)
     tm = 0.5 * (
