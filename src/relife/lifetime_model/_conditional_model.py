@@ -5,13 +5,12 @@ from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
-from optype.numpy import ArrayND
+from optype.numpy import Array, ArrayND, AtMost2D
 from typing_extensions import override
 
 from relife.utils import to_column_2d
 
 from ._base import (
-    AnyParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     ParametricLifetimeModel,
     document_args,
@@ -69,9 +68,9 @@ class AgeReplacementModel(
     plot
     """
 
-    baseline: AnyParametricLifetimeModel[*Ts]
+    baseline: ParametricLifetimeModel[*Ts]
 
-    def __init__(self, baseline: AnyParametricLifetimeModel[*Ts]):
+    def __init__(self, baseline: ParametricLifetimeModel[*Ts]):
         super().__init__()
         self.baseline = baseline
 
@@ -268,8 +267,10 @@ class AgeReplacementModel(
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def freeze(
-        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> FrozenParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]:
+        self, ar: ST | NumpyST | Array[AtMost2D, NumpyST], *args: *Ts
+    ) -> FrozenParametricLifetimeModel[
+        *tuple[ST | NumpyST | Array[AtMost2D, NumpyST], *Ts]
+    ]:
         """
         Freeze age replacement values and other arguments into the object data.
 
@@ -332,9 +333,9 @@ class LeftTruncatedModel(
     plot
     """
 
-    baseline: AnyParametricLifetimeModel[*Ts]
+    baseline: ParametricLifetimeModel[*Ts]
 
-    def __init__(self, baseline: AnyParametricLifetimeModel[*Ts]):
+    def __init__(self, baseline: ParametricLifetimeModel[*Ts]):
         super().__init__()
         self.baseline = baseline
 
@@ -514,8 +515,10 @@ class LeftTruncatedModel(
         return super().ppf(probability, *(a0, *args))
 
     def freeze(
-        self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> FrozenParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]:
+        self, a0: ST | NumpyST | Array[AtMost2D, NumpyST], *args: *Ts
+    ) -> FrozenParametricLifetimeModel[
+        *tuple[ST | NumpyST | Array[AtMost2D, NumpyST], *Ts]
+    ]:
         """
         Freeze conditional age values and other arguments into the object data.
 

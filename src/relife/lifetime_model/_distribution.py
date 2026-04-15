@@ -23,7 +23,7 @@ from typing_extensions import override
 
 from relife.base import OptimizerConfig
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
-from relife.utils import to_column_2d, to_numpy_float
+from relife.utils import to_column_2d, to_numpy_float64
 
 from ._base import (
     FittableParametricLifetimeModel,
@@ -274,7 +274,7 @@ class Exponential(LifetimeDistribution):
     def chf(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return to_numpy_float(self.rate * time)
+        return to_numpy_float64(self.rate * time)
 
     @override
     @document_args(
@@ -683,7 +683,7 @@ class Gamma(LifetimeDistribution):
         def func(
             s: ST | NumpyST | ArrayND[NumpyST],
         ) -> np.float64 | ArrayND[np.float64]:
-            return to_numpy_float(np.log(s) * s ** (self.shape - 1))
+            return to_numpy_float64(np.log(s) * s ** (self.shape - 1))
 
         return laguerre_quadrature(func, x, deg=100)
 

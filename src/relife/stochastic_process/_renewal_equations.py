@@ -1,22 +1,25 @@
-# pyright: basic
 from collections.abc import Callable
+from typing import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import Array, AtMost2D
+from optype.numpy import Array, ArrayND, AtMost2D
 
 from relife.economic import ExponentialDiscounting
-from relife.lifetime_model import AnyParametricLifetimeModel
+from relife.lifetime_model._base import ParametricLifetimeModel
 
 __all__ = ["renewal_equation_solver", "delayed_renewal_equation_solver"]
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+
 
 def renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    lifetime_model: AnyParametricLifetimeModel[()],
+    timeline: Array[AtMost2D, np.float64],
+    lifetime_model: ParametricLifetimeModel[()],
     evaluated_func: Callable[
-        [int | float | Array[AtMost2D, np.float64]],
-        np.float64 | Array[AtMost2D, np.float64],
+        [ST | NumpyST | ArrayND[NumpyST]],
+        np.float64 | ArrayND[np.float64],
     ],
     discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
@@ -24,19 +27,21 @@ def renewal_equation_solver(
     tm = 0.5 * (
         timeline[..., 1:] + timeline[..., :-1]
     )  # (nb_steps - 1,) or (m, nb_steps - 1)
-    f = lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
-    fm = lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps)
+    f = np.asarray(lifetime_model.cdf(timeline))  # (nb_steps,) or (m, nb_steps)
+    fm = np.asarray(lifetime_model.cdf(tm))  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y = np.asarray(evaluated_func(timeline))  # (nb_steps,) or (m, nb_steps)
 
     try:
-        np.broadcast_shapes(y.shape, f.shape)
-    except ValueError:
-        raise ValueError("Invalid shape between model and evaluated_func")
+        _ = np.broadcast_shapes(y.shape, f.shape)
+    except ValueError as err:
+        raise ValueError("Invalid shape between model and evaluated_func") from err
 
-    if discounting is not None:
-        d = discounting.factor(timeline)  # (nb_steps,) or (m, nb_steps)
-    else:
-        d = np.ones_like(f)
+    # (nb_steps,) or (m, nb_steps)
+    d = (
+        np.asarray(discounting.factor(timeline))
+        if discounting is not None
+        else np.ones_like(f)
+    )
     z = np.empty(y.shape)
     u = d * np.insert(f[..., 1:] - fm, 0, 1, axis=-1)
     v = d[..., :-1] * np.insert(np.diff(fm), 0, 1, axis=-1)
@@ -53,12 +58,12 @@ def renewal_equation_solver(
 
 
 def delayed_renewal_equation_solver(
-    timeline: NDArray[np.float64],
-    z: NDArray[np.float64],
-    first_lifetime_model: AnyParametricLifetimeModel[()],
+    timeline: Array[AtMost2D, np.float64],
+    z: Array[AtMost2D, np.float64],
+    first_lifetime_model: ParametricLifetimeModel[()],
     evaluated_func: Callable[
-        [int | float | Array[AtMost2D, np.float64]],
-        np.float64 | Array[AtMost2D, np.float64],
+        [ST | NumpyST | ArrayND[NumpyST]],
+        np.float64 | ArrayND[np.float64],
     ],
     discounting: ExponentialDiscounting | None = None,
 ) -> NDArray[np.float64]:
@@ -66,13 +71,17 @@ def delayed_renewal_equation_solver(
     tm = 0.5 * (
         timeline[..., 1:] + timeline[..., :-1]
     )  # (nb_steps - 1,) or (m, nb_steps - 1)
-    f1 = first_lifetime_model.cdf(timeline)  # (nb_steps,) or (m, nb_steps)
-    f1m = first_lifetime_model.cdf(tm)  # (nb_steps - 1,) or (m, nb_steps - 1)
-    y1 = evaluated_func(timeline)  # (nb_steps,) or (m, nb_steps - 1)
-    if discounting is not None:
-        d = discounting.factor(timeline)  # (nb_steps,) or (m, nb_steps - 1)
-    else:
-        d = np.ones_like(f1)
+    f1 = np.asarray(first_lifetime_model.cdf(timeline))  # (nb_steps,) or (m, nb_steps)
+    f1m = np.asarray(
+        first_lifetime_model.cdf(tm)
+    )  # (nb_steps - 1,) or (m, nb_steps - 1)
+    y1 = np.asarray(evaluated_func(timeline))  # (nb_steps,) or (m, nb_steps - 1)
+    # (nb_steps,) or (m, nb_steps)
+    d = (
+        np.asarray(discounting.factor(timeline))
+        if discounting is not None
+        else np.ones_like(f1)
+    )
     z1 = np.empty(y1.shape)
     u1 = d * np.insert(f1[..., 1:] - f1m, 0, 1, axis=-1)
     v1 = d[..., :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)

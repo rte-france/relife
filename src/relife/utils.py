@@ -13,7 +13,7 @@ from optype.numpy import (
 
 __all__ = [
     "to_column_2d",
-    "to_numpy_float",
+    "to_numpy_float64",
     "flatten_if_at_least_2d",
     "get_args_nb_assets",
     "get_model_nb_assets",
@@ -21,12 +21,12 @@ __all__ = [
 
 
 @overload
-def to_numpy_float(v: float | np.floating | np.uint) -> np.float64: ...
+def to_numpy_float64(v: float | np.floating | np.uint) -> np.float64: ...
 @overload
-def to_numpy_float(
+def to_numpy_float64(
     v: ArrayND[np.floating | np.uint],
 ) -> ArrayND[np.float64]: ...
-def to_numpy_float(
+def to_numpy_float64(
     v: float | np.uint | np.floating | ArrayND[np.floating | np.uint],
 ) -> np.float64 | ArrayND[np.float64]:
     """

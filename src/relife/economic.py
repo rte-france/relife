@@ -5,9 +5,9 @@ from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ArrayND
+from optype.numpy import ArrayND
 
-from relife.utils import to_numpy_float
+from relife.utils import to_numpy_float64
 
 Ts = TypeVarTuple("Ts")
 ST: TypeAlias = int | float
@@ -55,7 +55,7 @@ class RunToFailureReward(Reward):
     cf: np.float64 | ArrayND[np.float64]
 
     def __init__(self, cf: ST | NumpyST | ArrayND[NumpyST]) -> None:
-        self.cf = to_numpy_float(cf)
+        self.cf = to_numpy_float64(cf)
 
     def conditional_expectation(
         self, time: ST | NumpyST | ArrayND[NumpyST]
@@ -93,13 +93,13 @@ class AgeReplacementReward(Reward):
 
     def __init__(
         self,
-        cf: int | float | Array1D[np.float64],
-        cp: int | float | Array1D[np.float64],
-        ar: int | float | Array1D[np.float64],
+        cf: ST | NumpyST | ArrayND[NumpyST],
+        cp: ST | NumpyST | ArrayND[NumpyST],
+        ar: ST | NumpyST | ArrayND[NumpyST],
     ) -> None:
-        self.cf = to_numpy_float(cf)
-        self.cp = to_numpy_float(cp)
-        self.ar = to_numpy_float(ar)
+        self.cf = to_numpy_float64(cf)
+        self.cp = to_numpy_float64(cp)
+        self.ar = to_numpy_float64(ar)
 
     def conditional_expectation(
         self, time: ST | NumpyST | ArrayND[NumpyST]

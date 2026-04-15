@@ -310,20 +310,39 @@ Basically, one can catch usefull variables like ``methods`` and create nice auto
 Typing
 ------
 
-Most of ReLife methods a Numpy compatible. For typing, we use `optype <https://github.com/jorenham/optype>`__. It offers more functionnalities to type numpy code and it is compatible with scipy-stubs.
+Most of ReLife methods are Numpy compatible. For typing, we use `optype <https://github.com/jorenham/optype>`__. It offers more functionnalities to type Numpy code and it is compatible with ``scipy-stubs``, the official typing of Scipy.
 
-By default, many methods are typed like:
+By default, many methods use either:
 
-.. code-block:: python
+* ``ST`` : stands for Scalar Type, alias of ``float`` and ``int``.
+* ``NumpyST`` : stands for Numpy Scalar Type, alias of ``np.floating`` and ``np.uint``.
+* ``ArrayND[NumpyST]`` : stands for ``np.ndarray`` of ``NumpyST`` values.
 
-    T: TypeAlias = np.uint | np.floating
-    Ts = TypeVarTuple("Ts")
+
+The return types are generally narrowed to either ``np.float64`` or ``ArrayND[np.float64]``.
+
+Additionally, when it makes sense, the shape of arrays are specified with e.g. ``Array1D`` or ``Array[AtMost{}D, ...]``.
+
+.. note::
+
+    Technically, the output type values could be different with Numpy
+    operations. For instance, it could be ``np.floating | np.integer |
+    np.bool`` depending on the types of the inputs. In practice, we don't know
+    how to type the code in a more generic way without being too heavy or
+    clumsy. So, at runtime, we force the output to be always ``np.float64``
+    that is used most often. It aligns with the typing and simplifies
+    definitions.
+
+.. note::
     
-    def sf(
-        self, time: int | float | ArrayND[T], *args: *Ts
-    ) -> np.floating | ArrayND[T]: ...
+    ``freeze`` methods don't accept ``ArrayND[NumpyST]`` as input like other
+    methods. Inputs are narrowed to ``Array[AtMost2D, NumpyST]`` because frozen
+    models are meant to be used in stochastic processes or policies where
+    additionnal args can't have more than 2 dimensions. That's why ``freeze``
+    is not part of ``ParametricLifetimeModel`` interface by default but is
+    specific to derived classes.
 
+Linting
+-------
 
-``T`` is a type alias corresponding to any unsigned numpy integers or any numpy floating.
-Every output is always an array of 
-
+In many places, docstrings can be longer than 80 characters. In this case, we add a ``# noqa: E501`` mark to deactivate ``ruff`` warning.

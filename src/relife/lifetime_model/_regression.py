@@ -432,8 +432,8 @@ class ParametricLifetimeRegression(
         )
 
     def freeze(
-        self, covar: ST | NumpyST | ArrayND[NumpyST]
-    ) -> FrozenParametricLifetimeModel[ST | NumpyST | ArrayND[NumpyST]]:
+        self, covar: ST | NumpyST | Array[AtMost2D, NumpyST]
+    ) -> FrozenParametricLifetimeModel[ST | NumpyST | Array[AtMost2D, NumpyST]]:
         """
         Freeze regression covar.
 

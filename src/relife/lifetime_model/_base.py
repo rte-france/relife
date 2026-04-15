@@ -12,7 +12,6 @@ from typing import (
     Generic,
     Literal,
     ParamSpec,
-    Protocol,
     Self,
     TypeAlias,
     TypeVar,
@@ -35,11 +34,10 @@ from optype.numpy import (
 )
 from scipy import stats
 from scipy.optimize import newton
-from typing_extensions import override
+from typing_extensions import TypeIs, override
 
 from relife.base import (
     FittingResults,
-    FrozenParametricModel,
     MaximumLikelihoodOptimizer,
     OptimizerConfig,
     ParametricModel,
@@ -52,7 +50,7 @@ __all__ = [
     "FittableParametricLifetimeModel",
     "LifetimeData",
     "LifetimeLikelihood",
-    "AnyParametricLifetimeModel",
+    "is_frozen_parametric_lifetime_model",
 ]
 
 Ts = TypeVarTuple("Ts")
@@ -625,185 +623,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         return plot_probability_function(time, y, ax=ax, **kwargs)
 
 
-class FrozenParametricLifetimeModel(
-    FrozenParametricModel[ParametricLifetimeModel[*Ts], *Ts]
-):
-    _args: tuple[*Ts]
-    _unfrozen_model: ParametricLifetimeModel[*Ts]
-
-    def __init__(self, model: ParametricLifetimeModel[*Ts], *args: *Ts) -> None:
-        super().__init__(model, *args)
-
-    def sf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.sf(time, *self._args)
-
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.hf(time, *self._args)
-
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.chf(time, *self._args)
-
-    def pdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.pdf(time, *self._args)
-
-    def cdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.cdf(time, *self._args)
-
-    def ppf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.ppf(probability, *self._args)
-
-    def median(self) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.median(*self._args)
-
-    def isf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.isf(probability, *self._args)
-
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.ichf(cumulative_hazard_rate, *self._args)
-
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.rvs(
-            size,
-            *self._args,
-            seed=seed,
-        )
-
-    def ls_integrate(
-        self,
-        func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
-            np.float64 | ArrayND[np.float64],
-        ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
-        *,
-        deg: int = 10,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.ls_integrate(func, a, b, *self._args, deg=deg)
-
-    def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.moment(n, *self._args)
-
-    def mean(self) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.mean(*self._args)
-
-    def var(self) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.var(*self._args)
-
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self._unfrozen_model.mrl(time, *self._args)
-
-
-class AnyParametricLifetimeModel(Protocol[*Ts]):
-    """
-    Structural type for any parametric lifetime model.
-    It is particularly needed where an parameter can expect
-    ParametricLifetimeModel[*Ts] or FrozenParametricLifetimeModel[*Ts]
-    Their interfaces are different (the first expects args but the second
-    doesn't). See conditional_model.py.
-    """
-
-    def sf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def pdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def cdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def ppf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def median(self, *args: *Ts) -> np.float64 | ArrayND[NumpyST]: ...
-    def isf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def ichf(
-        self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def rvs(
-        self,
-        size: int | tuple[int, int],
-        *args: *Ts,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def ls_integrate(
-        self,
-        func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
-            np.float64 | ArrayND[np.float64],
-        ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-        deg: int = 10,
-    ) -> np.float64 | ArrayND[np.float64]: ...
-    def moment(self, n: int, *args: *Ts) -> np.float64 | ArrayND[np.float64]: ...
-
-
-@overload
-def is_lifetime_model(model: FrozenParametricLifetimeModel[*Ts]) -> Literal[True]: ...
-@overload
-def is_lifetime_model(
-    model: ParametricLifetimeModel[*Ts]
-    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
-) -> Literal[True]: ...
-@overload
-def is_lifetime_model(
-    model: Any
-    | ParametricLifetimeModel[*Ts]
-    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
-) -> bool: ...
-def is_lifetime_model(
-    model: Any
-    | ParametricLifetimeModel[*Ts]
-    | FrozenParametricLifetimeModel[ParametricModel, *Ts],
-) -> bool:
-    """
-    Checks if model is a lifetime model.
-    """
-    return isinstance(model, (ParametricLifetimeModel, FrozenParametricLifetimeModel))
-
-
 P = ParamSpec("P")
 T = TypeVar("T")
 
@@ -839,9 +658,142 @@ def document_args(
     return decorator_extend_docstring
 
 
+class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
+    args: tuple[*Ts]
+    unfrozen: ParametricLifetimeModel[*Ts]
+
+    def __init__(self, model: ParametricLifetimeModel[*Ts], *args: *Ts) -> None:
+        super().__init__()
+        self.unfrozen = model
+        self.args = args
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def sf(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.sf(time, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def hf(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.hf(time, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def chf(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.chf(time, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def pdf(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.pdf(time, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def cdf(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.cdf(time, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def ppf(
+        self, probability: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.ppf(probability, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def median(self) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.median(*self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def isf(
+        self, probability: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.isf(probability, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def ichf(
+        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.ichf(cumulative_hazard_rate, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def rvs(
+        self,
+        size: int | tuple[int, int],
+        *,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.rvs(
+            size,
+            *self.args,
+            seed=seed,
+        )
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def ls_integrate(
+        self,
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
+        *,
+        deg: int = 10,
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.ls_integrate(func, a, b, *self.args, deg=deg)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.moment(n, *self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def mean(self) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.mean(*self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def var(self) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.var(*self.args)
+
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+    def mrl(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.mrl(time, *self.args)
+
+
+# typeguard, narrowing type
+def is_frozen_parametric_lifetime_model(
+    model: ParametricLifetimeModel[*tuple[Any, ...]],
+) -> TypeIs[FrozenParametricLifetimeModel[*tuple[Any, ...]]]:
+    return isinstance(model, FrozenParametricLifetimeModel)
+
+
 M = TypeVar(
     "M",
-    bound="FittableParametricLifetimeModel[*tuple[Any, ...]]",
+    bound="FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]",  # noqa: E501
 )
 
 
@@ -1087,9 +1039,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
-        optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
-            time, args, event, entry, **kwargs
-        )
+        optimizer = self.init_likelihood(time, args, event, entry, **kwargs)
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
@@ -1345,7 +1295,9 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
 
 
 def _complete_time_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> float:
     if data.complete_time.size == 0.0:
@@ -1354,7 +1306,9 @@ def _complete_time_contrib(
 
 
 def _jac_complete_time_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.complete_time.size == 0:
@@ -1367,7 +1321,9 @@ def _jac_complete_time_contrib(
 
 
 def _censored_time_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> float:
     if data.censored_time.size == 0:
@@ -1387,7 +1343,9 @@ def _censored_time_contrib(
 
 
 def _jac_censored_time_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.censored_time.size == 0:
@@ -1413,7 +1371,9 @@ def _jac_censored_time_contrib(
 
 
 def _left_truncations_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> float:
     if data.left_truncations.size == 0.0:
@@ -1422,7 +1382,9 @@ def _left_truncations_contrib(
 
 
 def _jac_left_truncations_contrib(
-    model: FittableParametricLifetimeModel[*tuple[Any, ...]],
+    model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ],
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.left_truncations.size == 0.0:

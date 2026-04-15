@@ -1,5 +1,3 @@
-# pyright: basic
-
 import copy
 from typing import Any, Literal, TypeAlias, TypedDict
 
@@ -8,7 +6,11 @@ from optype.numpy import Array, Array1D, Array2D, AtMost2D
 
 from relife.base import ParametricModel
 from relife.economic import ExponentialDiscounting, Reward
-from relife.lifetime_model import AnyParametricLifetimeModel, LeftTruncatedModel
+from relife.lifetime_model import LeftTruncatedModel
+from relife.lifetime_model._base import (
+    ParametricLifetimeModel,
+    is_frozen_parametric_lifetime_model,
+)
 from relife.stochastic_process._sample import StochasticSampleMapping
 
 from ._renewal_equations import (
@@ -63,13 +65,13 @@ class RenewalProcess(ParametricModel):
     params_names
     """  # noqa: E501
 
-    lifetime_model: AnyParametricLifetimeModel[()]
-    first_lifetime_model: AnyParametricLifetimeModel[()] | None
+    lifetime_model: ParametricLifetimeModel[()]
+    first_lifetime_model: ParametricLifetimeModel[()] | None
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
-        first_lifetime_model: AnyParametricLifetimeModel[()] | None = None,
+        lifetime_model: ParametricLifetimeModel[()],
+        first_lifetime_model: ParametricLifetimeModel[()] | None = None,
     ) -> None:
         super().__init__()
         self.lifetime_model = lifetime_model
@@ -180,7 +182,11 @@ class RenewalProcess(ParametricModel):
         time_window: tuple[float, float],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed=None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -216,7 +222,11 @@ class RenewalProcess(ParametricModel):
         time_window: tuple[float, float],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed=None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ) -> LifetimeFitArgs:
         """Generate lifetime data
 
@@ -236,7 +246,6 @@ class RenewalProcess(ParametricModel):
         A dict of time, event, entry and args (covariates)
 
         """  # noqa: E501
-        from relife.base import FrozenParametricModel
 
         from ._sample import RenewalProcessIterable
 
@@ -244,12 +253,10 @@ class RenewalProcess(ParametricModel):
             self.first_lifetime_model is not None
             and self.first_lifetime_model != self.lifetime_model
         ):
-            if isinstance(self.first_lifetime_model, FrozenParametricModel):
+            if is_frozen_parametric_lifetime_model(self.first_lifetime_model):
                 if (
-                    isinstance(
-                        self.first_lifetime_model._unfrozen_model, LeftTruncatedModel
-                    )
-                    and self.first_lifetime_model._unfrozen_model.baseline
+                    isinstance(self.first_lifetime_model.unfrozen, LeftTruncatedModel)
+                    and self.first_lifetime_model.unfrozen.baseline
                     == self.lifetime_model
                 ):
                     pass
@@ -313,18 +320,18 @@ class RenewalRewardProcess(RenewalProcess):
     params_names
     """  # noqa: E501
 
-    lifetime_model: AnyParametricLifetimeModel[()]
-    first_lifetime_model: AnyParametricLifetimeModel[()] | None
+    lifetime_model: ParametricLifetimeModel[()]
+    first_lifetime_model: ParametricLifetimeModel[()] | None
     reward: Reward
     first_reward: Reward
     discounting: ExponentialDiscounting
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
+        lifetime_model: ParametricLifetimeModel[()],
         reward: Reward,
         discounting_rate: float = 0.0,
-        first_lifetime_model: AnyParametricLifetimeModel[()] | None = None,
+        first_lifetime_model: ParametricLifetimeModel[()] | None = None,
         first_reward: Reward | None = None,
     ) -> None:
         super().__init__(lifetime_model, first_lifetime_model)

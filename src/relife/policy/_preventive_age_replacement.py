@@ -3,27 +3,30 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC
-from typing import Any, Literal, Self, overload
+from typing import Any, Literal, Self, TypeAlias, overload
 
 import numpy as np
-from numpy.typing import NDArray
-from optype.numpy import Array, Array1D, AtMost1D
+from optype.numpy import Array, Array1D, ArrayND, AtMost1D
 from scipy.optimize import newton
 
 from relife.economic import AgeReplacementReward, ExponentialDiscounting
 from relife.lifetime_model import (
     AgeReplacementModel,
-    AnyParametricLifetimeModel,
     LeftTruncatedModel,
+)
+from relife.lifetime_model._base import (
+    FittableParametricLifetimeModel,
+    ParametricLifetimeModel,
 )
 from relife.quadrature import legendre_quadrature
 from relife.stochastic_process import RenewalRewardProcess
-from relife.stochastic_process.non_homogeneous_poisson_process import (
+from relife.stochastic_process._non_homogeneous_poisson_process import (
     FrozenNonHomogeneousPoissonProcess,
 )
 from relife.utils import (
     flatten_if_at_least_2d,
     to_column_2d,
+    to_numpy_float64,
 )
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
@@ -34,33 +37,40 @@ __all__ = [
     "age_replacement_policy",
 ]
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+
 
 @overload
 def age_replacement_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
-    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
+    baseline_model: ParametricLifetimeModel[()],
+    cost_structure: dict[str, ST | Array[AtMost1D, NumpyST]],
     one_cycle: Literal[True],
     **kwargs: Any,
 ) -> OneCycleAgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
-    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
+    baseline_model: ParametricLifetimeModel[()],
+    cost_structure: dict[str, ST | Array[AtMost1D, NumpyST]],
     one_cycle: Literal[False],
     **kwargs: Any,
 ) -> AgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
-    baseline_model: FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
+    baseline_model: FrozenNonHomogeneousPoissonProcess[
+        FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
+    ],
+    cost_structure: dict[str, ST | Array[AtMost1D, NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> NonHomogeneousPoissonAgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
-    baseline_model: AnyParametricLifetimeModel[()]
-    | FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
+    baseline_model: ParametricLifetimeModel[()]
+    | FrozenNonHomogeneousPoissonProcess[
+        FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
+    ],
+    cost_structure: dict[str, ST | Array[AtMost1D, NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> (
@@ -69,9 +79,11 @@ def age_replacement_policy(
     | NonHomogeneousPoissonAgeReplacementPolicy
 ): ...
 def age_replacement_policy(
-    baseline_model: AnyParametricLifetimeModel[()]
-    | FrozenNonHomogeneousPoissonProcess[*tuple[Any, ...]],
-    cost_structure: dict[str, int | float | Array[AtMost1D, np.float64]],
+    baseline_model: ParametricLifetimeModel[()]
+    | FrozenNonHomogeneousPoissonProcess[
+        FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
+    ],
+    cost_structure: dict[str, ST | Array[AtMost1D, NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> (
@@ -102,34 +114,34 @@ def age_replacement_policy(
     ------
     ValueError
         If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.
-    """
+    """  # noqa: E501
     if isinstance(baseline_model, FrozenNonHomogeneousPoissonProcess):
         try:
-            cr = cost_structure["cr"]
-            cp = cost_structure["cp"]
-        except KeyError:
-            raise ValueError("costs must contain 'cr' and 'cp'")
+            cr = to_numpy_float64(cost_structure["cr"])
+            cp = to_numpy_float64(cost_structure["cp"])
+        except KeyError as err:
+            raise ValueError("costs must contain 'cr' and 'cp'") from err
         return NonHomogeneousPoissonAgeReplacementPolicy(
             baseline_model, cr, cp, **kwargs
         )
     try:
-        cf = cost_structure["cf"]
-        cp = cost_structure["cp"]
-    except KeyError:
-        raise ValueError("costs must contain 'cf' and 'cp'")
+        cf = to_numpy_float64(cost_structure["cf"])
+        cp = to_numpy_float64(cost_structure["cp"])
+    except KeyError as err:
+        raise ValueError("costs must contain 'cf' and 'cp'") from err
     if one_cycle:
         return OneCycleAgeReplacementPolicy(baseline_model, cf, cp, **kwargs)
     return AgeReplacementPolicy(baseline_model, cf, cp, **kwargs)
 
 
-class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
+class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     _ar: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
     _a0: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
     discounting_rate: float
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
+        lifetime_model: ParametricLifetimeModel[()],
         cf: int | float | Array1D[np.float64],
         cp: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
@@ -158,7 +170,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         return flatten_if_at_least_2d(self._a0)
 
     @property
-    def cf(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
+    def cf(self) -> np.float64 | Array[AtMost1D, np.float64]:
         """Cost of failure.
 
         Returns
@@ -173,7 +185,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[AnyParametricLifetimeModel[()]]
         self._cost_structure["cf"] = to_column_2d(value)
 
     @property
-    def cp(self) -> np.float64 | Array[AtMost1D, np.float64] | None:
+    def cp(self) -> np.float64 | Array[AtMost1D, np.float64]:
         """Costs of preventive replacements.
 
         Returns
@@ -265,13 +277,13 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         criteria for age replacement. Proceedings of the Institution of
         Mechanical Engineers, Part O: Journal of Risk and Reliability,
         220(1), 21-29
-    """
+    """  # noqa: E501
 
     period_before_discounting: float
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
+        lifetime_model: ParametricLifetimeModel[()],
         cf: int | float | Array1D[np.float64],
         cp: int | float | Array1D[np.float64],
         discounting_rate: float = 0.0,
@@ -307,7 +319,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[ArrayND[np.float64], ArrayND[np.float64]]:
         if self.ar is None:
             raise ValueError
         return self._expected_costs.expected_net_present_value(
@@ -317,18 +329,14 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> ArrayND[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
     ) -> np.float64: ...
-    @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
-    def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         if self.ar is None:
             raise ValueError
         return (
@@ -337,7 +345,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[ArrayND[np.float64], ArrayND[np.float64]]:
         if self.ar is None or self.tr1 is None:
             raise ValueError
         else:
@@ -371,7 +379,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> ArrayND[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
@@ -379,10 +387,10 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         if self.ar is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
@@ -434,7 +442,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         if _sf_x0.ndim == 2 and x0.ndim == 0:
             x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
-        def eq(a: NDArray[np.float64]) -> NDArray[np.float64]:
+        def eq(a: ArrayND[np.float64]) -> ArrayND[np.float64]:
             return (
                 discounting.factor(a)
                 / discounting.annuity_factor(a)
@@ -487,7 +495,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., & Kallen, M. J. (2007).
         Maintenance optimization. Encyclopedia of Statistics in Quality and
         Reliability, 1000-1008.
-    """
+    """  # noqa: E501
 
     @property
     def _stochastic_process(self) -> RenewalRewardProcess:
@@ -511,7 +519,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[ArrayND[np.float64], ArrayND[np.float64]]:
         if self.ar is None:
             raise ValueError("ar must be set or optimized")
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
@@ -522,7 +530,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> ArrayND[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
@@ -530,10 +538,10 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         asymptotic_npv = (
             self._stochastic_process.asymptotic_expected_total_reward()
         )  # () or (m,)
@@ -543,7 +551,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[ArrayND[np.float64], ArrayND[np.float64]]:
         if self.ar is None or self.tr1 is None:
             raise ValueError
 
@@ -565,7 +573,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[False]
-    ) -> NDArray[np.float64]: ...
+    ) -> ArrayND[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
@@ -573,10 +581,10 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]: ...
+    ) -> np.float64 | ArrayND[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
-    ) -> np.float64 | NDArray[np.float64]:
+    ) -> np.float64 | ArrayND[np.float64]:
         if self.ar is None or self.tr1 is None:
             raise ValueError
 
@@ -666,7 +674,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         if _sf_x0.ndim == 2 and x0.ndim == 0:
             x0 = np.tile(x0, (_sf_x0.shape[0], 1))
 
-        def eq(a: NDArray[np.float64]) -> NDArray[np.float64]:  # () or (m, 1)
+        def eq(a: ArrayND[np.float64]) -> ArrayND[np.float64]:  # () or (m, 1)
             f = legendre_quadrature(
                 lambda x: discounting.factor(x) * self.baseline_model.sf(x),
                 0,

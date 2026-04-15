@@ -2,40 +2,55 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from dataclasses import dataclass, field
-from typing import Any, Generic, Self, TypeVarTuple
+from dataclasses import field
+from typing import Any, Generic, Self, TypeAlias, TypeVar, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import Array, Array1D, AtMost2D
+from optype.numpy import Array1D, Array2D, ArrayND
+from typing_extensions import TypeIs
 
-from relife.base import FittingResults, FrozenParametricModel, ParametricModel
+from relife.base import FittingResults, ParametricModel
 from relife.lifetime_model._base import (
     FittableParametricLifetimeModel,
+    FrozenParametricLifetimeModel,
+    LifetimeLikelihood,
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
 
+__all__ = [
+    "NonHomogeneousPoissonProcess",
+    "FrozenNonHomogeneousPoissonProcess",
+    "is_non_homogeneous_poisson_process",
+]
+
 Ts = TypeVarTuple("Ts")
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+M = TypeVar(
+    "M",
+    bound=FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
+)
 
-__all__ = ["NonHomogeneousPoissonProcess", "FrozenNonHomogeneousPoissonProcess"]
 
-
-class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
+class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
     """
     Non-homogeneous Poisson process.
     """
 
-    lifetime_model: FittableParametricLifetimeModel[*Ts]
+    lifetime_model: M
     fitting_results: FittingResults | None
 
-    def __init__(self, lifetime_model: FittableParametricLifetimeModel[*Ts]):
+    def __init__(self, lifetime_model: M):
         super().__init__()
         self.lifetime_model = lifetime_model
         self.fitting_results = None
 
     def intensity(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        *args: ST | NumpyST | ArrayND[NumpyST],
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The intensity function of the process.
 
@@ -55,8 +70,10 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         return self.lifetime_model.hf(time, *args)
 
     def cumulative_intensity(
-        self, time: int | float | Array[AtMost2D, np.float64], *args: *Ts
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        *args: ST | NumpyST | ArrayND[NumpyST],
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative intensity function of the process.
 
@@ -75,7 +92,9 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         """
         return self.lifetime_model.chf(time, *args)
 
-    def freeze(self, *args: *Ts) -> FrozenNonHomogeneousPoissonProcess[*Ts]:
+    def freeze(
+        self, *args: ST | NumpyST | ArrayND[NumpyST]
+    ) -> FrozenNonHomogeneousPoissonProcess[M]:
         """
         Freeze any arguments required by the process into the object data.
 
@@ -94,14 +113,18 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        *args: *Ts,
-        a0: int | float | Array1D[np.float64] | None = None,
-        ar: int | float | Array1D[np.float64] | None = None,
-        seed=None,
+        *args: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
-        This function will sample data and encapsulate them in a StochasticSampleMapping object.
+        Samples data and encapsulates them in a StochasticSampleMapping object.
 
         Parameters
         ----------
@@ -131,80 +154,34 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         )
 
     def generate_failure_data(
-        self, nb_samples: int, time_window: tuple[float, float], *args: *Ts, seed=None
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        *args: ST | NumpyST | ArrayND[NumpyST],
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ) -> dict[str, Any]:
         r"""
         .. warning:: Not implemented yet
         """
         raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"
+            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
         )
-
-        # from ._sample import NonHomogeneousPoissonProcessIterable
-
-        # frozen_nhpp = self.freeze(*args)
-
-        # iterable = NonHomogeneousPoissonProcessIterable(
-        #     frozen_nhpp, nb_samples, time_window=time_window, seed=seed
-        # )
-        # struct_array = np.concatenate(tuple(iterable))
-        # struct_array = np.sort(
-        #     struct_array, order=("sample_id", "asset_id", "timeline")
-        # )
-
-        # first_ages_index = np.nonzero(struct_array["entry"] == time_window[0])
-        # last_ages_index = np.nonzero(struct_array["age"] == time_window[1])
-
-        # event_index = np.nonzero(struct_array["event"])
-
-        # first_ages = struct_array[first_ages_index]["entry"].copy()
-        # last_ages = struct_array[last_ages_index]["age"].copy()
-
-        # assets_ids = np.char.add(
-        #     np.char.add(
-        #         np.full_like(
-        #             struct_array[last_ages_index]["sample_id"], "S", dtype=np.str_
-        #         ),
-        #         struct_array[last_ages_index]["sample_id"].astype(np.str_),
-        #     ),
-        #     np.char.add(
-        #         np.full_like(
-        #             struct_array[last_ages_index]["asset_id"], "A", dtype=np.str_
-        #         ),
-        #         struct_array[last_ages_index]["asset_id"].astype(np.str_),
-        #     ),
-        # )
-
-        # events_assets_ids = np.char.add(
-        #     np.char.add(
-        #         np.full_like(
-        #             struct_array[event_index]["sample_id"], "S", dtype=np.str_
-        #         ),
-        #         struct_array[event_index]["sample_id"].astype(np.str_),
-        #     ),
-        #     np.char.add(
-        #         np.full_like(struct_array[event_index]["asset_id"], "A", dtype=np.str_),
-        #         struct_array[event_index]["asset_id"].astype(np.str_),
-        #     ),
-        # )
-        # ages_at_events = struct_array[event_index]["age"].copy()
-
-        # return {
-        #     "ages_at_events": ages_at_events,
-        #     "events_assets_ids": events_assets_ids,
-        #     "first_ages": first_ages,
-        #     "last_ages": last_ages,
-        #     "assets_ids": assets_ids,
-        # }
 
     def fit(
         self,
-        ages_at_events: NDArray[np.float64],
-        events_assets_ids: Sequence[str] | NDArray[np.int64],
-        first_ages: NDArray[np.float64] | None = None,
-        last_ages: NDArray[np.float64] | None = None,
-        lifetime_model_args: NDArray[Any] | tuple[NDArray[Any], ...] | None = None,
-        assets_ids: Sequence[str] | NDArray[np.int64] | None = None,
+        ages_at_events: Array1D[np.float64],
+        events_assets_ids: Sequence[str],
+        first_ages: Array1D[np.float64] | None = None,
+        last_ages: Array1D[np.float64] | None = None,
+        lifetime_model_args: Array1D[Any]
+        | Array2D[Any]
+        | tuple[Array1D[Any] | Array2D[Any], ...]
+        | None = None,
+        assets_ids: Sequence[str] | None = None,
         **kwargs: Any,
     ) -> Self:
         """
@@ -265,8 +242,8 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             last_ages = np.array([35., 60.]),
             model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)
         )
-        """
-        warnings.warn(
+        """  # noqa: E501
+        warnings.warn(  # noqa: B028
             "Fit method of NHPP will change in a future release", DeprecationWarning
         )
 
@@ -279,25 +256,35 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
-        optimizer = self.lifetime_model.init_likelihood(
-            time, args, event, entry, **kwargs
-        )
+        optimizer: LifetimeLikelihood[
+            FittableParametricLifetimeModel[*tuple[Any, ...]]
+        ] = self.lifetime_model.init_likelihood(time, args, event, entry, **kwargs)
         fitting_results = optimizer.optimize()
         self.set_params(fitting_results.optimal_params)
         self.fitting_results = fitting_results
         return self
 
 
-class FrozenNonHomogeneousPoissonProcess(
-    FrozenParametricModel[NonHomogeneousPoissonProcess[*Ts], *Ts]
-):
+class FrozenNonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
     """
     Non-homogeneous Poisson process.
     """
 
+    unfrozen: NonHomogeneousPoissonProcess[M]
+    args: tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+
+    def __init__(
+        self,
+        nhpp: NonHomogeneousPoissonProcess[M],
+        *args: ST | NumpyST | ArrayND[NumpyST],
+    ):
+        super().__init__()
+        self.unfrozen = nhpp
+        self.args = args
+
     def intensity(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The intensity function of the process.
 
@@ -312,11 +299,11 @@ class FrozenNonHomogeneousPoissonProcess(
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.intensity(time, *self.args)
+        return self.unfrozen.intensity(time, *self.args)
 
     def cumulative_intensity(
-        self, time: int | float | Array[AtMost2D, np.float64]
-    ) -> np.float64 | Array[AtMost2D, np.float64]:
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative intensity function of the process.
 
@@ -333,15 +320,19 @@ class FrozenNonHomogeneousPoissonProcess(
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self._unfrozen_model.cumulative_intensity(time, *self.args)
+        return self.unfrozen.cumulative_intensity(time, *self.args)
 
     def sample(
         self,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: int | float | Array1D[np.float64] | None = None,
-        ar: int | float | Array1D[np.float64] | None = None,
-        seed=None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
@@ -359,16 +350,23 @@ class FrozenNonHomogeneousPoissonProcess(
             Random seed, by default None.
 
         """
-        return self._unfrozen_model.sample(
+        return self.unfrozen.sample(
             nb_samples, time_window, *self.args, a0=a0, ar=ar, seed=seed
         )
 
     def generate_failure_data(
-        self, nb_samples: int, time_window: tuple[float, float], seed=None
-    ):
-        """Generate failure data
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> dict[str, Any]:
+        """Generates failure data.
 
-        This function will generate failure data that can be used to fit a non-homogeneous Poisson process.
+        Generates failure data that can be used to fit a non-homogeneous Poisson process.
 
         Parameters
         ----------
@@ -382,128 +380,66 @@ class FrozenNonHomogeneousPoissonProcess(
         Returns
         -------
         A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
-        """
-        return self._unfrozen_model.generate_failure_data(
+        """  # noqa: E501
+        return self.unfrozen.generate_failure_data(
             nb_samples, time_window, *self.args, seed=seed
         )
 
 
-def is_non_homogeneous_poisson_process(model):
+# typeguard function
+def is_non_homogeneous_poisson_process(
+    model: NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M],
+) -> TypeIs[NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M]]:
     """
     Checks if model is a non-homogeneous Poisson process.
     """
-    # local import to avoid circular import
 
     return isinstance(
         model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)
     )
 
 
-@dataclass
 class NHPPData:
-    ages_at_events: NDArray[np.float64]
-    events_assets_ids: Sequence[str] | NDArray[np.int64]
-    first_ages: NDArray[np.float64] | None = field(repr=False, default=None)
-    last_ages: NDArray[np.float64] | None = field(repr=False, default=None)
-    model_args: tuple[float | NDArray[np.float64], ...] | None = field(
-        repr=False, default=None
+    ages_at_events: Array1D[np.float64]
+    events_assets_ids: Array1D[np.uint32]
+    first_ages: Array1D[np.float64] | None
+    last_ages: Array1D[np.float64] | None
+    model_args: (
+        Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None
     )
-    assets_ids: Sequence[str] | NDArray[np.int64] | None = field(
-        repr=False, default=None
-    )
+    assets_ids: Array1D[np.uint32] | None
 
     first_age_index: NDArray[np.int64] = field(repr=False, init=False)
     last_age_index: NDArray[np.int64] = field(repr=False, init=False)
 
-    def __post_init__(self):
+    def __init__(
+        self,
+        ages_at_events: Array1D[np.float64],
+        events_assets_ids: Sequence[str],
+        first_ages: Array1D[np.float64] | None = None,
+        last_ages: Array1D[np.float64] | None = None,
+        model_args: Array1D[Any]
+        | Array2D[Any]
+        | tuple[Array1D[Any] | Array2D[Any], ...]
+        | None = None,
+        assets_ids: Sequence[str] | None = None,
+    ) -> None:
+
         # convert inputs to arrays
+        self.ages_at_events = np.asarray(ages_at_events, dtype=np.float64)
         self.events_assets_ids = np.unique(
-            np.asarray(self.events_assets_ids), return_inverse=True
+            np.asarray(events_assets_ids), return_inverse=True
         )[1].astype(np.uint32)
-        self.ages_at_events = np.asarray(self.ages_at_events, dtype=np.float64)
-        if self.assets_ids is not None:
-            self.assets_ids = np.unique(
-                np.asarray(self.assets_ids), return_inverse=True
-            )[1].astype(np.uint32)
-        if self.first_ages is not None:
-            self.first_ages = np.asarray(self.first_ages, dtype=np.float64)
-        if self.last_ages is not None:
-            self.last_ages = np.asarray(self.last_ages, dtype=np.float64)
-
-        # control shapes
-        if self.events_assets_ids.ndim != 1:
-            raise ValueError(
-                "Invalid array shape for events_assets_ids. Expected 1d-array"
-            )
-        if self.ages_at_events.ndim != 1:
-            raise ValueError("Invalid array shape for ages. Expected 1d-array")
-        if len(self.events_assets_ids) != len(self.ages_at_events):
-            raise ValueError(
-                "Shape of events_assets_ids and ages must be equal. Expected equal length 1d-arrays"
-            )
-        if self.assets_ids is not None:
-            if self.assets_ids.ndim != 1:
-                raise ValueError(
-                    "Invalid array shape for assets_ids. Expected 1d-array"
-                )
-            if self.first_ages is not None:
-                if self.first_ages.ndim != 1:
-                    raise ValueError(
-                        "Invalid array shape for start_ages. Expected 1d-array"
-                    )
-                if len(self.first_ages) != len(self.assets_ids):
-                    raise ValueError(
-                        "Shape of assets_ids and start_ages must be equal. Expected equal length 1d-arrays"
-                    )
-            if self.last_ages is not None:
-                if self.last_ages.ndim != 1:
-                    raise ValueError(
-                        "Invalid array shape for last_ages. Expected 1d-array"
-                    )
-                if len(self.last_ages) != len(self.assets_ids):
-                    raise ValueError(
-                        "Shape of assets_ids and last_ages must be equal. Expected equal length 1d-arrays"
-                    )
-            if bool(self.model_args):
-                for arg in self.model_args:
-                    arg = np.atleast_2d(np.asarray(arg, dtype=np.float64))
-                    if arg.ndim > 2:
-                        raise ValueError(
-                            "Invalid arg shape in model_args. Arrays must be 0, 1 or 2d"
-                        )
-                    try:
-                        arg.reshape((len(self.assets_ids), -1))
-                    except ValueError:
-                        raise ValueError(
-                            """
-                            Invalid arg shape in model_args. Arrays must
-                            coherent with the number of assets given by
-                            assets_ids
-                            """
-                        )
-        else:
-            if self.first_ages is not None:
-                raise ValueError(
-                    "If first_ages is given, corresponding asset ids must be given in assets_ids"
-                )
-            if self.last_ages is not None:
-                raise ValueError(
-                    "If last_ages is given, corresponding asset ids must be given in assets_ids"
-                )
-            if bool(self.model_args):
-                raise ValueError(
-                    "If model_args is given, corresponding asset ids must be given in assets_ids"
-                )
-
-        # if self.events_assets_ids.dtype != np.int64:
-        #     events_assets_ids = np.unique(self.events_assets_ids, return_inverse=True)[1]
-        # # convert assets_id to int id
-        # if self.assets_ids is not None:
-        #     if self.assets_ids.dtype != np.int64:
-        #         assets_ids = np.unique(self.assets_ids, return_inverse=True)[1]
-        #     # control ids correspondance
-        #     if not np.all(np.isin(self.events_assets_ids, self.assets_ids)):
-        #         raise ValueError("If assets_ids is filled, all values of events_assets_ids must exist in assets_ids")
+        if assets_ids is not None:
+            self.assets_ids = np.unique(np.asarray(assets_ids), return_inverse=True)[
+                1
+            ].astype(np.uint32)
+        if first_ages is not None:
+            self.first_ages = np.asarray(first_ages, dtype=np.float64)
+        if last_ages is not None:
+            self.last_ages = np.asarray(last_ages, dtype=np.float64)
+        self.model_args = model_args
+        self._sanity_checks()
 
         # sort fields
         sort_ind = np.lexsort((self.ages_at_events, self.events_assets_ids))
@@ -540,24 +476,95 @@ class NHPPData:
                 else self.model_args
             )
 
+            if self.first_ages is not None and np.any(
+                self.ages_at_events[self.first_age_index]
+                <= self.first_ages[nb_ages_per_asset != 0]
+            ):
+                raise ValueError(
+                    "Each first_ages value must be lower than all of its corresponding ages values"  # noqa: E501
+                )
+            if self.last_ages is not None and np.any(
+                self.ages_at_events[self.last_age_index]
+                >= self.last_ages[nb_ages_per_asset != 0]
+            ):
+                raise ValueError(
+                    "Each last_ages value must be greater than all of its corresponding ages values"  # noqa: E501
+                )
+
+    def _sanity_checks(self) -> None:
+        # control shapes
+        if self.events_assets_ids.ndim != 1:
+            raise ValueError(
+                "Invalid array shape for events_assets_ids. Expected 1d-array"
+            )
+        if self.ages_at_events.ndim != 1:
+            raise ValueError("Invalid array shape for ages. Expected 1d-array")
+        if len(self.events_assets_ids) != len(self.ages_at_events):
+            raise ValueError(
+                "Shape of events_assets_ids and ages must be equal. Expected equal length 1d-arrays"  # noqa: E501
+            )
+        if self.assets_ids is not None:
+            if self.assets_ids.ndim != 1:
+                raise ValueError(
+                    "Invalid array shape for assets_ids. Expected 1d-array"
+                )
             if self.first_ages is not None:
-                if np.any(
-                    self.ages_at_events[self.first_age_index]
-                    <= self.first_ages[nb_ages_per_asset != 0]
-                ):
+                if self.first_ages.ndim != 1:
                     raise ValueError(
-                        "Each first_ages value must be lower than all of its corresponding ages values"
+                        "Invalid array shape for start_ages. Expected 1d-array"
+                    )
+                if len(self.first_ages) != len(self.assets_ids):
+                    raise ValueError(
+                        "Shape of assets_ids and start_ages must be equal. Expected equal length 1d-arrays"  # noqa: E501
                     )
             if self.last_ages is not None:
-                if np.any(
-                    self.ages_at_events[self.last_age_index]
-                    >= self.last_ages[nb_ages_per_asset != 0]
-                ):
+                if self.last_ages.ndim != 1:
                     raise ValueError(
-                        "Each last_ages value must be greater than all of its corresponding ages values"
+                        "Invalid array shape for last_ages. Expected 1d-array"
                     )
+                if len(self.last_ages) != len(self.assets_ids):
+                    raise ValueError(
+                        "Shape of assets_ids and last_ages must be equal. Expected equal length 1d-arrays"  # noqa: E501
+                    )
+            if bool(self.model_args):
+                for arg in self.model_args:
+                    arg = np.atleast_2d(np.asarray(arg, dtype=np.float64))
+                    if arg.ndim > 2:
+                        raise ValueError(
+                            "Invalid arg shape in model_args. Arrays must be 0, 1 or 2d"
+                        )
+                    try:
+                        _ = arg.reshape((len(self.assets_ids), -1))
+                    except ValueError as err:
+                        raise ValueError(
+                            """
+                            Invalid arg shape in model_args. Arrays must
+                            coherent with the number of assets given by
+                            assets_ids
+                            """
+                        ) from err
+        else:
+            if self.first_ages is not None:
+                raise ValueError(
+                    "If first_ages is given, corresponding asset ids must be given in assets_ids"  # noqa: E501
+                )
+            if self.last_ages is not None:
+                raise ValueError(
+                    "If last_ages is given, corresponding asset ids must be given in assets_ids"  # noqa: E501
+                )
+            if bool(self.model_args):
+                raise ValueError(
+                    "If model_args is given, corresponding asset ids must be given in assets_ids"  # noqa: E501
+                )
 
-    def to_lifetime_data(self):
+    def to_lifetime_data(
+        self,
+    ) -> tuple[
+        Array1D[np.float64],
+        Array1D[np.bool_],
+        Array1D[np.float64],
+        Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None,
+    ]:
         event = np.ones_like(self.ages_at_events, dtype=np.bool_)
         # insert_index = np.cumsum(nb_ages_per_asset)
         # insert_index = last_age_index + 1
