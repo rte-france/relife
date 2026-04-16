@@ -280,7 +280,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def sf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         a0 = reshape_1d_arg(a0)
-        return super().sf(time, a0, *args)
+        return self.baseline.sf(time + a0) / self.baseline.sf(a0) 
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)

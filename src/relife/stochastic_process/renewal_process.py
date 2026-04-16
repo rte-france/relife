@@ -31,6 +31,7 @@ class LifetimeFitArgs(TypedDict):
     args: tuple[NDArray[np.floating], ...]
 
 
+
 class RenewalProcess(ParametricModel):
     # noinspection PyUnresolvedReferences
     """Renewal process.
@@ -115,6 +116,59 @@ class RenewalProcess(ParametricModel):
             timeline, get_conditional_lifetime_model(self.lifetime_model, ar=ar), get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
+
+    
+    def expected_number_of_events(
+        self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
+
+        lifetime_model_applied = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
+        z = renewal_equation_solver(
+            timeline,
+            lifetime_model_applied,
+            lambda t: self.lifetime_model.cdf(np.minimum(t, ar or np.inf))
+        )
+
+        first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
+        first_ar = (ar or np.inf) - (a0 or 0)
+        delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).cdf(np.minimum(t,first_ar))
+        z = delayed_renewal_equation_solver(
+            timeline,
+            z,
+            first_lifetime_model_applied,
+            delayed_evaluated_func
+        )
+        return np.squeeze(timeline), np.squeeze(
+            z
+        )
+    
+    def expected_number_of_preventive_renewals(
+        self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        
+        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
+
+        lifetime_model_applied = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
+        z = renewal_equation_solver(
+            timeline,
+            lifetime_model_applied,
+            lambda t: (1 - self.lifetime_model.cdf(ar or np.inf)) * (t > (ar or np.inf))
+        )
+
+        first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
+        first_ar = (ar or np.inf) - (a0 or 0)
+        delayed_evaluated_func = lambda t: (1 - get_conditional_lifetime_model(self.first_lifetime_model, a0=a0).cdf(first_ar)) * (t > first_ar)
+        z = delayed_renewal_equation_solver(
+            timeline,
+            z,
+            first_lifetime_model_applied,
+            delayed_evaluated_func
+        )
+        return np.squeeze(timeline), np.squeeze(
+            z
+        )
 
     def renewal_density(
         self, tf: float, nb_steps: int, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
