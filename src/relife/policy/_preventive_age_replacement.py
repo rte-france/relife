@@ -4,6 +4,7 @@ from __future__ import annotations
 import warnings
 from abc import ABC
 from typing import Any, Literal, Optional, Self, overload
+import functools
 
 import numpy as np
 from numpy.typing import NDArray
@@ -36,6 +37,37 @@ __all__ = [
     "AgeReplacementModel",
     "age_replacement_policy",
 ]
+
+
+def requires_ar(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not hasattr(self, 'ar') or self.ar is None:
+            raise ValueError(
+                f"Age replacements must be set or optimised before using '{method.__name__}'"
+            )
+        return method(self, *args, **kwargs)
+    return wrapper
+
+
+def requires_valid_periods(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if np.any(self.period_before_discounting >= self.ar):
+            raise ValueError(
+                "The period before discounting must be lower than age replacement values"
+            )
+        if np.any(self.tr1 == 0):
+            warnings.warn(
+                "Some assets has already been replaced for the first cycle (ar < a0). For these assets, consider manually adjusting age of replacements."
+            )
+            ar = self.ar.copy()
+            self.ar = np.where(self.tr1 == 0, np.inf, self.ar)
+            result = method(self, *args, **kwargs)
+            self.ar = ar
+            return result
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 @overload
@@ -287,32 +319,24 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
         self.period_before_discounting = period_before_discounting
 
-    @property
-    def _expected_costs(self) -> OneCycleExpectedCosts:
-        if self.ar is None or self.tr1 is None:
-            raise ValueError("ar must be set or optimized")
-        else:
-            if self.a0 is None:
-                return OneCycleExpectedCosts(
-                    AgeReplacementModel(self.baseline_model).freeze(self.tr1),
-                    AgeReplacementReward(self.cf, self.cp, self.tr1),
-                    discounting_rate=self.discounting_rate,
-                    period_before_discounting=self.period_before_discounting,
-                )
-            return OneCycleExpectedCosts(
-                AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(
-                    self.tr1, self.a0
-                ),
-                AgeReplacementReward(self.cf, self.cp, self.tr1),
-                discounting_rate=self.discounting_rate,
-                period_before_discounting=self.period_before_discounting,
-            )
 
+    @property
+    @requires_ar
+    def _expected_costs(self) -> OneCycleExpectedCosts:
+        conditional_model = get_conditional_lifetime_model(self.baseline_model,a0=self.a0)
+        return OneCycleExpectedCosts(
+            conditional_model,
+            AgeReplacementReward(
+                self.cf, self.cp, self.tr1
+            ),
+            discounting_rate=self.discounting_rate,
+            period_before_discounting=self.period_before_discounting
+        )
+
+    @requires_ar
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        if self.ar is None:
-            raise ValueError
         return self._expected_costs.expected_net_present_value(
             tf, nb_steps, total_sum=total_sum
         )  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
@@ -329,47 +353,32 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @requires_ar
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]:
-        if self.ar is None:
-            raise ValueError
         return (
             self._expected_costs.asymptotic_expected_net_present_value()
         )  # () or (m, nb_steps)
 
+    @requires_valid_periods
+    @requires_ar
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        if self.ar is None or self.tr1 is None:
-            raise ValueError
-        else:
-            # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
-            if np.any(self.period_before_discounting >= self.ar):
-                raise ValueError(
-                    "The period before discounting must be lower than ar values"
-                )
 
-            if np.any(self.tr1 == 0):
-                warnings.warn(
-                    "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than a0"
-                )
-
-            ar = self.ar.copy()
-            #  change ar temporarly to enable computation of eeac (if not, AgeReplacementModel.ls_integrate bounds will be problematic)
-            self.ar = np.where(self.tr1 == 0, np.inf, self.ar)
-            timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
-                tf, nb_steps
-            )
-            if eeac.ndim == 2:  # more than one asset
-                eeac[np.where(self.ar == np.inf)[0], :] = np.nan
-            if eeac.ndim == 1 and self.ar == np.inf:
-                eeac.fill(np.nan)
-            self.ar = ar
-            return (
-                timeline,
-                eeac,
-            )  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
+        timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
+            tf, nb_steps
+        )
+        if eeac.ndim == 2:  # more than one asset
+            eeac[np.where(self.ar == np.inf)[0], :] = np.nan
+        if eeac.ndim == 1 and self.ar == np.inf:
+            eeac.fill(np.nan)
+        return (
+            timeline,
+            eeac,
+        )  # (nb_steps,), (nb_steps,) or (nb_steps,), (m, nb_steps)
 
     @overload
     def asymptotic_expected_equivalent_annual_cost(
@@ -383,34 +392,20 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @requires_valid_periods
+    @requires_ar
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]:
-        if self.ar is None:
-            raise ValueError
-        # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting
-        if np.any(self.period_before_discounting >= self.ar):
-            raise ValueError(
-                "The period before discounting must be lower than ar values"
-            )
 
-        if np.any(self.tr1 == 0):
-            warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr is 0). For these assets, consider adjusting ar values to be greater than a0"
-            )
-
-        ar = self.ar.copy()
-        #  change ar temporarly to enable computation of eeac (if not, AgeReplacementModel.ls_integrate bounds are not in right order)
-        self.ar = np.where(self.tr1 == 0, np.inf, self.ar)
         asymptotic_eeac = (
             self._expected_costs.asymptotic_expected_equivalent_annual_cost()
         )
-
         if asymptotic_eeac.ndim == 1:  # more than one asset
             asymptotic_eeac[np.where(self.ar == np.inf)[0]] = np.nan
         if asymptotic_eeac.ndim == 0 and self.ar == np.inf:
             asymptotic_eeac = np.array(np.nan)
-        self.ar = ar
         return asymptotic_eeac  # () or (m, nb_steps)
 
     def optimize(self) -> Self:
@@ -493,31 +488,21 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     """
 
     @property
+    @requires_ar
     def _stochastic_process(self) -> RenewalRewardProcess:
-        if self.ar is None or self.tr1 is None:
-            raise ValueError("ar must be set or optimized")
-        if self.a0 is None:
-            return RenewalRewardProcess(
-                AgeReplacementModel(self.baseline_model).freeze(self.ar),
-                AgeReplacementReward(self.cf, self.cp, self.ar),
-                discounting_rate=self.discounting_rate,
-            )
+        first_reward = AgeReplacementReward(self.cf, self.cp, self.tr1) if self.a0 is not None else None
         return RenewalRewardProcess(
-            AgeReplacementModel(self.baseline_model).freeze(self.ar),
-            AgeReplacementReward(self.cf, self.cp, self.ar),
-            discounting_rate=self.discounting_rate,
-            first_lifetime_model=AgeReplacementModel(
-                LeftTruncatedModel(self.baseline_model)
-            ).freeze(self.tr1, self.a0),
-            first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
-        )
+                self.baseline_model,
+                AgeReplacementReward(self.cf,self.cp,self.ar),
+                discounting_rate=self.discounting_rate,
+                first_reward=first_reward
+            )
 
+    @requires_ar
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        if self.ar is None:
-            raise ValueError("ar must be set or optimized")
-        timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
+        timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps, a0=self.a0, ar=self.ar)
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
         return timeline, npv
@@ -538,25 +523,21 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]:
         asymptotic_npv = (
-            self._stochastic_process.asymptotic_expected_total_reward()
+            self._stochastic_process.asymptotic_expected_total_reward(a0=self.a0, ar=self.ar)
         )  # () or (m,)
         if total_sum:
             asymptotic_npv = np.sum(asymptotic_npv)
         return asymptotic_npv
 
+    @requires_valid_periods
+    @requires_ar
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        if self.ar is None or self.tr1 is None:
-            raise ValueError
 
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
-            tf, nb_steps
+            tf, nb_steps, a0=self.a0, ar=self.ar
         )
-        if np.any(self.tr1 == 0):
-            warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than a0"
-            )
         if eeac.ndim == 2:
             eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
         if eeac.ndim == 1 and self.ar == np.inf:
@@ -577,19 +558,16 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @requires_valid_periods
+    @requires_ar
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | NDArray[np.float64]:
-        if self.ar is None or self.tr1 is None:
-            raise ValueError
 
         asymptotic_eeac = (
-            self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+            self._stochastic_process.asymptotic_expected_equivalent_annual_worth(a0=self.a0,ar=self.ar)
         )
-        if np.any(self.tr1 == 0):
-            warnings.warn(
-                "Some assets has already been replaced for the first cycle (where tr1 is 0). For these assets, consider adjusting ar values to be greater than a0"
-            )
         if asymptotic_eeac.ndim == 1:
             asymptotic_eeac[np.where(self.tr1 == 0)] = np.nan
         if asymptotic_eeac.ndim == 0 and self.tr1 == 0:
@@ -611,38 +589,20 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         total : bool, default is True
             If True, the given numbers of replacements are the sum of all replacements without distinction between assets
         """
-        copied_policy = self.__class__(
-            self.baseline_model,
-            1.0,
-            1.0,
-            ar=self.ar,
-            a0=self.a0,
-            discounting_rate=0.0,
-        )
-        timeline, total_cost = copied_policy.expected_net_present_value(
-            nb_years, nb_years + 1
-        )  # equiv to np.arange
+        
+        timeline, total_renewals = self._stochastic_process.renewal_function(nb_years,nb_years+1,a0=self.a0,ar=self.ar)
         if total:
-            mt = np.sum(np.atleast_2d(total_cost), axis=0)
+            mt = np.sum(np.atleast_2d(total_renewals), axis=0)
         else:
-            mt = total_cost
+            mt = total_renewals
         nb_replacements = np.diff(mt)
         if upon_failure:
-            copied_policy = self.__class__(
-                self.baseline_model,
-                1.0,
-                0.0,
-                ar=self.ar,
-                a0=self.a0,
-                discounting_rate=0.0,
-            )
-            _, total_cost = copied_policy.expected_net_present_value(
-                nb_years, nb_years + 1
-            )  # equiv to np.arange
+
+            _, failures_only = self._stochastic_process.expected_number_of_events(nb_years,nb_years+1,a0=self.a0,ar=self.ar)
             if total:
-                mf = np.sum(np.atleast_2d(total_cost), axis=0)
+                mf = np.sum(np.atleast_2d(failures_only), axis=0)
             else:
-                mf = total_cost
+                mf = failures_only
             nb_failures = np.diff(mf)
             return timeline[1:], nb_replacements, nb_failures
         return timeline[1:], nb_replacements
