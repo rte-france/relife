@@ -2,7 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Generic, Literal, TypeAlias, TypeVar, overload
 
 import numpy as np
-from optype.numpy import Array, Array0D, Array1D, ArrayND, AtMost2D, is_array_1d
+from optype.numpy import (
+    Array,
+    Array1D,
+    Array2D,
+    ArrayND,
+    is_array_1d,
+)
 from typing_extensions import override
 
 from relife.economic import ExponentialDiscounting, Reward
@@ -27,7 +33,7 @@ class ExpectedCostsABC(ABC):
     @abstractmethod
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected net present value.
 
@@ -73,7 +79,7 @@ class ExpectedCostsABC(ABC):
     @abstractmethod
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
-    ) -> np.float64 | ArrayND[np.float64]:
+    ) -> np.float64 | Array1D[np.float64]:
         r"""
         The asymtotic expected net present value.
 
@@ -98,7 +104,7 @@ class ExpectedCostsABC(ABC):
     @abstractmethod
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected equivalent annual cost.
 
@@ -187,7 +193,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
     @override
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline = _make_timeline(tf, nb_steps)
         etc = np.asarray(
             self.lifetime_model.ls_integrate(
@@ -236,7 +242,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
 
     def _expected_equivalent_annual_cost(
         self, timeline: ArrayND[np.float64]
-    ) -> ArrayND[np.float64]:
+    ) -> Array1D[np.float64] | Array2D[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             # avoid zero division + 1e-6
@@ -269,7 +275,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
     @override
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         value = self._expected_equivalent_annual_cost(timeline)
         if timeline.ndim == 2:
@@ -293,6 +299,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
     ) -> np.float64 | Array1D[np.float64]:
         timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         value = self._expected_equivalent_annual_cost(timeline)
+        assert is_array_1d(value)  # typeguard
         if total_sum:
             value = np.sum(value)
         return value  # () or (m,)
@@ -306,7 +313,7 @@ class ReplacementPolicy(ExpectedCostsABC, Generic[M], ABC):
     discounting_rate: float
     _cost_structure: dict[
         str,
-        np.float64 | Array0D[np.float64] | Array[tuple[int, Literal[1]], np.float64],
+        np.float64 | Array[tuple[int, Literal[1]], np.float64],
     ]
 
     def __init__(
@@ -314,9 +321,7 @@ class ReplacementPolicy(ExpectedCostsABC, Generic[M], ABC):
         baseline_model: M,
         cost_structure: dict[
             str,
-            np.float64
-            | Array0D[np.float64]
-            | Array[tuple[int, Literal[1]], np.float64],
+            np.float64 | Array[tuple[int, Literal[1]], np.float64],
         ],
         discounting_rate: float = 0.0,
     ):

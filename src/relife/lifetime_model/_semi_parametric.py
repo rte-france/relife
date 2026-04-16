@@ -22,8 +22,8 @@ __all__ = [
 class CoxData:
     time: Array[tuple[int, Literal[1]], np.float64]
     covar: Array2D[np.float64]
-    event: Array[tuple[int, Literal[1]], np.bool_] | None = None
-    entry: Array[tuple[int, Literal[1]], np.float64] | None = None
+    event: Array[tuple[int, Literal[1]], np.bool_] | None
+    entry: Array[tuple[int, Literal[1]], np.float64] | None
 
     ordered_event_time: Array1D[np.float64]
     event_count: Array1D[np.int64]

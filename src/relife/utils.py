@@ -6,6 +6,7 @@ from optype.numpy import (
     Array,
     Array0D,
     Array1D,
+    Array2D,
     ArrayND,
     is_array_0d,
     is_array_1d,
@@ -38,55 +39,88 @@ def to_numpy_float64(
     return np.asarray(v, dtype=np.float64)
 
 
-ST: TypeAlias = int | float
+ST: TypeAlias = int | float | bool
 NumpyST: TypeAlias = np.floating | np.uint | np.bool
 
 
-@overload
-def to_column_2d(arg: ST | NumpyST) -> np.float64: ...
+# type checkers warn about overload 2 because bool is subclass of int in Python
+# that's the best we can do.
 @overload
 def to_column_2d(
-    arg: Array0D[NumpyST],
+    arg: int | float,
 ) -> Array[tuple[Literal[1], Literal[1]], np.float64]: ...
 @overload
 def to_column_2d(
-    arg: Array1D[NumpyST],
-) -> Array[tuple[int, Literal[1]], np.float64]: ...
+    arg: bool,
+) -> Array[tuple[Literal[1], Literal[1]], np.bool]: ...
 @overload
 def to_column_2d(
-    arg: Array[tuple[int, int, *tuple[int, ...]], NumpyST],
+    arg: np.floating | np.uint,
+) -> Array[tuple[Literal[1], Literal[1]], np.float64]: ...
+@overload
+def to_column_2d(
+    arg: np.bool,
+) -> Array[tuple[Literal[1], Literal[1]], np.bool]: ...
+@overload
+def to_column_2d(
+    arg: Array0D[np.floating | np.uint],
+) -> Array[tuple[Literal[1], Literal[1]], np.float64]: ...
+@overload
+def to_column_2d(
+    arg: Array0D[np.bool],
+) -> Array[tuple[Literal[1], Literal[1]], np.bool]: ...
+@overload
+def to_column_2d(
+    arg: Array1D[np.floating | np.uint],
+) -> Array[tuple[int, Literal[1]], np.float64]: ...
+@overload
+def to_column_2d(arg: Array1D[np.bool]) -> Array[tuple[int, Literal[1]], np.bool]: ...
+@overload
+def to_column_2d(arg: Array2D[np.floating | np.uint]) -> Array2D[np.float64]: ...
+@overload
+def to_column_2d(arg: Array2D[np.bool]) -> Array2D[np.bool]: ...
+@overload
+def to_column_2d(
+    arg: Array[tuple[int, int, *tuple[int, ...]], np.floating | np.uint],
 ) -> Array[tuple[int, int, *tuple[int, ...]], np.float64]: ...
+@overload
+def to_column_2d(
+    arg: Array[tuple[int, int, *tuple[int, ...]], np.bool],
+) -> Array[tuple[int, int, *tuple[int, ...]], np.bool]: ...
 def to_column_2d(
     arg: ST
     | NumpyST
     | Array0D[NumpyST]
     | Array1D[NumpyST]
+    | Array2D[NumpyST]
     | Array[tuple[int, int, *tuple[int, ...]], NumpyST],
 ) -> (
-    np.float64
-    | Array[tuple[Literal[1], Literal[1]], np.float64]
-    | Array[tuple[int, Literal[1]], np.float64]
-    | Array[tuple[int, int, *tuple[int, ...]], np.float64]
+    Array[tuple[Literal[1], Literal[1]], NumpyST]
+    | Array[tuple[int, Literal[1]], NumpyST]
+    | Array2D[NumpyST]
+    | Array[tuple[int, int, *tuple[int, ...]], NumpyST]
 ):
     """
-    Reshapes ReLife arguments that are expected to be 0d or 1d.
+    Reshapes to column array.
 
     Parameters
     ----------
-    arg : float, 0d or 1d array
+    arg : any scalar or array
 
     Returns
     -------
-    np.float64 or (m, 1) shaped array
-        Reshaped array used to ensure broadcasting compatibility in computations.
+    np.ndarray
     """
     if isinstance(arg, np.ndarray):
-        if arg.ndim <= 1:
-            return arg.reshape(-1, 1).astype(np.float64)
+        dtype = np.float64 if arg.dtype != np.bool else np.bool
+    else:
+        dtype = np.float64 if not isinstance(arg, bool) else np.bool
+    arr = np.asarray(arg, dtype=dtype)
+    if arr.ndim <= 1:
+        return arr.reshape(-1, 1)
         # typeguards
-        assert not is_array_0d(arg) and not is_array_1d(arg)
-        return arg.astype(np.float64)
-    return np.float64(arg)
+    assert not is_array_0d(arr) and not is_array_1d(arr)
+    return arr
 
 
 @overload

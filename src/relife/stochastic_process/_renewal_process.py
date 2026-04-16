@@ -354,7 +354,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def expected_total_reward(
         self, tf: float, nb_steps: int
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""The expected total reward.
 
         The renewal equation solved to compute the expected reward is:
@@ -507,7 +507,7 @@ class RenewalRewardProcess(RenewalProcess):
 
     def expected_equivalent_annual_worth(
         self, tf: float, nb_steps: int
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         """Expected equivalent annual worth.
 
         Gives the equivalent annual worth of the expected total reward of the

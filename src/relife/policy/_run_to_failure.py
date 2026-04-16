@@ -1,46 +1,41 @@
-# pyright: basic
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Literal, overload
+from typing import Any, Literal, TypeAlias, overload
 
 import numpy as np
-from optype.numpy import Array, Array1D, AtMost2D
+from optype.numpy import Array, Array1D, Array2D
+from typing_extensions import override
 
 from relife.economic import RunToFailureReward
-from relife.lifetime_model import (
-    AnyParametricLifetimeModel,
-    LeftTruncatedModel,
-)
+from relife.lifetime_model import LeftTruncatedModel
+from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.stochastic_process import RenewalRewardProcess
+from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.utils import flatten_if_at_least_2d, to_column_2d
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+
 
 @overload
 def run_to_failure_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
+    baseline_model: ParametricLifetimeModel[()],
     cf: int | float | Array1D[np.float64],
     one_cycle: Literal[True],
     **kwargs: Any,
 ) -> OneCycleRunToFailurePolicy: ...
 @overload
 def run_to_failure_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
+    baseline_model: ParametricLifetimeModel[()],
     cf: int | float | Array1D[np.float64],
     one_cycle: Literal[False],
     **kwargs: Any,
 ) -> RunToFailurePolicy: ...
-@overload
 def run_to_failure_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
-    cf: int | float | Array1D[np.float64],
-    one_cycle: bool = False,
-    **kwargs: Any,
-) -> OneCycleRunToFailurePolicy | RunToFailurePolicy: ...
-def run_to_failure_policy(
-    baseline_model: AnyParametricLifetimeModel[()],
+    baseline_model: ParametricLifetimeModel[()],
     cf: int | float | Array1D[np.float64],
     one_cycle: bool = False,
     **kwargs: Any,
@@ -68,22 +63,22 @@ def run_to_failure_policy(
     ------
     ValueError
         If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.
-    """
+    """  # noqa: E501
     if one_cycle:
         return OneCycleRunToFailurePolicy(baseline_model, cf, **kwargs)
     return RunToFailurePolicy(baseline_model, cf, **kwargs)
 
 
-class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
-    discounting_rate: float
+class BaseRunToFailure(ReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     _a0: np.float64 | Array[tuple[int, Literal[1]], np.float64] | None
+    discounting_rate: float
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
-        cf: int | float | Array1D[np.float64],
+        lifetime_model: ParametricLifetimeModel[()],
+        cf: ST | NumpyST | Array1D[NumpyST],
         discounting_rate: float = 0.0,
-        a0: int | float | Array1D[np.float64] | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ):
         super().__init__(
             lifetime_model,
@@ -100,7 +95,6 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         -------
         np.ndarray
         """
-        # _a0 is (m, 1) but exposed cf is (m,)
         if self._a0 is None:
             return self._a0
         return flatten_if_at_least_2d(self._a0)
@@ -113,11 +107,9 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         -------
         np.ndarray
         """
-        # _cf is (m, 1) but exposed cf is (m,)
         return flatten_if_at_least_2d(self._cost_structure["cf"])
 
-    @cf.setter
-    def cf(self, value: AnyFloat) -> None:
+    def set_cf(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
         self._cost_structure["cf"] = to_column_2d(value)
 
 
@@ -146,14 +138,16 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     Attributes
     ----------
     cf
-    """
+    """  # noqa: E501
+
+    period_before_discounting: float
 
     def __init__(
         self,
-        lifetime_model: AnyParametricLifetimeModel[()],
-        cf: int | float | Array1D[np.float64],
+        lifetime_model: ParametricLifetimeModel[()],
+        cf: ST | NumpyST | Array1D[NumpyST],
         discounting_rate: float = 0.0,
-        a0: int | float | Array1D[np.float64] | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         period_before_discounting: float = 1.0,
     ) -> None:
         super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)
@@ -175,9 +169,10 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
             period_before_discounting=self.period_before_discounting,
         )
 
+    @override
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline, npv = self._expected_costs.expected_net_present_value(tf, nb_steps)
         if total_sum and npv.ndim == 2:
             return timeline, np.sum(npv, axis=0)
@@ -191,21 +186,21 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
     ) -> np.float64: ...
-    @overload
-    def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]: ...
+    @override
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
-        asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value()
+        asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value(
+            total_sum=total_sum
+        )
         if total_sum:
             return np.sum(asymptotic_npv)
         return asymptotic_npv
 
+    @override
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
             tf, nb_steps
         )
@@ -221,15 +216,14 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
     ) -> np.float64: ...
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]: ...
+    @override
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
         asymptotic_eeac = (
-            self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+            self._expected_costs.asymptotic_expected_equivalent_annual_cost(
+                total_sum=total_sum
+            )
         )
         if total_sum:
             return np.sum(asymptotic_eeac)
@@ -262,7 +256,7 @@ class RunToFailurePolicy(BaseRunToFailure):
     .. [1] Van der Weide, J. A. M., & Van Noortwijk, J. M. (2008). Renewal
         theory with exponential and hyperbolic discounting. Probability in
         the Engineering and Informational Sciences, 22(1), 53-74.
-    """
+    """  # noqa: E501
 
     @property
     def _stochastic_process(self) -> RenewalRewardProcess:
@@ -281,9 +275,10 @@ class RunToFailurePolicy(BaseRunToFailure):
             ),
         )
 
+    @override
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
@@ -297,10 +292,7 @@ class RunToFailurePolicy(BaseRunToFailure):
     def asymptotic_expected_net_present_value(
         self, total_sum: Literal[True]
     ) -> np.float64: ...
-    @overload
-    def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]: ...
+    @override
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
@@ -309,9 +301,10 @@ class RunToFailurePolicy(BaseRunToFailure):
             return np.sum(asymptotic_npv)
         return asymptotic_npv
 
+    @override
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array[AtMost2D, np.float64]]:
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
             tf, nb_steps
         )
@@ -322,15 +315,12 @@ class RunToFailurePolicy(BaseRunToFailure):
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[False]
-    ) -> np.float64 | Array1D[np.float64]: ...
+    ) -> Array1D[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: Literal[True]
     ) -> np.float64: ...
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]: ...
+    @override
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
@@ -341,23 +331,30 @@ class RunToFailurePolicy(BaseRunToFailure):
             return np.sum(asymptotic_eeac)
         return asymptotic_eeac
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
+    ) -> StochasticSampleMapping:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
+        nb_samples : int
+            The size of the desired sample
+        time_window : tuple of two floats
+            Time window in which data are sampled
         seed : int, optional
             Random seed, by default None.
 
         """
-        return self._stochastic_process.sample(tf, t0, size, seed)
+        return self._stochastic_process.sample(
+            nb_samples, time_window, a0=self.a0, seed=seed
+        )
