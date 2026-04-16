@@ -428,7 +428,7 @@ class RenewalRewardProcess(RenewalProcess):
         z = renewal_equation_solver(
             timeline,
             lifetime_model_applied,
-            lambda t: lifetime_model_applied.ls_integrate(
+            lambda t: self.lifetime_model.ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x) * self.discounting.factor(x)
                 ),
@@ -439,20 +439,22 @@ class RenewalRewardProcess(RenewalProcess):
             discounting=self.discounting,
         )
 
+
         first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
-        z = delayed_renewal_equation_solver(
-            timeline,
-            z,
-            first_lifetime_model_applied,
-            lambda t: first_lifetime_model_applied.ls_integrate(
+        delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model, a0=a0).ls_integrate(
                 lambda x: (
-                    self.first_reward.conditional_expectation(x)
-                    * self.discounting.factor(x)
+                    self.first_reward.conditional_expectation(x + (a0 or 0)) * self.discounting.factor(x + (a0 or 0))
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
                 deg=15,
             ),  # reward partial expectation
+        
+        z = delayed_renewal_equation_solver(
+            timeline,
+            z,
+            first_lifetime_model_applied,
+            delayed_evaluated_func,
             discounting=self.discounting,
         )
         return np.squeeze(timeline), np.squeeze(
@@ -501,7 +503,7 @@ class RenewalRewardProcess(RenewalProcess):
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
-        ly = lifetime_model_applied.ls_integrate(
+        ly = self.lifetime_model.ls_integrate(
             lambda x: (
                 self.discounting.factor(x) * self.reward.conditional_expectation(x)
             ),
@@ -518,10 +520,10 @@ class RenewalRewardProcess(RenewalProcess):
             )
         )  # () or (m,)
         ly1 = np.squeeze(
-                first_lifetime_model_applied.ls_integrate(
+                get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).ls_integrate(
                 lambda x: (
-                    self.discounting.factor(x)
-                    * self.first_reward.conditional_expectation(x)
+                    self.discounting.factor(x + (a0 or 0))
+                    * self.first_reward.conditional_expectation(x + (a0 or 0))
                 ),
                 0.0,
                 np.inf,
@@ -586,7 +588,7 @@ class RenewalRewardProcess(RenewalProcess):
         if self.discounting_rate == 0.0:
             return np.squeeze(
                 np.asarray(
-                    lifetime_model_applied.ls_integrate(
+                    self.lifetime_model.ls_integrate(
                         lambda x: self.reward.conditional_expectation(x),
                         np.float64(0.0),
                         np.asarray(np.inf),

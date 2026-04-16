@@ -490,12 +490,10 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @property
     @requires_ar
     def _stochastic_process(self) -> RenewalRewardProcess:
-        first_reward = AgeReplacementReward(self.cf, self.cp, self.tr1) if self.a0 is not None else None
         return RenewalRewardProcess(
                 self.baseline_model,
                 AgeReplacementReward(self.cf,self.cp,self.ar),
                 discounting_rate=self.discounting_rate,
-                first_reward=first_reward
             )
 
     @requires_ar
