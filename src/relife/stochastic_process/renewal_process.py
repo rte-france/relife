@@ -128,7 +128,7 @@ class RenewalProcess(ParametricModel):
         z = renewal_equation_solver(
             timeline,
             lifetime_model_applied,
-            lambda t: self.lifetime_model.cdf(np.minimum(t, ar or np.inf))
+            lambda t: self.lifetime_model.cdf(np.minimum(t, (ar or np.inf)))
         )
 
         first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
@@ -430,7 +430,7 @@ class RenewalRewardProcess(RenewalProcess):
             lifetime_model_applied,
             lambda t: self.lifetime_model.ls_integrate(
                 lambda x: (
-                    self.reward.conditional_expectation(x) * self.discounting.factor(x)
+                    self.reward.conditional_expectation(x) * self.discounting.factor(np.minimum(x,(ar or np.inf)))
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
@@ -443,7 +443,7 @@ class RenewalRewardProcess(RenewalProcess):
         first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
         delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model, a0=a0).ls_integrate(
                 lambda x: (
-                    self.first_reward.conditional_expectation(x + (a0 or 0)) * self.discounting.factor(x + (a0 or 0))
+                    self.first_reward.conditional_expectation(x) * self.discounting.factor(np.minimum(x,(ar or np.inf)))
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
@@ -505,7 +505,7 @@ class RenewalRewardProcess(RenewalProcess):
             return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
             lambda x: (
-                self.discounting.factor(x) * self.reward.conditional_expectation(x)
+                self.discounting.factor(np.minimum(x,(ar or np.inf))) * self.reward.conditional_expectation(x)
             ),
             0.0,
             np.inf,
@@ -519,11 +519,12 @@ class RenewalRewardProcess(RenewalProcess):
                 lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
             )
         )  # () or (m,)
+        first_ar = (ar or np.inf) - (a0 or 0)
         ly1 = np.squeeze(
                 get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).ls_integrate(
                 lambda x: (
-                    self.discounting.factor(x + (a0 or 0))
-                    * self.first_reward.conditional_expectation(x + (a0 or 0))
+                    self.discounting.factor(np.minimum(x,first_ar))
+                    * self.first_reward.conditional_expectation(x)
                 ),
                 0.0,
                 np.inf,
