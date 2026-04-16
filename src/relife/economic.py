@@ -1,11 +1,10 @@
-# pyright: basic
-
 from abc import ABC, abstractmethod
 from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from optype.numpy import ArrayND
+from typing_extensions import override
 
 from relife.utils import to_numpy_float64
 
@@ -23,7 +22,9 @@ class Reward(ABC):
         pass
 
     @abstractmethod
-    def sample(self, time: ST | NumpyST | ArrayND[NumpyST]) -> NDArray[np.float64]:
+    def sample(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | NDArray[np.float64]:
         """Reward conditional sampling.
 
         Parameters
@@ -57,6 +58,7 @@ class RunToFailureReward(Reward):
     def __init__(self, cf: ST | NumpyST | ArrayND[NumpyST]) -> None:
         self.cf = to_numpy_float64(cf)
 
+    @override
     def conditional_expectation(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
@@ -64,6 +66,7 @@ class RunToFailureReward(Reward):
             return np.ones_like(time) * self.cf
         return self.cf
 
+    @override
     def sample(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
@@ -101,11 +104,13 @@ class AgeReplacementReward(Reward):
         self.cp = to_numpy_float64(cp)
         self.ar = to_numpy_float64(ar)
 
+    @override
     def conditional_expectation(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
         return np.where(time < self.ar, self.cf, self.cp)
 
+    @override
     def sample(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
@@ -139,6 +144,7 @@ class ExponentialDiscounting(Discounting):
     def __init__(self, rate: float = 0.0) -> None:
         self.rate = rate
 
+    @override
     def factor(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
@@ -148,6 +154,7 @@ class ExponentialDiscounting(Discounting):
             return np.ones_like(time, dtype=np.float64)
         return np.float64(1)
 
+    @override
     def annuity_factor(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | NDArray[np.float64]:
