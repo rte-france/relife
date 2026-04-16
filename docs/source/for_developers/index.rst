@@ -67,14 +67,13 @@ Make sure Python ``3.11+`` is installed on your machine. Using this Python, crea
 a `Python virtual environment <https://docs.python.org/3/library/venv.html>`_ with
 the name of your choice. **Activate your virtual environment**. Install ReLife in
 `editable mode <https://setuptools.pypa.io/en/latest/userguide/development_mode.html>`_
-from the source code with the **dev** or **doc** dependencies depending on your plan to contribute to 
-the development or the documentation.
+from the source code with the dependencies.
 
 .. code-block::
 
     $ (YourEnv) python -m pip install -e . --group dev
 
-For **uv** users, it is possible to install ReLife in developer or documentation mode with the following commands.
+For **uv** users, it is possible to install ReLife with the following commands.
 Note that uv uses `editable installation <https://docs.astral.sh/uv/concepts/projects/dependencies/#editable-dependencies>`_  
 for workspace packages by default.
 
@@ -84,7 +83,7 @@ for workspace packages by default.
 
 4. Configure your IDE
 
-If you installed the **dev** dependencies group, the commands above should have installed `ruff <https://docs.astral.sh/ruff/>`_.
+The commands above should have installed `ruff <https://docs.astral.sh/ruff/>`_.
 Ruff is a powerful all-in-one tool for code linting and formatting.
 
 - The `Ruff formatter <https://docs.astral.sh/ruff/formatter/>`_ is an extremely fast Python code formatter designed as a drop-in replacement for Black.
