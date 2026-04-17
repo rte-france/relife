@@ -215,18 +215,20 @@ def test_aft_pph_weibull_eq(insulator_string_data):
         entry=insulator_string_data["entry"],
     )
 
-    assert weibull_pph.baseline.params == approx(weibull_aft.baseline.params, rel=1e-3)
-    assert weibull_pph.covar_effect.set_params == approx(
-        -weibull_aft.baseline.params[0] * weibull_aft.covar_effect.set_params,
+    assert weibull_pph.baseline.get_params() == approx(
+        weibull_aft.baseline.get_params(), rel=1e-3
+    )
+    assert weibull_pph.covar_effect.get_params() == approx(
+        -weibull_aft.baseline.get_params()[0] * weibull_aft.covar_effect.get_params(),
         rel=1e-3,
     )
 
 
 def test_negative_log(regression_likelihood):
-    params = regression_likelihood.model.params.copy()
+    params = regression_likelihood.model.get_params().copy()
     assert isinstance(regression_likelihood.negative_log(params), float)
 
 
 def test_jac_negative_log(regression_likelihood):
-    params = regression_likelihood.model.params.copy()
+    params = regression_likelihood.model.get_params().copy()
     assert regression_likelihood.jac_negative_log(params).shape == (params.size,)

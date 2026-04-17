@@ -9,7 +9,7 @@ from typing_extensions import override
 
 from relife.base import FittingResults, MaximumLikelihoodOptimizer, OptimizerConfig
 from relife.lifetime_model._regression import LinearCovarEffect
-from relife.utils import to_column_2d
+from relife.utils import to_column_2d_if_1d
 
 __all__ = [
     "SemiParametricProportionalHazard",
@@ -38,18 +38,18 @@ class CoxData:
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
     ) -> None:
-        self.time = to_column_2d(time)
+        self.time = to_column_2d_if_1d(time)
         self.event = (
-            to_column_2d(event)
+            to_column_2d_if_1d(event)
             if event is not None
             else np.ones_like(self.time, dtype=np.bool_)
         )
         self.entry = (
-            to_column_2d(entry)
+            to_column_2d_if_1d(entry)
             if entry is not None
             else np.zeros_like(self.time, dtype=np.float64)
         )
-        self.covar = to_column_2d(covar)
+        self.covar = to_column_2d_if_1d(covar)
         sizes = [len(x) for x in (self.time, self.event, self.entry, self.covar)]
 
         if len(set(sizes)) != 1:
@@ -255,14 +255,13 @@ class SemiParametricProportionalHazard:
         self._sf0 = None
         self._training_data = None
 
-    @property
-    def params(self):
+    def get_params(self) -> Array1D[np.float64] | None:
         if self.covar_effect is None:
             return None
-        return self.covar_effect.params
+        return self.covar_effect.get_params()
 
     @property
-    def nb_params(self):
+    def nb_params(self) -> int:
         if self.covar_effect is None:
             return None
         return self.covar_effect.nb_params
@@ -383,7 +382,7 @@ class SemiParametricProportionalHazard:
         **kwargs: Any,
     ) -> "CoxPartialLifetimeLikelihood|BreslowPartialLifetimeLikelihood|EfronPartialLifetimeLikelihood":
         # init covar_effect
-        covar = to_column_2d(covar)
+        covar = to_column_2d_if_1d(covar)
         self.covar_effect = LinearCovarEffect((None,) * covar.shape[-1])
 
         x0 = kwargs.get("x0", np.random.random(covar.shape[1]))

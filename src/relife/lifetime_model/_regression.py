@@ -26,7 +26,7 @@ from scipy.optimize import Bounds
 from typing_extensions import override
 
 from relife.base import OptimizerConfig, ParametricModel
-from relife.utils import to_column_2d
+from relife.utils import to_column_2d_if_1d
 
 from ._base import (
     FittableParametricLifetimeModel,
@@ -169,7 +169,9 @@ class LinearCovarEffect(ParametricModel):
                 {arr_covar.shape}
                 """
             )
-        g = np.exp(np.sum(self.params * arr_covar, axis=-1, keepdims=True))  # (m, 1)
+        g = np.exp(
+            np.sum(self.get_params() * arr_covar, axis=-1, keepdims=True)
+        )  # (m, 1)
         if arr_covar.ndim <= 1:
             return np.float64(g.item())
         return g
@@ -238,7 +240,7 @@ class ParametricLifetimeRegression(
         -------
         out : ndarray
         """
-        return self.covar_effect.params
+        return self.covar_effect.get_params()
 
     @property
     def nb_coef(self) -> int:
@@ -465,7 +467,7 @@ class ParametricLifetimeRegression(
     ) -> LifetimeLikelihood[Self]:
         if not isinstance(args, np.ndarray):
             raise ValueError("args is expected to be covar only.")
-        covar = to_column_2d(args)
+        covar = to_column_2d_if_1d(args)
         regression = type(self)(
             type(self.baseline)(), coefficients=(0.0,) * covar.shape[-1]
         )  # init new regression object with appropriate number of covar
@@ -501,7 +503,7 @@ class ParametricLifetimeRegression(
         if not isinstance(args, np.ndarray):
             raise ValueError("args is expected to be covar only.")
         self.covar_effect = LinearCovarEffect(
-            (None,) * to_column_2d(np.asarray(args, dtype=np.float64)).shape[-1]
+            (None,) * to_column_2d_if_1d(np.asarray(args, dtype=np.float64)).shape[-1]
         )  # changes params structure depending on number of covar
         return super().fit(time, args, event, entry, **kwargs)
 
@@ -509,8 +511,8 @@ class ParametricLifetimeRegression(
 def init_regression_params_from_lifetimes(
     model: ParametricLifetimeRegression, data: LifetimeData
 ) -> Array1D[np.float64]:
-    param0 = np.zeros_like(model.params, dtype=np.float64)
-    param0[-model.baseline.params.size :] = init_distrib_params_from_lifetimes(
+    param0 = np.zeros_like(model.get_params(), dtype=np.float64)
+    param0[-model.baseline.get_params().size :] = init_distrib_params_from_lifetimes(
         model.baseline, data
     )
     return param0

@@ -34,8 +34,8 @@ class Kijima1Process(ParametricModel, Generic[M]):
         self.fitting_results = None
 
     @property
-    def q(self) -> float:
-        return self.params[0]
+    def q(self) -> np.float64:
+        return self.get_params()[0]
 
     def freeze(self, *args: ST | NumpyST | ArrayND[NumpyST]) -> FrozenKijima1Process[M]:
         """
@@ -185,8 +185,8 @@ class Kijima2Process(ParametricModel, Generic[M]):
         self.fitting_results = None
 
     @property
-    def q(self) -> float:
-        return self.params[0]
+    def q(self) -> np.float64:
+        return self.get_params()[0]
 
     def freeze(self, *args: ST | NumpyST | ArrayND[NumpyST]) -> FrozenKijima2Process[M]:
         """

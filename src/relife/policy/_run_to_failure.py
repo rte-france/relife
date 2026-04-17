@@ -12,7 +12,7 @@ from relife.lifetime_model import LeftTruncatedModel
 from relife.lifetime_model._base import ParametricLifetimeModel
 from relife.stochastic_process import RenewalRewardProcess
 from relife.stochastic_process._sample import StochasticSampleMapping
-from relife.utils import flatten_if_at_least_2d, to_column_2d
+from relife.utils import flatten_if_at_least_2d, to_column_2d_if_1d
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
 
@@ -82,10 +82,10 @@ class BaseRunToFailure(ReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     ):
         super().__init__(
             lifetime_model,
-            {"cf": to_column_2d(cf)},
+            {"cf": to_column_2d_if_1d(cf)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = to_column_2d(a0) if a0 is not None else a0
+        self._a0 = to_column_2d_if_1d(a0) if a0 is not None else a0
 
     @property
     def a0(self) -> np.float64 | Array1D[np.float64] | None:
@@ -99,8 +99,7 @@ class BaseRunToFailure(ReplacementPolicy[ParametricLifetimeModel[()]], ABC):
             return self._a0
         return flatten_if_at_least_2d(self._a0)
 
-    @property
-    def cf(self) -> np.float64 | Array1D[np.float64]:
+    def get_cf(self) -> np.float64 | Array1D[np.float64]:
         """Cost of failure.
 
         Returns
@@ -110,7 +109,7 @@ class BaseRunToFailure(ReplacementPolicy[ParametricLifetimeModel[()]], ABC):
         return flatten_if_at_least_2d(self._cost_structure["cf"])
 
     def set_cf(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
-        self._cost_structure["cf"] = to_column_2d(value)
+        self._cost_structure["cf"] = to_column_2d_if_1d(value)
 
 
 class OneCycleRunToFailurePolicy(BaseRunToFailure):
@@ -158,13 +157,13 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         if self.a0 is None:
             return OneCycleExpectedCosts(
                 self.baseline_model,
-                RunToFailureReward(self.cf),
+                RunToFailureReward(self.get_cf()),
                 discounting_rate=self.discounting_rate,
                 period_before_discounting=self.period_before_discounting,
             )
         return OneCycleExpectedCosts(
             LeftTruncatedModel(self.baseline_model).freeze(self.a0),
-            RunToFailureReward(self.cf),
+            RunToFailureReward(self.get_cf()),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
         )
@@ -263,12 +262,12 @@ class RunToFailurePolicy(BaseRunToFailure):
         if self.a0 is None:
             return RenewalRewardProcess(
                 self.baseline_model,
-                RunToFailureReward(self.cf),
+                RunToFailureReward(self.get_cf()),
                 discounting_rate=self.discounting_rate,
             )
         return RenewalRewardProcess(
             self.baseline_model,
-            RunToFailureReward(self.cf),
+            RunToFailureReward(self.get_cf()),
             discounting_rate=self.discounting_rate,
             first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(
                 self.a0

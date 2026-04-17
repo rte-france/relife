@@ -53,4 +53,4 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"relife.data.csv" = ["*.csv"]
+"relife.datasets.csv" = ["*.csv"]

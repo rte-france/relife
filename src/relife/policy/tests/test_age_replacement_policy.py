@@ -64,7 +64,7 @@ class TestOneCycleAgeReplacementPolicy:
             cp,
             discounting_rate=discounting_rate,
             period_before_discounting=0.1,
-            ar=policy.ar + eps,
+            ar=policy.get_ar + eps,
         )
         suboptimal_policy2 = OneCycleAgeReplacementPolicy(
             distribution,
@@ -72,7 +72,7 @@ class TestOneCycleAgeReplacementPolicy:
             cp,
             discounting_rate=discounting_rate,
             period_before_discounting=0.1,
-            ar=policy.ar - eps,
+            ar=policy.get_ar - eps,
         )
         assert np.all(
             suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
@@ -135,10 +135,18 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         ).optimize()
         suboptimal_policy1 = AgeReplacementPolicy(
-            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar + eps
+            distribution,
+            cf,
+            cp,
+            discounting_rate=discounting_rate,
+            ar=policy.get_ar + eps,
         )
         suboptimal_policy2 = AgeReplacementPolicy(
-            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar - eps
+            distribution,
+            cf,
+            cp,
+            discounting_rate=discounting_rate,
+            ar=policy.get_ar - eps,
         )
 
         assert np.all(

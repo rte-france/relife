@@ -1,23 +1,25 @@
+from contextlib import suppress
 from importlib.metadata import PackageNotFoundError, version
 
-try:
+from . import (
+    datasets,
+    economic,
+    lifetime_model,
+    policy,
+    quadrature,
+    stochastic_process,
+    utils,
+)
+
+with suppress(PackageNotFoundError):
     __version__ = version("relife")
-except PackageNotFoundError:
-    # package is not installed
-    pass
 
-__all__: list[str] = []
-
-_submodules = [
-    "data",
+__all__ = [
+    "datasets",
     "lifetime_model",
-    "likelihood",
     "policy",
     "stochastic_process",
     "quadrature",
     "economic",
-    "typing",
     "utils",
 ]
-
-__all__ += _submodules

@@ -22,7 +22,7 @@ from scipy import stats
 from scipy.optimize import approx_fprime, minimize
 from typing_extensions import override
 
-__all__ = ["ParametricModel", "FrozenParametricModel", "MaximumLikelihoodOptimizer"]
+__all__ = ["ParametricModel", "MaximumLikelihoodOptimizer"]
 
 
 @final
@@ -132,8 +132,7 @@ class ParametricModel:
         self._params = _Parameters(**kwparams)
         self._baseline_models = {}
 
-    @property
-    def params(self) -> Array1D[np.float64]:
+    def get_params(self) -> Array1D[np.float64]:
         """
         Get the parameters of this model.
 

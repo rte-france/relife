@@ -72,6 +72,6 @@ def test_cox_params_eq(insulator_string_data):
     )
     sf_relife = re_model.sf(covar=covar[:2, :], se=False)
 
-    assert re_model.params == approx(insulator_data_cox_params, rel=1e-3)
+    assert re_model.get_params() == approx(insulator_data_cox_params, rel=1e-3)
     assert sf_relife[0][:19] == approx(timeline_head, rel=1e-3)
     assert np.transpose(sf_relife[1][:, :19]) == approx(sf_head, rel=1e-3)

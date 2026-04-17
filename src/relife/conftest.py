@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from relife.data import load_insulator_string, load_power_transformer
+from relife.datasets import load_insulator_string, load_power_transformer
 from relife.lifetime_model import (
     AgeReplacementModel,
     Exponential,

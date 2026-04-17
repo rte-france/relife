@@ -23,7 +23,7 @@ from typing_extensions import override
 
 from relife.base import OptimizerConfig
 from relife.quadrature import laguerre_quadrature, legendre_quadrature
-from relife.utils import to_column_2d, to_numpy_float64
+from relife.utils import to_column_2d_if_1d
 
 from ._base import (
     FittableParametricLifetimeModel,
@@ -252,7 +252,7 @@ class Exponential(LifetimeDistribution):
         super().__init__(rate=rate)
 
     @property
-    def rate(self) -> float:
+    def rate(self) -> np.float64:
         """
         Get the rate value.
 
@@ -260,7 +260,7 @@ class Exponential(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["rate"]
+        return self.get_params()[0]
 
     @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
@@ -274,7 +274,7 @@ class Exponential(LifetimeDistribution):
     def chf(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return to_numpy_float64(self.rate * time)
+        return self.rate * time
 
     @override
     @document_args(
@@ -375,7 +375,7 @@ class Weibull(LifetimeDistribution):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:
+    def shape(self) -> np.float64:
         """
         Get the shape value.
 
@@ -383,10 +383,10 @@ class Weibull(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["shape"]
+        return self.get_params()[0]
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self) -> np.float64:
         """
         Returns the rate value.
 
@@ -394,7 +394,7 @@ class Weibull(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["rate"]
+        return self.get_params()[1]
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -461,7 +461,6 @@ class Weibull(LifetimeDistribution):
                 * (1 + self.shape * np.log(self.rate * time)),
                 self.shape**2 * (self.rate * time) ** (self.shape - 1),
             ),
-            dtype=np.float64,
         )
 
     @override
@@ -472,7 +471,6 @@ class Weibull(LifetimeDistribution):
                 np.log(self.rate * time) * (self.rate * time) ** self.shape,
                 self.shape * time * (self.rate * time) ** (self.shape - 1),
             ),
-            dtype=np.float64,
         )
 
     @override
@@ -483,7 +481,6 @@ class Weibull(LifetimeDistribution):
             * (self.shape - 1)
             * self.rate**2
             * (self.rate * time) ** (self.shape - 2),
-            dtype=np.float64,
         )
 
 
@@ -531,7 +528,7 @@ class Gompertz(LifetimeDistribution):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self) -> np.float64:
         """
         Get the shape value.
 
@@ -539,10 +536,10 @@ class Gompertz(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["shape"]
+        return self.get_params()[0]
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self) -> np.float64:
         """
         Get the rate value.
 
@@ -550,7 +547,7 @@ class Gompertz(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["rate"]
+        return self.get_params()[1]
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -607,7 +604,6 @@ class Gompertz(LifetimeDistribution):
                 self.rate * np.exp(self.rate * time),
                 self.shape * np.exp(self.rate * time) * (1 + self.rate * time),
             ),
-            dtype=np.float64,
         )
 
     @override
@@ -618,7 +614,6 @@ class Gompertz(LifetimeDistribution):
                 np.expm1(self.rate * time),
                 self.shape * time * np.exp(self.rate * time),
             ),
-            dtype=np.float64,
         )
 
     @override
@@ -683,12 +678,12 @@ class Gamma(LifetimeDistribution):
         def func(
             s: ST | NumpyST | ArrayND[NumpyST],
         ) -> np.float64 | ArrayND[np.float64]:
-            return to_numpy_float64(np.log(s) * s ** (self.shape - 1))
+            return np.log(s) * s ** (self.shape - 1)
 
         return laguerre_quadrature(func, x, deg=100)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self) -> np.float64:
         """
         Get the shape value.
 
@@ -696,10 +691,10 @@ class Gamma(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["shape"]
+        return self.get_params()[0]
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self) -> np.float64:
         """
         Get the rate value.
 
@@ -707,14 +702,14 @@ class Gamma(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["rate"]
+        return self.get_params()[1]
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def hf(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        x = np.asarray(self.rate * time, dtype=np.float64)
+        x = np.asarray(self.rate * time)
         return self.rate * x ** (self.shape - 1) * np.exp(-x) / self._uppergamma(x)
 
     @override
@@ -722,7 +717,7 @@ class Gamma(LifetimeDistribution):
     def chf(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        x = np.asarray(self.rate * time, dtype=np.float64)
+        x = np.asarray(self.rate * time)
         return np.log(gamma(self.shape)) - np.log(self._uppergamma(x))
 
     @override
@@ -732,7 +727,7 @@ class Gamma(LifetimeDistribution):
         returns=[docscrape.Parameter("out", "np.float64", [""])],
     )
     def mean(self) -> np.float64 | ArrayND[np.float64]:
-        return np.float64(self.shape / self.rate)
+        return self.shape / self.rate
 
     @override
     @document_args(
@@ -741,7 +736,7 @@ class Gamma(LifetimeDistribution):
         returns=[docscrape.Parameter("out", "np.float64", [""])],
     )
     def var(self) -> np.float64 | ArrayND[np.float64]:
-        return np.float64(self.shape / (self.rate**2))
+        return self.shape / (self.rate**2)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -753,7 +748,6 @@ class Gamma(LifetimeDistribution):
             / self.rate
             * np.asarray(
                 gammainccinv(self.shape, np.exp(-cumulative_hazard_rate)),
-                dtype=np.float64,
             )
         )
 
@@ -780,14 +774,13 @@ class Gamma(LifetimeDistribution):
             digamma(self.shape) - self._jac_uppergamma_shape(x) / self._uppergamma(x),
             (x ** (self.shape - 1) * time * np.exp(-x) / self._uppergamma(x)),
         )
-        return np.stack(jac, dtype=np.float64)
+        return np.stack(jac)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
         return np.asarray(
             self.hf(time) * ((self.shape - 1) / time - self.rate + self.hf(time)),
-            dtype=np.float64,
         )
 
     @override
@@ -842,7 +835,7 @@ class LogLogistic(LifetimeDistribution):
         super().__init__(shape=shape, rate=rate)
 
     @property
-    def shape(self) -> float:  # optional but better for clarity and type checking
+    def shape(self) -> np.float64:
         """
         Get the shape value.
 
@@ -850,10 +843,10 @@ class LogLogistic(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["shape"]
+        return self.get_params()[0]
 
     @property
-    def rate(self) -> float:  # optional but better for clarity and type checking
+    def rate(self) -> np.float64:
         """
         Get the rate value.
 
@@ -861,7 +854,7 @@ class LogLogistic(LifetimeDistribution):
         -------
         out : float
         """
-        return self._params["rate"]
+        return self.get_params()[1]
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -924,7 +917,7 @@ class LogLogistic(LifetimeDistribution):
             (self.rate * x ** (self.shape - 1) / (1 + x**self.shape) ** 2)
             * (self.shape**2 / self.rate),
         )
-        return np.stack(jac, dtype=np.float64)
+        return np.stack(jac)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -934,7 +927,7 @@ class LogLogistic(LifetimeDistribution):
             (x**self.shape / (1 + x**self.shape)) * np.log(self.rate * time),
             (x**self.shape / (1 + x**self.shape)) * (self.shape / self.rate),
         )
-        return np.stack(jac, dtype=np.float64)
+        return np.stack(jac)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
@@ -1181,7 +1174,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[AnyUnsignedInt]):
     ) -> LifetimeLikelihood[Self]:
         if not isinstance(args, np.ndarray):
             raise ValueError("args is expected to be covar only.")
-        args = to_column_2d(args)
+        args = to_column_2d_if_1d(args)
         lifetime_data = LifetimeData(time, args, event, entry)
         x0 = kwargs.get(
             "x0", init_distrib_params_from_lifetimes(self.baseline, lifetime_data)

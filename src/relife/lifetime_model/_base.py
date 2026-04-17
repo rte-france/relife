@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import functools
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import field
@@ -43,7 +44,7 @@ from relife.base import (
     ParametricModel,
 )
 from relife.quadrature import legendre_quadrature, unweighted_laguerre_quadrature
-from relife.utils import to_column_2d
+from relife.utils import to_column_2d_if_1d
 
 __all__ = [
     "ParametricLifetimeModel",
@@ -343,11 +344,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
 
         def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
-            return np.asarray(self.sf(x, *args) - probability, dtype=float)
+            return np.asarray(self.sf(x, *args) - probability)
 
         return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
             func,  # pyright: ignore[reportArgumentType]
-            x0=np.zeros_like(probability, dtype=float),
+            x0=np.zeros_like(probability),
             args=args,
         )
 
@@ -783,6 +784,24 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
     ) -> np.float64 | ArrayND[np.float64]:
         return self.unfrozen.mrl(time, *self.args)
 
+    @override
+    def __getattr__(self, key: str) -> Any:
+        # __getattr__ needed to catch jac_<func> if it exists
+        frozen_type = self.unfrozen.__class__.__name__
+        try:
+            attr = getattr(self.unfrozen, key)
+        except AttributeError as err:
+            raise AttributeError(
+                f"Frozen {frozen_type} has no attribute {key}"
+            ) from err
+
+        def wrapper(*args: Any, **kwargs: Any):
+            return attr(*(*args, *self.args), **kwargs)
+
+        if inspect.ismethod(attr):
+            return wrapper
+        return attr
+
 
 # typeguard, narrowing type
 def is_frozen_parametric_lifetime_model(
@@ -1039,7 +1058,9 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
-        optimizer = self.init_likelihood(time, args, event, entry, **kwargs)
+        optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
+            time, args, event, entry, **kwargs
+        )
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
@@ -1147,27 +1168,27 @@ class LifetimeData:
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
     ) -> None:
-        column_time = to_column_2d(time)
+        column_time = to_column_2d_if_1d(time)
         if column_time.shape[-1] == 2 and event is not None:
             raise ValueError("If time is given as intervals, event must be None")
         column_event = None
         if column_time.shape[-1] == 1:
             column_event = (
-                to_column_2d(event)
+                to_column_2d_if_1d(event)
                 if event is not None
                 else np.ones_like(time, dtype=np.bool_)
             )
         column_entry = (
-            to_column_2d(entry)
+            to_column_2d_if_1d(entry)
             if entry is not None
             else np.zeros(len(time), dtype=np.float64)
         )
         if np.any(column_time <= column_entry):
             raise ValueError("All time values must be greater than entry values")
         if isinstance(args, tuple):
-            column_args = tuple(to_column_2d(arg) for arg in args)
+            column_args = tuple(to_column_2d_if_1d(arg) for arg in args)
         elif isinstance(args, np.ndarray):
-            column_args = (to_column_2d(args),)
+            column_args = (to_column_2d_if_1d(args),)
         else:
             column_args = ()
         sizes = [
@@ -1312,7 +1333,7 @@ def _jac_complete_time_contrib(
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.complete_time.size == 0:
-        return np.zeros_like(model.params)
+        return np.zeros_like(model.get_params())
     jac = -model.jac_pdf(data.complete_time, *data.complete_time_args) / model.pdf(
         data.complete_time, *data.complete_time_args
     )
@@ -1349,7 +1370,7 @@ def _jac_censored_time_contrib(
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.censored_time.size == 0:
-        return np.zeros_like(model.params)
+        return np.zeros_like(model.get_params())
     if data.censored_time.shape[-1] > 1:
         # interval censored time
         jac_interval_censored = (
@@ -1388,6 +1409,6 @@ def _jac_left_truncations_contrib(
     data: LifetimeData,
 ) -> NDArray[np.float64]:
     if data.left_truncations.size == 0.0:
-        return np.zeros_like(model.params)
+        return np.zeros_like(model.get_params())
     jac = -model.jac_chf(data.left_truncations, *data.left_truncations_args)
     return np.sum(jac, axis=(1, 2))

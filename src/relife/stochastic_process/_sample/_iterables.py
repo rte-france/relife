@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from typing import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
+from optype.numpy import Array1D
 from typing_extensions import override
 
-from relife.typing._scalars import NumpyFloat
-from relife.utils._array_utils import get_args_nb_assets, reshape_1d_arg
+from relife.utils import get_nb_assets, to_column_2d_if_1d
 
 from ._iterators import (
     Kijima1ProcessIterator,
@@ -29,6 +30,9 @@ __all__ = [
     "Kijima2ProcessIterable",
 ]
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+
 
 class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     def __init__(
@@ -36,23 +40,23 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed: int | None = None,
     ):
         self.process = process
 
         args = list(getattr(self.process.lifetime_model, "args", []))
         if ar is not None:
-            args += [reshape_1d_arg(ar)]
+            args += [to_column_2d_if_1d(ar)]
         if a0 is not None:
-            args += [reshape_1d_arg(a0)]
-        self.nb_assets = get_args_nb_assets(*args)
+            args += [to_column_2d_if_1d(a0)]
+        self.nb_assets = get_nb_assets(*args)
 
         t0, tf = time_window
         if t0 < 0 or tf < 0 or t0 > tf:
             raise ValueError(
-                f"Incorrect time window. Got {time_window}. Values must be positive and first value can't lower than second value."
+                f"Incorrect time window. Got {time_window}. Values must be positive and first value can't lower than second value."  # noqa: E501
             )
         self.time_window = t0, tf
         self.a0 = a0

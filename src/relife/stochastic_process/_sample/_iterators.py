@@ -3,19 +3,22 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import TypeAlias
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
 from numpy.typing import NDArray
+from optype.numpy import Array1D, ArrayND
 from typing_extensions import override
 
-from relife.base import is_frozen
 from relife.lifetime_model import LeftTruncatedModel
-from relife.lifetime_model._base import ParametricLifetimeModel
+from relife.lifetime_model._base import (
+    ParametricLifetimeModel,
+    is_frozen_parametric_lifetime_model,
+)
 from relife.lifetime_model._distribution import (
     EquilibriumDistribution,
 )
-from relife.typing._scalars import NumpyFloat
 
 __all__ = [
     "StochasticDataIterator",
@@ -24,13 +27,18 @@ __all__ = [
     "NonHomogeneousPoissonProcessIterator",
 ]
 
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
+
 
 def _expand_lifetime_model(
     lifetime_model: ParametricLifetimeModel, nb_samples: int
 ) -> ParametricLifetimeModel:
     """
-    Expand a lifetime model by duplicating its arguments. A regression with n_assets assets will result in a new regression with n_assets * n_samples assets.
-    """
+    Expand a lifetime model by duplicating its arguments.
+
+    A regression with n_assets assets will result in a new regression with n_assets * n_samples assets.
+    """  # noqa: E501
     if isinstance(lifetime_model, EquilibriumDistribution):
         return EquilibriumDistribution(
             _expand_lifetime_model(lifetime_model.baseline, nb_samples)
@@ -38,18 +46,18 @@ def _expand_lifetime_model(
 
     expanded_lifetime_model = lifetime_model
 
-    if is_frozen(lifetime_model):
+    if is_frozen_parametric_lifetime_model(lifetime_model):
         broadcasted_args = list(
             np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
         )
-        expanded_lifetime_model = lifetime_model.unfreeze().freeze(
-            *broadcasted_args
-        )
+        expanded_lifetime_model = lifetime_model.unfreeze().freeze(*broadcasted_args)
 
     return expanded_lifetime_model
 
 
-def _reshape_arr_to_assets(x: NumpyFloat | None, nb_assets: int) -> NumpyFloat | None:
+def _reshape_arr_to_assets(
+    x: ST | NumpyST | ArrayND[np.float64] | None, nb_assets: int
+) -> ArrayND[np.float64] | None:
 
     if x is None:
         return None
@@ -208,8 +216,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
@@ -246,7 +254,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         """
         Use the lifetime model modified at each iteration according to each stochastic process specific properties
-        """
+        """  # noqa: E501
 
     @abstractmethod
     def update_ages(
@@ -255,7 +263,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     ) -> None:
         """
         Update ages at each iteration according to each stochastic process specific properties
-        """
+        """  # noqa: E501
 
     def sample_step(
         self,
@@ -328,8 +336,8 @@ class RenewalProcessIterator(StochasticDataIterator):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
@@ -410,8 +418,8 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         process,
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        ar: NumpyFloat | None = None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
         nb_assets: int = 1,
         seed=None,
     ) -> None:
@@ -461,7 +469,7 @@ class Kijima1ProcessIterator(VirtualAgeProcessIterator):
     ):
         """
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
-        """
+        """  # noqa: E501
         # Update asset ages
         self.virtual_ages += self.process.q * residual_time
         self.ages += residual_time
@@ -478,7 +486,7 @@ class Kijima2ProcessIterator(VirtualAgeProcessIterator):
     ):
         """
         In a Kijima Process, the concept of age is virtual, and depends on the q parameter of the process
-        """
+        """  # noqa: E501
         # Update asset ages
         self.virtual_ages = self.process.q * (self.virtual_ages + residual_time)
         self.ages += residual_time

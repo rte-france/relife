@@ -25,7 +25,7 @@ from relife.stochastic_process._non_homogeneous_poisson_process import (
 )
 from relife.utils import (
     flatten_if_at_least_2d,
-    to_column_2d,
+    to_column_2d_if_1d,
     to_numpy_float64,
 )
 
@@ -136,11 +136,11 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
     ):
         super().__init__(
             lifetime_model,
-            {"cf": to_column_2d(cf), "cp": to_column_2d(cp)},
+            {"cf": to_column_2d_if_1d(cf), "cp": to_column_2d_if_1d(cp)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = to_column_2d(a0) if a0 is not None else a0
-        self._ar = to_column_2d(ar) if ar is not None else ar
+        self._a0 = to_column_2d_if_1d(a0) if a0 is not None else a0
+        self._ar = to_column_2d_if_1d(ar) if ar is not None else ar
 
     @property
     def a0(self) -> np.float64 | Array1D[np.float64] | None:
@@ -155,8 +155,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
             return self._a0
         return flatten_if_at_least_2d(self._a0)
 
-    @property
-    def cf(self) -> np.float64 | Array1D[np.float64]:
+    def get_cf(self) -> np.float64 | Array1D[np.float64]:
         """Cost of failure.
 
         Returns
@@ -167,10 +166,9 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
         return flatten_if_at_least_2d(self._cost_structure["cf"])
 
     def set_cf(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
-        self._cost_structure["cf"] = to_column_2d(value)
+        self._cost_structure["cf"] = to_column_2d_if_1d(value)
 
-    @property
-    def cp(self) -> np.float64 | Array1D[np.float64]:
+    def get_cp(self) -> np.float64 | Array1D[np.float64]:
         """Costs of preventive replacements.
 
         Returns
@@ -181,10 +179,9 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
         return flatten_if_at_least_2d(self._cost_structure["cp"])
 
     def set_cp(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
-        self._cost_structure["cp"] = to_column_2d(value)
+        self._cost_structure["cp"] = to_column_2d_if_1d(value)
 
-    @property
-    def ar(self) -> np.float64 | Array1D[np.float64] | None:
+    def get_ar(self) -> np.float64 | Array1D[np.float64] | None:
         """Preventive ages of replacement.
 
         Returns
@@ -198,7 +195,7 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
 
     def set_ar(self, value: ST | NumpyST | Array1D[NumpyST] | None) -> None:
         if value is not None:
-            self._ar = to_column_2d(value)
+            self._ar = to_column_2d_if_1d(value)
         else:
             self._ar = None
 
@@ -210,9 +207,9 @@ class BaseAgeReplacementPolicy(ReplacementPolicy[ParametricLifetimeModel[()]], A
         -------
         np.ndarray
         """
-        if self.a0 is not None and self.ar is not None:
-            return np.maximum(self.ar - self.a0, 0)
-        return self.ar
+        if self.a0 is not None and self.get_ar() is not None:
+            return np.maximum(self.get_ar() - self.a0, 0)
+        return self.get_ar()
 
 
 class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
@@ -280,13 +277,13 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     @property
     def _expected_costs(self) -> OneCycleExpectedCosts:
-        if self.ar is None or self.tr1 is None:
+        if self.get_ar() is None or self.tr1 is None:
             raise ValueError("ar must be set or optimized")
         else:
             if self.a0 is None:
                 return OneCycleExpectedCosts(
                     AgeReplacementModel(self.baseline_model).freeze(self.tr1),
-                    AgeReplacementReward(self.cf, self.cp, self.tr1),
+                    AgeReplacementReward(self.get_cf(), self.get_cp(), self.tr1),
                     discounting_rate=self.discounting_rate,
                     period_before_discounting=self.period_before_discounting,
                 )
@@ -294,7 +291,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
                 AgeReplacementModel(LeftTruncatedModel(self.baseline_model)).freeze(
                     self.tr1, self.a0
                 ),
-                AgeReplacementReward(self.cf, self.cp, self.tr1),
+                AgeReplacementReward(self.get_cf(), self.get_cp(), self.tr1),
                 discounting_rate=self.discounting_rate,
                 period_before_discounting=self.period_before_discounting,
             )
@@ -303,7 +300,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        if self.ar is None:
+        if self.get_ar() is None:
             raise ValueError
         return self._expected_costs.expected_net_present_value(
             tf, nb_steps, total_sum=total_sum
@@ -321,7 +318,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
-        if self.ar is None:
+        if self.get_ar() is None:
             raise ValueError
         return self._expected_costs.asymptotic_expected_net_present_value(
             total_sum=total_sum
@@ -331,11 +328,11 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        if self.ar is None or self.tr1 is None:
+        if self.get_ar() is None or self.tr1 is None:
             raise ValueError
         else:
             # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting  # noqa: E501
-            if np.any(self.period_before_discounting >= self.ar):
+            if np.any(self.period_before_discounting >= self.get_ar()):
                 raise ValueError(
                     "The period before discounting must be lower than ar values"
                 )
@@ -349,15 +346,15 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
                     stacklevel=2,
                 )
 
-            ar = self.ar.copy()
+            ar = self.get_ar().copy()
             #  change ar temporarly to enable computation of eeac (if not, AgeReplacementModel.ls_integrate bounds will be problematic)  # noqa: E501
-            self.set_ar(np.where(self.tr1 == 0, np.inf, self.ar))
+            self.set_ar(np.where(self.tr1 == 0, np.inf, self.get_ar()))
             timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
                 tf, nb_steps
             )
             if eeac.ndim == 2:  # more than one asset
-                eeac[np.where(self.ar == np.inf)[0], :] = np.nan
-            if eeac.ndim == 1 and self.ar == np.inf:
+                eeac[np.where(self.get_ar() == np.inf)[0], :] = np.nan
+            if eeac.ndim == 1 and self.get_ar() == np.inf:
                 eeac.fill(np.nan)
             self.set_ar(ar)
             return (
@@ -377,10 +374,10 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
-        if self.ar is None:
+        if self.get_ar() is None:
             raise ValueError
         # because b = np.minimum(ar, b) in ls_integrate, b can be lower than a depending on period before discounting  # noqa: E501
-        if np.any(self.period_before_discounting >= self.ar):
+        if np.any(self.period_before_discounting >= self.get_ar()):
             raise ValueError(
                 "The period before discounting must be lower than ar values"
             )
@@ -394,9 +391,9 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
                 stacklevel=2,
             )
 
-        ar = self.ar.copy()
+        ar = self.get_ar().copy()
         #  change ar temporarly to enable computation of eeac (if not, AgeReplacementModel.ls_integrate bounds are not in right order)  # noqa: E501
-        self.set_ar(np.where(self.tr1 == 0, np.inf, self.ar))
+        self.set_ar(np.where(self.tr1 == 0, np.inf, self.get_ar()))
         asymptotic_eeac = (
             self._expected_costs.asymptotic_expected_equivalent_annual_cost(
                 total_sum=total_sum
@@ -404,8 +401,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
         if asymptotic_eeac.ndim == 1:  # more than one asset
-            asymptotic_eeac[np.where(self.ar == np.inf)[0]] = np.nan
-        if asymptotic_eeac.ndim == 0 and self.ar == np.inf:
+            asymptotic_eeac[np.where(self.get_ar() == np.inf)[0]] = np.nan
+        if asymptotic_eeac.ndim == 0 and self.get_ar() == np.inf:
             asymptotic_eeac = np.array(np.nan)
         self.set_ar(ar)
         return asymptotic_eeac
@@ -446,7 +443,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
             )
 
         # no idea on how to type eq
-        self.ar = newton(eq, x0)  # () or (m, 1)
+        self.set_ar(newton(eq, x0))  # () or (m, 1)
         return self
 
 
@@ -491,29 +488,29 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     @property
     def _stochastic_process(self) -> RenewalRewardProcess:
-        if self.ar is None or self.tr1 is None:
+        if self.get_ar() is None or self.tr1 is None:
             raise ValueError("ar must be set or optimized")
         if self.a0 is None:
             return RenewalRewardProcess(
-                AgeReplacementModel(self.baseline_model).freeze(self.ar),
-                AgeReplacementReward(self.cf, self.cp, self.ar),
+                AgeReplacementModel(self.baseline_model).freeze(self.get_ar()),
+                AgeReplacementReward(self.get_cf(), self.get_cp(), self.get_ar()),
                 discounting_rate=self.discounting_rate,
             )
         return RenewalRewardProcess(
-            AgeReplacementModel(self.baseline_model).freeze(self.ar),
-            AgeReplacementReward(self.cf, self.cp, self.ar),
+            AgeReplacementModel(self.baseline_model).freeze(self.get_ar()),
+            AgeReplacementReward(self.get_cf(), self.get_cp(), self.get_ar()),
             discounting_rate=self.discounting_rate,
             first_lifetime_model=AgeReplacementModel(
                 LeftTruncatedModel(self.baseline_model)
             ).freeze(self.tr1, self.a0),
-            first_reward=AgeReplacementReward(self.cf, self.cp, self.tr1),
+            first_reward=AgeReplacementReward(self.get_cf(), self.get_cp(), self.tr1),
         )
 
     @override
     def expected_net_present_value(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        if self.ar is None:
+        if self.get_ar() is None:
             raise ValueError("ar must be set or optimized")
         timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
         if total_sum and npv.ndim == 2:
@@ -543,7 +540,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def expected_equivalent_annual_cost(
         self, tf: float, nb_steps: int, total_sum: bool = False
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        if self.ar is None or self.tr1 is None:
+        if self.get_ar() is None or self.tr1 is None:
             raise ValueError
 
         timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
@@ -559,7 +556,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             )
         if eeac.ndim == 2:
             eeac[np.where(np.atleast_1d(self.tr1) == 0)] = np.nan
-        if eeac.ndim == 1 and self.ar == np.inf:
+        if eeac.ndim == 1 and self.get_ar() == np.inf:
             eeac.fill(np.nan)
         if total_sum and eeac.ndim == 2:
             eeac = np.sum(eeac, axis=0)
@@ -577,7 +574,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, total_sum: bool = False
     ) -> np.float64 | Array1D[np.float64]:
-        if self.ar is None or self.tr1 is None:
+        if self.get_ar() is None or self.tr1 is None:
             raise ValueError
 
         asymptotic_eeac = (
@@ -618,7 +615,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             self.baseline_model,
             1.0,
             1.0,
-            ar=self.ar,
+            ar=self.get_ar(),
             a0=self.a0,
             discounting_rate=0.0,
         )
@@ -632,7 +629,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
                 self.baseline_model,
                 1.0,
                 0.0,
-                ar=self.ar,
+                ar=self.get_ar(),
                 a0=self.a0,
                 discounting_rate=0.0,
             )
@@ -764,7 +761,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def __init__(self, nhpp, cr, cp, discounting_rate=0.0, ar=None):
         super().__init__(
             nhpp,
-            cost_structure={"cr": to_column_2d(cr), "cp": to_column_2d(cp)},
+            cost_structure={"cr": to_column_2d_if_1d(cr), "cp": to_column_2d_if_1d(cp)},
             discounting_rate=discounting_rate,
         )
         self.ar = ar
@@ -781,7 +778,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
 
     @cp.setter
     def cp(self, value):
-        self._cost_structure["cp"] = to_column_2d(value)
+        self._cost_structure["cp"] = to_column_2d_if_1d(value)
 
     @property
     def cr(self):
@@ -795,7 +792,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
 
     @cr.setter
     def cr(self, value):
-        self._cost_structure["cr"] = to_column_2d(value)
+        self._cost_structure["cr"] = to_column_2d_if_1d(value)
 
     @property
     def ar(self):
@@ -812,7 +809,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     @ar.setter
     def ar(self, value):
         if value is not None:
-            value = to_column_2d(value)
+            value = to_column_2d_if_1d(value)
             self._ar = value
         else:
             self._ar = None

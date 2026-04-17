@@ -8,7 +8,7 @@ import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs
 from optype.numpy import Array, ArrayND, AtMost2D
 from typing_extensions import override
 
-from relife.utils import to_column_2d
+from relife.utils import to_column_2d_if_1d
 
 from ._base import (
     FrozenParametricLifetimeModel,
@@ -82,7 +82,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     @override
@@ -93,7 +93,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     @override
@@ -104,7 +104,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return super().cdf(time, *(ar, *args))
 
     @override
@@ -115,7 +115,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
@@ -126,7 +126,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
@@ -137,7 +137,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     @override
@@ -148,7 +148,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
@@ -159,7 +159,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         ub = np.array(np.inf)
         # ar.shape == (m, 1)
         mask = time >= ar  # (m, 1) or (m, n)
@@ -181,7 +181,7 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return self.isf(1 - probability, ar, *args)
 
     @override
@@ -189,7 +189,7 @@ class AgeReplacementModel(
     def median(
         self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return self.ppf(np.array(0.5), ar, *args)
 
     @override
@@ -226,7 +226,7 @@ class AgeReplacementModel(
         *args: *Ts,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         b = np.minimum(ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         if func(ar).ndim == 2 and integration.ndim == 1:
@@ -240,7 +240,7 @@ class AgeReplacementModel(
     def moment(
         self, n: int, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return self.ls_integrate(
             lambda x: np.asarray(x**n, dtype=float),
             np.float64(0),
@@ -255,7 +255,7 @@ class AgeReplacementModel(
     def mean(
         self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return self.moment(1, ar, *args)
 
     @override
@@ -263,7 +263,7 @@ class AgeReplacementModel(
     def var(
         self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d(ar)
+        ar = to_column_2d_if_1d(ar)
         return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
 
     def freeze(
@@ -347,7 +347,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().sf(time, a0, *args)
 
     @override
@@ -358,7 +358,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().pdf(time, a0, *args)
 
     @override
@@ -370,7 +370,7 @@ class LeftTruncatedModel(
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     @override
@@ -381,7 +381,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     @override
@@ -392,7 +392,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().cdf(time, *(a0, *args))
 
     @override
@@ -403,7 +403,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return self.baseline.hf(a0 + time, *args)
 
     @override
@@ -414,7 +414,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return (
             self.baseline.ichf(
                 cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
@@ -435,7 +435,7 @@ class LeftTruncatedModel(
         | np.random.RandomState
         | None = None,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         args_add_a0 = (a0, *args)
         return super().rvs(
             size,
@@ -457,7 +457,7 @@ class LeftTruncatedModel(
         *args: *Ts,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().ls_integrate(func, a, b, *(a0, *args), deg=deg)
 
     @override
@@ -465,7 +465,7 @@ class LeftTruncatedModel(
     def mean(
         self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().mean(*(a0, *args))
 
     @override
@@ -473,7 +473,7 @@ class LeftTruncatedModel(
     def median(
         self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().median(*(a0, *args))
 
     @override
@@ -481,7 +481,7 @@ class LeftTruncatedModel(
     def var(
         self, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().var(*(a0, *args))
 
     @override
@@ -489,7 +489,7 @@ class LeftTruncatedModel(
     def moment(
         self, n: int, a0: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().moment(n, *(a0, *args))
 
     @override
@@ -500,7 +500,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().mrl(time, *(a0, *args))
 
     @override
@@ -511,7 +511,7 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d(a0)
+        a0 = to_column_2d_if_1d(a0)
         return super().ppf(probability, *(a0, *args))
 
     def freeze(
