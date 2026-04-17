@@ -11,7 +11,7 @@ from relife.economic import ExponentialDiscounting, Reward
 from relife.lifetime_model._conditional_model import LeftTruncatedModel, get_conditional_lifetime_model
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
-from relife.typing._scalars import NumpyFloat
+from relife.typing._scalars import AnyFloat, NumpyFloat
 
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
@@ -22,6 +22,12 @@ from ._renewal_equations import (
 def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
     return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
+
+
+def apply_bias(t: AnyFloat, delay: NumpyFloat | None = None, censor_value: NumpyFloat | None = None, delay_applied_to_censor=False):
+    if delay_applied_to_censor:
+        return np.minimum(t, (censor_value or np.inf) - (delay or 0))
+    return np.minimum(t + (delay or 0), (censor_value or np.inf))
 
 
 class LifetimeFitArgs(TypedDict):
@@ -128,12 +134,11 @@ class RenewalProcess(ParametricModel):
         z = renewal_equation_solver(
             timeline,
             lifetime_model_applied,
-            lambda t: self.lifetime_model.cdf(np.minimum(t, (ar or np.inf)))
+            lambda t: self.lifetime_model.cdf(apply_bias(t,censor_value=ar))
         )
 
         first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
-        first_ar = (ar or np.inf) - (a0 or 0)
-        delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).cdf(np.minimum(t,first_ar))
+        delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).cdf(apply_bias(t,delay=a0,censor_value=ar,delay_applied_to_censor=True))
         z = delayed_renewal_equation_solver(
             timeline,
             z,
@@ -430,7 +435,7 @@ class RenewalRewardProcess(RenewalProcess):
             lifetime_model_applied,
             lambda t: self.lifetime_model.ls_integrate(
                 lambda x: (
-                    self.reward.conditional_expectation(x) * self.discounting.factor(np.minimum(x,(ar or np.inf)))
+                    self.reward.conditional_expectation(x) * self.discounting.factor(apply_bias(x,censor_value=ar))
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
@@ -443,7 +448,7 @@ class RenewalRewardProcess(RenewalProcess):
         first_lifetime_model_applied = get_conditional_lifetime_model(self.first_lifetime_model,a0=a0, ar=ar)
         delayed_evaluated_func = lambda t: get_conditional_lifetime_model(self.first_lifetime_model, a0=a0).ls_integrate(
                 lambda x: (
-                    self.first_reward.conditional_expectation(x) * self.discounting.factor(np.minimum(x,(ar or np.inf)))
+                    self.first_reward.conditional_expectation(apply_bias(x,delay=a0)) * self.discounting.factor(apply_bias(x,censor_value=ar,delay=a0,delay_applied_to_censor=True))
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
@@ -505,7 +510,7 @@ class RenewalRewardProcess(RenewalProcess):
             return np.full_like(np.squeeze(lf), np.inf)
         ly = self.lifetime_model.ls_integrate(
             lambda x: (
-                self.discounting.factor(np.minimum(x,(ar or np.inf))) * self.reward.conditional_expectation(x)
+                self.discounting.factor(apply_bias(x,censor_value=ar)) * self.reward.conditional_expectation(x)
             ),
             0.0,
             np.inf,
@@ -519,11 +524,10 @@ class RenewalRewardProcess(RenewalProcess):
                 lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
             )
         )  # () or (m,)
-        first_ar = (ar or np.inf) - (a0 or 0)
         ly1 = np.squeeze(
                 get_conditional_lifetime_model(self.first_lifetime_model,a0=a0).ls_integrate(
                 lambda x: (
-                    self.discounting.factor(np.minimum(x,first_ar))
+                    self.discounting.factor(apply_bias(x,censor_value=ar,delay=a0,delay_applied_to_censor=True))
                     * self.first_reward.conditional_expectation(x)
                 ),
                 0.0,
@@ -564,6 +568,7 @@ class RenewalRewardProcess(RenewalProcess):
         if z.ndim == 2 and af.shape != z.shape:  # (m, nb_steps)
             af = np.tile(af, (z.shape[0], 1))  # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
+        # TODO : checker si c'est pas la pdf en 0 du first applied lifetime_model plutôt ici
         q0 = self.reward.conditional_expectation(
             np.asarray(0.0)
         ) * self.lifetime_model.pdf(0.0)
