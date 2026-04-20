@@ -7,7 +7,8 @@ from relife.stochastic_process._sample._iterables import (
     Kijima1ProcessIterable,
     Kijima2ProcessIterable,
 )
-from relife.stochastic_process._sample.tests.utils import select_from_struct
+
+from .utils import select_from_struct
 
 
 class TestBasicSampling:

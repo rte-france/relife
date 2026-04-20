@@ -430,14 +430,13 @@ class NHPPData:
         self.events_assets_ids = np.unique(
             np.asarray(events_assets_ids), return_inverse=True
         )[1].astype(np.uint32)
+        self.assets_ids = None
         if assets_ids is not None:
             self.assets_ids = np.unique(np.asarray(assets_ids), return_inverse=True)[
                 1
             ].astype(np.uint32)
-        if first_ages is not None:
-            self.first_ages = np.asarray(first_ages, dtype=np.float64)
-        if last_ages is not None:
-            self.last_ages = np.asarray(last_ages, dtype=np.float64)
+        self.first_ages = first_ages
+        self.last_ages = last_ages
         self.model_args = model_args
         self._sanity_checks()
 

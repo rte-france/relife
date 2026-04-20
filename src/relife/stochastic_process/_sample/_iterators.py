@@ -50,7 +50,7 @@ def _expand_lifetime_model(
         broadcasted_args = list(
             np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
         )
-        expanded_lifetime_model = lifetime_model.unfreeze().freeze(*broadcasted_args)
+        expanded_lifetime_model = lifetime_model.unfrozen.freeze(*broadcasted_args)
 
     return expanded_lifetime_model
 
