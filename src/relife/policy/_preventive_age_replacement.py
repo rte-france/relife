@@ -40,35 +40,29 @@ __all__ = [
 ]
 
 
-# def requires_ar(method):
-#     @functools.wraps(method)
-#     def wrapper(self, *args, **kwargs):
-#         if not hasattr(self, 'ar') or self.ar is None:
-#             raise ValueError(
-#                 f"Age replacements must be set or optimised before using '{method.__name__}'"
-#             )
-#         return method(self, *args, **kwargs)
-#     return wrapper
+def check_impossible_replacements(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get ar and a0
+        import inspect
+        sig = inspect.signature(func)
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
+        params = bound.arguments
 
+        ar = params.get("ar")
+        a0 = params.get("a0", None)
 
-# def requires_valid_periods(method):
-#     @functools.wraps(method)
-#     def wrapper(self, *args, **kwargs):
-#         if np.any(self.period_before_discounting >= self.ar):
-#             raise ValueError(
-#                 "The period before discounting must be lower than age replacement values"
-#             )
-#         if np.any(self.tr1 == 0):
-#             warnings.warn(
-#                 "Some assets has already been replaced for the first cycle (ar < a0). For these assets, consider manually adjusting age of replacements."
-#             )
-#             ar = self.ar.copy()
-#             self.ar = np.where(self.tr1 == 0, np.inf, self.ar)
-#             result = method(self, *args, **kwargs)
-#             self.ar = ar
-#             return result
-#         return method(self, *args, **kwargs)
-#     return wrapper
+        # check ar is greater than a0 if a0 is provided
+        if a0 is not None:
+            if not (np.atleast_1d(ar) >= np.atleast_1d(a0)).all():
+                raise ValueError(
+                    f"Some assets are using an optimal age of replacement inferior to their current age. Please consider changing the age of replacement."
+                )
+
+        return func(*args, **kwargs)
+    return wrapper
+
 
 
 @overload
@@ -277,7 +271,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
             period_before_discounting=self.period_before_discounting
         )
 
-
+    @check_impossible_replacements
     def expected_net_present_value(
         self, ar : NumpyFloat, tf: float, nb_steps: int, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -297,6 +291,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @check_impossible_replacements
     def asymptotic_expected_net_present_value(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -304,7 +300,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
             self._expected_costs(ar=ar).asymptotic_expected_net_present_value(total_sum,ar=ar,a0=a0)
         )  # () or (m, nb_steps)
 
-
+    @check_impossible_replacements
     def expected_equivalent_annual_cost(
         self, ar : NumpyFloat, tf: float, nb_steps: int, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -329,6 +325,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @check_impossible_replacements
     def asymptotic_expected_equivalent_annual_cost(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -413,6 +411,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
                 discounting_rate=self.discounting_rate,
             )
 
+    @check_impossible_replacements
     def expected_net_present_value(
         self, ar : NumpyFloat, tf: float, nb_steps: int, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -433,6 +432,8 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @check_impossible_replacements
     def asymptotic_expected_net_present_value(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -443,6 +444,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             asymptotic_npv = np.sum(asymptotic_npv)
         return asymptotic_npv
 
+    @check_impossible_replacements
     def expected_equivalent_annual_cost(
         self, ar : NumpyFloat, tf: float, nb_steps: int, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -467,6 +469,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
 
+    @check_impossible_replacements
     def asymptotic_expected_equivalent_annual_cost(
         self, ar : NumpyFloat, total_sum: bool = False, a0 : NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -478,6 +481,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             asymptotic_eeac = np.sum(asymptotic_eeac)
         return asymptotic_eeac  # () or (m,)
 
+    @check_impossible_replacements
     def annual_number_of_replacements(self, ar : NumpyFloat, nb_years : int, upon_failure=False, total=True, a0 : NumpyFloat | None = None):
         """
         The expected number of annual replacements.
@@ -554,6 +558,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
         return newton(eq, x0) # pyright: ignore
 
+    @check_impossible_replacements
     def generate_failure_data(
         self, ar : NumpyFloat, nb_samples: int, time_window: tuple[float, float], a0 : NumpyFloat | None = None, seed=None,
     ):
@@ -579,6 +584,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
             nb_samples, time_window, ar=ar, a0=a0, seed=seed
         )
 
+    @check_impossible_replacements
     def sample(self, ar : NumpyFloat, nb_samples: int, time_window: tuple[float, float], a0 : NumpyFloat | None = None, seed=None):
         """Renewal data sampling.
 
