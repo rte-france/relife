@@ -183,13 +183,26 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         self.lifetime_model = lifetime_model
 
     def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = _make_timeline(tf, nb_steps)
         etc = np.asarray(
-            get_conditional_lifetime_model(self.lifetime_model,a0=a0,ar=ar).ls_integrate(
-                lambda x: self.reward.conditional_expectation(apply_bias(x,delay=a0))
-                * self.discounting.factor(apply_bias(x,delay=a0,censor_value=ar,delay_applied_to_censor=True)),
+            get_conditional_lifetime_model(
+                self.lifetime_model, a0=a0, ar=ar
+            ).ls_integrate(
+                lambda x: (
+                    self.reward.conditional_expectation(apply_bias(x, delay=a0))
+                    * self.discounting.factor(
+                        apply_bias(
+                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
+                        )
+                    )
+                ),
                 np.zeros_like(timeline),
                 timeline,
                 deg=15,
@@ -204,24 +217,44 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
 
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False], ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: Literal[False],
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True], ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: Literal[True],
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         # reward partial expectation
         value = np.squeeze(
-            get_conditional_lifetime_model(self.lifetime_model,a0=a0,ar=ar).ls_integrate(
-                lambda x: self.reward.conditional_expectation(apply_bias(x,delay=a0))
-                * self.discounting.factor(apply_bias(x,delay=a0,censor_value=ar,delay_applied_to_censor=True)),
+            get_conditional_lifetime_model(
+                self.lifetime_model, a0=a0, ar=ar
+            ).ls_integrate(
+                lambda x: (
+                    self.reward.conditional_expectation(apply_bias(x, delay=a0))
+                    * self.discounting.factor(
+                        apply_bias(
+                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
+                        )
+                    )
+                ),
                 np.float64(0.0),
                 np.asarray(np.inf),
                 deg=15,
@@ -232,17 +265,32 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         return value  # () or (m,)
 
     def _expected_equivalent_annual_cost(
-        self, timeline: NDArray[np.float64], ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        timeline: NDArray[np.float64],
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: NDArray[np.float64]) -> NDArray[np.float64]:
             # avoid zero division + 1e-6
             return (
-                self.reward.conditional_expectation(apply_bias(x,delay=a0))
-                * self.discounting.factor(apply_bias(x,delay=a0,censor_value=ar,delay_applied_to_censor=True))
-                / (self.discounting.annuity_factor(apply_bias(x,delay=a0,censor_value=ar,delay_applied_to_censor=True)) + 1e-6)
+                self.reward.conditional_expectation(apply_bias(x, delay=a0))
+                * self.discounting.factor(
+                    apply_bias(
+                        x, delay=a0, censor_value=ar, delay_applied_to_censor=True
+                    )
+                )
+                / (
+                    self.discounting.annuity_factor(
+                        apply_bias(
+                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
+                        )
+                    )
+                    + 1e-6
+                )
             )
-        conditional_model = get_conditional_lifetime_model(self.lifetime_model,a0=a0)
+
+        conditional_model = get_conditional_lifetime_model(self.lifetime_model, a0=a0)
         q0 = conditional_model.cdf(self.period_before_discounting) * f(
             np.asarray(self.period_before_discounting, dtype=float)
         )  # () or (m, 1)
@@ -264,10 +312,15 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         return np.squeeze(integral)  # (nb_steps,)/(m, nb_steps)
 
     def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
-        value = self._expected_equivalent_annual_cost(timeline,ar=ar,a0=a0)
+        value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
         if timeline.ndim == 2:
             timeline = timeline[0, :]  # (nb_steps,)
         if total_sum and value.ndim == 2:
@@ -276,21 +329,33 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
 
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False], ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: Literal[False],
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True], ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: Literal[True],
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False, ar : NumpyFloat | None = None, a0 : NumpyFloat | None = None
+        self,
+        total_sum: bool = False,
+        ar: NumpyFloat | None = None,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
-        value = self._expected_equivalent_annual_cost(timeline,ar=ar,a0=a0)
+        value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
         if total_sum:
             value = np.sum(value)
         return value  # () or (m,)

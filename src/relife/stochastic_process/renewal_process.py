@@ -13,8 +13,7 @@ from relife.lifetime_model._conditional_model import (
 )
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
-from relife.typing._scalars import AnyFloat, NumpyFloat
-
+from relife.typing._scalars import NumpyFloat
 from relife.utils.observation_bias import apply_bias
 
 from ._renewal_equations import (
@@ -630,7 +629,7 @@ class RenewalRewardProcess(RenewalProcess):
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
         q0 = self.reward.conditional_expectation(
             np.asarray(0.0)
-        ) * get_conditional_lifetime_model(self.lifetime_model,a0=a0).pdf(0.0)
+        ) * get_conditional_lifetime_model(self.lifetime_model, a0=a0).pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
