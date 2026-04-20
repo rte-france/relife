@@ -20,7 +20,7 @@ class TestOneCycleAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.optimize()
+            policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
         qa = policy.asymptotic_expected_equivalent_annual_cost()
@@ -39,7 +39,7 @@ class TestOneCycleAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.optimize()
+            policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
 
@@ -57,7 +57,7 @@ class TestOneCycleAgeReplacementPolicy:
         eps = 1e-2
         policy = OneCycleAgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
-        ).optimize()
+        ).compute_optimal_ar()
         suboptimal_policy1 = OneCycleAgeReplacementPolicy(
             distribution,
             cf,
@@ -97,7 +97,7 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.optimize()
+            policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
         qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
@@ -115,7 +115,7 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.optimize()
+            policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
         qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
@@ -133,7 +133,7 @@ class TestAgeReplacementPolicy:
         eps = 1e-2
         policy = AgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
-        ).optimize()
+        ).compute_optimal_ar()
         suboptimal_policy1 = AgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar + eps
         )

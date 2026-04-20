@@ -15,6 +15,8 @@ from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
 from relife.typing._scalars import AnyFloat, NumpyFloat
 
+from relife.utils.observation_bias import apply_bias
+
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
     renewal_equation_solver,
@@ -24,17 +26,6 @@ from ._renewal_equations import (
 def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
     timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
     return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
-
-
-def apply_bias(
-    t: AnyFloat,
-    delay: NumpyFloat | None = None,
-    censor_value: NumpyFloat | None = None,
-    delay_applied_to_censor=False,
-):
-    if delay_applied_to_censor:
-        return np.minimum(t, (censor_value or np.inf) - (delay or 0))
-    return np.minimum(t + (delay or 0), (censor_value or np.inf))
 
 
 class LifetimeFitArgs(TypedDict):
@@ -637,10 +628,9 @@ class RenewalRewardProcess(RenewalProcess):
         if z.ndim == 2 and af.shape != z.shape:  # (m, nb_steps)
             af = np.tile(af, (z.shape[0], 1))  # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
-        # TODO : checker si c'est pas la pdf en 0 du first applied lifetime_model plutôt ici
         q0 = self.reward.conditional_expectation(
             np.asarray(0.0)
-        ) * self.lifetime_model.pdf(0.0)
+        ) * get_conditional_lifetime_model(self.lifetime_model,a0=a0).pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
