@@ -66,7 +66,9 @@ class TestDistribution:
         n = 100
         renewal_process = RenewalProcess(distribution)
         for i in range(n):
-            lifetime_data = renewal_process.generate_failure_data(10000, 10 * q3, t0=0)
+            lifetime_data = renewal_process.generate_failure_data(
+                10000, 10 * q3, t0=0, seed=21
+            )
             try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
                 distribution.fit(**lifetime_data)
             except RuntimeError:
@@ -250,7 +252,9 @@ def test_age_replacement_sampling(distribution, ar):
     t0 = distribution.ppf(0.25)
     tf = 10 * distribution.ppf(0.75)
 
-    iterable = RenewalProcessIterable(renewal_process, nb_samples, (t0, tf), ar=ar)
+    iterable = RenewalProcessIterable(
+        renewal_process, nb_samples, (t0, tf), ar=ar, seed=21
+    )
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -274,7 +278,9 @@ def test_left_truncated_sampling(distribution, a0):
     tf = 10 * distribution.ppf(0.75)
     nb_samples = 100
 
-    iterable = RenewalProcessIterable(renewal_process, nb_samples, (0, tf), a0=a0)
+    iterable = RenewalProcessIterable(
+        renewal_process, nb_samples, (0, tf), a0=a0, seed=21
+    )
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -301,7 +307,9 @@ def test_age_replacement_regression_sampling(frozen_regression, ar):
     tf = 10 * frozen_regression.ppf(0.75).max()
     nb_samples = 10
 
-    iterable = RenewalProcessIterable(renewal_process, nb_samples, (t0, tf), ar=ar)
+    iterable = RenewalProcessIterable(
+        renewal_process, nb_samples, (t0, tf), ar=ar, seed=21
+    )
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 

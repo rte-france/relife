@@ -115,7 +115,7 @@ def test_basic_sampling(distribution):
     t0 = 0.0
     tf = distribution.ppf(0.95)
 
-    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf))
+    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf), seed=21)
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -136,7 +136,9 @@ def test_age_replacement_sampling(distribution, ar):
     t0 = distribution.ppf(0.3)
     tf = 3 * distribution.ppf(0.95)
 
-    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf), ar=ar)
+    iterable = NonHomogeneousPoissonProcessIterable(
+        nhpp, nb_samples, (t0, tf), ar=ar, seed=21
+    )
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -154,7 +156,7 @@ def test_regression_sampling(frozen_regression):
     tf = frozen_regression.ppf(0.95).min()
     nb_samples = 10
 
-    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf))
+    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf), seed=21)
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
@@ -178,7 +180,9 @@ def test_age_replacement_regression_sampling(frozen_regression, ar):
     tf = 10 * frozen_regression.ppf(0.75).max()
     nb_samples = 10
 
-    iterable = NonHomogeneousPoissonProcessIterable(nhpp, nb_samples, (t0, tf), ar=ar)
+    iterable = NonHomogeneousPoissonProcessIterable(
+        nhpp, nb_samples, (t0, tf), ar=ar, seed=21
+    )
     struct_array = np.concatenate(tuple(iterable))
     struct_array = np.sort(struct_array, order=("asset_id", "sample_id", "timeline"))
 
