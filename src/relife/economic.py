@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import TypeAlias, TypeVarTuple
+from typing import Literal, TypeAlias, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
-from optype.numpy import ArrayND
+from optype.numpy import Array, Array0D, Array1D, ArrayND
 from typing_extensions import override
 
-from relife.utils import to_numpy_float64
+from relife.utils import to_column_2d_if_1d
 
 Ts = TypeVarTuple("Ts")
 ST: TypeAlias = int | float
@@ -53,10 +53,10 @@ class RunToFailureReward(Reward):
     cf
     """
 
-    cf: np.float64 | ArrayND[np.float64]
+    cf: np.float64 | Array0D[np.float64] | Array[tuple[int, Literal[1]], np.float64]
 
-    def __init__(self, cf: ST | NumpyST | ArrayND[NumpyST]) -> None:
-        self.cf = to_numpy_float64(cf)
+    def __init__(self, cf: ST | NumpyST | Array0D[NumpyST] | Array1D[NumpyST]) -> None:
+        self.cf = to_column_2d_if_1d(cf)
 
     @override
     def conditional_expectation(
@@ -90,19 +90,19 @@ class AgeReplacementReward(Reward):
     ar
     """
 
-    cf: np.float64 | ArrayND[np.float64]
-    cp: np.float64 | ArrayND[np.float64]
-    ar: np.float64 | ArrayND[np.float64]
+    cf: np.float64 | Array0D[np.float64] | Array[tuple[int, Literal[1]], np.float64]
+    cp: np.float64 | Array0D[np.float64] | Array[tuple[int, Literal[1]], np.float64]
+    ar: np.float64 | Array0D[np.float64] | Array[tuple[int, Literal[1]], np.float64]
 
     def __init__(
         self,
-        cf: ST | NumpyST | ArrayND[NumpyST],
-        cp: ST | NumpyST | ArrayND[NumpyST],
-        ar: ST | NumpyST | ArrayND[NumpyST],
+        cf: ST | NumpyST | Array0D[NumpyST] | Array1D[NumpyST],
+        cp: ST | NumpyST | Array0D[NumpyST] | Array1D[NumpyST],
+        ar: ST | NumpyST | Array0D[NumpyST] | Array1D[NumpyST],
     ) -> None:
-        self.cf = to_numpy_float64(cf)
-        self.cp = to_numpy_float64(cp)
-        self.ar = to_numpy_float64(ar)
+        self.cf = to_column_2d_if_1d(cf)
+        self.cp = to_column_2d_if_1d(cp)
+        self.ar = to_column_2d_if_1d(ar)
 
     @override
     def conditional_expectation(

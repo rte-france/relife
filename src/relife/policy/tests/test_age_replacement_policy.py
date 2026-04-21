@@ -64,7 +64,7 @@ class TestOneCycleAgeReplacementPolicy:
             cp,
             discounting_rate=discounting_rate,
             period_before_discounting=0.1,
-            ar=policy.get_ar + eps,
+            ar=policy.get_ar() + eps,
         )
         suboptimal_policy2 = OneCycleAgeReplacementPolicy(
             distribution,
@@ -72,7 +72,7 @@ class TestOneCycleAgeReplacementPolicy:
             cp,
             discounting_rate=discounting_rate,
             period_before_discounting=0.1,
-            ar=policy.get_ar - eps,
+            ar=policy.get_ar() - eps,
         )
         assert np.all(
             suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
@@ -109,7 +109,7 @@ class TestAgeReplacementPolicy:
     ):
         if isinstance(distribution, Exponential):
             pytest.skip(
-                "Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)"
+                "Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)"  # noqa: E501
             )
         policy = AgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
@@ -128,7 +128,7 @@ class TestAgeReplacementPolicy:
     def test_optimal_replacement_age(self, distribution, cf, cp, discounting_rate):
         if isinstance(distribution, Exponential):
             pytest.skip(
-                "Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)"
+                "Exponential distribution won't work with this cf, cp (not tested in v1.0.0 too)"  # noqa: E501
             )
         eps = 1e-2
         policy = AgeReplacementPolicy(
@@ -139,14 +139,14 @@ class TestAgeReplacementPolicy:
             cf,
             cp,
             discounting_rate=discounting_rate,
-            ar=policy.get_ar + eps,
+            ar=policy.get_ar() + eps,
         )
         suboptimal_policy2 = AgeReplacementPolicy(
             distribution,
             cf,
             cp,
             discounting_rate=discounting_rate,
-            ar=policy.get_ar - eps,
+            ar=policy.get_ar() - eps,
         )
 
         assert np.all(

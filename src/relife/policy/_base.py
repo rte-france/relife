@@ -8,6 +8,7 @@ from optype.numpy import (
     Array2D,
     ArrayND,
     is_array_1d,
+    is_array_2d,
 )
 from typing_extensions import override
 
@@ -242,7 +243,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
 
     def _expected_equivalent_annual_cost(
         self, timeline: ArrayND[np.float64]
-    ) -> Array1D[np.float64] | Array2D[np.float64]:
+    ) -> np.float64 | Array1D[np.float64] | Array2D[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             # avoid zero division + 1e-6
@@ -283,6 +284,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         if total_sum and value.ndim == 2:
             value = np.sum(value, axis=0)
         assert is_array_1d(timeline)  # typeguard
+        assert is_array_1d(value) or is_array_2d(value)
         return timeline, value  # (nb_steps,) or (m, nb_steps)
 
     @overload
@@ -299,7 +301,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
     ) -> np.float64 | Array1D[np.float64]:
         timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         value = self._expected_equivalent_annual_cost(timeline)
-        assert is_array_1d(value)  # typeguard
+        assert not is_array_2d(value)
         if total_sum:
             value = np.sum(value)
         return value  # () or (m,)

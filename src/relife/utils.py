@@ -98,9 +98,9 @@ def to_column_2d_if_1d(
     | np.bool
     | Array0D[np.float64]
     | Array0D[np.bool]
-    | Array[tuple[int, Literal[1]], NumpyST]
-    | Array2D[NumpyST]
-    | Array[tuple[int, int, *tuple[int, ...]], NumpyST]
+    | Array[tuple[int, Literal[1]], np.float64]
+    | Array2D[np.float64]
+    | Array[tuple[int, int, *tuple[int, ...]], np.float64]
 ):
     """
     Reshapes to column array.
