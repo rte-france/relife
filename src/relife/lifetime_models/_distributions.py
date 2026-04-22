@@ -131,7 +131,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
         self,
-        size: int | tuple[int, int],
+        size: int | tuple[int, ...],
         *,
         seed: int
         | np.random.Generator
@@ -298,7 +298,7 @@ class Exponential(LifetimeDistribution):
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
         if isinstance(time, np.ndarray):
-            jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0).copy()
+            jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0)
         else:
             jac = np.array([1], dtype=np.float64)
         return jac
@@ -307,7 +307,7 @@ class Exponential(LifetimeDistribution):
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
         if isinstance(time, np.ndarray):
-            jac = np.expand_dims(time, axis=0).copy().astype(np.float64)
+            jac = np.expand_dims(time, axis=0).astype(np.float64)
         else:
             jac = np.array([time], dtype=np.float64)
         return jac

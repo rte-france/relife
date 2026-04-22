@@ -82,7 +82,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
     @override
@@ -93,7 +92,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
     @override
@@ -104,7 +102,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return super().cdf(time, *(ar, *args))
 
     @override
@@ -115,7 +112,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
     @override
@@ -126,7 +122,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
     @override
@@ -137,7 +132,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
     @override
@@ -148,7 +142,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
     @override
@@ -181,7 +174,6 @@ class AgeReplacementModel(
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         return self.isf(1 - probability, ar, *args)
 
     @override
@@ -189,8 +181,7 @@ class AgeReplacementModel(
     def median(
         self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
-        return self.ppf(np.array(0.5), ar, *args)
+        return self.ppf(0.5, ar, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
@@ -205,10 +196,9 @@ class AgeReplacementModel(
         | np.random.RandomState
         | None = None,
     ) -> np.float64 | ArrayND[np.float64]:
-        args_add_ar = (ar, *args)
         return super().rvs(
             size,
-            *args_add_ar,
+            *(ar, *args),
             seed=seed,
         )
 
@@ -347,7 +337,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return super().sf(time, a0, *args)
 
     @override
@@ -358,7 +347,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return super().pdf(time, a0, *args)
 
     @override
@@ -370,7 +358,6 @@ class LeftTruncatedModel(
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
-        a0 = to_column_2d_if_1d(a0)
         return self.ichf(cumulative_hazard_rate, a0, *args)
 
     @override
@@ -381,7 +368,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return self.baseline.chf(a0 + time, *args) - self.baseline.chf(a0, *args)
 
     @override
@@ -392,7 +378,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return super().cdf(time, *(a0, *args))
 
     @override
@@ -403,7 +388,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return self.baseline.hf(a0 + time, *args)
 
     @override
@@ -414,7 +398,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return (
             self.baseline.ichf(
                 cumulative_hazard_rate + self.baseline.chf(a0, *args), *args
@@ -435,7 +418,6 @@ class LeftTruncatedModel(
         | np.random.RandomState
         | None = None,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         args_add_a0 = (a0, *args)
         return super().rvs(
             size,
@@ -511,7 +493,6 @@ class LeftTruncatedModel(
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        a0 = to_column_2d_if_1d(a0)
         return super().ppf(probability, *(a0, *args))
 
     def freeze(

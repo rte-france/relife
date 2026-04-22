@@ -183,19 +183,20 @@ def frozen_ar_regression(regression):
 # LIFETIME MODEL VARIABLES FIXTURES
 #######################################################################################
 
-M = 3  # nb assets
-N = 10  # nb points
+M = 3
+N = 10
+P = 4
+Q = 6
 
 
 @pytest.fixture(
     params=[
         np.float64(1),
-        np.ones((1,), dtype=np.float64),
+        np.ones((), dtype=np.float64),
         np.ones((N,), dtype=np.float64),
-        np.ones((1, 1), dtype=np.float64),
-        np.ones((M, 1), dtype=np.float64),
-        np.ones((1, N), dtype=np.float64),
-        np.ones((M, 3), dtype=np.float64),
+        np.ones((M, N), dtype=np.float64),
+        np.ones((M, N, P), dtype=np.float64),
+        np.ones((M, N, P, Q), dtype=np.float64),
     ],
     ids=lambda time: f"time:{time.shape}",
 )
@@ -288,8 +289,14 @@ def a0(request):
 
 
 @pytest.fixture(
-    params=[1, N],
-    ids=lambda size: f"size:{size}",
+    params=[
+        1,
+        (N,),
+        (M, N),
+        (M, N, P),
+        (M, N, P, Q),
+    ],
+    ids=lambda rvs_size: f"{rvs_size}",
 )
 def rvs_size(request):
     return request.param

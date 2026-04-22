@@ -5,53 +5,48 @@ import pytest
 from pytest import approx
 
 
-def rvs_expected_shape(size):
-    if size != 1:
-        return (size,)
-    return ()
-
-
 def test_rvs(distribution, rvs_size):
-    assert distribution.rvs(
-        rvs_size,
-    ).shape == rvs_expected_shape(
-        size=rvs_size,
+    assert (
+        distribution.rvs(
+            rvs_size,
+        ).shape
+        == rvs_size
     )
 
 
 def test_sf(distribution, time):
-    assert distribution.sf(time).shape == time.shape
+    assert distribution.sf(time).shape == np.broadcast(time).shape
     assert distribution.sf(np.full(time.shape, distribution.median())) == approx(
         np.full(time.shape, 0.5), rel=1e-3
     )
 
 
 def test_hf(distribution, time):
-    assert distribution.hf(time).shape == time.shape
+    assert distribution.hf(time).shape == np.broadcast(time).shape
 
 
 def test_chf(distribution, time):
-    assert distribution.chf(time).shape == time.shape
+    assert distribution.chf(time).shape == np.broadcast(time).shape
 
 
 def test_cdf(distribution, time):
-    assert distribution.cdf(time).shape == time.shape
+    assert distribution.cdf(time).shape == np.broadcast(time).shape
 
 
 def test_pdf(distribution, time):
-    assert distribution.pdf(time).shape == time.shape
+    assert distribution.pdf(time).shape == np.broadcast(time).shape
 
 
 def test_ppf(distribution, probability):
-    assert distribution.ppf(probability).shape == probability.shape
+    assert distribution.ppf(probability).shape == np.broadcast(probability).shape
 
 
 def test_ichf(distribution, probability):
-    assert distribution.ichf(probability).shape == probability.shape
+    assert distribution.ichf(probability).shape == np.broadcast(probability).shape
 
 
 def test_isf(distribution, probability):
-    assert distribution.isf(probability).shape == probability.shape
+    assert distribution.isf(probability).shape == np.broadcast(probability).shape
     assert distribution.isf(np.full(probability.shape, 0.5)) == approx(
         np.full(probability.shape, distribution.median())
     )

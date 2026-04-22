@@ -343,12 +343,12 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             isf values at each given probability value(s).
         """
 
-        def func(x: ArrayND[np.float64]) -> ArrayND[np.float64]:
-            return np.asarray(self.sf(x, *args) - probability)
+        def func(x: ArrayND[np.float64]) -> np.float64 | ArrayND[np.float64]:
+            return self.sf(x, *args) - probability
 
         return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
             func,  # pyright: ignore[reportArgumentType]
-            x0=np.zeros_like(probability),
+            x0=probability,  # pyright: ignore[reportArgumentType]
             args=args,
         )
 
@@ -385,7 +385,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def rvs(
         self,
-        size: int | tuple[int, int],
+        size: int | tuple[int, ...],
         *args: *Ts,
         seed: int
         | np.random.Generator
@@ -412,9 +412,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             The sample values.
         """  # noqa: E501
         rng = np.random.default_rng(seed)
-        probability = rng.uniform(size=size)
-        if size == 1:
-            probability = np.squeeze(probability)
+        probability = rng.uniform(0.0, 1.0, size)
         return self.isf(probability, *args)
 
     def ls_integrate(
