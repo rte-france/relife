@@ -1,0 +1,220 @@
+API
+===
+
+This section provides comprehensive details about the exposed ReLife API.
+ReLife is structured into different modules, each with a clear and specific role.
+We divided the API documentation close to the same logic.
+
+.. currentmodule:: relife.base
+
+.. autosummary::
+    :toctree: base_class
+    :template: class_template.rst
+    :caption: Base classes
+    :nosignatures:
+
+    ParametricModel
+    MaximumLikelihoodOptimizer
+
+Lifetime models
+---------------
+
+Parametric lifetime models
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. currentmodule:: relife.lifetime_models
+
+.. rubric:: Parametric lifetime distributions
+
+.. autosummary::
+    :toctree: parametric_lifetime_models
+    :template: class_template.rst
+    :caption: Parametric lifetime models
+    :nosignatures:
+
+    Exponential
+    Weibull
+    Gompertz
+    Gamma
+    LogLogistic
+
+.. rubric:: Parametric lifetime regressions
+
+.. autosummary::
+    :toctree: parametric_lifetime_models
+    :template: class_template.rst
+    :nosignatures:
+
+    ParametricProportionalHazard
+    ParametricAcceleratedFailureTime
+
+
+Semiparametric lifetime regression
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+    :toctree: semiparametric_lifetime_models
+    :template: class_template.rst
+    :caption: Semiparametric lifetime models
+    :nosignatures:
+
+    SemiParametricProportionalHazard
+
+
+Non parametric lifetime models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+    :toctree: nonparametric_lifetime_models
+    :template: class_template.rst
+    :caption: Nonparametric lifetime models
+    :nosignatures:
+
+    KaplanMeier
+    NelsonAalen
+    ECDF
+
+
+Conditional lifetime models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rubric:: Conditional lifetime models
+
+.. autosummary::
+    :toctree: conditional_lifetime_models
+    :template: class_template.rst
+    :caption: Conditional lifetime models
+    :nosignatures:
+
+    LeftTruncatedModel
+    AgeReplacementModel
+
+
+Stochastic processes
+--------------------
+
+.. currentmodule:: relife.stochastic_processes
+
+.. autosummary::
+    :toctree: stochastic_process
+    :template: class_template.rst
+    :caption: Stochastic processes
+    :nosignatures:
+
+    RenewalProcess
+    RenewalRewardProcess
+    NonHomogeneousPoissonProcess
+
+Maintenance policies
+--------------------
+
+Convenient functions to instanciate a policy based on the given model and cost structure.
+
+.. currentmodule:: relife.policies
+
+.. autosummary::
+    :toctree: policy
+    :caption: Maintenance policies
+    :template: function_template.rst
+    :nosignatures:
+
+    age_replacement_policy
+    run_to_failure_policy
+
+Lower-level policy classes that can be used in addition to the above functions.
+
+.. autosummary::
+    :toctree: policy
+    :template: class_template.rst
+    :nosignatures:
+
+    AgeReplacementPolicy
+    OneCycleAgeReplacementPolicy
+    RunToFailurePolicy
+    OneCycleRunToFailurePolicy
+    NonHomogeneousPoissonAgeReplacementPolicy
+
+Rewards
+-------
+
+.. currentmodule:: relife.rewards
+
+.. autosummary::
+    :toctree: economy
+    :template: class_template.rst
+    :caption: Economy
+    :nosignatures:
+
+    RunToFailureReward
+    AgeReplacementReward
+    ExponentialDiscounting
+
+Built-in datasets
+-----------------
+
+.. currentmodule:: relife.datasets
+
+.. autosummary::
+    :toctree: data
+    :template: function_template.rst
+    :caption: Built-in datasets
+    :nosignatures:
+
+    ~load_circuit_breaker
+    ~load_insulator_string
+    ~load_power_transformer
+
+
+Likelihoods
+-----------
+
+.. currentmodule:: relife.lifetime_models
+
+.. autosummary::
+    :toctree: likelihoods
+    :template: class_template.rst
+    :caption: Likelihoods
+    :nosignatures:
+
+    LifetimeLikelihood
+    CoxPartialLifetimeLikelihood
+    EfronPartialLifetimeLikelihood
+    BreslowPartialLifetimeLikelihood
+
+
+Quadratures
+-----------
+
+Quadratures are used a many computations. We don't use Scipy quadrature implementations as, to our knowledge, they don't
+support automatic broadcasting of 2D bounds.
+
+.. currentmodule:: relife.quadratures
+
+.. autosummary::
+    :toctree: routines
+    :template: function_template.rst
+    :nosignatures:
+
+    ~legendre_quadrature
+    ~laguerre_quadrature
+    ~unweighted_laguerre_quadrature
+
+
+Utils
+-----
+
+Various utilities to help with development.
+
+.. currentmodule:: relife.utils
+
+.. autosummary::
+    :toctree: routines
+    :template: function_template.rst
+    :caption: Utils
+    :nosignatures:
+
+    ~to_numpy_float64
+    ~to_column_2d_if_1d
+    ~flatten_if_at_least_2d
+    ~get_nb_assets
+

@@ -34,6 +34,7 @@ Issues = "https://github.com/rte-france/relife/issues"
 dev = [
     "basedpyright>=1.38.3",
     "ipython>=9.10.0",
+    "jupyterlab>=4.5.6",
     "lifelines>=0.30.3",
     "matplotlib-stubs>=0.3.11",
     "mypy>=1.19.1",
@@ -52,4 +53,4 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"relife.data.csv" = ["*.csv"]
+"relife.datasets.csv" = ["*.csv"]
