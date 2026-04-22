@@ -171,8 +171,7 @@ class ParametricModel:
         assert new_params.ndim == 1
         self._params.set_all_values(tuple(v.item() for v in new_params))
 
-    @property
-    def params_names(self) -> tuple[str, ...]:
+    def get_params_names(self) -> tuple[str, ...]:
         """
         Parameters names.
 
@@ -186,19 +185,6 @@ class ParametricModel:
         Parameters values can be requested (a.k.a. get) by their name at instance level.
         """
         return self._params.all_names
-
-    @property
-    def nb_params(self) -> int:
-        """
-        Number of parameters.
-
-        Returns
-        -------
-        int
-            Number of parameters.
-
-        """
-        return self._params.size
 
     def __getattr__(self, name: str) -> Any:
         if name in self.__dict__:

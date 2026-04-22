@@ -4,7 +4,7 @@ import pytest
 from numpy.typing import NDArray
 
 from relife.datasets import load_insulator_string, load_power_transformer
-from relife.lifetime_model import (
+from relife.lifetime_models import (
     AgeReplacementModel,
     Exponential,
     Gamma,

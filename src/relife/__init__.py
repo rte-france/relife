@@ -3,11 +3,11 @@ from importlib.metadata import PackageNotFoundError, version
 
 from . import (
     datasets,
-    economic,
-    lifetime_model,
-    policy,
-    quadrature,
-    stochastic_process,
+    lifetime_models,
+    policies,
+    quadratures,
+    rewards,
+    stochastic_processes,
     utils,
 )
 
@@ -16,10 +16,10 @@ with suppress(PackageNotFoundError):
 
 __all__ = [
     "datasets",
-    "lifetime_model",
-    "policy",
-    "stochastic_process",
-    "quadrature",
-    "economic",
+    "lifetime_models",
+    "policies",
+    "stochastic_processes",
+    "quadratures",
+    "rewards",
     "utils",
 ]
