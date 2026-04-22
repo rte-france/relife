@@ -5,10 +5,8 @@ import numpy as np
 from optype.numpy import Array, Array1D, Array2D, AtMost2D
 
 from relife.base import ParametricModel
-from relife.lifetime_models import LeftTruncatedModel
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
-    is_frozen_parametric_lifetime_model,
 )
 from relife.rewards import ExponentialDiscounting, Reward
 from relife.stochastic_processes._sample import StochasticSampleMapping
@@ -75,6 +73,9 @@ class RenewalProcess(ParametricModel):
     ) -> None:
         super().__init__()
         self.lifetime_model = lifetime_model
+        if first_lifetime_model is None:
+            # TODO: use copy method
+            first_lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
     def renewal_function(
@@ -119,11 +120,7 @@ class RenewalProcess(ParametricModel):
 
         timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (1, nb_steps)
         renewal_function = renewal_equation_solver(
-            timeline,
-            self.lifetime_model,
-            self.lifetime_model.cdf
-            if self.first_lifetime_model is None
-            else self.first_lifetime_model.cdf,
+            timeline, self.lifetime_model, self.first_lifetime_model.cdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
@@ -168,11 +165,7 @@ class RenewalProcess(ParametricModel):
         """
         timeline = _make_timeline(tf, nb_steps)  #  (nb_steps,) or (m, nb_steps)
         renewal_density = renewal_equation_solver(
-            timeline,
-            self.lifetime_model,
-            self.lifetime_model.pdf
-            if self.first_lifetime_model is None
-            else self.first_lifetime_model.pdf,
+            timeline, self.lifetime_model, self.first_lifetime_model.pdf
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
@@ -245,25 +238,14 @@ class RenewalProcess(ParametricModel):
         -------
         A dict of time, event, entry and args (covariates)
 
-        """  # noqa: E501
+        """
 
         from ._sample import RenewalProcessIterable
 
-        if (
-            self.first_lifetime_model is not None
-            and self.first_lifetime_model != self.lifetime_model
-        ):
-            if is_frozen_parametric_lifetime_model(self.first_lifetime_model):
-                if (
-                    isinstance(self.first_lifetime_model.unfrozen, LeftTruncatedModel)
-                    and self.first_lifetime_model.unfrozen.baseline
-                    == self.lifetime_model
-                ):
-                    pass
-            else:
-                raise ValueError(
-                    "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."  # noqa: E501
-                )
+        if self.first_lifetime_model != self.lifetime_model:
+            raise ValueError(
+                "Calling sample_lifetime_data with lifetime_model different from first_lifetime_model is ambiguous."  # noqa: E501
+            )
         iterable = RenewalProcessIterable(
             self, nb_samples, time_window, a0=a0, ar=ar, seed=seed
         )
@@ -416,22 +398,21 @@ class RenewalRewardProcess(RenewalProcess):
             ),  # reward partial expectation
             discounting=self.discounting,
         )
-        if self.first_lifetime_model is not None:
-            z = delayed_renewal_equation_solver(
-                timeline,
-                z,
-                self.first_lifetime_model,
-                lambda t: self.first_lifetime_model.ls_integrate(
-                    lambda x: (
-                        self.first_reward.conditional_expectation(x)
-                        * self.discounting.factor(x)
-                    ),
-                    np.zeros_like(t),
-                    np.asarray(t),
-                    deg=15,
-                ),  # reward partial expectation
-                discounting=self.discounting,
-            )
+        z = delayed_renewal_equation_solver(
+            timeline,
+            z,
+            self.first_lifetime_model,
+            lambda t: self.first_lifetime_model.ls_integrate(
+                lambda x: (
+                    self.first_reward.conditional_expectation(x)
+                    * self.discounting.factor(x)
+                ),
+                np.zeros_like(t),
+                np.asarray(t),
+                deg=15,
+            ),  # reward partial expectation
+            discounting=self.discounting,
+        )
         return np.squeeze(timeline), np.squeeze(
             z
         )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
@@ -485,24 +466,24 @@ class RenewalRewardProcess(RenewalProcess):
             deg=100,
         )  # () or (m, 1)
         z = np.squeeze(ly / (1 - lf))  # () or (m,)
-        if self.first_lifetime_model is not None:
-            lf1 = np.squeeze(
-                self.first_lifetime_model.ls_integrate(
-                    lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
-                )
-            )  # () or (m,)
-            ly1 = np.squeeze(
-                self.first_lifetime_model.ls_integrate(
-                    lambda x: (
-                        self.discounting.factor(x)
-                        * self.first_reward.conditional_expectation(x)
-                    ),
-                    0.0,
-                    np.inf,
-                    deg=100,
-                )
-            )  # () or (m,)
-            z = ly1 + z * lf1  # () or (m,)
+
+        lf1 = np.squeeze(
+            self.first_lifetime_model.ls_integrate(
+                lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
+            )
+        )  # () or (m,)
+        ly1 = np.squeeze(
+            self.first_lifetime_model.ls_integrate(
+                lambda x: (
+                    self.discounting.factor(x)
+                    * self.first_reward.conditional_expectation(x)
+                ),
+                0.0,
+                np.inf,
+                deg=100,
+            )
+        )  # () or (m,)
+        z = ly1 + z * lf1  # () or (m,)
         return z  # () or (m,)
 
     def expected_equivalent_annual_worth(
@@ -535,14 +516,9 @@ class RenewalRewardProcess(RenewalProcess):
         if z.ndim == 2 and af.shape != z.shape:  # (m, nb_steps)
             af = np.tile(af, (z.shape[0], 1))  # (m, nb_steps)
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
-        if self.first_lifetime_model is not None:
-            q0 = self.first_reward.conditional_expectation(
-                np.asarray(0.0)
-            ) * self.first_lifetime_model.pdf(0.0)
-        else:
-            q0 = self.reward.conditional_expectation(
-                np.asarray(0.0)
-            ) * self.lifetime_model.pdf(0.0)
+        q0 = self.reward.conditional_expectation(
+            np.asarray(0.0)
+        ) * self.lifetime_model.pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
