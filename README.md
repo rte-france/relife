@@ -1,15 +1,17 @@
 <h1 align="center">
-  <img src="doc/source/_static/small_relife.gif" />
+  <img src="docs/source/_static/small_relife.gif" />
 </h1></br>
 
 An open-source Python library for optimizing large-scale infrastructure investment decisions.
 
 - **Documentation:** http://opensource.rte-france.com/relife/
-- **Source code:** https://github.com/rte-france/relife
 - **Contributing:** http://opensource.rte-france.com/relife/developper/index.html
 - **Bug reports:** https://github.com/rte-france/relife/issues
 
-Some explanations might be missing until we finish the documentation properly, so do not hesitate to open an issue.
+
+> [!WARNING]
+> Releases started from `1.0.0` version but the package API is still changing a lot.
+
 
 ## Installation
 
