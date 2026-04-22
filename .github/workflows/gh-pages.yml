@@ -31,18 +31,18 @@ jobs:
       - name: Build Sphinx Doc
         run: |
           # prefer sphinx-build rather than make build (it allows more control)
-          sphinx-build -M html ./doc/source ./doc/build -Ea
+          sphinx-build -M html ./docs/source ./docs/build -Ea
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages # branch on which files are commited
-          folder: ./doc/build/html # The folder the action should deploy.
+          folder: ./docs/build/html # The folder the action should deploy.
 
       - name: Save website as an artifact
         uses: actions/upload-artifact@v6
         with:
           name: website
-          path: ./doc/build
+          path: ./docs/build
           retention-days: 14
 
