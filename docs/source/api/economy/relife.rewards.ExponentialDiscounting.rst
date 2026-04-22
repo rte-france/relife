@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+ExponentialDiscounting
+======================
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.rewards
 
-.. autoclass:: ParametricModel
+.. autoclass:: ExponentialDiscounting
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,9 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~ExponentialDiscounting.annuity_factor
         
         
-            ~ParametricModel.get_params_names
-        
-        
-            ~ParametricModel.set_params
+            ~ExponentialDiscounting.factor
         
     

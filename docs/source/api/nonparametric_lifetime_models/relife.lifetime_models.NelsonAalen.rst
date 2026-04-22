@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+NelsonAalen
+===========
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.lifetime_models
 
-.. autoclass:: ParametricModel
+.. autoclass:: NelsonAalen
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,12 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~NelsonAalen.chf
         
         
-            ~ParametricModel.get_params_names
+            ~NelsonAalen.fit
         
         
-            ~ParametricModel.set_params
+            ~NelsonAalen.plot
         
     

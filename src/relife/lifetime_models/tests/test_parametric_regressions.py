@@ -58,23 +58,20 @@ def test_covar_effect():
         (z2 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1)
     )
 
-    assert covar_effect.g(np.ones(covar_effect.nb_coef)).shape == ()
-    assert covar_effect.g(np.ones((1, covar_effect.nb_coef))).shape == (1, 1)
-    assert covar_effect.g(np.ones((10, covar_effect.nb_coef))).shape == (10, 1)
+    nb_coef = covar_effect.get_params().size
+    assert covar_effect.g(np.ones(nb_coef)).shape == ()
+    assert covar_effect.g(np.ones((1, nb_coef))).shape == (1, 1)
+    assert covar_effect.g(np.ones((10, nb_coef))).shape == (10, 1)
 
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef)).shape == (
-        covar_effect.nb_coef,
-    )
-    assert covar_effect.jac_g(np.ones(covar_effect.nb_coef)).shape == (
-        covar_effect.nb_coef,
-    )
-    assert covar_effect.jac_g(np.ones((1, covar_effect.nb_coef))).shape == (
-        covar_effect.nb_coef,
+    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
+    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
+    assert covar_effect.jac_g(np.ones((1, nb_coef))).shape == (
+        nb_coef,
         1,
         1,
     )
-    assert covar_effect.jac_g(np.ones((10, covar_effect.nb_coef))).shape == (
-        covar_effect.nb_coef,
+    assert covar_effect.jac_g(np.ones((10, nb_coef))).shape == (
+        nb_coef,
         10,
         1,
     )
@@ -134,33 +131,38 @@ def test_dhf(regression, time, covar):
 
 
 def test_jac_sf(regression, time, covar):
-    assert regression.jac_sf(time, covar).shape == (
-        regression.nb_params,
-    ) + expected_shape(time=time, covar=covar)
+    nb_params = regression.get_params().size
+    assert regression.jac_sf(time, covar).shape == (nb_params,) + expected_shape(
+        time=time, covar=covar
+    )
 
 
 def test_jac_hf(regression, time, covar):
-    assert regression.jac_hf(time, covar).shape == (
-        regression.nb_params,
-    ) + expected_shape(time=time, covar=covar)
+    nb_params = regression.get_params().size
+    assert regression.jac_hf(time, covar).shape == (nb_params,) + expected_shape(
+        time=time, covar=covar
+    )
 
 
 def test_jac_chf(regression, time, covar):
-    assert regression.jac_chf(time, covar).shape == (
-        regression.nb_params,
-    ) + expected_shape(time=time, covar=covar)
+    nb_params = regression.get_params().size
+    assert regression.jac_chf(time, covar).shape == (nb_params,) + expected_shape(
+        time=time, covar=covar
+    )
 
 
 def test_jac_cdf(regression, time, covar):
-    assert regression.jac_cdf(time, covar).shape == (
-        regression.nb_params,
-    ) + expected_shape(time=time, covar=covar)
+    nb_params = regression.get_params().size
+    assert regression.jac_cdf(time, covar).shape == (nb_params,) + expected_shape(
+        time=time, covar=covar
+    )
 
 
 def test_jac_pdf(regression, time, covar):
-    assert regression.jac_pdf(time, covar).shape == (
-        regression.nb_params,
-    ) + expected_shape(time=time, covar=covar)
+    nb_params = regression.get_params().size
+    assert regression.jac_pdf(time, covar).shape == (nb_params,) + expected_shape(
+        time=time, covar=covar
+    )
 
 
 def test_ls_integrate(regression, integration_bound_a, integration_bound_b, covar):
@@ -293,30 +295,35 @@ class TestFrozenRegression:
 
     def test_jac_sf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_sf(time).shape == (
-            frozen_model.nb_params,
-        ) + expected_shape(time=time, covar=covar)
+        nb_params = frozen_model.get_params().size
+        assert frozen_model.jac_sf(time).shape == (nb_params,) + expected_shape(
+            time=time, covar=covar
+        )
 
     def test_jac_hf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_hf(time).shape == (
-            frozen_model.nb_params,
-        ) + expected_shape(time=time, covar=covar)
+        nb_params = frozen_model.get_params().size
+        assert frozen_model.jac_hf(time).shape == (nb_params,) + expected_shape(
+            time=time, covar=covar
+        )
 
     def test_jac_chf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_chf(time).shape == (
-            frozen_model.nb_params,
-        ) + expected_shape(time=time, covar=covar)
+        nb_params = frozen_model.get_params().size
+        assert frozen_model.jac_chf(time).shape == (nb_params,) + expected_shape(
+            time=time, covar=covar
+        )
 
     def test_jac_cdf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_cdf(time).shape == (
-            frozen_model.nb_params,
-        ) + expected_shape(time=time, covar=covar)
+        nb_params = frozen_model.get_params().size
+        assert frozen_model.jac_cdf(time).shape == (nb_params,) + expected_shape(
+            time=time, covar=covar
+        )
 
     def test_jac_pdf(self, regression, time, covar):
         frozen_model = regression.freeze(covar)
-        assert frozen_model.jac_pdf(time).shape == (
-            frozen_model.nb_params,
-        ) + expected_shape(time=time, covar=covar)
+        nb_params = frozen_model.get_params().size
+        assert frozen_model.jac_pdf(time).shape == (nb_params,) + expected_shape(
+            time=time, covar=covar
+        )

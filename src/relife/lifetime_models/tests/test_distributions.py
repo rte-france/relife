@@ -79,23 +79,28 @@ def test_dhf(distribution, time):
 
 
 def test_jac_sf(distribution, time):
-    assert distribution.jac_sf(time).shape == (distribution.nb_params,) + time.shape
+    nb_params = distribution.get_params().size
+    assert distribution.jac_sf(time).shape == (nb_params,) + time.shape
 
 
 def test_jac_hf(distribution, time):
-    assert distribution.jac_hf(time).shape == (distribution.nb_params,) + time.shape
+    nb_params = distribution.get_params().size
+    assert distribution.jac_hf(time).shape == (nb_params,) + time.shape
 
 
 def test_jac_chf(distribution, time):
-    assert distribution.jac_chf(time).shape == (distribution.nb_params,) + time.shape
+    nb_params = distribution.get_params().size
+    assert distribution.jac_chf(time).shape == (nb_params,) + time.shape
 
 
 def test_jac_cdf(distribution, time):
-    assert distribution.jac_cdf(time).shape == (distribution.nb_params,) + time.shape
+    nb_params = distribution.get_params().size
+    assert distribution.jac_cdf(time).shape == (nb_params,) + time.shape
 
 
 def test_jac_pdf(distribution, time):
-    assert distribution.jac_pdf(time).shape == (distribution.nb_params,) + time.shape
+    nb_params = distribution.get_params().size
+    assert distribution.jac_pdf(time).shape == (nb_params,) + time.shape
 
 
 def test_ls_integrate(distribution, integration_bound_a, integration_bound_b):

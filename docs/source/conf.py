@@ -64,9 +64,8 @@ else:
 templates_path = ["_templates"]
 exclude_patterns = [
     "_*",
-    "user_guide/_*",
-    "user_guide/.ipynb_checkpoints/*",
-    "learn/_*",
+    "user_guides/_*",
+    "user_guides/.ipynb_checkpoints/*",
     "api/_*",
 ]  # note to be parsed by compiler
 
@@ -82,9 +81,8 @@ html_js_files = ["custom-icon.js"]
 html_css_files = ["css/custom.css"]  # custom css to change some colors
 
 html_sidebars = {
-    "installation": [],  # removes navigation bar for installation.rst
-    "basic/index": [],  # idem
-    "developer/index": [],  # idem
+    "install": [],  # removes navigation bar for installation.rst
+    "for_developers/index": [],  # idem
 }
 
 html_theme_options = {

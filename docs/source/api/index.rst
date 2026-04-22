@@ -22,9 +22,9 @@ Lifetime models
 Parametric lifetime models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: relife.lifetime_model
+.. currentmodule:: relife.lifetime_models
 
-.. rubric:: Lifetime distributions
+.. rubric:: Parametric lifetime distributions
 
 .. autosummary::
     :toctree: parametric_lifetime_models
@@ -38,7 +38,7 @@ Parametric lifetime models
     Gamma
     LogLogistic
 
-.. rubric:: Lifetime regression
+.. rubric:: Parametric lifetime regressions
 
 .. autosummary::
     :toctree: parametric_lifetime_models
@@ -49,8 +49,8 @@ Parametric lifetime models
     ParametricAcceleratedFailureTime
 
 
-Semiparametric lifetime models
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Semiparametric lifetime regression
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
     :toctree: semiparametric_lifetime_models
@@ -93,7 +93,7 @@ Conditional lifetime models
 Stochastic processes
 --------------------
 
-.. currentmodule:: relife.stochastic_process
+.. currentmodule:: relife.stochastic_processes
 
 .. autosummary::
     :toctree: stochastic_process
@@ -110,7 +110,7 @@ Maintenance policies
 
 Convenient functions to instanciate a policy based on the given model and cost structure.
 
-.. currentmodule:: relife.policy
+.. currentmodule:: relife.policies
 
 .. autosummary::
     :toctree: policy
@@ -134,10 +134,10 @@ Lower-level policy classes that can be used in addition to the above functions.
     OneCycleRunToFailurePolicy
     NonHomogeneousPoissonAgeReplacementPolicy
 
-Economy
+Rewards
 -------
 
-.. currentmodule:: relife.economic
+.. currentmodule:: relife.rewards
 
 .. autosummary::
     :toctree: economy
@@ -152,7 +152,7 @@ Economy
 Built-in datasets
 -----------------
 
-.. currentmodule:: relife.data
+.. currentmodule:: relife.datasets
 
 .. autosummary::
     :toctree: data
@@ -168,7 +168,7 @@ Built-in datasets
 Likelihoods
 -----------
 
-.. currentmodule:: relife.lifetime_model
+.. currentmodule:: relife.lifetime_models
 
 .. autosummary::
     :toctree: likelihoods
@@ -180,6 +180,24 @@ Likelihoods
     CoxPartialLifetimeLikelihood
     EfronPartialLifetimeLikelihood
     BreslowPartialLifetimeLikelihood
+
+
+Quadratures
+-----------
+
+Quadratures are used a many computations. We don't use Scipy quadrature implementations as, to our knowledge, they don't
+support automatic broadcasting of 2D bounds.
+
+.. currentmodule:: relife.quadratures
+
+.. autosummary::
+    :toctree: routines
+    :template: function_template.rst
+    :nosignatures:
+
+    ~legendre_quadrature
+    ~laguerre_quadrature
+    ~unweighted_laguerre_quadrature
 
 
 Utils
@@ -195,20 +213,8 @@ Various utilities to help with development.
     :caption: Utils
     :nosignatures:
 
-    ~reshape_1d_arg
-    ~get_args_nb_assets
-
-Quadrature utilities used a many computations. We don't use Scipy quadrature implementations as, to our knowledge, they don't
-support automatic broadcasting of 2D bounds.
-
-.. currentmodule:: relife.utils.quadrature
-
-.. autosummary::
-    :toctree: routines
-    :template: function_template.rst
-    :nosignatures:
-
-    ~legendre_quadrature
-    ~laguerre_quadrature
-    ~unweighted_laguerre_quadrature
+    ~to_numpy_float64
+    ~to_column_2d_if_1d
+    ~flatten_if_at_least_2d
+    ~get_nb_assets
 

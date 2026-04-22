@@ -1,0 +1,45 @@
+﻿
+
+
+
+RunToFailurePolicy
+==================
+
+.. currentmodule:: relife.policies
+
+.. autoclass:: RunToFailurePolicy
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost
+        
+        
+            ~RunToFailurePolicy.asymptotic_expected_net_present_value
+        
+        
+            ~RunToFailurePolicy.expected_equivalent_annual_cost
+        
+        
+            ~RunToFailurePolicy.expected_net_present_value
+        
+        
+            ~RunToFailurePolicy.get_cf
+        
+        
+            ~RunToFailurePolicy.sample
+        
+        
+            ~RunToFailurePolicy.set_cf
+        
+    

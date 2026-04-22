@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+ECDF
+====
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.lifetime_models
 
-.. autoclass:: ParametricModel
+.. autoclass:: ECDF
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,15 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~ECDF.cdf
         
         
-            ~ParametricModel.get_params_names
+            ~ECDF.fit
         
         
-            ~ParametricModel.set_params
+            ~ECDF.plot
+        
+        
+            ~ECDF.sf
         
     

@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+AgeReplacementReward
+====================
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.rewards
 
-.. autoclass:: ParametricModel
+.. autoclass:: AgeReplacementReward
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,9 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~AgeReplacementReward.conditional_expectation
         
         
-            ~ParametricModel.get_params_names
-        
-        
-            ~ParametricModel.set_params
+            ~AgeReplacementReward.sample
         
     

@@ -3,7 +3,7 @@ from typing import Any, Literal, TypedDict, final, overload
 
 import numpy as np
 from numpy._typing import NDArray
-from optype.numpy import Array, Array1D, Array2D, AtMost2D
+from optype.numpy import Array, Array1D, Array2D
 from scipy.stats import norm
 from typing_extensions import override
 
@@ -140,7 +140,7 @@ class _BreslowBaseline:
     covar_effect: LinearCovarEffect
 
     def __init__(self, covar_effect: LinearCovarEffect, data: CoxData):
-        assert data.covar.shape[-1] == covar_effect.nb_params
+        assert data.covar.shape[-1] == covar_effect.get_params().size
         self.covar_effect = covar_effect
         self.data = data
 
@@ -259,12 +259,6 @@ class SemiParametricProportionalHazard:
         if self.covar_effect is None:
             return None
         return self.covar_effect.get_params()
-
-    @property
-    def nb_params(self) -> int:
-        if self.covar_effect is None:
-            return None
-        return self.covar_effect.nb_params
 
     def _require_fitted(
         self,
@@ -402,7 +396,7 @@ class SemiParametricProportionalHazard:
     def fit(
         self,
         time: Array1D[np.float64],
-        covar: Array[AtMost2D, np.float64],
+        covar: Array1D[Any] | Array2D[Any],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -606,7 +600,7 @@ class EfronPartialLifetimeLikelihood(
             If order 0, shape [m, max(d_j)]
             If order 1, shape [m, max(d_j), p]
             If order 2, shape [m, max(d_j), p, p]
-        """
+        """  # noqa: E501
 
         if order == 0:
             # shape [m, max(d_j)]

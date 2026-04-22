@@ -160,9 +160,8 @@ NB_ASSETS = 3
 
 @pytest.fixture
 def frozen_regression(regression):
-    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * regression.nb_coef).reshape(
-        NB_ASSETS, regression.nb_coef
-    )
+    nb_coef = regression.covar_effect.get_params().size
+    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * nb_coef).reshape(NB_ASSETS, nb_coef)
     return regression.freeze(covar)
 
 
@@ -174,9 +173,8 @@ def frozen_ar_distribution(distribution):
 
 @pytest.fixture
 def frozen_ar_regression(regression):
-    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * regression.nb_coef).reshape(
-        NB_ASSETS, regression.nb_coef
-    )
+    nb_coef = regression.covar_effect.get_params().size
+    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * nb_coef).reshape(NB_ASSETS, nb_coef)
     ar = regression.isf(0.75, covar)
     return AgeReplacementModel(regression).freeze(ar, covar)
 

@@ -79,7 +79,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
 
 class RenewalProcessIterable(StochasticDataIterable):
     def __iter__(self) -> RenewalProcessIterator:
-        from relife.stochastic_process import RenewalProcess, RenewalRewardProcess
+        from relife.stochastic_processes import RenewalProcess, RenewalRewardProcess
 
         if isinstance(self.process, RenewalRewardProcess):
             return RenewalRewardProcessIterator(

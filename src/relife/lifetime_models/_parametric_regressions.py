@@ -123,17 +123,6 @@ class LinearCovarEffect(ParametricModel):
     def __init__(self, coefficients: tuple[ST | None, ...] = (None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
-    @property
-    def nb_coef(self) -> int:
-        """
-        Returns the number of coefficients.
-
-        Returns
-        -------
-        out : int
-        """
-        return self.nb_params
-
     def g(
         self, covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
@@ -161,11 +150,12 @@ class LinearCovarEffect(ParametricModel):
                 """
             )
         covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
-        if covar_nb_coef != self.nb_coef:
+        nb_coef = self.get_params().size
+        if covar_nb_coef != nb_coef:
             raise ValueError(
                 f"""
                 Invalid covar. Number of covar does not match number of
-                coefficients. Got {self.nb_coef} nb_coef but covar shape is
+                coefficients. Got {nb_coef} nb_coef but covar shape is
                 {arr_covar.shape}
                 """
             )
@@ -193,9 +183,10 @@ class LinearCovarEffect(ParametricModel):
         """
         arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
         g = self.g(arr_covar)  # () or (m, 1)
-        jac = arr_covar.T.reshape(self.nb_coef, -1, 1) * g  # (nb_coef, m, 1)
+        nb_coef = self.get_params().size
+        jac = arr_covar.T.reshape(nb_coef, -1, 1) * g  # (nb_coef, m, 1)
         if arr_covar.ndim <= 1:
-            jac = jac.reshape(self.nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
+            jac = jac.reshape(nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
         return jac  # (nb_coef, m, 1)
 
 
@@ -231,8 +222,7 @@ class ParametricLifetimeRegression(
         self.covar_effect = LinearCovarEffect(coefficients)
         self.baseline = baseline
 
-    @property
-    def coefficients(self) -> Array1D[np.float64]:
+    def get_coefficients(self) -> Array1D[np.float64]:
         """
         Returns the coefficients values.
 
@@ -241,17 +231,6 @@ class ParametricLifetimeRegression(
         out : ndarray
         """
         return self.covar_effect.get_params()
-
-    @property
-    def nb_coef(self) -> int:
-        """
-        Returns the number of coefficients.
-
-        Returns
-        -------
-        out : int
-        """
-        return self.covar_effect.nb_params
 
     @override
     @document_args(
@@ -519,9 +498,10 @@ def init_regression_params_from_lifetimes(
 
 
 def get_regression_params_bounds(model: ParametricLifetimeRegression) -> Bounds:
+    nb_coefficients = model.covar_effect.get_params().size
     lb = np.concatenate(
         (
-            np.full(model.covar_effect.nb_params, -np.inf),
+            np.full(nb_coefficients, -np.inf),
             get_distrib_params_bounds(
                 model.baseline
             ).lb,  # baseline has _params_bounds according to typing
@@ -529,7 +509,7 @@ def get_regression_params_bounds(model: ParametricLifetimeRegression) -> Bounds:
     )
     ub = np.concatenate(
         (
-            np.full(model.covar_effect.nb_params, np.inf),
+            np.full(nb_coefficients, np.inf),
             get_distrib_params_bounds(model.baseline).ub,
         )
     )
@@ -666,7 +646,8 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
             axis=0,
         )  # (p + nb_coef, m, n)
 
-        jac = jac.reshape((self.nb_params,) + out_shape)
+        nb_params = self.get_params().size
+        jac = jac.reshape((nb_params,) + out_shape)
         return jac
 
     @override
@@ -702,7 +683,8 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
             axis=0,
         )  # (p + nb_coef, m, n)
 
-        jac = jac.reshape((self.nb_params,) + out_shape)
+        nb_params = self.get_params().size
+        jac = jac.reshape((nb_params,) + out_shape)
         return jac
 
 
@@ -843,7 +825,8 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
             axis=0,
         )  # (p + nb_coef, m, n)
 
-        jac = jac.reshape((self.nb_params,) + out_shape)
+        nb_params = self.get_params().size
+        jac = jac.reshape((nb_params,) + out_shape)
         return jac
 
     @override
@@ -880,5 +863,6 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
             axis=0,
         )  # (p + nb_coef, m, n)
 
-        jac = jac.reshape((self.nb_params,) + out_shape)
+        nb_params = self.get_params().size
+        jac = jac.reshape((nb_params,) + out_shape)
         return jac

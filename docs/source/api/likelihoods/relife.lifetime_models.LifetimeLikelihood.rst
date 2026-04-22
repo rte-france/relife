@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+LifetimeLikelihood
+==================
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.lifetime_models
 
-.. autoclass:: ParametricModel
+.. autoclass:: LifetimeLikelihood
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,12 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~LifetimeLikelihood.jac_negative_log
         
         
-            ~ParametricModel.get_params_names
+            ~LifetimeLikelihood.negative_log
         
         
-            ~ParametricModel.set_params
+            ~LifetimeLikelihood.optimize
         
     

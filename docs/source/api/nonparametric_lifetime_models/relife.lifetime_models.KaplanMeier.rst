@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+KaplanMeier
+===========
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.lifetime_models
 
-.. autoclass:: ParametricModel
+.. autoclass:: KaplanMeier
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,12 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~KaplanMeier.fit
         
         
-            ~ParametricModel.get_params_names
+            ~KaplanMeier.plot
         
         
-            ~ParametricModel.set_params
+            ~KaplanMeier.sf
         
     

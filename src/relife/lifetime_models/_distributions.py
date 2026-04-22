@@ -193,23 +193,25 @@ def init_distrib_params_from_lifetimes(
     all_time_values = np.concatenate(
         (data.complete_time.flatten(), data.censored_time.flatten())
     )
+    nb_params = model.get_params().size
     if isinstance(model, Gompertz):
-        param0 = np.empty(model.nb_params, dtype=np.float64)
+        param0 = np.empty(nb_params, dtype=np.float64)
         rate = np.pi / (np.sqrt(6) * np.std(all_time_values))
         shape = np.exp(-rate * np.mean(all_time_values))
         param0[0] = shape
         param0[1] = rate
         return param0
 
-    param0 = np.ones(model.nb_params, dtype=np.float64)
+    param0 = np.ones(nb_params, dtype=np.float64)
     param0[-1] = 1 / np.median(all_time_values)
     return param0
 
 
 def get_distrib_params_bounds(model: LifetimeDistribution) -> Bounds:
+    nb_params = model.get_params().size
     return Bounds(
-        np.full(model.nb_params, np.finfo(float).resolution),
-        np.full(model.nb_params, np.inf),
+        np.full(nb_params, np.finfo(float).resolution),
+        np.full(nb_params, np.inf),
     )
 
 

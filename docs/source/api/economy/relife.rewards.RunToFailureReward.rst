@@ -2,12 +2,12 @@
 
 
 
-ParametricModel
-===============
+RunToFailureReward
+==================
 
-.. currentmodule:: relife.base
+.. currentmodule:: relife.rewards
 
-.. autoclass:: ParametricModel
+.. autoclass:: RunToFailureReward
     :members:
     :inherited-members:
     :exclude-members: __init__, __new__
@@ -22,12 +22,9 @@ ParametricModel
     
         
         
-            ~ParametricModel.get_params
+            ~RunToFailureReward.conditional_expectation
         
         
-            ~ParametricModel.get_params_names
-        
-        
-            ~ParametricModel.set_params
+            ~RunToFailureReward.sample
         
     
