@@ -1,0 +1,6 @@
+﻿load\_circuit\_breaker
+======================
+
+.. currentmodule:: relife.datasets
+
+.. autofunction:: load_circuit_breaker

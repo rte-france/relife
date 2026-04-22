@@ -21,4 +21,13 @@ ParametricModel
 
     
         
+        
+            ~ParametricModel.get_params
+        
+        
+            ~ParametricModel.get_params_names
+        
+        
+            ~ParametricModel.set_params
+        
     

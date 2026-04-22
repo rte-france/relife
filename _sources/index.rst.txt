@@ -2,10 +2,8 @@
     :maxdepth: 2
     :hidden:
 
-    installation
-    basic/index
-    user/index
+    install
+    user_guides/index
     api/index
-    developer/index
-
+    for_developers/index
 
