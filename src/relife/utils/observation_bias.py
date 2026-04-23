@@ -1,6 +1,9 @@
+import inspect
+
 import numpy as np
 
 from relife.typing._scalars import AnyFloat, NumpyFloat
+from relife.utils._array_utils import reshape_1d_arg
 
 
 def apply_bias(
