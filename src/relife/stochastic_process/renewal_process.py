@@ -162,7 +162,7 @@ class RenewalProcess(ParametricModel):
         a0: NumpyFloat | None = None,
         ar: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        
+
         ar_assign = ar if ar is not None else np.inf
         a0_assign = a0 if a0 is not None else 0
 
@@ -174,9 +174,7 @@ class RenewalProcess(ParametricModel):
         z = renewal_equation_solver(
             timeline,
             lifetime_model_applied,
-            lambda t: (
-                (1 - self.lifetime_model.cdf(ar_assign)) * (t > (ar_assign))
-            ),
+            lambda t: (1 - self.lifetime_model.cdf(ar_assign)) * (t > (ar_assign)),
         )
 
         first_lifetime_model_applied = get_conditional_lifetime_model(
@@ -469,8 +467,7 @@ class RenewalRewardProcess(RenewalProcess):
             lifetime_model_applied,
             lambda t: lifetime_model_applied.ls_integrate(
                 lambda x: (
-                    self.reward.conditional_expectation(x)
-                    * self.discounting.factor(x)
+                    self.reward.conditional_expectation(x) * self.discounting.factor(x)
                 ),
                 np.zeros_like(t),
                 np.asarray(t),
@@ -483,16 +480,14 @@ class RenewalRewardProcess(RenewalProcess):
             self.first_lifetime_model, a0=a0, ar=ar
         )
         delayed_evaluated_func = lambda t: first_lifetime_model_applied.ls_integrate(
-                lambda x: (
-                    self.first_reward.conditional_expectation(apply_bias(x,delay=a0))
-                    * self.discounting.factor(
-                        x
-                    )
-                ),
-                np.zeros_like(t),
-                np.asarray(t),
-                deg=15,
-            )
+            lambda x: (
+                self.first_reward.conditional_expectation(apply_bias(x, delay=a0))
+                * self.discounting.factor(x)
+            ),
+            np.zeros_like(t),
+            np.asarray(t),
+            deg=15,
+        )
 
         z = delayed_renewal_equation_solver(
             timeline,
@@ -553,8 +548,7 @@ class RenewalRewardProcess(RenewalProcess):
             return np.full_like(np.squeeze(lf), np.inf)
         ly = lifetime_model_applied.ls_integrate(
             lambda x: (
-                self.discounting.factor(x)
-                * self.reward.conditional_expectation(x)
+                self.discounting.factor(x) * self.reward.conditional_expectation(x)
             ),
             0.0,
             np.inf,
@@ -573,10 +567,8 @@ class RenewalRewardProcess(RenewalProcess):
         ly1 = np.squeeze(
             first_lifetime_model_applied.ls_integrate(
                 lambda x: (
-                    self.discounting.factor(
-                        x
-                    )
-                    * self.first_reward.conditional_expectation(apply_bias(x,delay=a0))
+                    self.discounting.factor(x)
+                    * self.first_reward.conditional_expectation(apply_bias(x, delay=a0))
                 ),
                 0.0,
                 np.inf,
