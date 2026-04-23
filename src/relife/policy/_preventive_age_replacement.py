@@ -309,7 +309,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
 
         timeline, eeac = self._expected_costs(ar=ar).expected_equivalent_annual_cost(
-            tf, nb_steps, total_sum=total_sum,ar=ar, a0=a0
+            tf, nb_steps, total_sum=total_sum, ar=ar, a0=a0
         )
         return (
             timeline,
@@ -702,25 +702,41 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def cr(self, value):
         self._cost_structure["cr"] = reshape_1d_arg(value)
 
-    def expected_net_present_value(self, tf, ar : NumpyFloat, nb_steps, total_sum=False, a0: NumpyFloat | None = None):
+    def expected_net_present_value(
+        self,
+        tf,
+        ar: NumpyFloat,
+        nb_steps,
+        total_sum=False,
+        a0: NumpyFloat | None = None,
+    ):
         raise NotImplementedError("implementation will come in a future release")
 
-    def asymptotic_expected_net_present_value(self, ar : NumpyFloat, total_sum=False, a0: NumpyFloat | None = None):
+    def asymptotic_expected_net_present_value(
+        self, ar: NumpyFloat, total_sum=False, a0: NumpyFloat | None = None
+    ):
         raise NotImplementedError("implementation will come in a future release")
 
-    def expected_equivalent_annual_cost(self, ar : NumpyFloat, tf, nb_steps, total_sum=False, a0: NumpyFloat | None = None):
+    def expected_equivalent_annual_cost(
+        self,
+        ar: NumpyFloat,
+        tf,
+        nb_steps,
+        total_sum=False,
+        a0: NumpyFloat | None = None,
+    ):
         raise NotImplementedError("implementation will come in a future release")
 
-    def asymptotic_expected_equivalent_annual_cost(self, ar : NumpyFloat, a0: NumpyFloat | None = None):
+    def asymptotic_expected_equivalent_annual_cost(
+        self, ar: NumpyFloat, a0: NumpyFloat | None = None
+    ):
         discounting = ExponentialDiscounting(self.discounting_rate)
 
         if self.discounting_rate == 0.0:
             asymptotic_eeac = (
                 self.cp
                 + self.cr
-                * legendre_quadrature(
-                    lambda t: self.baseline_model.intensity(t), 0, ar
-                )
+                * legendre_quadrature(lambda t: self.baseline_model.intensity(t), 0, ar)
             ) / ar
         else:
             asymptotic_eeac = (
