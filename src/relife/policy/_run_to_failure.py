@@ -250,55 +250,46 @@ class RunToFailurePolicy(BaseRunToFailure):
     """
 
     @property
-    def _stochastic_process(self) -> RenewalRewardProcess:
-        if self.a0 is None:
-            return RenewalRewardProcess(
-                self.baseline_model,
-                RunToFailureReward(self.cf),
-                discounting_rate=self.discounting_rate,
-            )
+    def _stochastic_reward_process(self) -> RenewalRewardProcess:
         return RenewalRewardProcess(
             self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
-            first_lifetime_model=LeftTruncatedModel(self.baseline_model).freeze(
-                self.a0
-            ),
-        )
+            )
 
     def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False
+        self, tf: float, nb_steps: int, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, npv = self._stochastic_process.expected_total_reward(tf, nb_steps)
+        timeline, npv = self._stochastic_reward_process.expected_total_reward(tf, nb_steps, a0=a0)
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
         return timeline, npv
 
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False]
+        self, total_sum: Literal[False], a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True]
+        self, total_sum: Literal[True], a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
-        asymptotic_npv = self._stochastic_process.asymptotic_expected_total_reward()
+        asymptotic_npv = self._stochastic_reward_process.asymptotic_expected_total_reward(a0=a0)
         if total_sum:
             return np.sum(asymptotic_npv)
         return asymptotic_npv
 
     def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False
+        self, tf: float, nb_steps: int, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, eeac = self._stochastic_process.expected_equivalent_annual_worth(
-            tf, nb_steps
+        timeline, eeac = self._stochastic_reward_process.expected_equivalent_annual_worth(
+            tf, nb_steps, a0=a0
         )
         if total_sum and eeac.ndim == 2:
             eeac = np.sum(eeac, axis=0)
@@ -306,43 +297,48 @@ class RunToFailurePolicy(BaseRunToFailure):
 
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False]
+        self, total_sum: Literal[False], a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True]
+        self, total_sum: Literal[True], a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         asymptotic_eeac = (
-            self._stochastic_process.asymptotic_expected_equivalent_annual_worth()
+            self._stochastic_reward_process.asymptotic_expected_equivalent_annual_worth(a0=a0)
         )
         if total_sum:
             return np.sum(asymptotic_eeac)
         return asymptotic_eeac
 
-    def sample(self, size, tf, t0=0.0, seed=None):
+    def sample(
+        self,
+        nb_samples: int,
+        time_window: tuple[float, float],
+        a0: NumpyFloat | None = None,
+        seed=None,
+    ):
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
 
         Parameters
         ----------
-        size : int
-            The size of the desired sample.
-        tf : float
-            Time at the end of the observation.
-        t0 : float, default 0
-            Time at the beginning of the observation.
-        size : int or tuple of 2 int
-            Size of the sample
+        nb_samples : int
+            The number of samples.
+        time_window : tuple of two floats
+            Time window in which data are sampled.
         seed : int, optional
             Random seed, by default None.
 
         """
-        return self._stochastic_process.sample(tf, t0, size, seed)
+
+        return self._stochastic_reward_process.sample(
+            nb_samples, time_window, a0=a0, seed=seed
+        )
