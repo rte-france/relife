@@ -8,9 +8,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from relife.economic import RunToFailureReward
-from relife.lifetime_model import (
-    LeftTruncatedModel,
-)
 from relife.stochastic_process import RenewalRewardProcess
 from relife.typing import (
     AnyFloat,
@@ -255,41 +252,63 @@ class RunToFailurePolicy(BaseRunToFailure):
             self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
-            )
+        )
 
     def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, npv = self._stochastic_reward_process.expected_total_reward(tf, nb_steps, a0=a0)
+        timeline, npv = self._stochastic_reward_process.expected_total_reward(
+            tf, nb_steps, a0=a0
+        )
         if total_sum and npv.ndim == 2:
             npv = np.sum(npv, axis=0)
         return timeline, npv
 
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False], a0: NumpyFloat | None = None,
+        self,
+        total_sum: Literal[False],
+        a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True], a0: NumpyFloat | None = None,
+        self,
+        total_sum: Literal[True],
+        a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
-        asymptotic_npv = self._stochastic_reward_process.asymptotic_expected_total_reward(a0=a0)
+        asymptotic_npv = (
+            self._stochastic_reward_process.asymptotic_expected_total_reward(a0=a0)
+        )
         if total_sum:
             return np.sum(asymptotic_npv)
         return asymptotic_npv
 
     def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, eeac = self._stochastic_reward_process.expected_equivalent_annual_worth(
-            tf, nb_steps, a0=a0
+        timeline, eeac = (
+            self._stochastic_reward_process.expected_equivalent_annual_worth(
+                tf, nb_steps, a0=a0
+            )
         )
         if total_sum and eeac.ndim == 2:
             eeac = np.sum(eeac, axis=0)
@@ -297,21 +316,31 @@ class RunToFailurePolicy(BaseRunToFailure):
 
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False], a0: NumpyFloat | None = None,
+        self,
+        total_sum: Literal[False],
+        a0: NumpyFloat | None = None,
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True], a0: NumpyFloat | None = None,
+        self,
+        total_sum: Literal[True],
+        a0: NumpyFloat | None = None,
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False, a0: NumpyFloat | None = None,
+        self,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         asymptotic_eeac = (
-            self._stochastic_reward_process.asymptotic_expected_equivalent_annual_worth(a0=a0)
+            self._stochastic_reward_process.asymptotic_expected_equivalent_annual_worth(
+                a0=a0
+            )
         )
         if total_sum:
             return np.sum(asymptotic_eeac)
