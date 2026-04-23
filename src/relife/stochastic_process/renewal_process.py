@@ -479,8 +479,7 @@ class RenewalRewardProcess(RenewalProcess):
         first_lifetime_model_applied = get_conditional_lifetime_model(
             self.first_lifetime_model, a0=a0, ar=ar
         )
-        delayed_evaluated_func = (
-            lambda t: get_conditional_lifetime_model(
+        delayed_evaluated_func = lambda t: get_conditional_lifetime_model(
                 self.first_lifetime_model, a0=a0
             ).ls_integrate(
                 lambda x: (
@@ -494,8 +493,7 @@ class RenewalRewardProcess(RenewalProcess):
                 np.zeros_like(t),
                 np.asarray(t),
                 deg=15,
-            ),
-        )  # reward partial expectation
+            )
 
         z = delayed_renewal_equation_solver(
             timeline,

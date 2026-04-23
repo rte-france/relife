@@ -20,10 +20,10 @@ class TestOneCycleAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.compute_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
-        qa = policy.asymptotic_expected_equivalent_annual_cost()
+        qa = policy.asymptotic_expected_equivalent_annual_cost(ar)
         assert qa.shape == np.broadcast_shapes(cf.shape, cp.shape)  # () or (m,)
 
     # ignore runtime warning in optimization
@@ -39,12 +39,12 @@ class TestOneCycleAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.compute_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
 
-        qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
-        timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+        qa = policy.asymptotic_expected_equivalent_annual_cost(ar)  # () or (m,)
+        timeline, q = policy.expected_equivalent_annual_cost(ar, 400, nb_steps=2000)
 
         assert timeline.shape == (2000,)
         assert q.shape == qa.shape + timeline.shape  # (m, 2000) or (2000,)
@@ -57,29 +57,14 @@ class TestOneCycleAgeReplacementPolicy:
         eps = 1e-2
         policy = OneCycleAgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
-        ).compute_optimal_ar()
-        suboptimal_policy1 = OneCycleAgeReplacementPolicy(
-            distribution,
-            cf,
-            cp,
-            discounting_rate=discounting_rate,
-            period_before_discounting=0.1,
-            ar=policy.ar + eps,
         )
-        suboptimal_policy2 = OneCycleAgeReplacementPolicy(
-            distribution,
-            cf,
-            cp,
-            discounting_rate=discounting_rate,
-            period_before_discounting=0.1,
-            ar=policy.ar - eps,
-        )
+        ar = policy.compute_optimal_ar()
         assert np.all(
-            suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
-            > policy.asymptotic_expected_equivalent_annual_cost()
+            policy.asymptotic_expected_equivalent_annual_cost(ar+eps)
+            > policy.asymptotic_expected_equivalent_annual_cost(ar)
         ) and np.all(
-            suboptimal_policy2.asymptotic_expected_equivalent_annual_cost()
-            > policy.asymptotic_expected_equivalent_annual_cost()
+            policy.asymptotic_expected_equivalent_annual_cost(ar-eps)
+            > policy.asymptotic_expected_equivalent_annual_cost(ar)
         )
 
 
@@ -97,10 +82,10 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.compute_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
-        qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
+        qa = policy.asymptotic_expected_equivalent_annual_cost(ar)  # () or (m,)
         assert qa.shape == np.broadcast_shapes(cf.shape, cp.shape)  # () or (m,)
 
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
@@ -115,11 +100,11 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            policy.compute_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
-        qa = policy.asymptotic_expected_equivalent_annual_cost()  # () or (m,)
-        timeline, q = policy.expected_equivalent_annual_cost(400, nb_steps=2000)
+        qa = policy.asymptotic_expected_equivalent_annual_cost(ar)  # () or (m,)
+        timeline, q = policy.expected_equivalent_annual_cost(ar, 400, nb_steps=2000)
 
         assert timeline.shape == (2000,)
         assert q.shape == qa.shape + timeline.shape  # (m, 2000) or (2000,)
@@ -133,18 +118,12 @@ class TestAgeReplacementPolicy:
         eps = 1e-2
         policy = AgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
-        ).compute_optimal_ar()
-        suboptimal_policy1 = AgeReplacementPolicy(
-            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar + eps
         )
-        suboptimal_policy2 = AgeReplacementPolicy(
-            distribution, cf, cp, discounting_rate=discounting_rate, ar=policy.ar - eps
-        )
-
+        ar = policy.compute_optimal_ar()
         assert np.all(
-            suboptimal_policy1.asymptotic_expected_equivalent_annual_cost()
-            > policy.asymptotic_expected_equivalent_annual_cost()
+            policy.asymptotic_expected_equivalent_annual_cost(ar+eps)
+            > policy.asymptotic_expected_equivalent_annual_cost(ar)
         ) and np.all(
-            suboptimal_policy2.asymptotic_expected_equivalent_annual_cost()
-            > policy.asymptotic_expected_equivalent_annual_cost()
+            policy.asymptotic_expected_equivalent_annual_cost(ar-eps)
+            > policy.asymptotic_expected_equivalent_annual_cost(ar)
         )

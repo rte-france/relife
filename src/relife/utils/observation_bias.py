@@ -9,6 +9,10 @@ def apply_bias(
     censor_value: NumpyFloat | None = None,
     delay_applied_to_censor=False,
 ):
+    if censor_value is None:
+        censor_value = np.inf
+    if delay is None:
+        delay = 0
     if delay_applied_to_censor:
-        return np.minimum(t, (censor_value or np.inf) - (delay or 0))
-    return np.minimum(t + (delay or 0), (censor_value or np.inf))
+        return np.minimum(t, censor_value - delay)
+    return np.minimum(t + delay,censor_value)
