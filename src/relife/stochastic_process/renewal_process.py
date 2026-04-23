@@ -14,7 +14,10 @@ from relife.lifetime_model._conditional_model import (
 from relife.stochastic_process._sample import StochasticSampleMapping
 from relife.typing import AnyParametricLifetimeModel
 from relife.typing._scalars import NumpyFloat
-from relife.utils.observation_bias import apply_bias
+from relife.utils._array_utils import reshape_1d_arg
+from relife.utils.observation_bias import apply_bias, with_reshape_a0_ar
+
+import inspect
 
 from ._renewal_equations import (
     delayed_renewal_equation_solver,
@@ -73,6 +76,7 @@ class RenewalProcess(ParametricModel):
             first_lifetime_model = lifetime_model
         self.first_lifetime_model = first_lifetime_model
 
+    @with_reshape_a0_ar
     def renewal_function(
         self,
         tf: float,
@@ -125,6 +129,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_function)
 
+    @with_reshape_a0_ar
     def expected_number_of_events(
         self,
         tf: float,
@@ -155,6 +160,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(z)
 
+    @with_reshape_a0_ar
     def expected_number_of_preventive_renewals(
         self,
         tf: float,
@@ -195,6 +201,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(z)
 
+    @with_reshape_a0_ar
     def renewal_density(
         self,
         tf: float,
@@ -246,6 +253,7 @@ class RenewalProcess(ParametricModel):
         )
         return np.squeeze(timeline), np.squeeze(renewal_density)
 
+    @with_reshape_a0_ar
     def sample(
         self,
         nb_samples: int,
@@ -282,6 +290,7 @@ class RenewalProcess(ParametricModel):
             struct_array, iterable.nb_assets, nb_samples
         )
 
+    @with_reshape_a0_ar
     def generate_failure_data(
         self,
         nb_samples: int,
@@ -403,6 +412,7 @@ class RenewalRewardProcess(RenewalProcess):
     def discounting_rate(self, value: float) -> None:
         self.discounting.rate = value
 
+    @with_reshape_a0_ar
     def expected_total_reward(
         self,
         tf: float,
@@ -500,6 +510,7 @@ class RenewalRewardProcess(RenewalProcess):
             z
         )  # (nb_steps,), (nb_steps,) or (m, nb_steps)
 
+    @with_reshape_a0_ar
     def asymptotic_expected_total_reward(
         self, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -578,6 +589,7 @@ class RenewalRewardProcess(RenewalProcess):
         z = ly1 + z * lf1  # () or (m,)
         return z  # () or (m,)
 
+    @with_reshape_a0_ar
     def expected_equivalent_annual_worth(
         self,
         tf: float,
@@ -622,6 +634,7 @@ class RenewalRewardProcess(RenewalProcess):
             eeac
         )  # (nb_steps,) and (nb_steps) or (m, nb_steps)
 
+    @with_reshape_a0_ar
     def asymptotic_expected_equivalent_annual_worth(
         self, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:

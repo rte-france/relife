@@ -26,6 +26,7 @@ from relife.utils import (
     flatten_if_possible,
     reshape_1d_arg,
 )
+from relife.utils.observation_bias import with_reshape_a0_ar
 from relife.utils.quadrature import legendre_quadrature
 
 from ._base import OneCycleExpectedCosts, ReplacementPolicy
@@ -265,6 +266,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def expected_net_present_value(
         self,
         ar: NumpyFloat,
@@ -299,6 +301,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         )  # () or (m, nb_steps)
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def expected_equivalent_annual_cost(
         self,
         ar: NumpyFloat,
@@ -330,6 +333,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     ) -> np.float64 | NDArray[np.float64]: ...
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
         self, ar: NumpyFloat, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -415,6 +419,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def expected_net_present_value(
         self,
         ar: NumpyFloat,
@@ -444,6 +449,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     ) -> np.float64 | NDArray[np.float64]: ...
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def asymptotic_expected_net_present_value(
         self, ar: NumpyFloat, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -455,6 +461,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         return asymptotic_npv
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def expected_equivalent_annual_cost(
         self,
         ar: NumpyFloat,
@@ -485,6 +492,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     ) -> np.float64 | NDArray[np.float64]: ...
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
         self, ar: NumpyFloat, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
@@ -497,6 +505,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         return asymptotic_eeac  # () or (m,)
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def annual_number_of_replacements(
         self,
         ar: NumpyFloat,
@@ -584,6 +593,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         return newton(eq, x0)  # pyright: ignore
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def generate_failure_data(
         self,
         ar: NumpyFloat,
@@ -615,6 +625,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
     @check_impossible_replacements
+    @with_reshape_a0_ar
     def sample(
         self,
         ar: NumpyFloat,
@@ -702,6 +713,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def cr(self, value):
         self._cost_structure["cr"] = reshape_1d_arg(value)
 
+    @with_reshape_a0_ar
     def expected_net_present_value(
         self,
         tf,
@@ -712,11 +724,13 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     ):
         raise NotImplementedError("implementation will come in a future release")
 
+    @with_reshape_a0_ar
     def asymptotic_expected_net_present_value(
         self, ar: NumpyFloat, total_sum=False, a0: NumpyFloat | None = None
     ):
         raise NotImplementedError("implementation will come in a future release")
 
+    @with_reshape_a0_ar
     def expected_equivalent_annual_cost(
         self,
         ar: NumpyFloat,
@@ -727,6 +741,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     ):
         raise NotImplementedError("implementation will come in a future release")
 
+    @with_reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
         self, ar: NumpyFloat, a0: NumpyFloat | None = None
     ):
@@ -756,7 +771,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
             )
         return np.squeeze(asymptotic_eeac)  # () or (m,)
 
-    def optimize(self):
+    def compute_optimal_ar(self) -> NumpyFloat:
         """
         Optimize the policy according the costs, the discounting rate and the underlying non-homogeneous Poisson process.
 
@@ -790,5 +805,4 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
                 - self._cost_structure["cp"] / self._cost_structure["cr"]
             )
 
-        self.ar = newton(eq, x0)
-        return self
+        return newton(eq, x0)

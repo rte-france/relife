@@ -11,7 +11,7 @@ from relife.typing import (
     AnyParametricLifetimeModel,
     NumpyFloat,
 )
-from relife.utils.observation_bias import apply_bias
+from relife.utils.observation_bias import apply_bias, with_reshape_a0_ar
 
 __all__ = ["OneCycleExpectedCosts", "ReplacementPolicy"]
 
@@ -182,6 +182,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         self.period_before_discounting = period_before_discounting
         self.lifetime_model = lifetime_model
 
+    @with_reshape_a0_ar
     def expected_net_present_value(
         self,
         tf: float,
@@ -232,6 +233,8 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         ar: NumpyFloat | None = None,
         a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @with_reshape_a0_ar
     def asymptotic_expected_net_present_value(
         self,
         total_sum: bool = False,
@@ -256,6 +259,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             value = np.sum(value)
         return value  # () or (m,)
 
+    @with_reshape_a0_ar
     def _expected_equivalent_annual_cost(
         self,
         timeline: NDArray[np.float64],
@@ -294,6 +298,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         integral = np.where(mask, q0, q0 + integral)
         return np.squeeze(integral)  # (nb_steps,)/(m, nb_steps)
 
+    @with_reshape_a0_ar
     def expected_equivalent_annual_cost(
         self,
         tf: float,
@@ -331,6 +336,8 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         ar: NumpyFloat | None = None,
         a0: NumpyFloat | None = None,
     ) -> np.float64 | NDArray[np.float64]: ...
+
+    @with_reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
         self,
         total_sum: bool = False,
