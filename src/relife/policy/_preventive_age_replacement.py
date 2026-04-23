@@ -667,13 +667,12 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     ar
     """
 
-    def __init__(self, nhpp, cr, cp, discounting_rate=0.0, ar=None):
+    def __init__(self, nhpp, cr, cp, discounting_rate=0.0):
         super().__init__(
             nhpp,
             cost_structure={"cr": reshape_1d_arg(cr), "cp": reshape_1d_arg(cp)},
             discounting_rate=discounting_rate,
         )
-        self.ar = ar
 
     @property
     def cp(self):
@@ -703,64 +702,41 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def cr(self, value):
         self._cost_structure["cr"] = reshape_1d_arg(value)
 
-    @property
-    def ar(self):
-        """Preventive ages of replacement.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        if self._ar is None:
-            return self._ar
-        return flatten_if_possible(self._ar)
-
-    @ar.setter
-    def ar(self, value):
-        if value is not None:
-            value = reshape_1d_arg(value)
-            self._ar = value
-        else:
-            self._ar = None
-
-    def expected_net_present_value(self, tf, nb_steps, total_sum=False):
+    def expected_net_present_value(self, tf, ar : NumpyFloat, nb_steps, total_sum=False, a0: NumpyFloat | None = None):
         raise NotImplementedError("implementation will come in a future release")
 
-    def asymptotic_expected_net_present_value(self, total_sum=False):
+    def asymptotic_expected_net_present_value(self, ar : NumpyFloat, total_sum=False, a0: NumpyFloat | None = None):
         raise NotImplementedError("implementation will come in a future release")
 
-    def expected_equivalent_annual_cost(self, tf, nb_steps, total_sum=False):
+    def expected_equivalent_annual_cost(self, ar : NumpyFloat, tf, nb_steps, total_sum=False, a0: NumpyFloat | None = None):
         raise NotImplementedError("implementation will come in a future release")
 
-    def asymptotic_expected_equivalent_annual_cost(self):
+    def asymptotic_expected_equivalent_annual_cost(self, ar : NumpyFloat, a0: NumpyFloat | None = None):
         discounting = ExponentialDiscounting(self.discounting_rate)
-
-        if self.ar is None:
-            raise ValueError
 
         if self.discounting_rate == 0.0:
             asymptotic_eeac = (
                 self.cp
                 + self.cr
                 * legendre_quadrature(
-                    lambda t: self.baseline_model.intensity(t), 0, self._ar
+                    lambda t: self.baseline_model.intensity(t), 0, ar
                 )
-            ) / self._ar
+            ) / ar
         else:
             asymptotic_eeac = (
                 self.discounting_rate
                 * (
-                    self.cp * discounting.factor(self._ar)
+                    self.cp * discounting.factor(ar)
                     + self.cr
                     * legendre_quadrature(
                         lambda t: (
                             discounting.factor(t) * self.baseline_model.intensity(t)
                         ),
                         0,
-                        self._ar,
+                        ar,
                     )
                 )
-                / (1 - discounting.factor(self._ar))
+                / (1 - discounting.factor(ar))
             )
         return np.squeeze(asymptotic_eeac)  # () or (m,)
 
