@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeAlias, TypeVarTuple
+from typing import Generic, TypeAlias, TypeVar, TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from optype.numpy import Array, ArrayND, AtMost2D
 from typing_extensions import override
 
+from relife.lifetime_models._distributions import LifetimeDistribution
+from relife.lifetime_models._parametric_regressions import ParametricLifetimeRegression
 from relife.utils import to_column_2d_if_1d
 
 from ._base import (
     FrozenParametricLifetimeModel,
     ParametricLifetimeModel,
+    approx_ls_integrate,
     document_args,
 )
 
@@ -44,8 +47,15 @@ _ar_args_docstring = [
 ]
 
 
+B = TypeVar("B", bound=LifetimeDistribution | ParametricLifetimeRegression)
+AR: TypeAlias = ST | NumpyST | ArrayND[NumpyST]
+A0: TypeAlias = ST | NumpyST | ArrayND[NumpyST]
+ArgT: TypeAlias = ST | NumpyST | ArrayND[NumpyST]
+
+
 class AgeReplacementModel(
-    ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], *Ts]]
+    ParametricLifetimeModel[*tuple[AR, *tuple[ArgT, ...]]],
+    Generic[B],
 ):
     r"""
     Age replacement model.
@@ -68,9 +78,9 @@ class AgeReplacementModel(
     plot
     """
 
-    baseline: ParametricLifetimeModel[*Ts]
+    baseline: B
 
-    def __init__(self, baseline: ParametricLifetimeModel[*Ts]):
+    def __init__(self, baseline: B):
         super().__init__()
         self.baseline = baseline
 
@@ -80,7 +90,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < ar, self.baseline.sf(time, *args), 0.0)
 
@@ -90,7 +100,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < ar, self.baseline.hf(time, *args), 0.0)
 
@@ -100,7 +110,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return super().cdf(time, *(ar, *args))
 
@@ -110,7 +120,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < ar, self.baseline.chf(time, *args), 0.0)
 
@@ -120,7 +130,7 @@ class AgeReplacementModel(
         self,
         probability: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.minimum(self.baseline.isf(probability, *args), ar)
 
@@ -130,7 +140,7 @@ class AgeReplacementModel(
         self,
         cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), ar)
 
@@ -140,7 +150,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < ar, self.baseline.pdf(time, *args), 0)
 
@@ -150,7 +160,7 @@ class AgeReplacementModel(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         ar = to_column_2d_if_1d(ar)
         ub = np.array(np.inf)
@@ -172,14 +182,16 @@ class AgeReplacementModel(
         self,
         probability: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return self.isf(1 - probability, ar, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def median(
-        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+        self,
+        ar: ST | NumpyST | ArrayND[NumpyST],
+        *args: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         return self.ppf(0.5, ar, *args)
 
@@ -187,9 +199,9 @@ class AgeReplacementModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def rvs(
         self,
-        size: int | tuple[int, int],
+        size: int | tuple[int, ...],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
         seed: int
         | np.random.Generator
         | np.random.BitGenerator
@@ -213,54 +225,20 @@ class AgeReplacementModel(
         a: ST | NumpyST | ArrayND[NumpyST],
         b: ST | NumpyST | ArrayND[NumpyST],
         ar: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
+        *args: ST | NumpyST | ArrayND[NumpyST],
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
         b = np.minimum(ar, b)
-        integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
-        if func(ar).ndim == 2 and integration.ndim == 1:
-            integration = integration.reshape(-1, 1)
+        integration = approx_ls_integrate(self.baseline, func, a, b, args=args, deg=deg)
         return integration + np.where(
             b == ar, func(ar) * self.baseline.sf(ar, *args), 0
         )
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
-    def moment(
-        self, n: int, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
-        return self.ls_integrate(
-            lambda x: np.asarray(x**n, dtype=float),
-            np.float64(0),
-            np.inf,
-            ar,
-            *args,
-            deg=100,
-        )
-
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
-    def mean(
-        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
-        return self.moment(1, ar, *args)
-
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
-    def var(
-        self, ar: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        ar = to_column_2d_if_1d(ar)
-        return self.moment(2, ar, *args) - self.moment(1, ar, *args) ** 2
-
     def freeze(
-        self, ar: ST | NumpyST | Array[AtMost2D, NumpyST], *args: *Ts
-    ) -> FrozenParametricLifetimeModel[
-        *tuple[ST | NumpyST | Array[AtMost2D, NumpyST], *Ts]
-    ]:
+        self,
+        ar: ST | NumpyST | Array[AtMost2D, NumpyST],
+        *args: ST | NumpyST | Array[AtMost2D, NumpyST],
+    ) -> FrozenParametricLifetimeModel:
         """
         Freeze age replacement values and other arguments into the object data.
 

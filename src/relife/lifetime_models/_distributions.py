@@ -22,7 +22,10 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import OptimizerConfig
-from relife.quadratures import laguerre_quadrature, legendre_quadrature
+from relife.quadratures import (
+    laguerre_quadrature,
+    legendre_quadrature,
+)
 from relife.utils import to_column_2d_if_1d
 
 from ._base import (
@@ -30,6 +33,9 @@ from ._base import (
     LifetimeData,
     LifetimeLikelihood,
     ParametricLifetimeModel,
+    approx_ls_integrate,
+    approx_moment,
+    approx_mrl,
     document_args,
 )
 
@@ -96,11 +102,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         return super().ppf(probability)
 
     @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
-    def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
-        return super().moment(n)
-
-    @override
     @document_args(
         base_cls=FittableParametricLifetimeModel,
         args_docstring=[],
@@ -144,20 +145,93 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             seed=seed,
         )
 
-    @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
-            np.float64 | ArrayND[np.float64],
+            [ST | NumpyST | ArrayND[NumpyST]], np.float64 | ArrayND[np.float64]
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
         b: ST | NumpyST | ArrayND[NumpyST],
-        *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().ls_integrate(func, a, b, deg=deg)
+        """
+        Lebesgue-Stieltjes integration.
+
+        Parameters
+        ----------
+        func : Callable
+            A function of the form `y = func(x)` taking floats or ndarrays
+            as inputs and returning a np.float64 or an ndarray.
+        a : float or ndarray
+            The lower bound of the integration.
+        b : float or ndarray
+            The upper bound of the integration. Can't be `np.inf`.
+        deg : int, default is 10.
+            Number of sample points and weights for the quadrature
+
+        Returns
+        -------
+        out : np.ndarray
+            Lebesgue-Stieltjes integration of `func` from `a` to `b`.
+        """
+
+        return approx_ls_integrate(self, func, a, b, deg=deg)
+
+    def moment(self, n: int) -> np.float64:
+        """
+        n-th order moment.
+
+        Parameters
+        ----------
+        n : int
+            order of the moment, at least 1.
+
+        Returns
+        -------
+        out : np.float64
+        """
+        moment = approx_moment(self, n)
+        assert isinstance(moment, np.float64)  # typeguard
+        return moment
+
+    def mean(self) -> np.float64:
+        """
+        The mean of the distribution.
+
+        Returns
+        -------
+        out : np.float64
+        """
+        return self.moment(1)
+
+    def var(self) -> np.float64:
+        """
+        The variance of the distribution.
+
+        Returns
+        -------
+        out : np.float64
+        """
+        return self.moment(2) - self.moment(1) ** 2
+
+    def mrl(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        """
+        The mean residual life function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+        return approx_mrl(self, time)
 
     @override
     def init_likelihood(
@@ -263,31 +337,6 @@ class Exponential(LifetimeDistribution):
         return self.get_params()[0] * time
 
     @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def mean(self) -> np.float64:
-        return 1 / self.get_params()[0]
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def var(self) -> np.float64:
-        return 1 / self.get_params()[0] ** 2
-
-    @override
-    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return 1 / self.get_params()[0] * np.ones_like(time)
-
-    @override
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ichf(
         self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
@@ -318,6 +367,20 @@ class Exponential(LifetimeDistribution):
         if isinstance(time, np.ndarray):
             return np.zeros_like(time, dtype=np.float64)
         return np.asarray(0, dtype=np.float64)
+
+    @override
+    def mean(self) -> np.float64:
+        return 1 / self.get_params()[0]
+
+    @override
+    def var(self) -> np.float64:
+        return 1 / self.get_params()[0] ** 2
+
+    @override
+    def mrl(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return 1 / self.get_params()[0] * np.ones_like(time)
 
 
 @final
@@ -377,41 +440,6 @@ class Weibull(LifetimeDistribution):
         return (rate * np.asarray(time)) ** shape
 
     @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def mean(self) -> np.float64 | ArrayND[np.float64]:
-        shape, rate = self.get_params()
-        return gamma(1 + 1 / shape) / rate
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def var(self) -> np.float64 | ArrayND[np.float64]:
-        shape, rate = self.get_params()
-        return gamma(1 + 2 / shape) / rate**2 - self.mean() ** 2
-
-    @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        shape, rate = self.get_params()
-        return (
-            gamma(1 / shape)
-            / (rate * shape * self.sf(time))
-            * gammaincc(
-                1 / shape,
-                (rate * time) ** shape,
-            )
-        )
-
-    @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(
         self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
@@ -447,6 +475,30 @@ class Weibull(LifetimeDistribution):
         shape, rate = self.get_params()
         return np.asarray(
             shape * (shape - 1) * rate**2 * (rate * time) ** (shape - 2),
+        )
+
+    @override
+    def mean(self) -> np.float64:
+        shape, rate = self.get_params()
+        return gamma(1 + 1 / shape) / rate
+
+    @override
+    def var(self) -> np.float64:
+        shape, rate = self.get_params()
+        return gamma(1 + 2 / shape) / rate**2 - self.mean() ** 2
+
+    @override
+    def mrl(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        shape, rate = self.get_params()
+        return (
+            gamma(1 / shape)
+            / (rate * shape * self.sf(time))
+            * gammaincc(
+                1 / shape,
+                (rate * time) ** shape,
+            )
         )
 
 
@@ -504,34 +556,6 @@ class Gompertz(LifetimeDistribution):
         return shape * np.expm1(rate * time)
 
     @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def mean(self) -> np.float64:
-        shape, rate = self.get_params()
-        return np.exp(shape) * exp1(shape) / rate
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def var(self) -> np.float64 | ArrayND[np.float64]:
-        return super().var()
-
-    @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        shape, rate = self.get_params()
-        z = shape * np.exp(rate * time)
-        return np.exp(z) * exp1(z) / rate
-
-    @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(
         self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
@@ -566,6 +590,23 @@ class Gompertz(LifetimeDistribution):
     def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return shape * rate**2 * np.exp(rate * time)
+
+    @override
+    def mean(self) -> np.float64:
+        shape, rate = self.get_params()
+        return np.exp(shape) * exp1(shape) / rate
+
+    @override
+    def var(self) -> np.float64:
+        return super().var()
+
+    @override
+    def mrl(
+        self, time: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        shape, rate = self.get_params()
+        z = shape * np.exp(rate * time)
+        return np.exp(z) * exp1(z) / rate
 
 
 @final
@@ -643,26 +684,6 @@ class Gamma(LifetimeDistribution):
         return np.log(gamma(shape)) - np.log(self._uppergamma(x))
 
     @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def mean(self) -> np.float64:
-        shape, rate = self.get_params()
-        return shape / rate
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def var(self) -> np.float64:
-        shape, rate = self.get_params()
-        return shape / (rate**2)
-
-    @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(
         self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
@@ -712,11 +733,14 @@ class Gamma(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().mrl(time)
+    def mean(self) -> np.float64:
+        shape, rate = self.get_params()
+        return shape / rate
+
+    @override
+    def var(self) -> np.float64:
+        shape, rate = self.get_params()
+        return shape / (rate**2)
 
 
 @final
@@ -775,32 +799,6 @@ class LogLogistic(LifetimeDistribution):
         return np.log(1 + x**shape)
 
     @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def mean(self) -> np.float64:
-        shape, rate = self.get_params()
-        b = np.pi / shape
-        if shape <= 1:
-            raise ValueError(f"Expectancy only defined for shape > 1: shape = {shape}")
-        return b / (rate * np.sin(b))
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel,
-        args_docstring=[],
-        returns=[docscrape.Parameter("out", "np.float64", [""])],
-    )
-    def var(self) -> np.float64:
-        shape, rate = self.get_params()
-        b = np.pi / shape
-        if shape <= 2:
-            raise ValueError(f"Variance only defined for shape > 2: shape = {shape}")
-        return (1 / rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
-
-    @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
     def ichf(
         self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
@@ -845,11 +843,20 @@ class LogLogistic(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().mrl(time)
+    def mean(self) -> np.float64:
+        shape, rate = self.get_params()
+        b = np.pi / shape
+        if shape <= 1:
+            raise ValueError(f"Expectancy only defined for shape > 1: shape = {shape}")
+        return b / (rate * np.sin(b))
+
+    @override
+    def var(self) -> np.float64:
+        shape, rate = self.get_params()
+        b = np.pi / shape
+        if shape <= 2:
+            raise ValueError(f"Variance only defined for shape > 2: shape = {shape}")
+        return (1 / rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
 
 
 Ts = TypeVarTuple("Ts")

@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import TypeAlias
+from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 from optype.numpy import ArrayND
@@ -14,6 +14,7 @@ __all__ = [
 
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
+Ts = TypeVarTuple("Ts")
 
 
 def _control_bounds(*bounds: ST | NumpyST | ArrayND[NumpyST]) -> None:
@@ -27,10 +28,7 @@ def _control_bounds(*bounds: ST | NumpyST | ArrayND[NumpyST]) -> None:
 
 
 def legendre_quadrature(
-    func: Callable[
-        [ST | NumpyST | ArrayND[NumpyST]],
-        np.float64 | ArrayND[np.float64],
-    ],
+    func: Callable[..., np.float64 | ArrayND[np.float64]],
     a: ST | NumpyST | ArrayND[NumpyST],
     b: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
@@ -41,15 +39,16 @@ def legendre_quadrature(
     Parameters
     ----------
     func : Callable
-        A function of the form `out = func(x, *args)` taking floats or ndarrays
-        as inputs and returning a np.float64 or an ndarray.
-        `(x, *args)` broadcasted shape must be the same than `out`.
+        A function of the form `y = func(x, a, b, c, ...)` taking floats or ndarrays
+        as inputs and returning a np.float64 or an ndarray. `a, b, c, ...` are extra
+        arguments that must be passed in the `args` parameter.
+        `(x, a, b, c, ...)` broadcasted shape must be the same than `y`.
     a : float or ndarray
         The lower bound of the integration.
     b : float or ndarray
         The upper bound of the integration. Can't be `np.inf`.
     args : float or ndarray
-        Extra arguments used in the function call `func(x, *args)`.
+        Extra arguments used in the function call.
     deg : int, default is 10.
         Number of sample points and weights for the quadrature
 
@@ -78,15 +77,12 @@ def legendre_quadrature(
     m = np.expand_dims((a + b) / 2, axis=-1)  # (*shape, 1)
     u = p * x + m  # (*shape, deg)
     v = p * w  # (*shape, deg)
-    fvalues = func(u)  # (*shape, deg)
+    fvalues = func(u, *npargs)  # (*shape, deg)
     return np.sum(v * fvalues, axis=-1)
 
 
 def laguerre_quadrature(
-    func: Callable[
-        [ST | NumpyST | ArrayND[NumpyST]],
-        np.float64 | ArrayND[np.float64],
-    ],
+    func: Callable[..., np.float64 | ArrayND[np.float64]],
     a: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
     deg: int = 10,
@@ -96,13 +92,14 @@ def laguerre_quadrature(
      Parameters
      ----------
     func : Callable
-        A function of the form `out = func(x, *args)` taking floats or ndarrays
-        as inputs and returning a np.float64 or an ndarray.
-        `(x, *args)` broadcasted shape must be the same than `out`.
+        A function of the form `y = func(x, a, b, c, ...)` taking floats or ndarrays
+        as inputs and returning a np.float64 or an ndarray. `a, b, c, ...` are extra
+        arguments that must be passed in the `args` parameter.
+        `(x, a, b, c, ...)` broadcasted shape must be the same than `y`.
     a : float or ndarray
          The lower bound of the integration.
      args : float or ndarray
-         Extra arguments used in the function call `func(x, *args)`.
+         Extra arguments used in the function call.
      deg : int, default is 10.
          Number of sample points and weights for the quadrature
 
@@ -122,16 +119,13 @@ def laguerre_quadrature(
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     x = np.expand_dims(x, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
     w = np.expand_dims(w, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    fvalues = func(x + a)  # (*f.shape, deg)
+    fvalues = func(x + a, *npargs)  # (*shape, deg)
     exp_a = np.where(np.exp(-a) == 0, 1.0, np.exp(-a))  # (*a.shape, 1)
     return np.sum(w * fvalues * exp_a, axis=-1)
 
 
 def unweighted_laguerre_quadrature(
-    func: Callable[
-        [ST | NumpyST | ArrayND[NumpyST]],
-        np.float64 | ArrayND[np.float64],
-    ],
+    func: Callable[..., np.float64 | ArrayND[np.float64]],
     a: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
     deg: int = 10,
@@ -141,13 +135,14 @@ def unweighted_laguerre_quadrature(
     Parameters
     ----------
     func : Callable
-        A function of the form `out = func(x, *args)` taking floats or ndarrays
-        as inputs and returning a np.float64 or an ndarray.
-        `(x, *args)` broadcasted shape must be the same than `out`.
+        A function of the form `y = func(x, a, b, c, ...)` taking floats or ndarrays
+        as inputs and returning a np.float64 or an ndarray. `a, b, c, ...` are extra
+        arguments that must be passed in the `args` parameter.
+        `(x, a, b, c, ...)` broadcasted shape must be the same than `y`.
     a : float or ndarray
         The lower bound of the integration.
     args : float or ndarray
-        Extra arguments used in the function call `func(x, *args)`.
+        Extra arguments used in the function call.
     deg : int, default is 10.
         Number of sample points and weights for the quadrature
 
@@ -168,5 +163,5 @@ def unweighted_laguerre_quadrature(
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
     x = np.expand_dims(x, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
     w = np.expand_dims(w, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    fvalues = func(x + a)  # (*f.shape, deg)
+    fvalues = func(x + a, *npargs)  # (*shape, deg)
     return np.sum(w * fvalues * np.exp(x), axis=-1)
