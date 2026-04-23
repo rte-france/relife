@@ -309,7 +309,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
 
         timeline, eeac = self._expected_costs(ar=ar).expected_equivalent_annual_cost(
-            tf, nb_steps, ar=ar, a0=a0
+            tf, nb_steps, total_sum=total_sum,ar=ar, a0=a0
         )
         return (
             timeline,

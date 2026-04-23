@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Literal, Optional, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -80,7 +80,6 @@ def run_to_failure_policy(
 
 class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
     _cost_structure: dict[str, NumpyFloat]
-    _a0: Optional[NumpyFloat]
     discounting_rate: float
 
     def __init__(
@@ -88,27 +87,12 @@ class BaseRunToFailure(ReplacementPolicy[AnyParametricLifetimeModel[()]], ABC):
         lifetime_model: AnyParametricLifetimeModel[()],
         cf: AnyFloat,
         discounting_rate: float = 0.0,
-        a0: Optional[AnyFloat] = None,
     ):
         super().__init__(
             lifetime_model,
             {"cf": reshape_1d_arg(cf)},
             discounting_rate=discounting_rate,
         )
-        self._a0 = reshape_1d_arg(a0) if a0 is not None else a0
-
-    @property
-    def a0(self) -> Optional[NumpyFloat]:
-        """Current ages of the assets.
-
-        Returns
-        -------
-        np.ndarray
-        """
-        # _a0 is (m, 1) but exposed cf is (m,)
-        if self._a0 is None:
-            return self._a0
-        return flatten_if_possible(self._a0)
 
     @property
     def cf(self) -> NumpyFloat:
@@ -158,87 +142,83 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         lifetime_model: AnyParametricLifetimeModel[()],
         cf: AnyFloat,
         discounting_rate: float = 0.0,
-        a0: Optional[AnyFloat] = None,
         period_before_discounting: float = 1.0,
     ) -> None:
-        super().__init__(lifetime_model, cf, discounting_rate=discounting_rate, a0=a0)
+        super().__init__(lifetime_model, cf, discounting_rate=discounting_rate)
         self.period_before_discounting = period_before_discounting
 
     @property
     def _expected_costs(self) -> OneCycleExpectedCosts:
-        if self.a0 is None:
-            return OneCycleExpectedCosts(
-                self.baseline_model,
-                RunToFailureReward(self.cf),
-                discounting_rate=self.discounting_rate,
-                period_before_discounting=self.period_before_discounting,
-            )
         return OneCycleExpectedCosts(
-            LeftTruncatedModel(self.baseline_model).freeze(self.a0),
+            self.baseline_model,
             RunToFailureReward(self.cf),
             discounting_rate=self.discounting_rate,
             period_before_discounting=self.period_before_discounting,
         )
 
     def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline, npv = self._expected_costs.expected_net_present_value(tf, nb_steps)
+        timeline, npv = self._expected_costs.expected_net_present_value(
+            tf, nb_steps, a0=a0
+        )
         if total_sum and npv.ndim == 2:
             return timeline, np.sum(npv, axis=0)
         return timeline, npv
 
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False]
+        self, total_sum: Literal[False], a0: NumpyFloat | None = None
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True]
+        self, total_sum: Literal[True], a0: NumpyFloat | None = None
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
-        asymptotic_npv = self._expected_costs.asymptotic_expected_net_present_value()
-        if total_sum:
-            return np.sum(asymptotic_npv)
-        return asymptotic_npv
+        return self._expected_costs.asymptotic_expected_net_present_value(
+            total_sum, a0=a0
+        )
 
     def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False
+        self,
+        tf: float,
+        nb_steps: int,
+        total_sum: bool = False,
+        a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         timeline, eeac = self._expected_costs.expected_equivalent_annual_cost(
-            tf, nb_steps
+            tf, nb_steps, total_sum=total_sum, a0=a0
         )
-        if total_sum and eeac.ndim == 2:
-            return timeline, np.sum(eeac, axis=0)
         return timeline, eeac
 
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False]
+        self, total_sum: Literal[False], a0: NumpyFloat | None = None
     ) -> NDArray[np.float64]: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True]
+        self, total_sum: Literal[True], a0: NumpyFloat | None = None
     ) -> np.float64: ...
     @overload
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]: ...
     def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
+        self, total_sum: bool = False, a0: NumpyFloat | None = None
     ) -> np.float64 | NDArray[np.float64]:
-        asymptotic_eeac = (
-            self._expected_costs.asymptotic_expected_equivalent_annual_cost()
+        return self._expected_costs.asymptotic_expected_equivalent_annual_cost(
+            total_sum=total_sum, a0=a0
         )
-        if total_sum:
-            return np.sum(asymptotic_eeac)
-        return asymptotic_eeac
 
 
 class RunToFailurePolicy(BaseRunToFailure):
