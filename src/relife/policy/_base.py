@@ -197,11 +197,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             ).ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(apply_bias(x, delay=a0))
-                    * self.discounting.factor(
-                        apply_bias(
-                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
-                        )
-                    )
+                    * self.discounting.factor(x)
                 ),
                 np.zeros_like(timeline),
                 timeline,
@@ -249,11 +245,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             ).ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(apply_bias(x, delay=a0))
-                    * self.discounting.factor(
-                        apply_bias(
-                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
-                        )
-                    )
+                    * self.discounting.factor(x)
                 ),
                 np.float64(0.0),
                 np.asarray(np.inf),
@@ -275,22 +267,13 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             # avoid zero division + 1e-6
             return (
                 self.reward.conditional_expectation(apply_bias(x, delay=a0))
-                * self.discounting.factor(
-                    apply_bias(
-                        x, delay=a0, censor_value=ar, delay_applied_to_censor=True
-                    )
-                )
-                / (
-                    self.discounting.annuity_factor(
-                        apply_bias(
-                            x, delay=a0, censor_value=ar, delay_applied_to_censor=True
-                        )
-                    )
-                    + 1e-6
-                )
+                * self.discounting.factor(x)
+                / (self.discounting.annuity_factor(x) + 1e-6)
             )
 
-        conditional_model = get_conditional_lifetime_model(self.lifetime_model, a0=a0)
+        conditional_model = get_conditional_lifetime_model(
+            self.lifetime_model, a0=a0, ar=ar
+        )
         q0 = conditional_model.cdf(self.period_before_discounting) * f(
             np.asarray(self.period_before_discounting, dtype=float)
         )  # () or (m, 1)
@@ -302,7 +285,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         a[timeline < self.period_before_discounting] = 0.0  # (nb_steps,)
         # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
         integral = conditional_model.ls_integrate(
-            f, a, timeline, deg=15
+            f, a, timeline, deg=20
         )  # (nb_steps,) or (m, nb_steps) if q0: (), or (m, nb_steps) if q0 : (m, 1)
         mask = np.broadcast_to(
             timeline < self.period_before_discounting, integral.shape
