@@ -418,8 +418,12 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
 def get_conditional_lifetime_model(lifetime_model: FrozenParametricLifetimeModel, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> FrozenParametricLifetimeModel:
     # TODO: use copy method of parametricmodel
     applied_model = deepcopy(lifetime_model)
-    if ar is not None:
-        applied_model = AgeReplacementModel(applied_model).freeze(ar)
     if a0 is not None:
         applied_model = LeftTruncatedModel(applied_model).freeze(a0)
+    if ar is not None:
+        if a0 is not None:
+            applied_model = AgeReplacementModel(applied_model).freeze(ar-a0)
+        else:
+            applied_model = AgeReplacementModel(applied_model).freeze(ar)
+    
     return applied_model
