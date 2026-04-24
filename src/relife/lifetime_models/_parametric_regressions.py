@@ -9,28 +9,32 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Self, TypeAlias, final
+from collections.abc import Callable, Sequence
+from typing import Any, Literal, Self, TypeAlias, TypeGuard, final
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from optype.numpy import (
     Array,
     Array1D,
-    Array2D,
     ArrayND,
     AtMost2D,
+    is_array_1d,
 )
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife.base import OptimizerConfig, ParametricModel
-from relife.utils import to_column_2d_if_1d
+from relife.base import FitConfig, ParametricModel
 
 from ._base import (
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     LifetimeData,
     LifetimeLikelihood,
+    approx_ls_integrate,
+    approx_mean,
+    approx_moment,
+    approx_var,
     document_args,
 )
 from ._distributions import (
@@ -119,6 +123,12 @@ _covar_docstring = [
         ],
     ),
 ]
+
+
+def _is_array1d_sequence(
+    val: Sequence[object],
+) -> TypeGuard[Sequence[Array1D[np.float64]]]:
+    return all(is_array_1d(x) for x in val)
 
 
 class ParametricLifetimeRegression(
@@ -273,6 +283,34 @@ class ParametricLifetimeRegression(
             seed=seed,
         )
 
+    def ls_integrate(
+        self,
+        func: Callable[
+            [ST | NumpyST | ArrayND[NumpyST]],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
+        deg: int = 10,
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_ls_integrate(self, func, a, b, args=covar, deg=deg)
+
+    def moment(
+        self, n: int, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_moment(self, n, args=covar)
+
+    def mean(
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_mean(self, args=covar)
+
+    def var(
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_var(self, args=covar)
+
     def freeze(
         self, *covar: ST | NumpyST | Array[AtMost2D, NumpyST]
     ) -> FrozenParametricLifetimeModel:
@@ -293,30 +331,34 @@ class ParametricLifetimeRegression(
         """  # noqa: E501
         return FrozenParametricLifetimeModel(self, *covar)
 
+    def _get_covar_fit(**kwargs: Any) -> Sequence[Array1D[np.float64]]:
+        if "covar" not in kwargs:
+            raise ValueError("Expected covar.")
+        covar_sequence = kwargs["covar"]
+        # typeguards
+        assert _is_array1d_sequence(covar_sequence) or is_array_1d(covar_sequence)
+        if not isinstance(covar_sequence, Sequence):
+            covar_sequence = (covar_sequence,)
+        return covar_sequence
+
     @override
     def init_likelihood(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        if not isinstance(args, np.ndarray):
-            raise ValueError("args is expected to be covar only.")
-        covar = to_column_2d_if_1d(args)
+        covar_sequence = self._get_covar_fit(**kwargs)
         regression = type(self)(
-            type(self.baseline)(), coefficients=(0.0,) * covar.shape[-1]
+            type(self.baseline)(), coefficients=(0.0,) * len(covar_sequence)
         )  # init new regression object with appropriate number of covar
-        lifetime_data = LifetimeData(time, args, event, entry)
+        lifetime_data = LifetimeData(time, event, entry, covar_sequence)
         x0 = kwargs.get(
             "x0", init_regression_params_from_lifetimes(regression, lifetime_data)
         )
         regression.set_params(x0)
-        config = OptimizerConfig(x0)
+        config = FitConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
             "bounds", get_regression_params_bounds(regression)
         )
@@ -331,21 +373,14 @@ class ParametricLifetimeRegression(
     @override
     def fit(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
-        if not isinstance(args, np.ndarray):
-            raise ValueError("args is expected to be covar only.")
-        self.covar_effect = LinearCovarEffect(
-            (None,) * to_column_2d_if_1d(np.asarray(args, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-        return super().fit(time, args, event, entry, **kwargs)
+        covar_sequence = self._get_covar_fit(**kwargs)
+        self.covar_effect = LinearCovarEffect((None,) * len(covar_sequence))
+        return super().fit(time, event, entry, **kwargs)
 
 
 def init_regression_params_from_lifetimes(

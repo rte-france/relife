@@ -351,7 +351,7 @@ D = TypeVar("D")
 
 
 @dataclass
-class OptimizerConfig:
+class FitConfig:
     x0: ToFloat | ToFloat1D
     scipy_minimize_options: dict[str, Any] = field(default_factory=dict)
     covariance_method: Literal["cs", "2point", "exact", False] = False
@@ -375,7 +375,7 @@ class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
 
     model: M
     data: D
-    config: OptimizerConfig
+    config: FitConfig
 
     @property
     @abstractmethod

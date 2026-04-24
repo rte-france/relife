@@ -35,46 +35,12 @@ def rvs_expected_shape(size, **kwargs):
 
 
 def test_covar_effect():
-    """
-    covar : () or (nb_coef,)
-    => g : ()
-    => jac_g : (nb_coef,)
-
-    covar : (m, nb_coef)
-    => g : (m, 1)
-    => jac_g : (nb_coef, m, 1)
-    """
-
     covar_effect = LinearCovarEffect(coefficients=(2.4, 5.5))
     z1 = np.array([1, 2, 3])
     z2 = np.array([0.8, 0.7, 0.5])
-    assert covar_effect.g(np.column_stack((z1, z2))) == approx(
-        np.exp(2.4 * z1 + 5.5 * z2).reshape(-1, 1)
-    )
-    assert covar_effect.jac_g(np.column_stack((z1, z2)))[0] == approx(
-        (z1 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1)
-    )
-    assert covar_effect.jac_g(np.column_stack((z1, z2)))[1] == approx(
-        (z2 * np.exp(2.4 * z1 + 5.5 * z2)).reshape(-1, 1)
-    )
-
-    nb_coef = covar_effect.get_params().size
-    assert covar_effect.g(np.ones(nb_coef)).shape == ()
-    assert covar_effect.g(np.ones((1, nb_coef))).shape == (1, 1)
-    assert covar_effect.g(np.ones((10, nb_coef))).shape == (10, 1)
-
-    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
-    assert covar_effect.jac_g(np.ones(nb_coef)).shape == (nb_coef,)
-    assert covar_effect.jac_g(np.ones((1, nb_coef))).shape == (
-        nb_coef,
-        1,
-        1,
-    )
-    assert covar_effect.jac_g(np.ones((10, nb_coef))).shape == (
-        nb_coef,
-        10,
-        1,
-    )
+    assert covar_effect.g(z1, z2) == approx(np.exp(2.4 * z1 + 5.5 * z2))
+    assert covar_effect.jac_g(z1, z2)[0] == approx(z1 * np.exp(2.4 * z1 + 5.5 * z2))
+    assert covar_effect.jac_g(z1, z2)[1] == approx(z2 * np.exp(2.4 * z1 + 5.5 * z2))
 
 
 def test_rvs(regression, covar, rvs_size):
@@ -83,8 +49,11 @@ def test_rvs(regression, covar, rvs_size):
     )
 
 
-def test_sf(regression, time, covar):
-    assert regression.sf(time, covar).shape == expected_shape(time=time, covar=covar)
+def test_sf(regression, time_covar):
+    time, *covar = time_covar
+    assert (
+        regression.sf(time, *covar).shape == np.broadcast_arrays(time, *covar)[0].shape
+    )
 
 
 def test_hf(regression, time, covar):

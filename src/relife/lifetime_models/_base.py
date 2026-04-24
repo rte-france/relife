@@ -6,7 +6,7 @@ import copy
 import functools
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import field
 from typing import (
     Any,
@@ -39,9 +39,9 @@ from scipy.optimize import newton
 from typing_extensions import TypeIs, override
 
 from relife.base import (
+    FitConfig,
     FittingResults,
     MaximumLikelihoodOptimizer,
-    OptimizerConfig,
     ParametricModel,
 )
 from relife.quadratures import legendre_quadrature, unweighted_laguerre_quadrature
@@ -55,11 +55,12 @@ __all__ = [
     "is_frozen_parametric_lifetime_model",
 ]
 
-Ts = TypeVarTuple("Ts")
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
+Ts = TypeVarTuple("Ts")
 
 
+# matplotlib typing is still buggy
 @overload
 def plot_probability_function(
     x: Array1D[np.float64],
@@ -347,9 +348,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         def func(x: ArrayND[np.float64]) -> np.float64 | ArrayND[np.float64]:
             return self.sf(x, *args) - probability
 
-        return newton(  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
-            func,  # pyright: ignore[reportArgumentType]
-            x0=probability,  # pyright: ignore[reportArgumentType]
+        return newton(
+            func,
+            x0=probability,
             args=args,
         )
 
@@ -386,7 +387,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def rvs(
         self,
-        size: int | tuple[int, ...],
+        size: int | tuple[int, ...] | None = None,
         *args: *Ts,
         seed: int
         | np.random.Generator
@@ -432,7 +433,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
 
 # these functions can't be generic and can't be part of ParametricLifetimeModel[*Ts]
-# because they uses quadratures with explicit Numpy parameters, args can't be left as *Ts  # noqa: E501
+# because they uses quadratures with explicit Numpy parameters
+# thus *args can't be typed as *Ts that is Unknown until the inferface becomes concrete
+# default option added to TypeVarTuple in Python 3.13 does not solve this issue
+# because it does concrete types may be different than default and not allowed in
+# operations
 def approx_ls_integrate(
     model: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
     func: Callable[[ST | NumpyST | ArrayND[NumpyST]], np.float64 | ArrayND[np.float64]],
@@ -710,8 +715,6 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
             seed=seed,
         )
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def ls_integrate(
         self,
         func: Callable[
@@ -723,29 +726,32 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
         *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.unfrozen.ls_integrate(func, a, b, *self.args, deg=deg)
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
+        if hasattr(self.unfrozen, "ls_integrate"):
+            return self.unfrozen.ls_integrate(func, a, b, *self.args, deg=deg)
+        return approx_ls_integrate(self.unfrozen, func, a, b, args=self.args, deg=deg)
+
     def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
-        return self.unfrozen.moment(n, *self.args)
+        if hasattr(self.unfrozen, "moment"):
+            return self.unfrozen.moment(n, *self.args)
+        return approx_moment(self.unfrozen, n, self.args)
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def mean(self) -> np.float64 | ArrayND[np.float64]:
-        return self.unfrozen.mean(*self.args)
+        if hasattr(self.unfrozen, "mean"):
+            return self.unfrozen.mean(*self.args)
+        return approx_mean(self.unfrozen, self.args)
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def var(self) -> np.float64 | ArrayND[np.float64]:
-        return self.unfrozen.var(*self.args)
+        if hasattr(self.unfrozen, "var"):
+            return self.unfrozen.var(*self.args)
+        return approx_var(self.unfrozen, self.args)
 
-    @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def mrl(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.unfrozen.mrl(time, *self.args)
+        if hasattr(self.unfrozen, "mrl"):
+            return self.unfrozen.mrl(time, *self.args)
+        return approx_mrl(self.unfrozen, time, self.args)
 
     @override
     def __getattr__(self, key: str) -> Any:
@@ -923,11 +929,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     @abstractmethod
     def init_likelihood(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -983,14 +985,10 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
 
     def fit(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-        **kwargs: Any,
+        **kwargs: FitConfig,
     ) -> Self:
         """
         Estimation of parameters from lifetime data.
@@ -1022,7 +1020,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
             The estimated parameters are setted inplace.
         """
         optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
-            time, args, event, entry, **kwargs
+            time, event, entry, **kwargs
         )
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
@@ -1125,11 +1123,9 @@ class LifetimeData:
     def __init__(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
-        args: (
-            Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None
-        ) = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
+        args: Sequence[Array1D[np.float64]] = (),
     ) -> None:
         column_time = to_column_2d_if_1d(time)
         if column_time.shape[-1] == 2 and event is not None:
@@ -1148,12 +1144,7 @@ class LifetimeData:
         )
         if np.any(column_time <= column_entry):
             raise ValueError("All time values must be greater than entry values")
-        if isinstance(args, tuple):
-            column_args = tuple(to_column_2d_if_1d(arg) for arg in args)
-        elif isinstance(args, np.ndarray):
-            column_args = (to_column_2d_if_1d(args),)
-        else:
-            column_args = ()
+        column_args = tuple(to_column_2d_if_1d(arg) for arg in args)
         sizes = [
             len(x)
             for x in (column_time, column_event, column_entry, *column_args)
@@ -1233,7 +1224,7 @@ class LifetimeLikelihood(MaximumLikelihoodOptimizer[M, LifetimeData]):
         self,
         model: M,
         data: LifetimeData,
-        config: OptimizerConfig,
+        config: FitConfig,
     ):
         self.model = copy.deepcopy(model)
         self.data = data

@@ -207,12 +207,11 @@ def time(request):
 @pytest.fixture(
     params=[
         np.float64(0.5),
-        np.ones((1,), dtype=np.float64) * 0.5,
+        np.ones((), dtype=np.float64) * 0.5,
         np.ones((N,), dtype=np.float64) * 0.5,
-        np.ones((1, 1), dtype=np.float64) * 0.5,
-        np.ones((M, 1), dtype=np.float64) * 0.5,
-        np.ones((1, N), dtype=np.float64) * 0.5,
         np.ones((M, N), dtype=np.float64) * 0.5,
+        np.ones((M, N, P), dtype=np.float64) * 0.5,
+        np.ones((M, N, P, Q), dtype=np.float64) * 0.5,
     ],
     ids=lambda probability: f"probability:{probability.shape}",
 )
@@ -222,13 +221,23 @@ def probability(request):
 
 @pytest.fixture(
     params=[
-        np.ones((len(COEFFICIENTS),), dtype=np.float64),
-        np.ones((1, len(COEFFICIENTS)), dtype=np.float64),
-        np.ones((M, len(COEFFICIENTS)), dtype=np.float64),
+        (np.float64(1), np.float64(1), np.float64(1)),
+        (np.ones((N,)), np.float64(1), np.float64(1)),
+        (np.float64(1), np.ones((N,)), np.float64(1)),
+        (np.float64(1), np.float64(1), np.ones((N,))),
+        (np.ones((N,)), np.ones((N,)), np.float64(1)),
+        (np.ones((N,)), np.ones((N,)), np.ones((N,))),
+        (np.ones((M, N)), np.float64(1), np.float64(1)),
+        (np.ones((M, N)), np.ones((N,)), np.float64(1)),
+        (np.ones((M, N)), np.ones((N,)), np.ones((N,))),
+        (np.ones((M, N)), np.ones((1, N)), np.float64(1)),
+        (np.ones((M, N)), np.ones((1, N)), np.ones((1, N))),
+        (np.ones((M, N)), np.ones((M, 1)), np.ones((1, N))),
+        (np.ones((M, N)), np.ones((M, 1)), np.ones((M, 1))),
+        (np.ones((M, N)), np.ones((M, N)), np.ones((M, N))),
     ],
-    ids=lambda covar: f"covar:{covar.shape}",
 )
-def covar(request):
+def time_covar(request):
     return request.param
 
 
@@ -290,7 +299,7 @@ def a0(request):
 
 @pytest.fixture(
     params=[
-        1,
+        N,
         (N,),
         (M, N),
         (M, N, P),

@@ -6,6 +6,7 @@ from abc import ABC
 from collections.abc import Callable
 from typing import (
     Any,
+    Literal,
     Self,
     TypeAlias,
     TypeVar,
@@ -16,12 +17,12 @@ from typing import (
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
-from optype.numpy import Array1D, Array2D, ArrayND
+from optype.numpy import Array, Array1D, Array2D, ArrayND
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
-from relife.base import OptimizerConfig
+from relife.base import FitConfig
 from relife.quadratures import (
     laguerre_quadrature,
     legendre_quadrature,
@@ -190,9 +191,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         -------
         out : np.float64
         """
-        moment = approx_moment(self, n)
-        assert isinstance(moment, np.float64)  # typeguard
-        return moment
+        return np.float64(approx_moment(self, n))
 
     def mean(self) -> np.float64:
         """
@@ -236,19 +235,14 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @override
     def init_likelihood(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        assert args is None
         lifetime_data = LifetimeData(time, event=event, entry=entry)
         x0 = kwargs.get("x0", init_distrib_params_from_lifetimes(self, lifetime_data))
-        config = OptimizerConfig(x0)
+        config = FitConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
             "bounds", get_distrib_params_bounds(self)
         )
@@ -1089,7 +1083,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[AnyUnsignedInt]):
         x0 = kwargs.get(
             "x0", init_distrib_params_from_lifetimes(self.baseline, lifetime_data)
         )
-        config = OptimizerConfig(x0)
+        config = FitConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
             "bounds", get_distrib_params_bounds(self.baseline)
         )
