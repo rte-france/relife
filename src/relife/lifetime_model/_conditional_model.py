@@ -280,7 +280,7 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def sf(self, time: AnyFloat, a0: AnyFloat, *args: *Ts) -> NumpyFloat:
         a0 = reshape_1d_arg(a0)
-        return self.baseline.sf(time + a0) / self.baseline.sf(a0) 
+        return self.baseline.sf(time + a0) / self.baseline.sf(a0)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
@@ -415,15 +415,35 @@ class LeftTruncatedModel(ParametricLifetimeModel[*tuple[AnyFloat, *Ts]]):
         return FrozenParametricLifetimeModel(self, a0, *args)
 
 
-def get_conditional_lifetime_model(lifetime_model: FrozenParametricLifetimeModel, a0: NumpyFloat | None = None, ar: NumpyFloat | None = None) -> FrozenParametricLifetimeModel:
-    # TODO: use copy method of parametricmodel
+def get_conditional_lifetime_model(
+    lifetime_model: FrozenParametricLifetimeModel,
+    a0: NumpyFloat | None = None,
+    ar: NumpyFloat | None = None,
+) -> FrozenParametricLifetimeModel:
+    """
+        Fabric for conditional models
+
+        Parameters
+        ----------
+        a0 : float or np.ndarray or None
+            Initial ages
+        ar : float or np.ndarray or None
+            Preventive ages of replacements
+            
+        Returns
+        -------
+        FrozenParametricLifetimeModel
+    """
     applied_model = deepcopy(lifetime_model)
+
+    # Apply left truncation first for numerical stability
     if a0 is not None:
         applied_model = LeftTruncatedModel(applied_model).freeze(a0)
     if ar is not None:
         if a0 is not None:
-            applied_model = AgeReplacementModel(applied_model).freeze(ar-a0)
+            # If both are applied, ar becomes ar - a0
+            applied_model = AgeReplacementModel(applied_model).freeze(ar - a0)
         else:
             applied_model = AgeReplacementModel(applied_model).freeze(ar)
-    
+
     return applied_model
