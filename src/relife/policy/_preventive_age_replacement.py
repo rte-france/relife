@@ -745,6 +745,9 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self, ar: NumpyFloat, a0: NumpyFloat | None = None
     ):
+        if a0 is not None:
+            raise ValueError("NHPP policies with initial ages will be covered in a future release")
+
         discounting = ExponentialDiscounting(self.discounting_rate)
 
         if self.discounting_rate == 0.0:
