@@ -125,9 +125,6 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         Costs of failures
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    a0 : float or 1darray, optional
-        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
-        be take into account for the first cycle.
 
     Attributes
     ----------
@@ -231,9 +228,6 @@ class RunToFailurePolicy(BaseRunToFailure):
         Costs of failures
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    a0 : float or 1darray, optional
-        Current ages of the assets, by default 0 for each asset. If it is given, left truncations of ``a0`` will
-        be take into account for the first cycle.
 
     Attributes
     ----------
@@ -365,6 +359,8 @@ class RunToFailurePolicy(BaseRunToFailure):
             Time window in which data are sampled.
         seed : int, optional
             Random seed, by default None.
+        a0 : float or np.ndarray or None
+            Optional, initial ages
 
         """
 

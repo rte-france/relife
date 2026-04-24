@@ -223,18 +223,11 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         Costs of preventive replacements
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    a0 : float or 1darray, optional
-        Current ages of the assets. If it is given, left truncations of ``a0`` will
-        be take into account for the first cycle.
-    ar : float or 1darray, optional
-        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
-        and access to the rest of the object interface.
 
     Attributes
     ----------
     cf
     cp
-    ar
 
     References
     ----------
@@ -345,12 +338,12 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def compute_optimal_ar(self) -> NumpyFloat:
         """
-        Optimize the policy according the costs, the discounting rate and the underlying lifetime model.
+        Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
 
         Returns
         -------
-        Self
-             Optimized policy.
+        ar : float or np.ndarray
+            Optimal ages of replacements.
         """
 
         discounting = ExponentialDiscounting(self.discounting_rate)
@@ -519,12 +512,16 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
         Parameters
         ----------
+        ar : float or np.ndarray
+            Ages of replacements
         nb_years : int
             The number of years on which the annual number of replacements are projected
         upon_failure : bool, default is False
             If True, it also returns the annual number of replacements due to unexpected failures
         total : bool, default is True
             If True, the given numbers of replacements are the sum of all replacements without distinction between assets
+        a0 : float or np.ndarray or None
+            Optional, initial ages
         """
 
         timeline, total_renewals = self._stochastic_reward_process(
@@ -549,13 +546,14 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     def compute_optimal_ar(self) -> NumpyFloat:
         """
-        Optimize the policy according the costs, the discounting rate and the underlying lifetime model.
+        Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
 
         Returns
         -------
-        Self
-             Optimized policy.
+        ar : float or np.ndarray
+            Optimal ages of replacements.
         """
+
         discounting = ExponentialDiscounting(self.discounting_rate)
         x0 = np.minimum(
             self._cost_structure["cp"]
@@ -608,12 +606,16 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
         Parameters
         ----------
+        ar : float or np.ndarray
+            Ages of replacements
         nb_samples : int
             The number of samples.
         time_window : tuple of two floats
             Time window in which data are sampled.
         seed : int, optional
             Random seed, by default None.
+        a0 : float or np.ndarray or None
+            Optional, initial ages
 
         Returns
         -------
@@ -667,15 +669,11 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
         The cost of failure.
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-    ar : float or 1darray, optional
-        Ages of preventive replacements, by default None. If not given, one must call ``optimize`` to set ``ar`` values
-        and access to the rest of the object interface.
 
     Attributes
     ----------
     cp
     cr
-    ar
     """
 
     def __init__(self, nhpp, cr, cp, discounting_rate=0.0):
@@ -746,7 +744,9 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
         self, ar: NumpyFloat, a0: NumpyFloat | None = None
     ):
         if a0 is not None:
-            raise ValueError("NHPP policies with initial ages will be covered in a future release")
+            raise ValueError(
+                "NHPP policies with initial ages will be covered in a future release"
+            )
 
         discounting = ExponentialDiscounting(self.discounting_rate)
 
@@ -776,12 +776,12 @@ class NonHomogeneousPoissonAgeReplacementPolicy(ReplacementPolicy):
 
     def compute_optimal_ar(self) -> NumpyFloat:
         """
-        Optimize the policy according the costs, the discounting rate and the underlying non-homogeneous Poisson process.
+        Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
 
         Returns
         -------
-        Self
-             Optimized policy.
+        ar : float or np.ndarray
+            Optimal ages of replacements.
         """
 
         discounting = ExponentialDiscounting(self.discounting_rate)
