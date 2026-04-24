@@ -11,14 +11,10 @@ from relife.typing import (
     AnyParametricLifetimeModel,
     NumpyFloat,
 )
+from relife.utils._array_utils import make_timeline
 from relife.utils.observation_bias import apply_bias, with_reshape_a0_ar
 
 __all__ = ["OneCycleExpectedCosts", "ReplacementPolicy"]
-
-
-def _make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
-    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
 
 
 class ExpectedCostsABC(ABC):
@@ -191,7 +187,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         ar: NumpyFloat | None = None,
         a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = _make_timeline(tf, nb_steps)
+        timeline = make_timeline(tf, nb_steps)
         etc = np.asarray(
             get_conditional_lifetime_model(
                 self.lifetime_model, a0=a0, ar=ar
@@ -307,7 +303,7 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         ar: NumpyFloat | None = None,
         a0: NumpyFloat | None = None,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        timeline = make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
         value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
         if timeline.ndim == 2:
             timeline = timeline[0, :]  # (nb_steps,)

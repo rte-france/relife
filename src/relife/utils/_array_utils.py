@@ -81,3 +81,8 @@ def get_args_nb_assets(*args: NDArray[Any]) -> int:
     if len(broadcast_shape) == 0:
         return 1
     return broadcast_shape[0]
+
+
+def make_timeline(tf: float, nb_steps: int) -> NDArray[np.float64]:
+    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
+    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
