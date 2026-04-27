@@ -1,6 +1,5 @@
-# pyright: basic
-
 import numpy as np
+from optype.numpy import ArrayND
 from pytest import approx
 from scipy.stats import boxcox, zscore
 
@@ -9,29 +8,11 @@ from relife.lifetime_models import (
     ParametricProportionalHazard,
     Weibull,
 )
-from relife.lifetime_models._parametric_regressions import LinearCovarEffect
-
-
-def expected_shape(**kwargs):
-    def shape_contrib(**_kwargs):
-        yield ()  # yield at least (), in case kwargs is empty
-        for k, v in _kwargs.items():
-            match k:
-                case "covar" if v.ndim == 2:
-                    yield v.shape[0], 1
-                case "covar" if v.ndim < 2:
-                    yield ()
-                case _:
-                    yield v.shape
-
-    return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
-
-
-def rvs_expected_shape(size, **kwargs):
-    out_shape = expected_shape(**kwargs)
-    if size != 1:
-        return np.broadcast_shapes(out_shape, (size,))
-    return out_shape
+from relife.lifetime_models._parametric_regressions import (
+    LinearCovarEffect,
+    ParametricLifetimeRegression,
+)
+from relife.lifetime_models.tests.test_conditional_models import expected_shape
 
 
 def test_covar_effect():
@@ -43,95 +24,243 @@ def test_covar_effect():
     assert covar_effect.jac_g(z1, z2)[1] == approx(z2 * np.exp(2.4 * z1 + 5.5 * z2))
 
 
-def test_rvs(regression, covar, rvs_size):
-    assert regression.rvs(rvs_size, covar).shape == rvs_expected_shape(
-        rvs_size, covar=covar
-    )
-
-
-def test_sf(regression, time_covar):
-    time, *covar = time_covar
-    assert (
-        regression.sf(time, *covar).shape == np.broadcast_arrays(time, *covar)[0].shape
-    )
-
-
-def test_hf(regression, time, covar):
-    assert regression.hf(time, covar).shape == expected_shape(time=time, covar=covar)
-
-
-def test_chf(regression, time, covar):
-    assert regression.chf(time, covar).shape == expected_shape(time=time, covar=covar)
-
-
-def test_cdf(regression, time, covar):
-    assert regression.cdf(time, covar).shape == expected_shape(time=time, covar=covar)
-
-
-def test_pdf(regression, time, covar):
-    assert regression.pdf(time, covar).shape == expected_shape(time=time, covar=covar)
-
-
-def test_ppf(regression, probability, covar):
-    assert regression.ppf(probability, covar).shape == expected_shape(
-        time=probability, covar=covar
-    )
-
-
-def test_ichf(regression, probability, covar):
-    assert regression.ichf(probability, covar).shape == expected_shape(
-        time=probability, covar=covar
-    )
-
-
-def test_isf(regression, probability, covar):
-    assert regression.isf(probability, covar).shape == expected_shape(
-        time=probability, covar=covar
-    )
-    assert regression.isf(np.full(probability.shape, 0.5), covar) == approx(
-        np.broadcast_to(
-            regression.median(covar), expected_shape(time=probability, covar=covar)
+class TestBroadcasting:
+    def test_rvs(
+        self,
+        regression: ParametricLifetimeRegression,
+        rvs_size_covar: tuple[
+            tuple[int, ...], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        rvs_size, covar_1, covar_2 = rvs_size_covar
+        assert regression.rvs(rvs_size, covar_1, covar_2).shape == np.broadcast_shapes(
+            rvs_size, covar_1.shape, covar_2.shape
         )
-    )
+
+    def test_sf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.sf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_hf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.hf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_chf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.chf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_cdf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.cdf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_pdf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.pdf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_ppf(
+        self,
+        regression: ParametricLifetimeRegression,
+        probability_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        probability, *covar = probability_covar
+        assert (
+            regression.ppf(probability, *covar).shape
+            == np.broadcast_arrays(probability, *covar)[0].shape
+        )
+
+    def test_ichf(
+        self,
+        regression: ParametricLifetimeRegression,
+        probability_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        probability, *covar = probability_covar
+        assert (
+            regression.ichf(probability, *covar).shape
+            == np.broadcast_arrays(probability, *covar)[0].shape
+        )
+
+    def test_isf(
+        self,
+        regression: ParametricLifetimeRegression,
+        probability_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        probability, *covar = probability_covar
+        assert (
+            regression.isf(probability, *covar).shape
+            == np.broadcast_arrays(probability, *covar)[0].shape
+        )
+
+    def test_dhf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        time, *covar = time_covar
+        assert (
+            regression.dhf(time, *covar).shape
+            == np.broadcast_arrays(time, *covar)[0].shape
+        )
+
+    def test_jac_sf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        nb_params = regression.get_params().size
+        time, covar_1, covar_2 = time_covar
+        assert regression.jac_sf(time, covar_1, covar_2).shape == (
+            nb_params,
+        ) + np.broadcast_shapes(time.shape, covar_1.shape, covar_2.shape)
+
+    def test_jac_hf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        nb_params = regression.get_params().size
+        time, covar_1, covar_2 = time_covar
+        assert regression.jac_hf(time, covar_1, covar_2).shape == (
+            nb_params,
+        ) + np.broadcast_shapes(time.shape, covar_1.shape, covar_2.shape)
+
+    def test_jac_chf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        nb_params = regression.get_params().size
+        time, covar_1, covar_2 = time_covar
+        assert regression.jac_chf(time, covar_1, covar_2).shape == (
+            nb_params,
+        ) + np.broadcast_shapes(time.shape, covar_1.shape, covar_2.shape)
+
+    def test_jac_cdf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        nb_params = regression.get_params().size
+        time, covar_1, covar_2 = time_covar
+        assert regression.jac_cdf(time, covar_1, covar_2).shape == (
+            nb_params,
+        ) + np.broadcast_shapes(time.shape, covar_1.shape, covar_2.shape)
+
+    def test_jac_pdf(
+        self,
+        regression: ParametricLifetimeRegression,
+        time_covar: tuple[
+            ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+        ],
+    ):
+        nb_params = regression.get_params().size
+        time, covar_1, covar_2 = time_covar
+        assert regression.jac_pdf(time, covar_1, covar_2).shape == (
+            nb_params,
+        ) + np.broadcast_shapes(time.shape, covar_1.shape, covar_2.shape)
+
+    def test_ls_integrate(
+        self,
+        regression: ParametricLifetimeRegression,
+        a_b_covar: tuple[
+            ArrayND[np.float64],
+            ArrayND[np.float64],
+            ArrayND[np.float64],
+            ArrayND[np.float64],
+        ],
+    ):
+        a, b, covar_1, covar_2 = a_b_covar
+        expected_shape = np.broadcast_shapes(
+            a.shape, b.shape, covar_1.shape, covar_2.shape
+        )
+        ls_integrate = regression.ls_integrate(
+            np.ones_like,
+            a,
+            b,
+            covar_1,
+            covar_2,
+        )
+        assert ls_integrate.shape == expected_shape
 
 
-def test_dhf(regression, time, covar):
-    assert regression.dhf(time, covar).shape == expected_shape(time=time, covar=covar)
+def test_sf_values(
+    regression: ParametricLifetimeRegression,
+    time_covar: tuple[ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]],
+):
+    _, *covar = time_covar
+    median = regression.median(*covar)
+    assert regression.sf(median) == approx(np.full_like(median, 0.5), rel=1e-3)
 
 
-def test_jac_sf(regression, time, covar):
-    nb_params = regression.get_params().size
-    assert regression.jac_sf(time, covar).shape == (nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
-
-
-def test_jac_hf(regression, time, covar):
-    nb_params = regression.get_params().size
-    assert regression.jac_hf(time, covar).shape == (nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
-
-
-def test_jac_chf(regression, time, covar):
-    nb_params = regression.get_params().size
-    assert regression.jac_chf(time, covar).shape == (nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
-
-
-def test_jac_cdf(regression, time, covar):
-    nb_params = regression.get_params().size
-    assert regression.jac_cdf(time, covar).shape == (nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
-
-
-def test_jac_pdf(regression, time, covar):
-    nb_params = regression.get_params().size
-    assert regression.jac_pdf(time, covar).shape == (nb_params,) + expected_shape(
-        time=time, covar=covar
-    )
+def test_isf_values(
+    regression: ParametricLifetimeRegression,
+    time_probability: tuple[
+        ArrayND[np.float64], ArrayND[np.float64], ArrayND[np.float64]
+    ],
+):
+    _, *covar = time_probability
+    median = regression.median(*covar)
+    assert regression.isf(np.full_like(median, 0.5), *covar) == approx(median, rel=1e-3)
 
 
 def test_ls_integrate(regression, integration_bound_a, integration_bound_b, covar):

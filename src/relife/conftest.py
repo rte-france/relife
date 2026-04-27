@@ -1,4 +1,5 @@
 # pyright: basic
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -183,129 +184,18 @@ def frozen_ar_regression(regression):
 # LIFETIME MODEL VARIABLES FIXTURES
 #######################################################################################
 
-M = 3
-N = 10
-P = 4
-Q = 6
-
 
 @pytest.fixture(
-    params=[
-        np.float64(1),
-        np.ones((), dtype=np.float64),
-        np.ones((N,), dtype=np.float64),
-        np.ones((M, N), dtype=np.float64),
-        np.ones((M, N, P), dtype=np.float64),
-        np.ones((M, N, P, Q), dtype=np.float64),
-    ],
-    ids=lambda time: f"time:{time.shape}",
-)
-def time(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        np.float64(0.5),
-        np.ones((), dtype=np.float64) * 0.5,
-        np.ones((N,), dtype=np.float64) * 0.5,
-        np.ones((M, N), dtype=np.float64) * 0.5,
-        np.ones((M, N, P), dtype=np.float64) * 0.5,
-        np.ones((M, N, P, Q), dtype=np.float64) * 0.5,
-    ],
-    ids=lambda probability: f"probability:{probability.shape}",
-)
-def probability(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        (np.float64(1), np.float64(1), np.float64(1)),
-        (np.ones((N,)), np.float64(1), np.float64(1)),
-        (np.float64(1), np.ones((N,)), np.float64(1)),
-        (np.float64(1), np.float64(1), np.ones((N,))),
-        (np.ones((N,)), np.ones((N,)), np.float64(1)),
-        (np.ones((N,)), np.ones((N,)), np.ones((N,))),
-        (np.ones((M, N)), np.float64(1), np.float64(1)),
-        (np.ones((M, N)), np.ones((N,)), np.float64(1)),
-        (np.ones((M, N)), np.ones((N,)), np.ones((N,))),
-        (np.ones((M, N)), np.ones((1, N)), np.float64(1)),
-        (np.ones((M, N)), np.ones((1, N)), np.ones((1, N))),
-        (np.ones((M, N)), np.ones((M, 1)), np.ones((1, N))),
-        (np.ones((M, N)), np.ones((M, 1)), np.ones((M, 1))),
-        (np.ones((M, N)), np.ones((M, N)), np.ones((M, N))),
-    ],
-)
-def time_covar(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        2.0 * np.ones((), dtype=np.float64),
-        2.0 * np.ones((1,), dtype=np.float64),
-        2.0 * np.ones((N,), dtype=np.float64),
-        2.0 * np.ones((1, N), dtype=np.float64),
-        2.0 * np.ones((M, 1), dtype=np.float64),
-        2.0 * np.ones((M, N), dtype=np.float64),
-    ],
-    ids=lambda a: f"a:{a.shape}",
-)
-def integration_bound_a(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        8.0 * np.ones((), dtype=np.float64),
-        8.0 * np.ones((1,), dtype=np.float64),
-        8.0 * np.ones((N,), dtype=np.float64),
-        8.0 * np.ones((1, N), dtype=np.float64),
-        8.0 * np.ones((M, 1), dtype=np.float64),
-        8.0 * np.ones((M, N), dtype=np.float64),
-    ],
-    ids=lambda b: f"b:{b.shape}",
-)
-def integration_bound_b(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        np.ones((), dtype=np.float64),
-        np.ones((1,), dtype=np.float64),
-        np.ones((M,), dtype=np.float64),
-        np.ones((M, 1), dtype=np.float64),
-    ],
-    ids=lambda ar: f"ar:{ar.shape}",
-)
-def ar(request):
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        np.ones((), dtype=np.float64),
-        np.ones((1,), dtype=np.float64),
-        np.ones((M,), dtype=np.float64),
-        np.ones((M, 1), dtype=np.float64),
-    ],
-    ids=lambda a0: f"a0:{a0.shape}",
+    params=list(_generate_shapes(1, 4)),
+    ids=lambda shape: f"ar:{shape}",
 )
 def a0(request):
-    return request.param
+    return np.ones(request.param, dtype=np.float64)
 
 
 @pytest.fixture(
-    params=[
-        N,
-        (N,),
-        (M, N),
-        (M, N, P),
-        (M, N, P, Q),
-    ],
-    ids=lambda rvs_size: f"{rvs_size}",
+    params=list(_generate_shapes(1, 4)),
+    ids=lambda shape: f"size:{shape}",
 )
 def rvs_size(request):
     return request.param
@@ -316,34 +206,34 @@ def rvs_size(request):
 #######################################################################################
 
 
-@pytest.fixture(
-    params=[
-        np.ones((), dtype=np.float64),
-        # np.ones((1,), dtype=np.float64),
-        np.ones((M,), dtype=np.float64),
-        # np.ones((M, 1), dtype=np.float64),
-    ],
-    ids=lambda cp: f"cp:{cp.shape}",
-)
-def cp(request):
-    return request.param
-
-
-# M = 3
-CF_RANGE = [5, 10, 20, 100, 1000]
-
-
-@pytest.fixture(
-    params=[
-        np.array(CF_RANGE[0], dtype=np.float64),  # ()
-        # np.array([CF_RANGE[0]], dtype=np.float64), # (1,)
-        np.array(CF_RANGE[:M], dtype=np.float64),  # (M,)
-        # np.array(CF_RANGE[:M], dtype=np.float64).reshape(-1, 1), # (M, 1)
-    ],
-    ids=lambda cf: f"cf:{cf.shape}",
-)
-def cf(request):
-    return request.param
+# @pytest.fixture(
+#     params=[
+#         np.ones((), dtype=np.float64),
+#         # np.ones((1,), dtype=np.float64),
+#         np.ones((M,), dtype=np.float64),
+#         # np.ones((M, 1), dtype=np.float64),
+#     ],
+#     ids=lambda cp: f"cp:{cp.shape}",
+# )
+# def cp(request):
+#     return request.param
+#
+#
+# # M = 3
+# CF_RANGE = [5, 10, 20, 100, 1000]
+#
+#
+# @pytest.fixture(
+#     params=[
+#         np.array(CF_RANGE[0], dtype=np.float64),  # ()
+#         # np.array([CF_RANGE[0]], dtype=np.float64), # (1,)
+#         np.array(CF_RANGE[:M], dtype=np.float64),  # (M,)
+#         # np.array(CF_RANGE[:M], dtype=np.float64).reshape(-1, 1), # (M, 1)
+#     ],
+#     ids=lambda cf: f"cf:{cf.shape}",
+# )
+# def cf(request):
+#     return request.param
 
 
 @pytest.fixture(params=[0.0, 0.04], ids=lambda rate: f"discounting_rate:{rate}")

@@ -269,7 +269,7 @@ class ParametricLifetimeRegression(
     )
     def rvs(
         self,
-        size: int | tuple[int, ...],
+        size: int | tuple[int, ...] | None = None,
         *covar: ST | NumpyST | ArrayND[NumpyST],
         seed: int
         | np.random.Generator
