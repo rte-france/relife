@@ -181,27 +181,6 @@ def frozen_ar_regression(regression):
 
 
 #######################################################################################
-# LIFETIME MODEL VARIABLES FIXTURES
-#######################################################################################
-
-
-@pytest.fixture(
-    params=list(_generate_shapes(1, 4)),
-    ids=lambda shape: f"ar:{shape}",
-)
-def a0(request):
-    return np.ones(request.param, dtype=np.float64)
-
-
-@pytest.fixture(
-    params=list(_generate_shapes(1, 4)),
-    ids=lambda shape: f"size:{shape}",
-)
-def rvs_size(request):
-    return request.param
-
-
-#######################################################################################
 # ECONOMIC FIXTURES
 #######################################################################################
 

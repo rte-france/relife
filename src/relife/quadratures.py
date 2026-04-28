@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import TypeAlias, TypeVarTuple
+from typing import Concatenate, TypeAlias, TypeVarTuple
 
 import numpy as np
 from optype.numpy import ArrayND
@@ -28,7 +28,10 @@ def _control_bounds(*bounds: ST | NumpyST | ArrayND[NumpyST]) -> None:
 
 
 def legendre_quadrature(
-    func: Callable[..., np.float64 | ArrayND[np.float64]],
+    func: Callable[
+        Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+        np.float64 | ArrayND[np.float64],
+    ],
     a: ST | NumpyST | ArrayND[NumpyST],
     b: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
@@ -71,18 +74,21 @@ def legendre_quadrature(
     if np.any(a > b):
         raise ValueError("Bound values a must be lower than values of b")
     x, w = np.polynomial.legendre.leggauss(deg)  # (deg,)
-    x = np.expand_dims(x, axis=tuple(range(a.ndim)))  # (1, ..., 1, deg)
-    w = np.expand_dims(w, axis=tuple(range(a.ndim)))  # (1, ..., 1, deg)
-    p = np.expand_dims((b - a) / 2, axis=-1)  # (*shape, 1)
-    m = np.expand_dims((a + b) / 2, axis=-1)  # (*shape, 1)
-    u = p * x + m  # (*shape, deg)
-    v = p * w  # (*shape, deg)
-    fvalues = func(u, *npargs)  # (*shape, deg)
-    return np.sum(v * fvalues, axis=-1)
+    x = np.expand_dims(x, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    w = np.expand_dims(w, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    p = (b - a) / 2  # (*shape,)
+    m = (a + b) / 2  # (*shape,)
+    u = p * x + m  # (deg, *shape)
+    v = p * w  # (deg, *shape)
+    fvalues = func(u, *npargs)  # (deg, *shape)
+    return np.sum(v * fvalues, axis=0)  # (*shape,)
 
 
 def laguerre_quadrature(
-    func: Callable[..., np.float64 | ArrayND[np.float64]],
+    func: Callable[
+        Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+        np.float64 | ArrayND[np.float64],
+    ],
     a: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
     deg: int = 10,
@@ -113,19 +119,21 @@ def laguerre_quadrature(
     """  # noqa: E501
     npargs = tuple(to_numpy_float64(arg) for arg in args)
     a = to_numpy_float64(a)
-    a, *npargs = np.broadcast_arrays(a, *npargs)  # shape
-    a = np.expand_dims(a, axis=-1)  # (*shape, 1)
+    a, *npargs = np.broadcast_arrays(a, *npargs)  # (shape,)
     _control_bounds(a)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    x = np.expand_dims(x, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    w = np.expand_dims(w, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    fvalues = func(x + a, *npargs)  # (*shape, deg)
-    exp_a = np.where(np.exp(-a) == 0, 1.0, np.exp(-a))  # (*a.shape, 1)
-    return np.sum(w * fvalues * exp_a, axis=-1)
+    x = np.expand_dims(x, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    w = np.expand_dims(w, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    fvalues = func(x + a, *npargs)  # (deg, *shape)
+    exp_a = np.where(np.exp(-a) == 0, 1.0, np.exp(-a))  # (*shape,)
+    return np.sum(w * fvalues * exp_a, axis=0)  # (*shape,)
 
 
 def unweighted_laguerre_quadrature(
-    func: Callable[..., np.float64 | ArrayND[np.float64]],
+    func: Callable[
+        Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+        np.float64 | ArrayND[np.float64],
+    ],
     a: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
     deg: int = 10,
@@ -158,10 +166,9 @@ def unweighted_laguerre_quadrature(
     npargs = tuple(to_numpy_float64(arg) for arg in args)
     a = to_numpy_float64(a)
     a, *npargs = np.broadcast_arrays(a, *npargs)  # shape
-    a = np.expand_dims(a, axis=-1)  # (*shape, 1)
     _control_bounds(a)
     x, w = np.polynomial.laguerre.laggauss(deg)  # (deg,)
-    x = np.expand_dims(x, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    w = np.expand_dims(w, axis=tuple(range(a.ndim - 1)))  # (1, ..., 1, deg)
-    fvalues = func(x + a, *npargs)  # (*shape, deg)
-    return np.sum(w * fvalues * np.exp(x), axis=-1)
+    x = np.expand_dims(x, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    w = np.expand_dims(w, axis=tuple(range(1, a.ndim + 1)))  # (deg, 1, ..., 1)
+    fvalues = func(x + a, *npargs)  # (deg, *shape)
+    return np.sum(w * fvalues * np.exp(x), axis=0)  # (*shape,)

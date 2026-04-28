@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Callable, Sequence
-from typing import Any, Literal, Self, TypeAlias, TypeGuard, final
+from typing import Any, Concatenate, Literal, Self, TypeAlias, final
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
@@ -19,7 +19,6 @@ from optype.numpy import (
     Array1D,
     ArrayND,
     AtMost2D,
-    is_array_1d,
 )
 from scipy.optimize import Bounds
 from typing_extensions import override
@@ -64,7 +63,7 @@ class LinearCovarEffect(ParametricModel):
         Coefficients of the covariates effect.
     """
 
-    def __init__(self, coefficients: tuple[ST | None, ...] = (None,)):
+    def __init__(self, coefficients: Sequence[ST]):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
     def g(
@@ -125,12 +124,6 @@ _covar_docstring = [
 ]
 
 
-def _is_array1d_sequence(
-    val: Sequence[object],
-) -> TypeGuard[Sequence[Array1D[np.float64]]]:
-    return all(is_array_1d(x) for x in val)
-
-
 class ParametricLifetimeRegression(
     FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]], ABC
 ):
@@ -144,11 +137,11 @@ class ParametricLifetimeRegression(
     def __init__(
         self,
         baseline: LifetimeDistribution,
-        coefficients: tuple[ST | None, ...] = (None,),
+        coefficients: tuple[ST, ...] = (),
     ):
         super().__init__()
-        self.covar_effect = LinearCovarEffect(coefficients)
         self.baseline = baseline
+        self.covar_effect = LinearCovarEffect(coefficients)
 
     def get_coefficients(self) -> Array1D[np.float64]:
         """
@@ -286,7 +279,7 @@ class ParametricLifetimeRegression(
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
             np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
@@ -331,15 +324,13 @@ class ParametricLifetimeRegression(
         """  # noqa: E501
         return FrozenParametricLifetimeModel(self, *covar)
 
-    def _get_covar_fit(**kwargs: Any) -> Sequence[Array1D[np.float64]]:
-        if "covar" not in kwargs:
-            raise ValueError("Expected covar.")
-        covar_sequence = kwargs["covar"]
+    def _get_covar_fit(
+        self, covar: Array1D[np.float64] | Sequence[Array1D[np.float64]]
+    ) -> Sequence[Array1D[np.float64]]:
         # typeguards
-        assert _is_array1d_sequence(covar_sequence) or is_array_1d(covar_sequence)
-        if not isinstance(covar_sequence, Sequence):
-            covar_sequence = (covar_sequence,)
-        return covar_sequence
+        if not isinstance(covar, Sequence):
+            covar = (covar,)
+        return covar
 
     @override
     def init_likelihood(
@@ -347,9 +338,11 @@ class ParametricLifetimeRegression(
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
+        *,
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        covar_sequence = self._get_covar_fit(**kwargs)
+        covar_sequence = self._get_covar_fit(covar)
         regression = type(self)(
             type(self.baseline)(), coefficients=(0.0,) * len(covar_sequence)
         )  # init new regression object with appropriate number of covar
@@ -376,10 +369,12 @@ class ParametricLifetimeRegression(
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
+        *,
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> Self:
-        covar_sequence = self._get_covar_fit(**kwargs)
-        self.covar_effect = LinearCovarEffect((None,) * len(covar_sequence))
+        covar_sequence = self._get_covar_fit(covar)
+        self.covar_effect = LinearCovarEffect((0.0,) * len(covar_sequence))
         return super().fit(time, event, entry, **kwargs)
 
 
@@ -511,17 +506,12 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         time: ST | NumpyST | ArrayND[NumpyST],
         *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        g = self.covar_effect.g(*covar)
-        jac_g = self.covar_effect.jac_g(*covar)  # (nb_coef, ...)
-        baseline_hf = self.baseline.hf(time)
-        baseline_jac_hf = self.baseline.jac_hf(time)  # (p, ...)
-        return np.concatenate(
-            (
-                baseline_hf * jac_g,  #  (nb_coef, ...)
-                g * baseline_jac_hf,  # (p, ...)
-            ),
-            axis=0,
-        )  # (p + nb_coef, ...)
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        u = self.baseline.hf(ndtime) * self.covar_effect.jac_g(
+            *ndcovar
+        )  # (nb_coef, ...)
+        v = self.covar_effect.g(*ndcovar) * self.baseline.jac_hf(ndtime)  # (p, ...)
+        return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
     @override
     @document_args(
@@ -532,17 +522,12 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         time: ST | NumpyST | ArrayND[NumpyST],
         *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        g = self.covar_effect.g(*covar)
-        jac_g = self.covar_effect.jac_g(*covar)  # (nb_coef, ...)
-        baseline_chf = self.baseline.chf(time)
-        baseline_jac_chf = np.asarray(self.baseline.jac_chf(time))  # (p, ...)
-        return np.concatenate(
-            (
-                baseline_chf * jac_g,  #  (nb_coef, ...)
-                g * baseline_jac_chf,  # (p, ...)
-            ),
-            axis=0,
-        )  # (p + nb_coef, ...)
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        u = self.baseline.chf(ndtime) * self.covar_effect.jac_g(
+            *ndcovar
+        )  # (nb_coef, ...)
+        v = self.covar_effect.g(*ndcovar) * self.baseline.jac_chf(ndtime)
+        return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
 
 @final
@@ -647,9 +632,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         time: ST | NumpyST | ArrayND[NumpyST],
         *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        g = self.covar_effect.g(*covar)
-        jac_g = self.covar_effect.jac_g(*covar)  # (nb_coef, ...)
-        t0 = time / g
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        g = self.covar_effect.g(*ndcovar)
+        jac_g = self.covar_effect.jac_g(*ndcovar)  # (nb_coef, ...)
+        t0 = ndtime / g
         baseline_jac_hf_t0 = self.baseline.jac_hf(t0)  # (p, ...)
         baseline_hf_t0 = self.baseline.hf(t0)
         baseline_dhf_t0 = self.baseline.dhf(t0)
@@ -674,9 +660,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         time: ST | NumpyST | ArrayND[NumpyST],
         *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        g = self.covar_effect.g(*covar)
-        jac_g = self.covar_effect.jac_g(*covar)  # (nb_coef, ...)
-        t0 = time / g
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        g = self.covar_effect.g(*ndcovar)
+        jac_g = self.covar_effect.jac_g(*ndcovar)  # (nb_coef, ...)
+        t0 = ndtime / g
         baseline_jac_chf_t0 = self.baseline.jac_chf(t0)  # (p, ...)
         baseline_hf_t0 = self.baseline.hf(t0)
         return np.concatenate(

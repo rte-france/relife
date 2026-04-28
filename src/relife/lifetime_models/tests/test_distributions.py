@@ -2,13 +2,14 @@ from typing import TypeAlias
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 from optype.numpy import Array1D, ArrayND
-from pytest import approx
 
 from relife.lifetime_models import (
     LifetimeLikelihood,
 )
 from relife.lifetime_models._distributions import LifetimeDistribution
+from relife.utils import to_numpy_float64
 
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
@@ -113,16 +114,19 @@ class TestBroadcasting:
 
 
 def test_sf_values(distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-    assert distribution.sf(np.full(time.shape, distribution.median())) == approx(
-        np.full(time.shape, 0.5), rel=1e-3
+    assert_allclose(
+        distribution.sf(np.full(time.shape, distribution.median())),
+        np.full(time.shape, 0.5),
+        rtol=1e-3,
     )
 
 
 def test_isf_values(
     distribution: LifetimeDistribution, probability: ArrayND[np.float64]
 ):
-    assert distribution.isf(np.full(probability.shape, 0.5)) == approx(
-        np.full(probability.shape, distribution.median())
+    assert_allclose(
+        distribution.isf(np.full(probability.shape, 0.5)),
+        np.full(probability.shape, distribution.median()),
     )
 
 
@@ -134,17 +138,22 @@ def test_ls_integrate_values(
     integration = distribution.ls_integrate(
         np.ones_like, integration_bound_a, integration_bound_b, deg=100
     )
-    assert integration == approx(
-        distribution.cdf(integration_bound_b) - distribution.cdf(integration_bound_a)
+    assert_allclose(
+        integration,
+        distribution.cdf(integration_bound_b) - distribution.cdf(integration_bound_a),
     )
+
+    def func(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
+        return to_numpy_float64(x)
+
     integration = distribution.ls_integrate(
-        lambda x: x,
+        func,
         np.zeros_like(integration_bound_a),
         np.full_like(integration_bound_b, np.inf),
         deg=100,
     )
-    assert integration == approx(
-        np.full(integration.shape, distribution.mean()), rel=1e-3
+    assert_allclose(
+        integration, np.full(integration.shape, distribution.mean()), rtol=1e-3
     )
 
 
@@ -157,7 +166,7 @@ def test_fit(
         event=power_transformer_data["event"],
         entry=power_transformer_data["entry"],
     )
-    assert distribution.get_params() == pytest.approx(expected_params, rel=1e-3)
+    assert_allclose(distribution.get_params(), expected_params, rtol=1e-3)
 
 
 def test_negative_log(

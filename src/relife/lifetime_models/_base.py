@@ -10,6 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import field
 from typing import (
     Any,
+    Concatenate,
     Generic,
     Literal,
     ParamSpec,
@@ -434,13 +435,15 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
 # these functions can't be generic and can't be part of ParametricLifetimeModel[*Ts]
 # because they uses quadratures with explicit Numpy parameters
-# thus *args can't be typed as *Ts that is Unknown until the inferface becomes concrete
+# thus *args can't be typed as *Ts which is Unknown until the inferface becomes concrete
 # default option added to TypeVarTuple in Python 3.13 does not solve this issue
-# because it does concrete types may be different than default and not allowed in
-# operations
+# because concrete types may be different than default used in operations
 def approx_ls_integrate(
     model: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
-    func: Callable[[ST | NumpyST | ArrayND[NumpyST]], np.float64 | ArrayND[np.float64]],
+    func: Callable[
+        Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+        np.float64 | ArrayND[np.float64],
+    ],
     a: ST | NumpyST | ArrayND[NumpyST],
     b: ST | NumpyST | ArrayND[NumpyST],
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...] = (),
@@ -452,12 +455,16 @@ def approx_ls_integrate(
     Parameters
     ----------
     func : Callable
-        A function of the form `y = func(x)` taking floats or ndarrays
-        as inputs and returning a np.float64 or an ndarray.
+        A function of the form `y = func(x, a, b, c, ...)` taking floats or ndarrays
+        as inputs and returning a np.float64 or an ndarray. `a, b, c, ...` are extra
+        arguments that must be passed in the `args` parameter.
+        `(x, a, b, c, ...)` broadcasted shape must be the same than `y`.
     a : float or ndarray
         The lower bound of the integration.
     b : float or ndarray
         The upper bound of the integration. Can't be `np.inf`.
+    args : float or ndarray
+        Extra arguments used in the function call.
     deg : int, default is 10.
         Number of sample points and weights for the quadrature
 
@@ -468,9 +475,9 @@ def approx_ls_integrate(
     """
 
     def integrand(
-        x: ST | NumpyST | ArrayND[NumpyST],
+        x: ST | NumpyST | ArrayND[NumpyST], *args: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return func(x) * model.pdf(x, *args)
+        return func(x, *args) * model.pdf(x, *args)
 
     arr_a, arr_b = np.broadcast_arrays(a, b)  # (), (n,) or (m, n)
     if np.any(arr_a > arr_b):
@@ -988,7 +995,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-        **kwargs: FitConfig,
+        **kwargs: Any,
     ) -> Self:
         """
         Estimation of parameters from lifetime data.

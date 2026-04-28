@@ -6,6 +6,7 @@ from abc import ABC
 from collections.abc import Callable
 from typing import (
     Any,
+    Concatenate,
     Literal,
     Self,
     TypeAlias,
@@ -149,7 +150,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]], np.float64 | ArrayND[np.float64]
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+            np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
         b: ST | NumpyST | ArrayND[NumpyST],
@@ -1049,11 +1051,10 @@ class MinimumDistribution(FittableParametricLifetimeModel[AnyUnsignedInt]):
         jac_sf, sf = self.jac_sf(time, n), self.sf(time, n)
         return jac_hf * sf + jac_sf * hf
 
-    @override
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
             np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
