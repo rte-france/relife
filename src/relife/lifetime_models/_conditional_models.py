@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeAlias, TypeVarTuple
+from typing import Concatenate, TypeAlias, TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
@@ -177,7 +177,7 @@ class AgeReplacementModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_ar_args_docstring)
     def rvs(
         self,
-        size: int | tuple[int, ...],
+        size: int | tuple[int, ...] | None = None,
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: ST | NumpyST | ArrayND[NumpyST],
         seed: int
@@ -195,7 +195,7 @@ class AgeReplacementModel(
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
             np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
@@ -209,7 +209,7 @@ class AgeReplacementModel(
             self.baseline, func, a, b, args=(ar, *args), deg=deg
         )
         return integration + np.where(
-            b == ar, func(ar) * self.baseline.sf(ar, *args), 0
+            b == ar, func(ar, *args) * self.baseline.sf(ar, *args), 0
         )
 
     def moment(
@@ -423,7 +423,7 @@ class LeftTruncatedModel(
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
             np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
