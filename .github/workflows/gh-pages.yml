@@ -59,7 +59,7 @@ jobs:
           
           # Copy main conf file
           cp /tmp/conf_main.py "$DOC_SRC/conf.py"
-          
+
           python -m pip install . --group dev
           DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
           mkdir -p _site/latest
@@ -76,6 +76,7 @@ jobs:
           # Build docs for each version of type major.minor
           while read -r TAG FOLDER; do
             echo "=== Building $TAG into $FOLDER ==="
+            rm -rf docs/ doc/ build_tmp/ 
             git checkout --force "$TAG"
 
             # Detect doc/ vs docs/ (for older builds)
