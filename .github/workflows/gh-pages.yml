@@ -34,7 +34,7 @@ jobs:
       - name: Build Sphinx docs for selected versions
         env:
           # Use DOCS_BASE_URL_OVERRIDE env variable for debug (local deployment)
-          DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL_OVERRIDE || 'https://opensource.rte-france.com/relife' }}
+          DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL_OVERRIDE || 'https://opensource.rte-france.com/relife/' }}
         run: |
           echo "Deploying with URL: $DOCS_BASE_URL"
           # Create _site/ folder even if it exists
@@ -51,7 +51,7 @@ jobs:
           # Build docs for each version of type major.minor
           while read -r TAG FOLDER; do
             echo "=== Building $TAG into $FOLDER ==="
-            git checkout "$TAG"
+            git checkout --force "$TAG"
             # Copy main conf file
             cp /tmp/conf_main.py docs/source/conf.py
             # If dependencies changed between versions
