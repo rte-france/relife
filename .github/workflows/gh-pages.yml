@@ -52,22 +52,35 @@ jobs:
           while read -r TAG FOLDER; do
             echo "=== Building $TAG into $FOLDER ==="
             git checkout --force "$TAG"
+
+            # Detect doc/ vs docs/ (for older builds)
+            if [ -d "docs/source" ]; then
+              DOC_SRC="docs/source"
+            elif [ -d "doc/source" ]; then
+              DOC_SRC="doc/source"
+            else
+              echo "ERROR: pas de dossier source pour $TAG"
+              exit 1
+            fi
+            echo "Doc source : $DOC_SRC"
+
             # Copy main conf file
-            cp /tmp/conf_main.py docs/source/conf.py
+            cp /tmp/conf_main.py "$DOC_SRC/conf.py"
             # If dependencies changed between versions
             python -m pip install . --group dev
-            DOCS_VERSION="$FOLDER" sphinx-build -M html ./docs/source ./docs/build -Ea
+            DOCS_VERSION="$FOLDER" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
             mkdir -p "_site/$FOLDER"
-            cp -r docs/build/. "_site/$FOLDER/"
-            rm -rf docs/build
+            cp -r ./build_tmp/. "_site/$FOLDER/"
+            rm -rf ./build_tmp
           done <<< "$SELECTION"
 
           # Build "latest" from main
           git checkout main
           python -m pip install . --group dev
-          DOCS_VERSION="latest" sphinx-build -M html ./docs/source ./docs/build -Ea
+          DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
           mkdir -p _site/latest
-          cp -r docs/build/. _site/latest/
+          cp -r ./build_tmp/. _site/latest/
+          rm -rf ./build_tmp
 
           # Alias "stable" to most recent version
           TOP_FOLDER=$(echo "$SELECTION" | head -n1 | awk '{print $2}')
