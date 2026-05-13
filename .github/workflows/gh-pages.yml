@@ -45,6 +45,31 @@ jobs:
           cp docs/source/generate_versions.py /tmp/generate_versions.py
           cp docs/source/conf.py /tmp/conf_main.py
 
+          # Build "latest" from main
+          git checkout --force main
+
+          if [ -d "docs/source" ]; then
+            DOC_SRC="docs/source"
+          elif [ -d "doc/source" ]; then
+            DOC_SRC="doc/source"
+          else
+            echo "ERROR: pas de dossier source sur main"
+            exit 1
+          fi
+          
+          # Copy main conf file
+          cp /tmp/conf_main.py "$DOC_SRC/conf.py"
+          
+          python -m pip install . --group dev
+          DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
+          mkdir -p _site/latest
+          cp -r ./build_tmp/. _site/latest/
+          rm -rf ./build_tmp
+
+          # Generate versions.json
+          python /tmp/generate_versions.py
+          cp "$DOC_SRC/_static/versions.json" _site/versions.json
+
           # List of all tags and versions
           SELECTION=$(python /tmp/select_versions.py)
 
@@ -74,24 +99,11 @@ jobs:
             rm -rf ./build_tmp
           done <<< "$SELECTION"
 
-          # Build "latest" from main (main has a "s" in docs/)
-          DOC_SRC="docs/source"
-          git checkout --force main
-          python -m pip install . --group dev
-          DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
-          mkdir -p _site/latest
-          cp -r ./build_tmp/. _site/latest/
-          rm -rf ./build_tmp
-
           # Alias "stable" to most recent version
           TOP_FOLDER=$(echo "$SELECTION" | head -n1 | awk '{print $2}')
           if [ -n "$TOP_FOLDER" ] && [ -d "_site/$TOP_FOLDER" ]; then
             cp -r "_site/$TOP_FOLDER" "_site/stable"
           fi
-
-          # Generate versions.json
-          python /tmp/generate_versions.py
-          cp docs/source/_static/versions.json _site/versions.json
 
           # index.html redirects to /stable/
           cat > _site/index.html <<'EOF'
