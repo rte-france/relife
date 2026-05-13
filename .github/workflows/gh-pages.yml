@@ -11,6 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # fetch all history for all tags and branches
@@ -32,17 +33,75 @@ jobs:
         run: |
           # prefer sphinx-build rather than make build (it allows more control)
           sphinx-build -M html ./docs/source ./docs/build -Ea
+      
+      - name: Build Sphinx docs for selected versions
+        env:
+          # Use DOCS_BASE_URL_OVERRIDE env variable for debug (local deployment)
+          DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL_OVERRIDE || 'https://opensource.rte-france.com/relife' }}
+        run: |
+          echo "Deploying with URL: $DOCS_BASE_URL"
+          # Create _site/ folder even if it exists
+          mkdir -p _site
+
+          # Copy scripts from main (for older tags without them)
+          cp docs/source/select_versions.py /tmp/select_versions.py
+          cp docs/source/generate_versions.py /tmp/generate_versions.py
+          cp docs/source/conf.py /tmp/conf_main.py
+
+          # List of all tags and versions
+          SELECTION=$(python /tmp/select_versions.py)
+
+          # Build docs for each version of type major.minor
+          while read -r TAG FOLDER; do
+            echo "=== Building $TAG into $FOLDER ==="
+            git checkout "$TAG"
+            # Copy main conf file
+            cp /tmp/conf_main.py docs/source/conf.py
+            # If dependencies changed between versions
+            python -m pip install . --group dev
+            DOCS_VERSION="$FOLDER" sphinx-build -M html ./docs/source ./docs/build -Ea
+            mkdir -p "_site/$FOLDER"
+            cp -r docs/build/. "_site/$FOLDER/"
+            rm -rf docs/build
+          done <<< "$SELECTION"
+
+          # Build "latest" from main
+          git checkout main
+          python -m pip install . --group dev
+          DOCS_VERSION="latest" sphinx-build -M html ./docs/source ./docs/build -Ea
+          mkdir -p _site/latest
+          cp -r docs/build/. _site/latest/
+
+          # Alias "stable" to most recent version
+          TOP_FOLDER=$(echo "$SELECTION" | head -n1 | awk '{print $2}')
+          if [ -n "$TOP_FOLDER" ] && [ -d "_site/$TOP_FOLDER" ]; then
+            cp -r "_site/$TOP_FOLDER" "_site/stable"
+          fi
+
+          # Generate versions.json
+          python /tmp/generate_versions.py
+          cp docs/source/_static/versions.json _site/versions.json
+
+          # index.html redirects to /stable/
+          cat > _site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <meta http-equiv="refresh" content="0; url=./stable/">
+          EOF
+
+          # Jekyll by default ignore _static, _sources folders
+          touch _site/.nojekyll
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages # branch on which files are commited
-          folder: ./docs/build/html # The folder the action should deploy.
+          folder: ./_site/ # The folder the action should deploy.
+          clean: true # clean the content of _site/ if exists
 
       - name: Save website as an artifact
         uses: actions/upload-artifact@v6
         with:
           name: website
-          path: ./docs/build
+          path: ./_site
           retention-days: 14
 

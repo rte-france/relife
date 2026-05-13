@@ -111,7 +111,12 @@ html_theme_options = {
             "icon": "fa-custom fa-pypi",
         },
     ],
-    "navbar_start": ["navbar-logo", "version"],
+    "navbar_start": ["navbar-logo"],
+    "switcher": {
+        "json_url": f"{os.environ.get('DOCS_BASE_URL', 'https://opensource.rte-france.com/relife/')}versions.json",
+        "version_match": os.environ.get("DOCS_VERSION", "latest"),
+    },
+    "navbar_end": ["theme-switcher", "version-switcher"],
 }
 
 # Additional templates that should be rendered to pages, maps page names to

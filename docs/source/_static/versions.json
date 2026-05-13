@@ -1,0 +1,23 @@
+[
+  {
+    "name": "latest (dev)",
+    "version": "latest",
+    "url": "https://opensource.rte-france.com/relife//latest/"
+  },
+  {
+    "name": "v2.8.0",
+    "version": "v2.8",
+    "url": "https://opensource.rte-france.com/relife//v2.8/",
+    "preferred": true
+  },
+  {
+    "name": "v2.7.1",
+    "version": "v2.7",
+    "url": "https://opensource.rte-france.com/relife//v2.7/"
+  },
+  {
+    "name": "v2.6.3",
+    "version": "v2.6",
+    "url": "https://opensource.rte-france.com/relife//v2.6/"
+  }
+]
