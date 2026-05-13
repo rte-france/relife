@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-      - uses: actions/checkout@v6
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # fetch all history for all tags and branches
 
