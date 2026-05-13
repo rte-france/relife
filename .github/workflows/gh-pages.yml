@@ -75,7 +75,7 @@ jobs:
           done <<< "$SELECTION"
 
           # Build "latest" from main
-          git checkout main
+          git checkout --force main
           python -m pip install . --group dev
           DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
           mkdir -p _site/latest
