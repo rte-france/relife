@@ -74,7 +74,8 @@ jobs:
             rm -rf ./build_tmp
           done <<< "$SELECTION"
 
-          # Build "latest" from main
+          # Build "latest" from main (main has a "s" in docs/)
+          DOC_SRC="docs/source"
           git checkout --force main
           python -m pip install . --group dev
           DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
