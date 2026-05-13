@@ -63,7 +63,7 @@ jobs:
           python -m pip install . --group dev
           DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
           mkdir -p _site/latest
-          cp -r ./build_tmp/. _site/latest/
+          cp -r ./build_tmp/html/. _site/latest/
           rm -rf ./build_tmp
 
           # Generate versions.json
@@ -96,7 +96,7 @@ jobs:
             python -m pip install . --group dev
             DOCS_VERSION="$FOLDER" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
             mkdir -p "_site/$FOLDER"
-            cp -r ./build_tmp/. "_site/$FOLDER/"
+            cp -r ./build_tmp/html/. "_site/$FOLDER/"
             rm -rf ./build_tmp
           done <<< "$SELECTION"
 

@@ -16,7 +16,7 @@ def get_versions():
             {
                 "name": tag,
                 "version": folder,
-                "url": f"{BASE_URL}/{folder}/",
+                "url": f"{BASE_URL}{folder}/",
             }
         )
     return versions
@@ -28,7 +28,7 @@ def main():
         {
             "name": "latest (dev)",
             "version": "latest",
-            "url": f"{BASE_URL}/latest/",
+            "url": f"{BASE_URL}latest/",
         }
     ] + versions
 
