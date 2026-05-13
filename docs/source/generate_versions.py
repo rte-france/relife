@@ -8,9 +8,7 @@ OUTPUT = Path("docs/source/_static/versions.json")
 
 
 def get_versions():
-    out = subprocess.check_output(
-        ["python", "docs/source/select_versions.py"], text=True
-    )
+    out = subprocess.check_output(["python", "/tmp/select_versions.py"], text=True)
     versions = []
     for line in out.splitlines():
         tag, folder = line.split()
