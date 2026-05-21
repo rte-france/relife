@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - dev/**
+  # This command allows to rerun action with a button on github
   workflow_dispatch: 
 permissions:
   contents: write
@@ -31,89 +32,11 @@ jobs:
         # pandoc is required by sphinx extensions
         run: sudo apt-get update && sudo apt-get install -y pandoc
       
-      - name: Build Sphinx docs for selected versions
+      - name: Build Sphinx docs for selected versions (see comments in file docs_versioning_build.sh)
         env:
-          # Use DOCS_BASE_URL_OVERRIDE env variable for debug (local deployment)
+          # Use DOCS_BASE_URL_OVERRIDE env variable for debug (local deployment on your own github pages)
           DOCS_BASE_URL: ${{ vars.DOCS_BASE_URL_OVERRIDE || 'https://opensource.rte-france.com/relife/' }}
-        run: |
-          echo "Deploying with URL: $DOCS_BASE_URL"
-          # Create _site/ folder even if it exists
-          mkdir -p _site
-
-          # Copy scripts from main (for older tags without them)
-          cp docs/source/select_versions.py /tmp/select_versions.py
-          cp docs/source/generate_versions.py /tmp/generate_versions.py
-          cp docs/source/conf.py /tmp/conf_main.py
-
-          # Build "latest" from main
-          git checkout --force main
-
-          if [ -d "docs/source" ]; then
-            DOC_SRC="docs/source"
-          elif [ -d "doc/source" ]; then
-            DOC_SRC="doc/source"
-          else
-            echo "ERROR: pas de dossier source sur main"
-            exit 1
-          fi
-          
-          # Copy main conf file
-          cp /tmp/conf_main.py "$DOC_SRC/conf.py"
-
-          python -m pip install . --group dev
-          DOCS_VERSION="latest" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
-          mkdir -p _site/latest
-          cp -r ./build_tmp/html/. _site/latest/
-          rm -rf ./build_tmp
-
-          # Generate versions.json
-          python /tmp/generate_versions.py
-          cp "$DOC_SRC/_static/versions.json" _site/versions.json
-
-          # List of all tags and versions
-          SELECTION=$(python /tmp/select_versions.py)
-
-          # Build docs for each version of type major.minor
-          while read -r TAG FOLDER; do
-            echo "=== Building $TAG into $FOLDER ==="
-            rm -rf docs/ doc/ build_tmp/ 
-            git checkout --force "$TAG"
-
-            # Detect doc/ vs docs/ (for older builds)
-            if [ -d "docs/source" ]; then
-              DOC_SRC="docs/source"
-            elif [ -d "doc/source" ]; then
-              DOC_SRC="doc/source"
-            else
-              echo "ERROR: pas de dossier source pour $TAG"
-              exit 1
-            fi
-            echo "Doc source : $DOC_SRC"
-
-            # Copy main conf file
-            cp /tmp/conf_main.py "$DOC_SRC/conf.py"
-            # If dependencies changed between versions
-            python -m pip install . --group dev
-            DOCS_VERSION="$FOLDER" sphinx-build -M html "./$DOC_SRC" ./build_tmp -Ea
-            mkdir -p "_site/$FOLDER"
-            cp -r ./build_tmp/html/. "_site/$FOLDER/"
-            rm -rf ./build_tmp
-          done <<< "$SELECTION"
-
-          # Alias "stable" to most recent version
-          TOP_FOLDER=$(echo "$SELECTION" | head -n1 | awk '{print $2}')
-          if [ -n "$TOP_FOLDER" ] && [ -d "_site/$TOP_FOLDER" ]; then
-            cp -r "_site/$TOP_FOLDER" "_site/stable"
-          fi
-
-          # index.html redirects to /stable/
-          cat > _site/index.html <<'EOF'
-          <!DOCTYPE html>
-          <meta http-equiv="refresh" content="0; url=./stable/">
-          EOF
-
-          # Jekyll by default ignore _static, _sources folders
-          touch _site/.nojekyll
+        run: bash docs/source/docs_versioning_build.sh
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

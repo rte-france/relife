@@ -1,13 +1,15 @@
-"""Select the last 3 major.minor versions for the docs.
-If multiple options: select the latest tag."""
+"""
+Select the last 3 major.minor versions for the docs.
+If multiple options: select the latest tag.
+This function only print results (for bash or other python scripts)
+"""
 
 import re
 import subprocess
 from collections import defaultdict
 
+# Change this parameter to add more older versions
 N_VERSIONS = 3
-TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
-
 
 def list_tags():
     out = subprocess.check_output(["git", "tag", "-l", "v*"], text=True)
@@ -17,7 +19,7 @@ def list_tags():
 def main():
     families = defaultdict(list)  # (major, minor) -> [(patch, tag), ...]
     for tag in list_tags():
-        m = TAG_RE.match(tag)
+        m = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$").match(tag)
         if not m:
             continue
         major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
