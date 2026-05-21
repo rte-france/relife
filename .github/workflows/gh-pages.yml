@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - dev/**
   # This command allows to rerun action with a button on github
   workflow_dispatch: 
 permissions:
