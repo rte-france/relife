@@ -5,7 +5,7 @@ from typing import TypeAlias, TypeVarTuple
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
-from optype.numpy import Array, ArrayND, AtMost2D
+from optype.numpy import Array, Array1D, ArrayND, AtMost2D
 from typing_extensions import override
 
 from relife.utils import to_column_2d_if_1d
@@ -16,7 +16,11 @@ from ._base import (
     document_args,
 )
 
-__all__: list[str] = ["AgeReplacementModel", "LeftTruncatedModel"]
+__all__: list[str] = [
+    "AgeReplacementModel",
+    "LeftTruncatedModel",
+    "get_conditional_lifetime_model",
+]
 
 Ts = TypeVarTuple("Ts")
 ST: TypeAlias = int | float
@@ -348,7 +352,7 @@ class LeftTruncatedModel(
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         a0 = to_column_2d_if_1d(a0)
-        return super().sf(time, a0, *args)
+        return self.baseline.sf(time + a0, *args) / self.baseline.sf(a0, *args)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
@@ -536,3 +540,34 @@ class LeftTruncatedModel(
         FrozenLeftTruncatedModel
         """
         return FrozenParametricLifetimeModel(self, a0, *args)
+
+
+def get_conditional_lifetime_model(
+    lifetime_model: ParametricLifetimeModel[()],
+    *,
+    a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+    ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+) -> ParametricLifetimeModel[()]:
+    """
+    Fabric for conditional models
+
+    Parameters
+    ----------
+    a0 : float or np.ndarray or None
+        Initial ages
+    ar : float or np.ndarray or None
+        Preventive ages of replacements
+
+    Returns
+    -------
+    FrozenParametricLifetimeModel
+    """
+    # Apply left truncation first for numerical stability
+    if a0 != 0.0:
+        lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
+        if ar != np.inf:
+            # If both are applied, ar becomes ar - a0
+            return AgeReplacementModel(lifetime_model).freeze(ar - a0)
+    if ar != np.inf:
+        return AgeReplacementModel(lifetime_model).freeze(ar)
+    return lifetime_model
