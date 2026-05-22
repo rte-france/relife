@@ -17,7 +17,6 @@ from relife.lifetime_models._base import (
 from relife.lifetime_models._conditional_models import get_conditional_lifetime_model
 from relife.rewards import ExponentialDiscounting, Reward
 from relife.stochastic_processes._renewal_processes import (
-    make_timeline,
     reshape_a0_ar,
 )
 
@@ -55,7 +54,7 @@ class OneCycleExpectedCosts:
         a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
         ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        timeline = make_timeline(tf, nb_steps)
+        timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         etc = np.asarray(
             get_conditional_lifetime_model(
                 self.lifetime_model, a0=a0, ar=ar
@@ -83,7 +82,7 @@ class OneCycleExpectedCosts:
         a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
         ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        timeline = make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
+        timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
         if timeline.ndim == 2:
             timeline = timeline[0, :]  # (nb_steps,)

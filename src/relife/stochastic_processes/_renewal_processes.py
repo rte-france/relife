@@ -1,5 +1,6 @@
 import copy
-from typing import Any, Literal, TypeAlias, TypedDict
+from collections.abc import Callable
+from typing import Any, Literal, ParamSpec, TypeAlias, TypedDict, TypeVar
 
 import numpy as np
 from optype.numpy import Array, Array1D, Array2D, ArrayND, is_array_1d
@@ -16,8 +17,7 @@ from relife.stochastic_processes._sample import StochasticSampleMapping
 from relife.utils import to_column_2d_if_1d
 
 from ._renewal_equations import (
-    delayed_renewal_equation_solver,
-    renewal_equation_solver,
+    RenewalEquationSolver,
 )
 
 ST: TypeAlias = int | float
@@ -27,27 +27,22 @@ NumpyST: TypeAlias = np.floating | np.uint
 __all__ = [
     "RenewalProcess",
     "RenewalRewardProcess",
-    "make_timeline",
 ]
 
-
-def make_timeline(
-    tf: float, nb_steps: int
-) -> Array[tuple[Literal[1], int], np.float64]:
-    return np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
+R = TypeVar("R")
+P = ParamSpec("P")
 
 
-def reshape_a0_ar(func):
-    def wrapper(*args, **kwargs):
-
-        if kwargs.get("a0"):
-            if kwargs.get("a0") != 0.0:
-                kwargs["a0"] = to_column_2d_if_1d(kwargs["a0"])
-
-        if kwargs.get("ar"):
-            if kwargs.get("ar") != np.inf:
-                kwargs["ar"] = to_column_2d_if_1d(kwargs["ar"])
-
+def reshape_a0_ar(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        a0 = kwargs.get("a0")
+        ar = kwargs.get("ar")
+        if a0 and a0 != 0.0 and isinstance(a0, np.ndarray):
+            assert is_array_1d(a0)  # typeguard
+            kwargs["a0"] = to_column_2d_if_1d(a0)
+        if ar and ar != np.inf and isinstance(a0, np.ndarray):
+            assert is_array_1d(ar)  # typeguard
+            kwargs["ar"] = to_column_2d_if_1d(ar)
         return func(*args, **kwargs)
 
     return wrapper
@@ -146,13 +141,11 @@ class RenewalProcess(ParametricModel):
             Sons.
         """
 
-        timeline = make_timeline(tf, nb_steps)
-        renewal_function = renewal_equation_solver(
-            timeline,
+        renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
             get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf,
         )
-        return np.squeeze(timeline), np.squeeze(renewal_function)
+        return renewal_equation_solver.solve(tf, nb_steps)
 
     @reshape_a0_ar
     def expected_number_of_events(
@@ -181,14 +174,6 @@ class RenewalProcess(ParametricModel):
             A tuple containing the timeline and the computed values.
         """  # noqa: E501
 
-        timeline = make_timeline(tf, nb_steps)
-        lifetime_model = get_conditional_lifetime_model(self.lifetime_model, ar=ar)
-        # Apply delay for the first renewal with a0
-        # If no a0 are given, will result in the same solution
-        first_lifetime_model = get_conditional_lifetime_model(
-            self.first_lifetime_model, a0=a0, ar=ar
-        )
-
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             return self.lifetime_model.cdf(np.minimum(t, ar))
 
@@ -198,9 +183,13 @@ class RenewalProcess(ParametricModel):
             )
             return left_truncated_model.cdf(np.minimum(t, ar - a0))
 
-        z = renewal_equation_solver(timeline, lifetime_model, F)
-        z = delayed_renewal_equation_solver(timeline, z, first_lifetime_model, F1)
-        return np.squeeze(timeline), np.squeeze(z)
+        renewal_equation_solver = RenewalEquationSolver(
+            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+            F,
+            get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
+            F1,
+        )
+        return renewal_equation_solver.solve(tf, nb_steps)
 
     @reshape_a0_ar
     def expected_number_of_preventive_renewals(
@@ -229,8 +218,6 @@ class RenewalProcess(ParametricModel):
             A tuple containing the timeline and the computed values.
         """  # noqa: E501
 
-        timeline = make_timeline(tf, nb_steps)
-
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             return (1 - self.lifetime_model.cdf(ar)) * (t > ar)
 
@@ -243,20 +230,16 @@ class RenewalProcess(ParametricModel):
                 )
             ) * (t > first_ar)
 
-        z = renewal_equation_solver(
-            timeline, get_conditional_lifetime_model(self.lifetime_model, ar=ar), F
-        )
-
-        # Apply delay for the first renewal with a0
-        # If no a0 are given, will result in the same solution
-        z = delayed_renewal_equation_solver(
-            timeline,
-            z,
+        renewal_equation_solver = RenewalEquationSolver(
+            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+            F,
             get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
             F1,
         )
 
-        return np.squeeze(timeline), np.squeeze(z)
+        return renewal_equation_solver.solve(
+            tf, nb_steps, discounting_rate=self.discounting_rate
+        )
 
     @reshape_a0_ar
     def renewal_density(
@@ -306,13 +289,11 @@ class RenewalProcess(ParametricModel):
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
         """
-        timeline = make_timeline(tf, nb_steps)
-        renewal_density = renewal_equation_solver(
-            timeline,
+        renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
             get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf,
         )
-        return np.squeeze(timeline), np.squeeze(renewal_density)
+        return renewal_equation_solver.solve(tf, nb_steps)
 
     @reshape_a0_ar
     def sample(
@@ -393,7 +374,7 @@ class RenewalProcess(ParametricModel):
         -------
         A dict of time, event, entry and args (covariates)
 
-        """
+        """  # noqa: E501
 
         from ._sample import RenewalProcessIterable
 
@@ -546,7 +527,6 @@ class RenewalRewardProcess(RenewalProcess):
             A tuple containing the timeline and the computed values.
 
         """
-        timeline = make_timeline(tf, nb_steps)
 
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             return get_conditional_lifetime_model(
@@ -573,23 +553,16 @@ class RenewalRewardProcess(RenewalProcess):
                 deg=15,
             )
 
-        z = renewal_equation_solver(
-            timeline,
+        renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
             F,
-            discounting=self.discounting,
-        )
-
-        # Apply delay for the first renewal with a0
-        # If no a0 are given, will result in the same solution
-        z = delayed_renewal_equation_solver(
-            timeline,
-            z,
             get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
             F1,
-            discounting=self.discounting,
         )
-        return np.squeeze(timeline), np.squeeze(z)
+
+        return renewal_equation_solver.solve(
+            tf, nb_steps, discounting_rate=self.discounting_rate
+        )
 
     @reshape_a0_ar
     def asymptotic_expected_total_reward(
