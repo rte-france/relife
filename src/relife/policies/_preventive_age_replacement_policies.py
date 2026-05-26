@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import functools
+import inspect
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Literal, TypeAlias, overload
+from collections.abc import Callable
+from typing import Any, Literal, ParamSpec, TypeAlias, TypeVar, overload
 
 import numpy as np
 from optype.numpy import Array1D, Array2D, ArrayND
@@ -43,31 +45,30 @@ __all__ = [
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
+R = TypeVar("R")
+P = ParamSpec("P")
 
-def check_impossible_replacements(func):
+
+def check_impossible_replacements(func: Callable[P, R]) -> Callable[P, R]:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         # Get ar and a0
-        import inspect
 
         sig = inspect.signature(func)
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
-        params = bound.arguments
-
-        ar = params.get("ar")
-        a0 = params.get("a0", None)
+        bound_arguments = sig.bind(*args, **kwargs)
+        bound_arguments.apply_defaults()
+        ar = bound_arguments.arguments.get("ar")
+        a0 = bound_arguments.arguments.get("a0", None)
 
         # check ar is greater than a0 if a0 is provided
-        if a0 is not None:
-            if not np.all(np.atleast_1d(ar) >= np.atleast_1d(a0)):
-                warnings.warn(
-                    """ Some assets are using an optimal age of replacement
-                    inferior to their current age. Please consider changing the
-                    age of replacement.
-                    """,
-                    stacklevel=2,
-                )
+        if a0 and np.any(ar < a0):
+            warnings.warn(
+                """
+                Some ages of replacement are inferior to assets ages. You may change the
+                age of replacement.
+                """,
+                stacklevel=2,
+            )
 
         return func(*args, **kwargs)
 
@@ -664,11 +665,15 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @reshape_a0_ar
     def generate_failure_data(
         self,
-        ar: NumpyFloat,
+        ar: ST | NumpyST | Array1D[NumpyST],
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        seed=None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ):
         """Generate failure data
 
@@ -691,7 +696,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         -------
         A dict of time, event, entry and args (covariates)
 
-        """
+        """  # noqa: E501
         return self._stochastic_reward_process(ar=ar).generate_failure_data(
             nb_samples, time_window, ar=ar, a0=a0, seed=seed
         )
@@ -700,11 +705,15 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @reshape_a0_ar
     def sample(
         self,
-        ar: NumpyFloat,
+        ar: ST | NumpyST | Array1D[NumpyST],
         nb_samples: int,
         time_window: tuple[float, float],
-        a0: NumpyFloat | None = None,
-        seed=None,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ):
         """Renewal data sampling.
 
@@ -726,13 +735,13 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
 
-class NonHomogeneousPoissonAgeReplacementPolicy(BaseReplacementPolicy):
+class NonHomogeneousPoissonAgeReplacementPolicy:
     r"""Age replacement policy for non-Homogeneous Poisson process.
 
     Parameters
     ----------
     nhpp : non-homogeneous Poisson process
-        The underlying non homogeneous poisson process. If the process expects covars, it must be frozen before.
+        The underlying non homogeneous poisson process.
     cr : float or 1darray
         The cost of repair.
     cp : float or 1darray
