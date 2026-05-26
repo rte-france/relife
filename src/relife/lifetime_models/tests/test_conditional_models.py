@@ -63,10 +63,10 @@ class TestAgeReplacementDistribution:
             time=time, ar=ar
         )
 
-    def test_ppf(self, distribution, time, ar):
-        assert AgeReplacementModel(distribution).ppf(time, ar).shape == expected_shape(
-            time=time, ar=ar
-        )
+    def test_ppf(self, distribution, probability, ar):
+        assert AgeReplacementModel(distribution).ppf(
+            probability, ar
+        ).shape == expected_shape(probability=probability, ar=ar)
 
     def test_ichf(self, distribution, probability, ar):
         assert AgeReplacementModel(distribution).ichf(
@@ -167,10 +167,10 @@ class TestAgeReplacementRegression:
             time, ar, covar
         ).shape == expected_shape(time=time, ar=ar, covar=covar)
 
-    def test_ppf(self, regression, time, ar, covar):
+    def test_ppf(self, regression, probability, ar, covar):
         assert AgeReplacementModel(regression).ppf(
-            time, ar, covar
-        ).shape == expected_shape(time=time, ar=ar, covar=covar)
+            probability, ar, covar
+        ).shape == expected_shape(probability=probability, ar=ar, covar=covar)
 
     def test_ichf(self, regression, probability, ar, covar):
         assert AgeReplacementModel(regression).ichf(
@@ -281,10 +281,10 @@ class TestLeftTruncatedDistribution:
             time=time, a0=a0
         )
 
-    def test_ppf(self, distribution, time, a0):
-        assert LeftTruncatedModel(distribution).ppf(time, a0).shape == expected_shape(
-            time=time, a0=a0
-        )
+    def test_ppf(self, distribution, probability, a0):
+        assert LeftTruncatedModel(distribution).ppf(
+            probability, a0
+        ).shape == expected_shape(probability=probability, a0=a0)
 
     def test_ichf(self, distribution, probability, a0):
         assert LeftTruncatedModel(distribution).ichf(
@@ -381,10 +381,10 @@ class TestLeftTruncatedRegression:
             time, a0, covar
         ).shape == expected_shape(time=time, a0=a0, covar=covar)
 
-    def test_ppf(self, regression, time, a0, covar):
+    def test_ppf(self, regression, probability, a0, covar):
         assert LeftTruncatedModel(regression).ppf(
-            time, a0, covar
-        ).shape == expected_shape(time=time, a0=a0, covar=covar)
+            probability, a0, covar
+        ).shape == expected_shape(probability=probability, a0=a0, covar=covar)
 
     def test_ichf(self, regression, probability, a0, covar):
         assert LeftTruncatedModel(regression).ichf(
@@ -487,9 +487,11 @@ class TestFrozenAgeReplacementDistribution:
         frozen_model = AgeReplacementModel(distribution).freeze(ar)
         assert frozen_model.pdf(time).shape == expected_shape(time=time, ar=ar)
 
-    def test_ppf(self, distribution, time, ar):
+    def test_ppf(self, distribution, probability, ar):
         frozen_model = AgeReplacementModel(distribution).freeze(ar)
-        assert frozen_model.ppf(time).shape == expected_shape(time=time, ar=ar)
+        assert frozen_model.ppf(probability).shape == expected_shape(
+            probability=probability, ar=ar
+        )
 
     def test_ichf(self, distribution, probability, ar):
         frozen_model = AgeReplacementModel(distribution).freeze(ar)
@@ -591,10 +593,10 @@ class TestFrozenAgeReplacementRegression:
             time=time, ar=ar, covar=covar
         )
 
-    def test_ppf(self, regression, time, ar, covar):
+    def test_ppf(self, regression, probability, ar, covar):
         frozen_model = AgeReplacementModel(regression).freeze(ar, covar)
-        assert frozen_model.ppf(time).shape == expected_shape(
-            time=time, ar=ar, covar=covar
+        assert frozen_model.ppf(probability).shape == expected_shape(
+            probability=probability, ar=ar, covar=covar
         )
 
     def test_ichf(self, regression, probability, ar, covar):
@@ -686,9 +688,11 @@ class TestFrozenLeftTruncatedDistribution:
         frozen_model = LeftTruncatedModel(distribution).freeze(a0)
         assert frozen_model.pdf(time).shape == expected_shape(time=time, a0=a0)
 
-    def test_ppf(self, distribution, time, a0):
+    def test_ppf(self, distribution, probability, a0):
         frozen_model = LeftTruncatedModel(distribution).freeze(a0)
-        assert frozen_model.ppf(time).shape == expected_shape(time=time, a0=a0)
+        assert frozen_model.ppf(probability).shape == expected_shape(
+            probability=probability, a0=a0
+        )
 
     def test_ichf(self, distribution, probability, a0):
         frozen_model = LeftTruncatedModel(distribution).freeze(a0)
@@ -788,10 +792,10 @@ class TestLeftTruncatedRegression:
             time=time, a0=a0, covar=covar
         )
 
-    def test_ppf(self, regression, time, a0, covar):
+    def test_ppf(self, regression, probability, a0, covar):
         frozen_model = LeftTruncatedModel(regression).freeze(a0, covar)
-        assert frozen_model.ppf(time).shape == expected_shape(
-            time=time, a0=a0, covar=covar
+        assert frozen_model.ppf(probability).shape == expected_shape(
+            probability=probability, a0=a0, covar=covar
         )
 
     def test_ichf(self, regression, probability, a0, covar):

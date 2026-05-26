@@ -545,29 +545,29 @@ class LeftTruncatedModel(
 def get_conditional_lifetime_model(
     lifetime_model: ParametricLifetimeModel[()],
     *,
-    a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-    ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+    a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ar: ST | NumpyST | Array1D[NumpyST] | None = None,
 ) -> ParametricLifetimeModel[()]:
     """
-    Fabric for conditional models
+    Fabric for conditional models.
 
     Parameters
     ----------
-    a0 : float or np.ndarray or None
-        Initial ages
-    ar : float or np.ndarray or None
-        Preventive ages of replacements
+    a0 : float or np.ndarray, optional
+        Initial ages of the assets.
+    ar : float or np.ndarray, optional
+        Preventive ages of replacements.
 
     Returns
     -------
     FrozenParametricLifetimeModel
     """
     # Apply left truncation first for numerical stability
-    if a0 != 0.0:
+    if a0:
         lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
-        if ar != np.inf:
+        if ar:
             # If both are applied, ar becomes ar - a0
             return AgeReplacementModel(lifetime_model).freeze(ar - a0)
-    if ar != np.inf:
+    if ar:
         return AgeReplacementModel(lifetime_model).freeze(ar)
     return lifetime_model

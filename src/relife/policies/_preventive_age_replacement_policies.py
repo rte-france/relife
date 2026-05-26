@@ -201,7 +201,7 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected net present value.
@@ -225,6 +225,10 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
             The final time.
         nb_steps : int
             The number of steps used to discretized the time.
+        ar : float or np.ndarray
+            Preventive ages of replacements.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -238,7 +242,7 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected equivalent annual cost.
@@ -259,6 +263,10 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
             The final time.
         nb_steps : int
             The number of steps used to discretized the time.
+        ar : float or np.ndarray
+            Preventive ages of replacements.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -270,7 +278,7 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
     def asymptotic_expected_net_present_value(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         r"""
         The asymtotic expected net present value.
@@ -281,11 +289,10 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
 
         Parameters
         ----------
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
+        ar : float or np.ndarray
+            Preventive ages of replacements.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -297,7 +304,7 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
     def asymptotic_expected_equivalent_annual_cost(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         r"""
         The asymtotic expected equivalent annual cost.
@@ -308,6 +315,10 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
 
         Parameters
         ----------
+        ar : float or np.ndarray
+            Preventive ages of replacements.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -385,7 +396,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         total_sum: bool = False,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._expected_costs(ar=ar).expected_net_present_value(
@@ -397,7 +408,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return self._expected_costs(ar=ar).asymptotic_expected_net_present_value(a0, ar)
 
@@ -408,7 +419,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
 
         return self._expected_costs(ar=ar).expected_equivalent_annual_cost(
@@ -421,7 +432,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
 
         return self._expected_costs(ar=ar).asymptotic_expected_equivalent_annual_cost(
@@ -514,7 +525,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._stochastic_reward_process(ar=ar).expected_total_reward(
             tf, nb_steps, a0, ar
@@ -528,7 +539,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         tf: float,
         nb_steps: int,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
 
         return self._stochastic_reward_process(ar).expected_equivalent_annual_worth(
@@ -541,7 +552,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_net_present_value(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return self._stochastic_reward_process(ar=ar).asymptotic_expected_total_reward(
             a0, ar
@@ -553,7 +564,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     def asymptotic_expected_equivalent_annual_cost(
         self,
         ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
 
         return self._stochastic_reward_process(
@@ -568,7 +579,7 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         nb_years: int,
         upon_failure: bool = False,
         total: bool = True,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ):
         """
         The expected number of annual replacements.

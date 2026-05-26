@@ -51,8 +51,8 @@ class OneCycleExpectedCosts:
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-        ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         etc = np.asarray(
@@ -79,8 +79,8 @@ class OneCycleExpectedCosts:
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-        ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
@@ -93,8 +93,8 @@ class OneCycleExpectedCosts:
     @reshape_a0_ar
     def asymptotic_expected_net_present_value(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-        ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         # reward partial expectation
         return np.squeeze(
@@ -114,8 +114,8 @@ class OneCycleExpectedCosts:
     @reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-        ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
         value = self._expected_equivalent_annual_cost(timeline, a0=a0, ar=ar)
@@ -126,8 +126,8 @@ class OneCycleExpectedCosts:
     def _expected_equivalent_annual_cost(
         self,
         timeline: ArrayND[np.float64],
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
-        ar: ST | NumpyST | Array1D[NumpyST] = np.inf,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64] | Array2D[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:

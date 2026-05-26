@@ -101,7 +101,7 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected net present value.
@@ -125,6 +125,8 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
             The final time.
         nb_steps : int
             The number of steps used to discretized the time.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -137,7 +139,7 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
         The expected equivalent annual cost.
@@ -158,6 +160,8 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
             The final time.
         nb_steps : int
             The number of steps used to discretized the time.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -168,7 +172,7 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     @abstractmethod
     def asymptotic_expected_net_present_value(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         r"""
         The asymtotic expected net present value.
@@ -179,11 +183,8 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
 
         Parameters
         ----------
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -194,7 +195,7 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     @abstractmethod
     def asymptotic_expected_equivalent_annual_cost(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         r"""
         The asymtotic expected equivalent annual cost.
@@ -205,6 +206,8 @@ class BaseRunToFailure(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
 
         Parameters
         ----------
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
 
         Returns
         -------
@@ -263,7 +266,7 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._expected_costs.expected_net_present_value(tf, nb_steps, a0=a0)
 
@@ -272,21 +275,21 @@ class OneCycleRunToFailurePolicy(BaseRunToFailure):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._expected_costs.expected_equivalent_annual_cost(tf, nb_steps, a0=a0)
 
     @override
     def asymptotic_expected_net_present_value(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return self._expected_costs.asymptotic_expected_net_present_value(a0=a0)
 
     @override
     def asymptotic_expected_equivalent_annual_cost(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return self._expected_costs.asymptotic_expected_equivalent_annual_cost(a0=a0)
 
@@ -329,7 +332,7 @@ class RunToFailurePolicy(BaseRunToFailure):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._stochastic_reward_process.expected_total_reward(
             tf, nb_steps, a0=a0
@@ -340,7 +343,7 @@ class RunToFailurePolicy(BaseRunToFailure):
         self,
         tf: float,
         nb_steps: int,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         return self._stochastic_reward_process.expected_equivalent_annual_worth(
             tf, nb_steps, a0=a0
@@ -349,14 +352,14 @@ class RunToFailurePolicy(BaseRunToFailure):
     @override
     def asymptotic_expected_net_present_value(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return self._stochastic_reward_process.asymptotic_expected_total_reward(a0=a0)
 
     @override
     def asymptotic_expected_equivalent_annual_cost(
         self,
-        a0: ST | NumpyST | Array1D[NumpyST] = 0.0,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         return (
             self._stochastic_reward_process.asymptotic_expected_equivalent_annual_worth(
@@ -368,6 +371,7 @@ class RunToFailurePolicy(BaseRunToFailure):
         self,
         nb_samples: int,
         time_window: tuple[float, float],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed: int
         | np.random.Generator
         | np.random.BitGenerator
@@ -384,12 +388,12 @@ class RunToFailurePolicy(BaseRunToFailure):
             The size of the desired sample
         time_window : tuple of two floats
             Time window in which data are sampled
+        a0 : float or np.ndarray, optional
+            Initial ages of the assets.
         seed : int, optional
             Random seed, by default None.
-        a0 : float or np.ndarray or None
-            Optional, initial ages
 
         """
-        return self._stochastic_process.sample(
-            nb_samples, time_window, a0=self.a0, seed=seed
+        return self._stochastic_reward_process.sample(
+            nb_samples, time_window, a0=a0, seed=seed
         )
