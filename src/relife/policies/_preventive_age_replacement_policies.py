@@ -16,7 +16,6 @@ from relife.lifetime_models import (
     AgeReplacementModel,
 )
 from relife.lifetime_models._base import (
-    FittableParametricLifetimeModel,
     ParametricLifetimeModel,
 )
 from relife.quadratures import legendre_quadrature
@@ -91,18 +90,13 @@ def age_replacement_policy(
 ) -> AgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
-    baseline_model: FrozenNonHomogeneousPoissonProcess[
-        FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
-    ],
+    baseline_model: FrozenNonHomogeneousPoissonProcess,
     cost_structure: dict[str, ST | NumpyST | Array1D[NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> NonHomogeneousPoissonAgeReplacementPolicy: ...
 def age_replacement_policy(
-    baseline_model: ParametricLifetimeModel[()]
-    | FrozenNonHomogeneousPoissonProcess[
-        FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
-    ],
+    baseline_model: ParametricLifetimeModel[()] | FrozenNonHomogeneousPoissonProcess,
     cost_structure: dict[str, ST | NumpyST | Array1D[NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
@@ -353,7 +347,7 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
 
-    Attributes
+    Attributes_pre
     ----------
     cf
     cp
@@ -735,7 +729,9 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
         )
 
 
-class NonHomogeneousPoissonAgeReplacementPolicy:
+class NonHomogeneousPoissonAgeReplacementPolicy(
+    BaseReplacementPolicy[FrozenNonHomogeneousPoissonProcess]
+):
     r"""Age replacement policy for non-Homogeneous Poisson process.
 
     Parameters
@@ -755,16 +751,23 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
     cr
     """
 
-    def __init__(self, nhpp, cr, cp, discounting_rate=0.0):
+    discounting_rate: float
+
+    def __init__(
+        self,
+        process: FrozenNonHomogeneousPoissonProcess,
+        cr: ST | NumpyST | Array1D[NumpyST],
+        cp: ST | NumpyST | Array1D[NumpyST],
+        discounting_rate: float = 0.0,
+    ) -> None:
         super().__init__(
-            nhpp,
-            cost_structure={"cr": to_column_2d_if_1d(cr), "cp": to_column_2d_if_1d(cp)},
+            process,
+            {"cr": to_column_2d_if_1d(cr), "cp": to_column_2d_if_1d(cp)},
             discounting_rate=discounting_rate,
         )
 
-    @property
-    def cp(self):
-        """Costs of preventive replacement.
+    def get_cp(self) -> np.float64 | Array1D[np.float64]:
+        """Costs of preventive replacements.
 
         Returns
         -------
@@ -772,13 +775,11 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         """
         return flatten_if_at_least_2d(self._cost_structure["cp"])
 
-    @cp.setter
-    def cp(self, value):
+    def set_cp(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
         self._cost_structure["cp"] = to_column_2d_if_1d(value)
 
-    @property
-    def cr(self):
-        """Cost of minimal repair.
+    def get_cr(self) -> np.float64 | Array1D[np.float64]:
+        """Costs of minimal repair.
 
         Returns
         -------
@@ -786,41 +787,42 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         """
         return flatten_if_at_least_2d(self._cost_structure["cr"])
 
-    @cr.setter
-    def cr(self, value):
+    def set_cr(self, value: ST | NumpyST | Array1D[NumpyST]) -> None:
         self._cost_structure["cr"] = to_column_2d_if_1d(value)
 
     @reshape_a0_ar
     def expected_net_present_value(
         self,
-        tf,
-        ar: NumpyFloat,
-        nb_steps,
-        total_sum=False,
-        a0: NumpyFloat | None = None,
-    ):
+        tf: float,
+        nb_steps: int,
+        ar: ST | NumpyST | Array1D[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         raise NotImplementedError("implementation will come in a future release")
 
     @reshape_a0_ar
     def asymptotic_expected_net_present_value(
-        self, ar: NumpyFloat, total_sum=False, a0: NumpyFloat | None = None
-    ):
+        self,
+        ar: ST | NumpyST | Array1D[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         raise NotImplementedError("implementation will come in a future release")
 
     @reshape_a0_ar
     def expected_equivalent_annual_cost(
         self,
-        ar: NumpyFloat,
-        tf,
-        nb_steps,
-        total_sum=False,
-        a0: NumpyFloat | None = None,
+        tf: float,
+        nb_steps: int,
+        ar: ST | NumpyST | Array1D[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ):
         raise NotImplementedError("implementation will come in a future release")
 
     @reshape_a0_ar
     def asymptotic_expected_equivalent_annual_cost(
-        self, ar: NumpyFloat, a0: NumpyFloat | None = None
+        self,
+        ar: ST | NumpyST | Array1D[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ):
         if a0 is not None:
             raise ValueError(
@@ -831,16 +833,16 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
 
         if self.discounting_rate == 0.0:
             asymptotic_eeac = (
-                self.cp
-                + self.cr
+                self.get_cp()
+                + self.get_cr()
                 * legendre_quadrature(lambda t: self.baseline_model.intensity(t), 0, ar)
             ) / ar
         else:
             asymptotic_eeac = (
                 self.discounting_rate
                 * (
-                    self.cp * discounting.factor(ar)
-                    + self.cr
+                    self.get_cp() * discounting.factor(ar)
+                    + self.get_cr()
                     * legendre_quadrature(
                         lambda t: (
                             discounting.factor(t) * self.baseline_model.intensity(t)
@@ -853,7 +855,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
             )
         return np.squeeze(asymptotic_eeac)  # () or (m,)
 
-    def compute_optimal_ar(self) -> NumpyFloat:
+    def get_optimal_ar(self) -> ST | Array1D[np.float64]:
         """
         Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
 
@@ -861,12 +863,12 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
         -------
         ar : float or np.ndarray
             Optimal ages of replacements.
-        """
+        """  # noqa: E501
 
         discounting = ExponentialDiscounting(self.discounting_rate)
         x0 = np.atleast_2d(self.baseline_model.lifetime_model.mean())
 
-        def eq(a):
+        def eq(a: ArrayND[np.float64]) -> np.float64 | ArrayND[np.float64]:
             if discounting.rate != 0:
                 return (
                     (1 - discounting.factor(a))
@@ -887,4 +889,4 @@ class NonHomogeneousPoissonAgeReplacementPolicy:
                 - self._cost_structure["cp"] / self._cost_structure["cr"]
             )
 
-        return newton(eq, x0)
+        return newton(eq, x0)  # pyright: ignore
