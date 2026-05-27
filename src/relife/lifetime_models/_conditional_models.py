@@ -563,11 +563,11 @@ def get_conditional_lifetime_model(
     FrozenParametricLifetimeModel
     """
     # Apply left truncation first for numerical stability
-    if a0:
+    if a0 is not None:
         lifetime_model = LeftTruncatedModel(lifetime_model).freeze(a0)
-        if ar:
+        if ar is not None:
             # If both are applied, ar becomes ar - a0
             return AgeReplacementModel(lifetime_model).freeze(ar - a0)
-    if ar:
+    if ar is not None:
         return AgeReplacementModel(lifetime_model).freeze(ar)
     return lifetime_model

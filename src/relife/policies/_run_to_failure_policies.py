@@ -18,6 +18,8 @@ from ._base import BaseReplacementPolicy, OneCycleExpectedCosts
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
+__all__ = ["run_to_failure_policy", "OneCycleRunToFailurePolicy", "RunToFailurePolicy"]
+
 
 @overload
 def run_to_failure_policy(

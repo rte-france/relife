@@ -1,3 +1,4 @@
+import inspect
 from collections.abc import Callable
 from typing import Any, Literal, ParamSpec, TypeAlias, TypedDict, TypeVar
 
@@ -34,12 +35,15 @@ P = ParamSpec("P")
 
 def reshape_a0_ar(func: Callable[P, R]) -> Callable[P, R]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        a0 = kwargs.get("a0")
-        ar = kwargs.get("ar")
-        if a0 and a0 != 0.0 and isinstance(a0, np.ndarray):
+        sig = inspect.signature(func)
+        bound_arguments = sig.bind(*args, **kwargs)
+        bound_arguments.apply_defaults()
+        ar = bound_arguments.arguments.get("ar")
+        a0 = bound_arguments.arguments.get("a0")
+        if a0 is not None and isinstance(a0, np.ndarray):
             assert is_array_1d(a0)  # typeguard
             kwargs["a0"] = to_column_2d_if_1d(a0)
-        if ar and ar != np.inf and isinstance(a0, np.ndarray):
+        if ar is not None and isinstance(a0, np.ndarray):
             assert is_array_1d(ar)  # typeguard
             kwargs["ar"] = to_column_2d_if_1d(ar)
         return func(*args, **kwargs)
