@@ -187,7 +187,7 @@ class RenewalProcess(ParametricModel):
         """  # noqa: E501
 
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
-            _ar = ar if ar else np.inf
+            _ar = ar if ar is not None else np.inf
             return self.lifetime_model.cdf(np.minimum(t, _ar))
 
         def F1(
@@ -196,8 +196,8 @@ class RenewalProcess(ParametricModel):
             left_truncated_model = get_conditional_lifetime_model(
                 self.first_lifetime_model, a0=a0
             )
-            _ar = ar if ar else np.inf
-            _a0 = a0 if a0 else 0.0
+            _ar = ar if ar is not None else np.inf
+            _a0 = a0 if a0 is not None else 0.0
             return left_truncated_model.cdf(np.minimum(t, _ar - _a0))
 
         if self._different_first_lifetime_model:
@@ -247,7 +247,7 @@ class RenewalProcess(ParametricModel):
             return (1 - self.lifetime_model.cdf(ar)) * (t > ar)
 
         def F1(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
-            _a0 = a0 if a0 else 0.0
+            _a0 = a0 if a0 is not None else 0.0
             first_ar = ar - _a0
             return (
                 1
@@ -270,7 +270,7 @@ class RenewalProcess(ParametricModel):
             )
 
         return renewal_equation_solver.solve(
-            tf, nb_steps, discounting_rate=self.discounting_rate
+            tf, nb_steps
         )
 
     @reshape_a0_ar

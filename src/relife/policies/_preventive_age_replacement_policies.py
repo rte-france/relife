@@ -60,7 +60,7 @@ def check_impossible_replacements(func: Callable[P, R]) -> Callable[P, R]:
         a0 = bound_arguments.arguments.get("a0", None)
 
         # check ar is greater than a0 if a0 is provided
-        if a0 and np.any(ar < a0):
+        if a0 is not None and np.any(ar < a0):
             warnings.warn(
                 """
                 Some ages of replacement are inferior to assets ages. You may change the
