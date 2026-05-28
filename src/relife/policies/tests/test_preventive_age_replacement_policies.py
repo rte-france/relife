@@ -82,7 +82,7 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            ar = policy.get_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
         qa = policy.asymptotic_expected_equivalent_annual_cost(ar)  # () or (m,)
@@ -100,7 +100,7 @@ class TestAgeReplacementPolicy:
             distribution, cf, cp, discounting_rate=discounting_rate
         )
         try:
-            ar = policy.get_optimal_ar()
+            ar = policy.compute_optimal_ar()
         except RuntimeError:
             pytest.skip("Optimization failed, EEAC may be too flat")
         qa = policy.asymptotic_expected_equivalent_annual_cost(ar)  # () or (m,)
@@ -119,7 +119,7 @@ class TestAgeReplacementPolicy:
         policy = AgeReplacementPolicy(
             distribution, cf, cp, discounting_rate=discounting_rate
         )
-        ar = policy.get_optimal_ar()
+        ar = policy.compute_optimal_ar()
         assert np.all(
             policy.asymptotic_expected_equivalent_annual_cost(ar + eps)
             > policy.asymptotic_expected_equivalent_annual_cost(ar)

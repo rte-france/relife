@@ -168,6 +168,10 @@ M = TypeVar("M")
 
 
 class BaseReplacementPolicy(Generic[M], ABC):
+    """
+    Base class of replacement policies.
+    """
+
     baseline_model: M
     discounting_rate: float
     _cost_structure: dict[

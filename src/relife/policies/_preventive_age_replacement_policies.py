@@ -63,8 +63,8 @@ def check_impossible_replacements(func: Callable[P, R]) -> Callable[P, R]:
         if a0 is not None and np.any(ar < a0):
             warnings.warn(
                 """
-                Some ages of replacement are inferior to assets ages. You may change the
-                age of replacement.
+                Some ages of replacement are inferior to assets ages. You may change 
+                ages of replacement.
                 """,
                 stacklevel=2,
             )
@@ -150,6 +150,11 @@ def age_replacement_policy(
 
 class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]], ABC):
     discounting_rate: float
+
+    """
+    Base class of age replacement policies.
+
+    """
 
     def __init__(
         self,
@@ -321,6 +326,19 @@ class BaseAgeReplacementPolicy(BaseReplacementPolicy[ParametricLifetimeModel[()]
             The asymptotic expected values.
         """
 
+    @abstractmethod
+    def compute_optimal_ar(self) -> ST | Array1D[np.float64]:
+        """
+        Compute the optimal ages of replacement.
+
+        The optimal ages of replacement depends one the costs, the discounting rate and the underlying lifetime model.
+
+        Returns
+        -------
+        out : float or np.ndarray
+            Optimal ages of replacements.
+        """  # noqa: E501
+
 
 class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
     r"""One-cyle age replacement policy.
@@ -346,11 +364,6 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
         Costs of preventive replacements
     discounting_rate : float, default is 0.
         The discounting rate value used in the exponential discounting function
-
-    Attributes_pre
-    ----------
-    cf
-    cp
 
     References
     ----------
@@ -434,16 +447,8 @@ class OneCycleAgeReplacementPolicy(BaseAgeReplacementPolicy):
             a0, ar
         )
 
-    def get_optimal_ar(self) -> ST | Array1D[np.float64]:
-        """
-        Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
-
-        Returns
-        -------
-        ar : float or np.ndarray
-            Optimal ages of replacements.
-        """  # noqa: E501
-
+    @override
+    def compute_optimal_ar(self) -> ST | Array1D[np.float64]:
         discounting = ExponentialDiscounting(self.discounting_rate)
 
         x0 = np.minimum(
@@ -492,8 +497,10 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
     Attributes
     ----------
-    cf
-    cp
+    baseline_model : univariate parametric lifetime model.
+        The underlying lifetime model.
+    discounting_rate : float
+        The discounting value.
 
     References
     ----------
@@ -570,53 +577,56 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @reshape_a0_ar
     def annual_number_of_replacements(
         self,
-        ar: ST | NumpyST | Array1D[NumpyST],
         nb_years: int,
-        upon_failure: bool = False,
-        total: bool = True,
+        ar: ST | NumpyST | Array1D[NumpyST],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ):
         """
-        The expected number of annual replacements.
+        The expected annual number of replacements.
 
         Parameters
         ----------
-        ar : float or np.ndarray
-            Ages of replacements
         nb_years : int
             The number of years on which the annual number of replacements are projected
-        upon_failure : bool, default is False
-            If True, it also returns the annual number of replacements due to unexpected failures
-        a0 : float or np.ndarray or None
-            Optional, initial ages
-        """  # noqa: E501
-
-        timeline, total_renewals = self._stochastic_reward_process(
-            ar=ar
-        ).renewal_function(nb_years, nb_years + 1, a0=a0, ar=ar)
-        nb_replacements = np.diff(total_renewals)
-        if upon_failure:
-            _, failures_only = self._stochastic_reward_process(
-                ar=ar
-            ).expected_number_of_events(nb_years, nb_years + 1, a0=a0, ar=ar)
-            if total:
-                mf = np.sum(np.atleast_2d(failures_only), axis=0)
-            else:
-                mf = failures_only
-            nb_failures = np.diff(mf)
-            return timeline[1:], nb_replacements, nb_failures
-        return timeline[1:], nb_replacements
-
-    def get_optimal_ar(self) -> ST | Array1D[np.float64]:
-        """
-        Optimize the policy according to the costs, the discounting rate and the underlying lifetime model.
-
-        Returns
-        -------
         ar : float or np.ndarray
-            Optimal ages of replacements.
+            Ages of replacements.
+        a0 : float or np.ndarray, optional.
+            The initial ages.
         """  # noqa: E501
 
+        timeline, nb_renewals = self._stochastic_reward_process(ar=ar).renewal_function(
+            nb_years, nb_years + 1, a0=a0, ar=ar
+        )
+        return timeline[1:], np.diff(nb_renewals)
+
+    @check_impossible_replacements
+    @reshape_a0_ar
+    def annual_number_of_failures(
+        self,
+        nb_years: int,
+        ar: ST | NumpyST | Array1D[NumpyST],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ):
+        """
+        The expected annual number of replacements upon failures.
+
+        Parameters
+        ----------
+        nb_years : int
+            The number of years on which the annual number of replacements are projected.
+        ar : float or np.ndarray
+            Ages of replacements.
+        a0 : float or np.ndarray, optional.
+            The initial ages.
+        """  # noqa: E501
+
+        timeline, nb_events = self._stochastic_reward_process(
+            ar=ar
+        ).expected_number_of_events(nb_years, nb_years + 1, a0=a0, ar=ar)
+        return timeline[1:], np.diff(nb_events)
+
+    @override
+    def compute_optimal_ar(self) -> ST | Array1D[np.float64]:
         discounting = ExponentialDiscounting(self.discounting_rate)
         x0 = np.minimum(
             self._cost_structure["cp"]
@@ -659,9 +669,9 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @reshape_a0_ar
     def generate_failure_data(
         self,
-        ar: ST | NumpyST | Array1D[NumpyST],
         nb_samples: int,
         time_window: tuple[float, float],
+        ar: ST | NumpyST | Array1D[NumpyST],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed: int
         | np.random.Generator
@@ -699,9 +709,9 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
     @reshape_a0_ar
     def sample(
         self,
-        ar: ST | NumpyST | Array1D[NumpyST],
         nb_samples: int,
         time_window: tuple[float, float],
+        ar: ST | NumpyST | Array1D[NumpyST],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         seed: int
         | np.random.Generator

@@ -1,3 +1,4 @@
+import functools
 import inspect
 from collections.abc import Callable
 from typing import Any, Literal, ParamSpec, TypeAlias, TypedDict, TypeVar
@@ -34,19 +35,20 @@ P = ParamSpec("P")
 
 
 def reshape_a0_ar(func: Callable[P, R]) -> Callable[P, R]:
+    @functools.wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         sig = inspect.signature(func)
-        bound_arguments = sig.bind(*args, **kwargs)
-        bound_arguments.apply_defaults()
-        ar = bound_arguments.arguments.get("ar")
-        a0 = bound_arguments.arguments.get("a0")
-        if a0 is not None and isinstance(a0, np.ndarray):
+        ba = sig.bind(*args, **kwargs)
+        ba.apply_defaults()
+        a0 = ba.arguments.get("a0")
+        ar = ba.arguments.get("ar")
+        if a0 is not None and isinstance(a0, np.ndarray) and a0.ndim != 2:
             assert is_array_1d(a0)  # typeguard
-            kwargs["a0"] = to_column_2d_if_1d(a0)
-        if ar is not None and isinstance(a0, np.ndarray):
+            ba.arguments["a0"] = to_column_2d_if_1d(a0)
+        if ar is not None and isinstance(ar, np.ndarray) and ar.ndim != 2:
             assert is_array_1d(ar)  # typeguard
-            kwargs["ar"] = to_column_2d_if_1d(ar)
-        return func(*args, **kwargs)
+            ba.arguments["ar"] = to_column_2d_if_1d(ar)
+        return func(*ba.args, **ba.kwargs)
 
     return wrapper
 
@@ -76,9 +78,6 @@ class RenewalProcess(ParametricModel):
 
     first_lifetime_model : any lifetime distribution or frozen lifetime model, optional
         A lifetime model for the first renewal (delayed renewal process). It is lifetime_model by default
-    nb_params
-    params
-    params_names
     """  # noqa: E501
 
     lifetime_model: ParametricLifetimeModel[()]
@@ -107,7 +106,8 @@ class RenewalProcess(ParametricModel):
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""The renewal function.
+        r"""
+        The renewal function :math:`m(t) = m_e(t) + m_p(t)`.
 
         The renewal function gives the expected total number of renewals.
         It is computed  by solving the renewal equation:
@@ -162,7 +162,12 @@ class RenewalProcess(ParametricModel):
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""The expected number of events at each time of the process.
+        r"""
+        The expected number of events :math:`m_e(t)`.
+
+        .. math::
+
+            m_e(t) = F(min(t,~a_r)) + \int_0^{+\infty}m_e(t-x)d\hat{F}(x)
 
         Parameters
         ----------
@@ -223,7 +228,12 @@ class RenewalProcess(ParametricModel):
         ar: ST | NumpyST | Array1D[NumpyST],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""The expected number of preventive renewals at each time of the process.
+        r"""
+        The expected number of preventive renewals :math:`m_p(t)`.
+
+        .. math::
+
+            m_p(t) = \mathbb{1}_{t > a_r} \cdot (1 - F(a_r)) + \int_0^{+\infty}m_p(t-x)d\hat{F}(x)
 
         Parameters
         ----------
@@ -241,7 +251,7 @@ class RenewalProcess(ParametricModel):
         out : tuple of two ndarrays
             A timeline and the corresponding values.
 
-        """
+        """  # noqa: E501
 
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             return (1 - self.lifetime_model.cdf(ar)) * (t > ar)
@@ -269,9 +279,7 @@ class RenewalProcess(ParametricModel):
                 F,
             )
 
-        return renewal_equation_solver.solve(
-            tf, nb_steps
-        )
+        return renewal_equation_solver.solve(tf, nb_steps)
 
     @reshape_a0_ar
     def renewal_density(
@@ -281,18 +289,13 @@ class RenewalProcess(ParametricModel):
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""The renewal density.
-
-        The renewal density corresponds to the derivative of the renewal function with
-        respect to time. It is computed by solving the renewal equation:
+        r"""The renewal density :math:`\omega(t) = m'(t)`.
 
         .. math::
 
-            \mu(t) = f_1(t) + \int_0^t \mu(t-x) \mathrm{d}F(x)
+            \omega(t) = f_1(t) + \int_0^t \omega(t-x) \mathrm{d}F(x)
 
-        where:
 
-        - :math:`\mu` is the renewal function.
         - :math:`F` is the cumulative distribution function of the underlying
           lifetime model.
         - :math:`f_1` is the probability density function of the underlying
