@@ -182,6 +182,7 @@ class AgeReplacementModel(
     def rvs(
         self,
         size: int | tuple[int, ...] | None = None,
+        *,
         ar: ST | NumpyST | ArrayND[NumpyST],
         *args: ST | NumpyST | ArrayND[NumpyST],
         seed: int
@@ -399,7 +400,7 @@ class LeftTruncatedModel(
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_a0_args_docstring)
     def rvs(
         self,
-        size: int | tuple[int, ...],
+        size: int | tuple[int, ...] | None = None,
         a0: ST | NumpyST | ArrayND[NumpyST],
         *args: ST | NumpyST | ArrayND[NumpyST],
         seed: int

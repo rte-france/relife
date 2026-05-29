@@ -1026,9 +1026,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
-        optimizer: LifetimeLikelihood[Self] = self.init_likelihood(
-            time, event, entry, **kwargs
-        )
+        optimizer = self.init_likelihood(time, event, entry, **kwargs)
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
