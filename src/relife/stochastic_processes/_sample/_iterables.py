@@ -42,7 +42,11 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
         time_window: tuple[float, float],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed: int | None = None,
+        seed: int
+        | np.random.Generator
+        | np.random.BitGenerator
+        | np.random.RandomState
+        | None = None,
     ):
         self.process = process
 
