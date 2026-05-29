@@ -378,6 +378,10 @@ class Exponential(LifetimeDistribution):
     ) -> np.float64 | ArrayND[np.float64]:
         return 1 / self.get_params()[0] * np.ones_like(time)
 
+    @override
+    def __repr__(self) -> str:
+        return f"Exponential(rate={self.get_params()[0]!r})"
+
 
 @final
 class Weibull(LifetimeDistribution):
@@ -497,6 +501,11 @@ class Weibull(LifetimeDistribution):
             )
         )
 
+    @override
+    def __repr__(self) -> str:
+        params = self.get_params()
+        return f"Weibull(shape={params[0]!r}, rate={params[1]!r})"
+
 
 @final
 class Gompertz(LifetimeDistribution):
@@ -603,6 +612,11 @@ class Gompertz(LifetimeDistribution):
         shape, rate = self.get_params()
         z = shape * np.exp(rate * time)
         return np.exp(z) * exp1(z) / rate
+
+    @override
+    def __repr__(self) -> str:
+        params = self.get_params()
+        return f"Gompertz(shape={params[0]!r}, rate={params[1]!r})"
 
 
 @final
@@ -738,6 +752,11 @@ class Gamma(LifetimeDistribution):
         shape, rate = self.get_params()
         return shape / (rate**2)
 
+    @override
+    def __repr__(self) -> str:
+        params = self.get_params()
+        return f"Gamma(shape={params[0]!r}, rate={params[1]!r})"
+
 
 @final
 class LogLogistic(LifetimeDistribution):
@@ -853,6 +872,11 @@ class LogLogistic(LifetimeDistribution):
         if shape <= 2:
             raise ValueError(f"Variance only defined for shape > 2: shape = {shape}")
         return (1 / rate**2) * (2 * b / np.sin(2 * b) - b**2 / (np.sin(b) ** 2))
+
+    @override
+    def __repr__(self) -> str:
+        params = self.get_params()
+        return f"LogLogistic(shape={params[0]!r}, rate={params[1]!r})"
 
 
 Ts = TypeVarTuple("Ts")

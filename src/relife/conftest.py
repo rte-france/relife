@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-from numpy.typing import NDArray
 
 from relife.datasets import load_insulator_string, load_power_transformer
 from relife.lifetime_models import (
@@ -36,88 +35,29 @@ def insulator_string_data():
 #######################################################################################
 
 
-def exponential():
-    return Exponential(0.00795203)
+_DISTRIBUTIONS = [
+    Exponential(0.00795203),
+    Weibull(3.46597395, 0.01227849),
+    Gompertz(0.00865741, 0.06062632),
+    Gamma(5.3571091, 0.06622822),
+    LogLogistic(3.92614064, 0.0133325),
+]
 
 
-def weibull():
-    return Weibull(3.46597395, 0.01227849)
+_COEFFICIENTS = (np.log(2), np.log(2))
 
 
-def gompertz():
-    return Gompertz(0.00865741, 0.06062632)
+_REGRESSIONS = [
+    ParametricProportionalHazard(d, _COEFFICIENTS) for d in _DISTRIBUTIONS
+] + [ParametricAcceleratedFailureTime(d, _COEFFICIENTS) for d in _DISTRIBUTIONS]
 
 
-def gamma():
-    return Gamma(5.3571091, 0.06622822)
-
-
-def loglogistic():
-    return LogLogistic(3.92614064, 0.0133325)
-
-
-COEFFICIENTS = (np.log(2), np.log(2))
-
-
-def pph_exponential():
-    return ParametricProportionalHazard(exponential(), coefficients=COEFFICIENTS)
-
-
-def pph_weibull():
-    return ParametricProportionalHazard(weibull(), coefficients=COEFFICIENTS)
-
-
-def pph_gompertz():
-    return ParametricProportionalHazard(gompertz(), coefficients=COEFFICIENTS)
-
-
-def pph_gamma():
-    return ParametricProportionalHazard(gamma(), coefficients=COEFFICIENTS)
-
-
-def pph_loglogistic():
-    return ParametricProportionalHazard(loglogistic(), coefficients=COEFFICIENTS)
-
-
-def aft_exponential():
-    return ParametricAcceleratedFailureTime(exponential(), coefficients=COEFFICIENTS)
-
-
-def aft_weibull():
-    return ParametricAcceleratedFailureTime(weibull(), coefficients=COEFFICIENTS)
-
-
-def aft_gompertz():
-    return ParametricAcceleratedFailureTime(gompertz(), coefficients=COEFFICIENTS)
-
-
-def aft_gamma():
-    return ParametricAcceleratedFailureTime(gamma(), coefficients=COEFFICIENTS)
-
-
-def aft_loglogistic():
-    return ParametricAcceleratedFailureTime(loglogistic(), coefficients=COEFFICIENTS)
-
-
-@pytest.fixture(params=[exponential(), weibull(), gompertz(), gamma(), loglogistic()])
+@pytest.fixture(params=_DISTRIBUTIONS, ids=[repr(d) for d in _DISTRIBUTIONS])
 def distribution(request):
     yield request.param
 
 
-@pytest.fixture(
-    params=[
-        pph_exponential(),
-        pph_weibull(),
-        pph_gompertz(),
-        pph_gamma(),
-        pph_loglogistic(),
-        aft_exponential(),
-        aft_weibull(),
-        aft_gompertz(),
-        aft_gamma(),
-        aft_loglogistic(),
-    ]
-)
+@pytest.fixture(params=_REGRESSIONS, ids=[repr(r) for r in _REGRESSIONS])
 def regression(request):
     yield request.param
 
@@ -219,36 +159,33 @@ def frozen_ar_regression(regression):
 def discounting_rate(request):
     return request.param
 
+    #######################################################################################
+    # FACTORY FIXTURE TO CONTROL IO SHAPES
+    #######################################################################################
 
-#######################################################################################
-# FACTORY FIXTURE TO CONTROL IO SHAPES
-#######################################################################################
-
-
-@pytest.fixture
-def expected_out_shape():
-    def _expected_out_shape(**kwargs: NDArray[np.float64]) -> tuple[int, ...]:
-        def shape_contrib(**kwargs: NDArray[np.float64]):
-            yield ()  # yield at least (), in case kwargs is empty
-            for k, v in kwargs.items():
-                match k:
-                    case "covar" if v.ndim == 2:
-                        yield v.shape[0], 1
-                    case "covar" if v.ndim < 2:
-                        yield ()
-                    case "cf" | "cp" | "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
-                        yield v.shape
-                    case "cf" | "cp" | "ar" | "a0" if v.ndim == 1:
-                        yield v.size, 1
-                    case "size":
-                        if isinstance(v, int):
-                            if v == 1:
-                                yield ()
-                            yield (v,)
-                        yield v  # it is tuple
-                    case _:
-                        yield v.shape
-
-        return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
-
-    return _expected_out_shape
+    # @pytest.fixture
+    # def expected_out_shape():
+    #     def _expected_out_shape(**kwargs: NDArray[np.float64]) -> tuple[int, ...]:
+    #         def shape_contrib(**kwargs: NDArray[np.float64]):
+    #             yield ()  # yield at least (), in case kwargs is empty
+    #             for k, v in kwargs.items():
+    #                 match k:
+    #                     case "covar" if v.ndim == 2:
+    #                         yield v.shape[0], 1
+    #                     case "covar" if v.ndim < 2:
+    #                         yield ()
+    #                     case "cf" | "cp" | "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
+    #                         yield v.shape
+    #                     case "cf" | "cp" | "ar" | "a0" if v.ndim == 1:
+    #                         yield v.size, 1
+    #                     case "size":
+    #                         if isinstance(v, int):
+    #                             if v == 1:
+    #                                 yield ()
+    #                             yield (v,)
+    #                         yield v  # it is tuple
+    #                     case _:
+    #                         yield v.shape
+    #
+    #         return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
+    # return _expected_out_shape

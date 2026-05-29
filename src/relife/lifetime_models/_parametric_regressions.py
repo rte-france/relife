@@ -110,6 +110,10 @@ class LinearCovarEffect(ParametricModel):
         stack_covar = np.stack(broadcasted_covar, axis=0)
         return stack_covar * g
 
+    @override
+    def __repr__(self) -> str:
+        return f"LinearCovarEffect({self.get_params()!r})"
+
 
 _covar_docstring = [
     docscrape.Parameter(
@@ -529,6 +533,10 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         v = self.covar_effect.g(*ndcovar) * self.baseline.jac_chf(ndtime)
         return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
+    @override
+    def __repr__(self) -> str:
+        return f"ParametricProportionalHazard({repr(self.baseline)}, {self.get_coefficients()!r})"  # noqa: E501
+
 
 @final
 class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
@@ -673,3 +681,7 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
             ),
             axis=0,
         )  # (p + nb_coef, ...)
+
+    @override
+    def __repr__(self) -> str:
+        return f"ParametricAcceleratedFailureTime({repr(self.baseline)}, {self.get_coefficients()!r})"  # noqa: E501

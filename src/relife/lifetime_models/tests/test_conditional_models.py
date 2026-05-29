@@ -5,24 +5,23 @@ from pytest import approx
 
 from relife.lifetime_models import AgeReplacementModel, LeftTruncatedModel
 
-
-def expected_shape(**kwargs):
-    def shape_contrib(**_kwargs):
-        yield ()  # yield at least (), in case kwargs is empty
-        for k, v in _kwargs.items():
-            match k:
-                case "covar" if v.ndim == 2:
-                    yield v.shape[0], 1
-                case "covar" if v.ndim < 2:
-                    yield ()
-                case "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
-                    yield v.shape
-                case "ar" | "a0" if v.ndim == 1:
-                    yield v.size, 1
-                case _:
-                    yield v.shape
-
-    return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
+# def expected_shape(**kwargs):
+#     def shape_contrib(**_kwargs):
+#         yield ()  # yield at least (), in case kwargs is empty
+#         for k, v in _kwargs.items():
+#             match k:
+#                 case "covar" if v.ndim == 2:
+#                     yield v.shape[0], 1
+#                 case "covar" if v.ndim < 2:
+#                     yield ()
+#                 case "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
+#                     yield v.shape
+#                 case "ar" | "a0" if v.ndim == 1:
+#                     yield v.size, 1
+#                 case _:
+#                     yield v.shape
+#
+#     return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
 
 
 def rvs_expected_shape(size, **kwargs):
