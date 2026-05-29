@@ -9,30 +9,31 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Callable
-from typing import Any, Self, TypeAlias, final
+from collections.abc import Callable, Sequence
+from typing import Any, Concatenate, Literal, Self, TypeAlias, final
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from optype.numpy import (
     Array,
     Array1D,
-    Array2D,
     ArrayND,
     AtMost2D,
-    is_array_2d,
 )
 from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife.base import OptimizerConfig, ParametricModel
-from relife.utils import to_column_2d_if_1d
+from relife.base import FitConfig, ParametricModel
 
 from ._base import (
     FittableParametricLifetimeModel,
     FrozenParametricLifetimeModel,
     LifetimeData,
     LifetimeLikelihood,
+    approx_ls_integrate,
+    approx_mean,
+    approx_moment,
+    approx_var,
     document_args,
 )
 from ._distributions import (
@@ -51,64 +52,6 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _broadcast_time_covar(
-    time: ST | NumpyST | ArrayND[NumpyST],
-    covar: ST | NumpyST | ArrayND[NumpyST],
-) -> tuple[ArrayND[np.float64], Array[AtMost2D, np.float64]]:
-    time = np.atleast_2d(np.asarray(time, dtype=np.float64))  #  (m, n)
-    covar = np.atleast_2d(np.asarray(covar, dtype=np.float64))  #  (m, nb_coef)
-    assert is_array_2d(time)  # typeguards
-    assert is_array_2d(covar)  # typeguards
-    match (time.shape[0], covar.shape[0]):
-        case (1, _):
-            time = np.repeat(time, covar.shape[0], axis=0)
-        case (_, 1):
-            covar = np.repeat(covar, time.shape[0], axis=0)
-        case (m1, m2) if m1 != m2:
-            raise ValueError(
-                f"""
-                Incompatible time and covar. time has {m1} nb_assets but
-                covar has {m2} nb_assets
-                """
-            )
-        case _:
-            pass
-    return time, covar
-
-
-def _broadcast_time_covar_shapes(
-    time_shape: tuple[int, ...], covar_shape: tuple[int, ...]
-) -> tuple[int, ...]:
-    """
-    time_shape : (), (n,) or (m, n)
-    covar_shape : (), (nb_coef,) or (m, nb_coef)
-    """
-    match [time_shape, covar_shape]:
-        case [(), ()] | [(), (_,)]:
-            return ()
-        case [(), (m, _)]:
-            return m, 1
-        case [(n,), ()] | [(n,), (_,)]:
-            return (n,)
-        case [(n,), (m, _)] | [(m, n), ()] | [(m, n), (_,)]:
-            return m, n
-        case [(mt, n), (mc, _)] if mt != mc:
-            if mt != 1 and mc != 1:
-                raise ValueError(
-                    f"""
-                    Invalid time and covar : time got {mt} nb assets but covar
-                    got {mc} nb assets
-                    """
-                )
-            return max(mt, mc), n
-        case [(mt, n), (mc, _)] if mt == mc:
-            return mt, n
-        case _:
-            raise ValueError(
-                f"Invalid time or covar shape. Got {time_shape} and {covar_shape}"
-            )
-
-
 @final
 class LinearCovarEffect(ParametricModel):
     """
@@ -120,11 +63,11 @@ class LinearCovarEffect(ParametricModel):
         Coefficients of the covariates effect.
     """
 
-    def __init__(self, coefficients: tuple[ST | None, ...] = (None,)):
+    def __init__(self, coefficients: Sequence[ST]):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
     def g(
-        self, covar: ST | NumpyST | ArrayND[NumpyST]
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
         """
         Returns the covariates effect.
@@ -137,36 +80,19 @@ class LinearCovarEffect(ParametricModel):
         Returns
         -------
         out : np.float64 or np.ndarray
-            If `covar.shape` is `()`, `out` is `float`.
-            If `covar.shape` is `(nb_coef,)`, `out.shape` is `()`.
-            If `covar.shape` is `(m, nb_coef)`, `out.shape` is `(m, 1)`.
         """
-        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        if arr_covar.ndim > 2:
-            raise ValueError(
-                f"""
-                Invalid covar shape. Expected (nb_coef,) or (m, nb_coef) but
-                got {arr_covar.shape}
-                """
-            )
-        covar_nb_coef = arr_covar.size if arr_covar.ndim <= 1 else arr_covar.shape[-1]
         nb_coef = self.get_params().size
-        if covar_nb_coef != nb_coef:
+        if len(covar) != nb_coef:
             raise ValueError(
                 f"""
-                Invalid covar. Number of covar does not match number of
-                coefficients. Got {nb_coef} nb_coef but covar shape is
-                {arr_covar.shape}
-                """
+                Invalid number of covar. Got {nb_coef} coefficients but {len(covar)} covariates are given.
+                """  # noqa: E501
             )
-        g = np.exp(
-            np.sum(self.get_params() * arr_covar, axis=-1, keepdims=True)
-        )  # (m, 1)
-        if arr_covar.ndim <= 1:
-            return np.float64(g.item())
-        return g
+        broadcasted_covar = np.broadcast_arrays(*covar)
+        stack_covar = np.stack(broadcasted_covar, axis=-1)
+        return np.exp(np.sum(stack_covar * self.get_params(), axis=-1))
 
-    def jac_g(self, covar: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_g(self, *covar: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
         """
         Returns the jacobian of the covariates effect.
 
@@ -178,16 +104,11 @@ class LinearCovarEffect(ParametricModel):
         Returns
         -------
         out : np.ndarray
-            If `covar.shape` is `()` or `(nb_coef,)`, `out.shape` is `(nb_coef,)`.
-            If `covar.shape` is (m, nb_coef)`, `out.shape` is `(nb_coef, m, 1)`.
         """
-        arr_covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        g = self.g(arr_covar)  # () or (m, 1)
-        nb_coef = self.get_params().size
-        jac = arr_covar.T.reshape(nb_coef, -1, 1) * g  # (nb_coef, m, 1)
-        if arr_covar.ndim <= 1:
-            jac = jac.reshape(nb_coef)  # (nb_coef,) or (nb_coef, m, 1)
-        return jac  # (nb_coef, m, 1)
+        g = self.g(*covar)
+        broadcasted_covar = np.broadcast_arrays(*covar)
+        stack_covar = np.stack(broadcasted_covar, axis=0)
+        return stack_covar * g
 
 
 _covar_docstring = [
@@ -204,7 +125,7 @@ _covar_docstring = [
 
 
 class ParametricLifetimeRegression(
-    FittableParametricLifetimeModel[ST | NumpyST | ArrayND[NumpyST]], ABC
+    FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]], ABC
 ):
     """
     Base class for lifetime regression.
@@ -216,11 +137,11 @@ class ParametricLifetimeRegression(
     def __init__(
         self,
         baseline: LifetimeDistribution,
-        coefficients: tuple[ST | None, ...] = (None,),
+        coefficients: tuple[ST, ...] = (),
     ):
         super().__init__()
-        self.covar_effect = LinearCovarEffect(coefficients)
         self.baseline = baseline
+        self.covar_effect = LinearCovarEffect(coefficients)
 
     def get_coefficients(self) -> Array1D[np.float64]:
         """
@@ -239,9 +160,9 @@ class ParametricLifetimeRegression(
     def sf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().sf(time, covar)
+        return super().sf(time, *covar)
 
     @override
     @document_args(
@@ -250,12 +171,12 @@ class ParametricLifetimeRegression(
     def isf(
         self,
         probability: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(
             np.clip(probability, 0, 1 - np.finfo(float).resolution)
         )
-        return self.ichf(cumulative_hazard_rate, covar)
+        return self.ichf(cumulative_hazard_rate, *covar)
 
     @override
     @document_args(
@@ -264,9 +185,9 @@ class ParametricLifetimeRegression(
     def cdf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().cdf(time, covar)
+        return super().cdf(time, *covar)
 
     @override
     @document_args(
@@ -275,9 +196,9 @@ class ParametricLifetimeRegression(
     def pdf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().pdf(time, covar)
+        return super().pdf(time, *covar)
 
     @override
     @document_args(
@@ -286,74 +207,18 @@ class ParametricLifetimeRegression(
     def ppf(
         self,
         probability: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().ppf(probability, covar)
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
-    )
-    def mrl(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().mrl(time, covar)
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
-    )
-    def ls_integrate(
-        self,
-        func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
-            np.float64 | ArrayND[np.float64],
-        ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
-        *,
-        deg: int = 10,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().ls_integrate(func, a, b, covar, deg=deg)
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
-    )
-    def moment(
-        self, n: int, covar: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().moment(n, covar)
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
-    )
-    def mean(
-        self, covar: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().mean(covar)
-
-    @override
-    @document_args(
-        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
-    )
-    def var(
-        self, covar: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().var(covar)
+        return super().ppf(probability, *covar)
 
     @override
     @document_args(
         base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
     )
     def median(
-        self, covar: ST | NumpyST | ArrayND[NumpyST]
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return super().median(covar)
+        return super().median(*covar)
 
     @override
     @document_args(
@@ -362,9 +227,9 @@ class ParametricLifetimeRegression(
     def jac_sf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        return -self.jac_chf(time, covar) * self.sf(time, covar)
+        return -self.jac_chf(time, *covar) * self.sf(time, *covar)
 
     @override
     @document_args(
@@ -373,9 +238,9 @@ class ParametricLifetimeRegression(
     def jac_cdf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        return super().jac_cdf(time, covar)
+        return super().jac_cdf(time, *covar)
 
     @override
     @document_args(
@@ -384,11 +249,11 @@ class ParametricLifetimeRegression(
     def jac_pdf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        jac = self.jac_hf(time, covar) * self.sf(time, covar) + self.jac_sf(
-            time, covar
-        ) * self.hf(time, covar)
+        jac = self.jac_hf(time, *covar) * self.sf(time, *covar) + self.jac_sf(
+            time, *covar
+        ) * self.hf(time, *covar)
         return jac
 
     @override
@@ -397,9 +262,8 @@ class ParametricLifetimeRegression(
     )
     def rvs(
         self,
-        size: int | tuple[int, int],
-        covar: ST | NumpyST | ArrayND[NumpyST],
-        *,
+        size: int | tuple[int, ...] | None = None,
+        *covar: ST | NumpyST | ArrayND[NumpyST],
         seed: int
         | np.random.Generator
         | np.random.BitGenerator
@@ -408,13 +272,41 @@ class ParametricLifetimeRegression(
     ) -> np.float64 | ArrayND[np.float64]:
         return super().rvs(
             size,
-            covar,
+            *covar,
             seed=seed,
         )
 
+    def ls_integrate(
+        self,
+        func: Callable[
+            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+            np.float64 | ArrayND[np.float64],
+        ],
+        a: ST | NumpyST | ArrayND[NumpyST],
+        b: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
+        deg: int = 10,
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_ls_integrate(self, func, a, b, args=covar, deg=deg)
+
+    def moment(
+        self, n: int, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_moment(self, n, args=covar)
+
+    def mean(
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_mean(self, args=covar)
+
+    def var(
+        self, *covar: ST | NumpyST | ArrayND[NumpyST]
+    ) -> np.float64 | ArrayND[np.float64]:
+        return approx_var(self, args=covar)
+
     def freeze(
-        self, covar: ST | NumpyST | Array[AtMost2D, NumpyST]
-    ) -> FrozenParametricLifetimeModel[ST | NumpyST | Array[AtMost2D, NumpyST]]:
+        self, *covar: ST | NumpyST | Array[AtMost2D, NumpyST]
+    ) -> FrozenParametricLifetimeModel:
         """
         Freeze regression covar.
 
@@ -430,32 +322,36 @@ class ParametricLifetimeRegression(
             The same object but with `covar` stored as object data. Calling methods
             from the frozen regression does not need `covar`.
         """  # noqa: E501
-        return FrozenParametricLifetimeModel(self, covar)
+        return FrozenParametricLifetimeModel(self, *covar)
+
+    def _get_covar_fit(
+        self, covar: Array1D[np.float64] | Sequence[Array1D[np.float64]]
+    ) -> Sequence[Array1D[np.float64]]:
+        # typeguards
+        if not isinstance(covar, Sequence):
+            covar = (covar,)
+        return covar
 
     @override
     def init_likelihood(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
+        *,
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        if not isinstance(args, np.ndarray):
-            raise ValueError("args is expected to be covar only.")
-        covar = to_column_2d_if_1d(args)
+        covar_sequence = self._get_covar_fit(covar)
         regression = type(self)(
-            type(self.baseline)(), coefficients=(0.0,) * covar.shape[-1]
+            type(self.baseline)(), coefficients=(0.0,) * len(covar_sequence)
         )  # init new regression object with appropriate number of covar
-        lifetime_data = LifetimeData(time, args, event, entry)
+        lifetime_data = LifetimeData(time, event, entry, covar_sequence)
         x0 = kwargs.get(
             "x0", init_regression_params_from_lifetimes(regression, lifetime_data)
         )
         regression.set_params(x0)
-        config = OptimizerConfig(x0)
+        config = FitConfig(x0)
         config.scipy_minimize_options["bounds"] = kwargs.get(
             "bounds", get_regression_params_bounds(regression)
         )
@@ -470,21 +366,16 @@ class ParametricLifetimeRegression(
     @override
     def fit(
         self,
-        time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
+        *,
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> Self:
-        if not isinstance(args, np.ndarray):
-            raise ValueError("args is expected to be covar only.")
-        self.covar_effect = LinearCovarEffect(
-            (None,) * to_column_2d_if_1d(np.asarray(args, dtype=np.float64)).shape[-1]
-        )  # changes params structure depending on number of covar
-        return super().fit(time, args, event, entry, **kwargs)
+        covar_sequence = self._get_covar_fit(covar)
+        self.covar_effect = LinearCovarEffect((0.0,) * len(covar_sequence))
+        return super().fit(time, event, entry, **kwargs)
 
 
 def init_regression_params_from_lifetimes(
@@ -550,12 +441,6 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.).
         If the model is not fitted, the value is None.
-    coefficients
-    nb_params
-    params
-    params_names
-    plot
-
 
     References
     ----------
@@ -575,9 +460,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def hf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.hf(time)
+        return self.covar_effect.g(*covar) * self.baseline.hf(time)
 
     @override
     @document_args(
@@ -586,9 +471,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def chf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.chf(time)
+        return self.covar_effect.g(*covar) * self.baseline.chf(time)
 
     @override
     @document_args(
@@ -597,9 +482,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def ichf(
         self,
         cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(covar))
+        return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(*covar))
 
     @override
     @document_args(
@@ -608,9 +493,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def dhf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.dhf(time)
+        return self.covar_effect.g(*covar) * self.baseline.dhf(time)
 
     @override
     @document_args(
@@ -619,36 +504,14 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def jac_hf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        time = np.asarray(time)  # (), (n,) or (m, n)
-        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(
-            time.shape, covar.shape
-        )  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
-
-        g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
-
-        baseline_hf = np.asarray(self.baseline.hf(time))  # (m, n)
-        # p == baseline.nb_params
-        baseline_jac_hf = self.baseline.jac_hf(time)  # (p, m, n)
-        jac_g = np.repeat(
-            jac_g, baseline_hf.shape[-1], axis=-1
-        )  # (nb_coef, m, n) necessary to concatenate
-
-        jac = np.concatenate(
-            (
-                baseline_hf * jac_g,  #  (nb_coef, m, n)
-                g * baseline_jac_hf,  # (p, m, n)
-            ),
-            axis=0,
-        )  # (p + nb_coef, m, n)
-
-        nb_params = self.get_params().size
-        jac = jac.reshape((nb_params,) + out_shape)
-        return jac
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        u = self.baseline.hf(ndtime) * self.covar_effect.jac_g(
+            *ndcovar
+        )  # (nb_coef, ...)
+        v = self.covar_effect.g(*ndcovar) * self.baseline.jac_hf(ndtime)  # (p, ...)
+        return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
     @override
     @document_args(
@@ -657,40 +520,18 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
     def jac_chf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        time = np.asarray(time)  # (), (n,) or (m, n)
-        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(
-            time.shape, covar.shape
-        )  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
-
-        g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
-        baseline_chf = self.baseline.chf(time)  # (m, n)
-        #  p == baseline.nb_params
-        baseline_jac_chf = np.asarray(self.baseline.jac_chf(time))  # (p, m, n)
-        jac_g = np.repeat(
-            jac_g, baseline_chf.shape[-1], axis=-1
-        )  # (nb_coef, m, n) necessary to concatenate
-
-        jac = np.concatenate(
-            (
-                baseline_chf * jac_g,  #  (nb_coef, m, n)
-                g * baseline_jac_chf,  # (p, m, n)
-            ),
-            axis=0,
-        )  # (p + nb_coef, m, n)
-
-        nb_params = self.get_params().size
-        jac = jac.reshape((nb_params,) + out_shape)
-        return jac
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        u = self.baseline.chf(ndtime) * self.covar_effect.jac_g(
+            *ndcovar
+        )  # (nb_coef, ...)
+        v = self.covar_effect.g(*ndcovar) * self.baseline.jac_chf(ndtime)
+        return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
 
 @final
 class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
-    # noinspection PyUnresolvedReferences
     r"""
     Accelerated failure time regression.
 
@@ -724,12 +565,6 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     fitting_results : FittingResults, default is None
         An object containing fitting results (AIC, BIC, etc.).
         If the model is not fitted, the value is None.
-    coefficients
-    nb_params
-    params
-    params_names
-    plot
-
 
     References
     ----------
@@ -748,10 +583,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def hf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
-        return self.baseline.hf(t0) / self.covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(*covar)
+        return self.baseline.hf(t0) / self.covar_effect.g(*covar)
 
     @override
     @document_args(
@@ -760,9 +595,9 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def chf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
+        t0 = time / self.covar_effect.g(*covar)
         return self.baseline.chf(t0)
 
     @override
@@ -772,9 +607,9 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def ichf(
         self,
         cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.covar_effect.g(covar) * self.baseline.ichf(cumulative_hazard_rate)
+        return self.covar_effect.g(*covar) * self.baseline.ichf(cumulative_hazard_rate)
 
     @override
     @document_args(
@@ -783,10 +618,10 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def dhf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        t0 = time / self.covar_effect.g(covar)
-        return self.baseline.dhf(t0) / self.covar_effect.g(covar) ** 2
+        t0 = time / self.covar_effect.g(*covar)
+        return self.baseline.dhf(t0) / self.covar_effect.g(*covar) ** 2
 
     @override
     @document_args(
@@ -795,39 +630,26 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def jac_hf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        time = np.asarray(time)  # (), (n,) or (m, n)
-        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(
-            time.shape, covar.shape
-        )  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
-
-        g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
-        t0 = time / g  # (m, n)
-        # p == baseline.nb_params
-        baseline_jac_hf_t0 = self.baseline.jac_hf(t0)  # (p, m, n)
-        baseline_hf_t0 = self.baseline.hf(t0)  # (m, n)
-        baseline_dhf_t0 = self.baseline.dhf(t0)  # (m, n)
-        jac_g = np.repeat(jac_g, baseline_hf_t0.shape[-1], axis=-1)  # (nb_coef, m, n)
-
-        jac = np.concatenate(
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        g = self.covar_effect.g(*ndcovar)
+        jac_g = self.covar_effect.jac_g(*ndcovar)  # (nb_coef, ...)
+        t0 = ndtime / g
+        baseline_jac_hf_t0 = self.baseline.jac_hf(t0)  # (p, ...)
+        baseline_hf_t0 = self.baseline.hf(t0)
+        baseline_dhf_t0 = self.baseline.dhf(t0)
+        return np.concatenate(
             (
                 -jac_g
                 / g**2
                 * (
                     baseline_hf_t0 + t0 * baseline_dhf_t0
-                ),  # (nb_coef, m, n) necessary to concatenate
-                baseline_jac_hf_t0 / g,  # (p, m, n)
+                ),  # (nb_coef, ...) necessary to concatenate
+                baseline_jac_hf_t0 / g,  # (p, ...)
             ),
             axis=0,
-        )  # (p + nb_coef, m, n)
-
-        nb_params = self.get_params().size
-        jac = jac.reshape((nb_params,) + out_shape)
-        return jac
+        )  # (p + nb_coef, ...)
 
     @override
     @document_args(
@@ -836,33 +658,18 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
     def jac_chf(
         self,
         time: ST | NumpyST | ArrayND[NumpyST],
-        covar: ST | NumpyST | ArrayND[NumpyST],
+        *covar: ST | NumpyST | ArrayND[NumpyST],
     ) -> ArrayND[np.float64]:
-        time = np.asarray(time)  # (), (n,) or (m, n)
-        covar = np.asarray(covar)  # (), (nb_coef,) or (m, nb_coef)
-        out_shape = _broadcast_time_covar_shapes(
-            time.shape, covar.shape
-        )  # (), (n,) or (m, n)
-        time, covar = _broadcast_time_covar(time, covar)  # (m, n) and (m, nb_coef)
-
-        g = self.covar_effect.g(covar)  # (m, 1)
-        jac_g = self.covar_effect.jac_g(covar)  # (nb_coef, m, 1)
-        t0 = time / g  #  (m, n)
-        # p == baseline.nb_params
-        baseline_jac_chf_t0 = self.baseline.jac_chf(t0)  # (p, m, n)
-        baseline_hf_t0 = self.baseline.hf(t0)  #  (m, n)
-        jac_g = np.repeat(
-            jac_g, baseline_hf_t0.shape[-1], axis=-1
-        )  # (nb_coef, m, n) necessary to concatenate
-
-        jac = np.concatenate(
+        ndtime, *ndcovar = np.broadcast_arrays(time, *covar)
+        g = self.covar_effect.g(*ndcovar)
+        jac_g = self.covar_effect.jac_g(*ndcovar)  # (nb_coef, ...)
+        t0 = ndtime / g
+        baseline_jac_chf_t0 = self.baseline.jac_chf(t0)  # (p, ...)
+        baseline_hf_t0 = self.baseline.hf(t0)
+        return np.concatenate(
             (
-                -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, m, n)
-                baseline_jac_chf_t0,  # (p, m, n)
+                -jac_g / g * t0 * baseline_hf_t0,  #  (nb_coef, ...)
+                baseline_jac_chf_t0,  # (p, ...)
             ),
             axis=0,
-        )  # (p + nb_coef, m, n)
-
-        nb_params = self.get_params().size
-        jac = jac.reshape((nb_params,) + out_shape)
-        return jac
+        )  # (p + nb_coef, ...)

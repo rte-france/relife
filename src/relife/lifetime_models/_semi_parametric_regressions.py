@@ -7,7 +7,7 @@ from optype.numpy import Array, Array1D, Array2D
 from scipy.stats import norm
 from typing_extensions import override
 
-from relife.base import FittingResults, MaximumLikelihoodOptimizer, OptimizerConfig
+from relife.base import FitConfig, FittingResults, MaximumLikelihoodOptimizer
 from relife.lifetime_models._parametric_regressions import LinearCovarEffect
 from relife.utils import to_column_2d_if_1d
 
@@ -380,7 +380,7 @@ class SemiParametricProportionalHazard:
         self.covar_effect = LinearCovarEffect((None,) * covar.shape[-1])
 
         x0 = kwargs.get("x0", np.random.random(covar.shape[1]))
-        config = OptimizerConfig(x0)
+        config = FitConfig(x0)
         config.scipy_minimize_options["method"] = kwargs.get("method", "trust-exact")
         config.covariance_method = kwargs.get("covariance_method", "exact")
 
@@ -420,13 +420,13 @@ class CoxPartialLifetimeLikelihood(
 ):
     data: CoxData
     model: LinearCovarEffect
-    config: OptimizerConfig
+    config: FitConfig
 
     def __init__(
         self,
         model: LinearCovarEffect,
         data: CoxData,
-        config: OptimizerConfig,
+        config: FitConfig,
     ):
         self.model = copy.deepcopy(model)
         self.data = data
@@ -482,14 +482,14 @@ class BreslowPartialLifetimeLikelihood(
 ):
     data: CoxData
     model: LinearCovarEffect
-    config: OptimizerConfig
+    config: FitConfig
     s_j: NDArray[np.float64]
 
     def __init__(
         self,
         model: LinearCovarEffect,
         data: CoxData,
-        config: OptimizerConfig,
+        config: FitConfig,
     ):
         self.model = copy.deepcopy(model)
         self.data = data
@@ -553,7 +553,7 @@ class EfronPartialLifetimeLikelihood(
 ):
     data: CoxData
     model: LinearCovarEffect
-    config: OptimizerConfig
+    config: FitConfig
     s_j: NDArray[np.float64]
     discount_rates: NDArray[np.float64]
     discount_rates_mask: NDArray[np.bool_]
@@ -563,7 +563,7 @@ class EfronPartialLifetimeLikelihood(
         self,
         model: LinearCovarEffect,
         data: CoxData,
-        config: OptimizerConfig,
+        config: FitConfig,
     ):
         self.model = copy.deepcopy(model)
         self.data = data
