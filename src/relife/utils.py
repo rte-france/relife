@@ -40,12 +40,12 @@ ST: TypeAlias = int | float | bool
 NumpyST: TypeAlias = np.floating | np.uint | np.bool
 
 
-# type checkers warn about overload 2 because bool is subclass of int in Python
-# that's the best we can do.
 @overload
 def to_column_2d_if_1d(
     arg: int | float,
 ) -> np.float64: ...
+# type checkers warn about overload 2 because bool is subclass of int in Python
+# that's the best we can do.
 @overload
 def to_column_2d_if_1d(
     arg: bool,

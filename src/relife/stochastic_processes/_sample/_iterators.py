@@ -209,7 +209,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
     """Abstract class for all stochastic processes iterator.
     Used to build the structarrays, get the shapes, iterate through steps and identify the observation window.
     Abstract method is sample_next_step, that is unique for each stochastic process.
-    """
+    """  # noqa: E501
 
     def __init__(
         self,

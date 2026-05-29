@@ -3,17 +3,15 @@ from __future__ import annotations
 import warnings
 from collections.abc import Sequence
 from dataclasses import field
-from typing import Any, Generic, Self, TypeAlias, TypeVar, TypeVarTuple
+from typing import Any, Self, TypeAlias, TypeVarTuple
 
 import numpy as np
 from numpy.typing import NDArray
 from optype.numpy import Array1D, Array2D, ArrayND
-from typing_extensions import TypeIs
 
 from relife.base import FittingResults, ParametricModel
 from relife.lifetime_models._base import (
     FittableParametricLifetimeModel,
-    FrozenParametricLifetimeModel,
     LifetimeLikelihood,
 )
 from relife.stochastic_processes._sample import StochasticSampleMapping
@@ -21,27 +19,29 @@ from relife.stochastic_processes._sample import StochasticSampleMapping
 __all__ = [
     "NonHomogeneousPoissonProcess",
     "FrozenNonHomogeneousPoissonProcess",
-    "is_non_homogeneous_poisson_process",
 ]
 
 Ts = TypeVarTuple("Ts")
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
-M = TypeVar(
-    "M",
-    bound=FittableParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
-)
 
 
-class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
+class NonHomogeneousPoissonProcess(ParametricModel):
     """
     Non-homogeneous Poisson process.
     """
 
-    lifetime_model: M
+    lifetime_model: FittableParametricLifetimeModel[
+        *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    ]
     fitting_results: FittingResults | None
 
-    def __init__(self, lifetime_model: M):
+    def __init__(
+        self,
+        lifetime_model: FittableParametricLifetimeModel[
+            *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+        ],
+    ):
         super().__init__()
         self.lifetime_model = lifetime_model
         self.fitting_results = None
@@ -94,7 +94,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
 
     def freeze(
         self, *args: ST | NumpyST | ArrayND[NumpyST]
-    ) -> FrozenNonHomogeneousPoissonProcess[M]:
+    ) -> FrozenNonHomogeneousPoissonProcess:
         """
         Freeze any arguments required by the process into the object data.
 
@@ -265,17 +265,17 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
         return self
 
 
-class FrozenNonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
+class FrozenNonHomogeneousPoissonProcess(ParametricModel):
     """
     Non-homogeneous Poisson process.
     """
 
-    unfrozen: NonHomogeneousPoissonProcess[M]
+    unfrozen: NonHomogeneousPoissonProcess
     args: tuple[ST | NumpyST | ArrayND[NumpyST], ...]
 
     def __init__(
         self,
-        nhpp: NonHomogeneousPoissonProcess[M],
+        nhpp: NonHomogeneousPoissonProcess,
         *args: ST | NumpyST | ArrayND[NumpyST],
     ):
         super().__init__()
@@ -387,16 +387,16 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel, Generic[M]):
 
 
 # typeguard function
-def is_non_homogeneous_poisson_process(
-    model: NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M],
-) -> TypeIs[NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M]]:
-    """
-    Checks if model is a non-homogeneous Poisson process.
-    """
-
-    return isinstance(
-        model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)
-    )
+# def is_non_homogeneous_poisson_process(
+#     model: NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M],
+# ) -> TypeIs[NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M]]:
+#     """
+#     Checks if model is a non-homogeneous Poisson process.
+#     """
+#
+#     return isinstance(
+#         model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)
+#     )
 
 
 class NHPPData:

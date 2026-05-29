@@ -16,14 +16,18 @@ NumpyST: TypeAlias = np.floating | np.uint
 class Reward(ABC):
     @abstractmethod
     def conditional_expectation(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         """Conditional expected reward"""
         pass
 
     @abstractmethod
     def sample(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
         """Reward conditional sampling.
 
@@ -60,17 +64,23 @@ class RunToFailureReward(Reward):
 
     @override
     def conditional_expectation(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
+        if a0 is not None:
+            time = time + a0
         if isinstance(time, np.ndarray):
             return np.ones_like(time) * self.cf
         return self.cf
 
     @override
     def sample(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
-        return self.conditional_expectation(time)
+        return self.conditional_expectation(time, a0)
 
 
 class AgeReplacementReward(Reward):
@@ -106,15 +116,21 @@ class AgeReplacementReward(Reward):
 
     @override
     def conditional_expectation(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
+        if a0 is not None:
+            time = time + a0
         return np.where(time < self.ar, self.cf, self.cp)
 
     @override
     def sample(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> np.float64 | NDArray[np.float64]:
-        return self.conditional_expectation(time)
+        return self.conditional_expectation(time, a0)
 
 
 class Discounting(ABC):

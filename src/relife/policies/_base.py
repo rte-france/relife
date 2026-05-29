@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import Generic, Literal, TypeAlias, TypeVar, overload
+from abc import ABC
+from typing import Generic, Literal, TypeAlias, TypeVar
 
 import numpy as np
 from optype.numpy import (
@@ -10,168 +10,23 @@ from optype.numpy import (
     is_array_1d,
     is_array_2d,
 )
-from typing_extensions import override
 
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
 )
+from relife.lifetime_models._conditional_models import get_conditional_lifetime_model
 from relife.rewards import ExponentialDiscounting, Reward
+from relife.stochastic_processes._renewal_processes import (
+    reshape_a0_ar,
+)
 
-__all__ = ["OneCycleExpectedCosts", "ReplacementPolicy"]
+__all__ = ["OneCycleExpectedCosts", "BaseReplacementPolicy"]
 
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _make_timeline(
-    tf: float, nb_steps: int
-) -> Array[tuple[Literal[1], int], np.float64]:
-    timeline = np.linspace(0, tf, nb_steps, dtype=np.float64)  # (nb_steps,)
-    return np.atleast_2d(timeline)  # (1, nb_steps) to ensure broadcasting
-
-
-class ExpectedCostsABC(ABC):
-    @abstractmethod
-    def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""
-        The expected net present value.
-
-        .. math::
-
-            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)
-
-        where :
-
-        - :math:`t` is the time
-        - :math:`X_1 \sim F` is the random lifetime of the first asset
-        - :math:`Z_t` are the random costs at each time :math:`t`
-        - :math:`\delta` is the discounting rate
-
-        It is computed by solving the renewal equation.
-
-        Parameters
-        ----------
-        tf : float
-            The final time.
-        nb_steps : int
-            The number of steps used to discretized the time.
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline and the computed values.
-        """
-
-    @overload
-    def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False]
-    ) -> np.float64 | Array1D[np.float64]: ...
-    @overload
-    def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True]
-    ) -> np.float64: ...
-    @abstractmethod
-    def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]:
-        r"""
-        The asymtotic expected net present value.
-
-        .. math::
-
-            \lim_{t\to\infty} z(t)
-
-        Parameters
-        ----------
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected values.
-        """
-
-    @abstractmethod
-    def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""
-        The expected equivalent annual cost.
-
-        .. math::
-
-            q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}
-
-        where :
-
-        - :math:`t` is the time.
-        - :math:`z(t)` is the expected net present value at time :math:`t`.
-        - :math:`\delta` is the discounting rate.
-
-        Parameters
-        ----------
-        tf : float
-            The final time.
-        nb_steps : int
-            The number of steps used to discretized the time.
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
-
-        Returns
-        -------
-        tuple of two ndarrays
-            A tuple containing the timeline and the computed values.
-        """
-
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False]
-    ) -> np.float64 | Array1D[np.float64]: ...
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True]
-    ) -> np.float64: ...
-    @abstractmethod
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]:
-        r"""
-        The asymtotic expected equivalent annual cost.
-
-        .. math::
-
-            \lim_{t\to\infty} q(t)
-
-        Parameters
-        ----------
-        total_sum : bool, default False
-            If True, returns the total sum over the first axis of the result.
-            If the policy data encodes several assets, this option allows to
-            return the sum result on the fleet rather than calling
-            ``np.sum`` afterwards.
-
-        Returns
-        -------
-        ndarray
-            The asymptotic expected values.
-        """
-
-
-class OneCycleExpectedCosts(ExpectedCostsABC):
+class OneCycleExpectedCosts:
     lifetime_model: ParametricLifetimeModel[()]
     reward: Reward
     discounting: ExponentialDiscounting
@@ -191,15 +46,22 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         self.period_before_discounting = period_before_discounting
         self.lifetime_model = lifetime_model
 
-    @override
+    @reshape_a0_ar
     def expected_net_present_value(
-        self, tf: float, nb_steps: int, total_sum: bool = False
+        self,
+        tf: float,
+        nb_steps: int,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        timeline = _make_timeline(tf, nb_steps)
+        timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         etc = np.asarray(
-            self.lifetime_model.ls_integrate(
+            get_conditional_lifetime_model(
+                self.lifetime_model, a0=a0, ar=ar
+            ).ls_integrate(
                 lambda x: (
-                    self.reward.conditional_expectation(x) * self.discounting.factor(x)
+                    self.reward.conditional_expectation(x, a0)
+                    * self.discounting.factor(x)
                 ),
                 np.zeros_like(timeline),
                 timeline,
@@ -207,53 +69,79 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
             ),
             dtype=float,
         )  # (nb_steps,) or (m, nb_steps)
-        if total_sum and etc.ndim == 2:
-            etc = np.sum(etc, axis=0)
         if timeline.ndim == 2:
             timeline = timeline[0, :]
         assert is_array_1d(timeline)  # typeguard
         return timeline, etc  # (nb_steps,) and (nb_steps,)/(m, nb_steps)
 
-    @overload
+    @reshape_a0_ar
+    def expected_equivalent_annual_cost(
+        self,
+        tf: float,
+        nb_steps: int,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
+        timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
+        value = self._expected_equivalent_annual_cost(timeline, ar=ar, a0=a0)
+        if timeline.ndim == 2:
+            timeline = timeline[0, :]  # (nb_steps,)
+        assert is_array_1d(timeline)  # typeguard
+        assert is_array_1d(value) or is_array_2d(value)
+        return timeline, value  # (nb_steps,) or (m, nb_steps)
+
+    @reshape_a0_ar
     def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[False]
-    ) -> np.float64 | Array1D[np.float64]: ...
-    @overload
-    def asymptotic_expected_net_present_value(
-        self, total_sum: Literal[True]
-    ) -> np.float64: ...
-    @override
-    def asymptotic_expected_net_present_value(
-        self, total_sum: bool = False
+        self,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64]:
         # reward partial expectation
-        value = np.squeeze(
-            self.lifetime_model.ls_integrate(
+        return np.squeeze(
+            get_conditional_lifetime_model(
+                self.lifetime_model, a0=a0, ar=ar
+            ).ls_integrate(
                 lambda x: (
-                    self.reward.conditional_expectation(x) * self.discounting.factor(x)
+                    self.reward.conditional_expectation(x, a0)
+                    * self.discounting.factor(x)
                 ),
                 np.float64(0.0),
                 np.asarray(np.inf),
                 deg=15,
             )
         )
-        if total_sum:
-            value = np.sum(value)
-        return value  # () or (m,)
 
+    @reshape_a0_ar
+    def asymptotic_expected_equivalent_annual_cost(
+        self,
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
+    ) -> np.float64 | Array1D[np.float64]:
+        timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
+        value = self._expected_equivalent_annual_cost(timeline, a0=a0, ar=ar)
+        assert is_array_1d(value) or isinstance(value, np.float64)  # typeguard
+        return value
+
+    @reshape_a0_ar
     def _expected_equivalent_annual_cost(
-        self, timeline: ArrayND[np.float64]
+        self,
+        timeline: ArrayND[np.float64],
+        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> np.float64 | Array1D[np.float64] | Array2D[np.float64]:
         # timeline : (nb_steps,) or (m, nb_steps)
         def f(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
             # avoid zero division + 1e-6
             return (
-                self.reward.conditional_expectation(x)
+                self.reward.conditional_expectation(x, a0)
                 * self.discounting.factor(x)
                 / (self.discounting.annuity_factor(x) + 1e-6)
             )
 
-        q0 = self.lifetime_model.cdf(self.period_before_discounting) * f(
+        conditional_model = get_conditional_lifetime_model(
+            self.lifetime_model, a0=a0, ar=ar
+        )
+        q0 = conditional_model.cdf(self.period_before_discounting) * f(
             np.asarray(self.period_before_discounting, dtype=float)
         )  # () or (m, 1)
         a = np.full_like(
@@ -263,54 +151,27 @@ class OneCycleExpectedCosts(ExpectedCostsABC):
         # change first value of lower bound to compute the integral
         a[timeline < self.period_before_discounting] = 0.0  # (nb_steps,)
         # a = np.where(timeline < self.period_before_discounting, 0., a)  # (nb_steps,)
-        integral = self.lifetime_model.ls_integrate(
-            f, a, timeline, deg=15
+        integral = conditional_model.ls_integrate(
+            f, a, timeline, deg=20
         )  # (nb_steps,) or (m, nb_steps) if q0: (), or (m, nb_steps) if q0 : (m, 1)
         mask = np.broadcast_to(
             timeline < self.period_before_discounting, integral.shape
         )  # (), (nb_steps,) or (m, nb_steps)
         q0 = np.broadcast_to(q0, integral.shape)  # (nb_steps,) or (m, nb_steps)
-        integral = np.where(mask, q0, q0 + integral)
-        return np.squeeze(integral)  # (nb_steps,)/(m, nb_steps)
-
-    @override
-    def expected_equivalent_annual_cost(
-        self, tf: float, nb_steps: int, total_sum: bool = False
-    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        timeline = _make_timeline(tf, nb_steps)  # (nb_steps,) or (m, nb_steps)
-        value = self._expected_equivalent_annual_cost(timeline)
-        if timeline.ndim == 2:
-            timeline = timeline[0, :]  # (nb_steps,)
-        if total_sum and value.ndim == 2:
-            value = np.sum(value, axis=0)
-        assert is_array_1d(timeline)  # typeguard
-        assert is_array_1d(value) or is_array_2d(value)
-        return timeline, value  # (nb_steps,) or (m, nb_steps)
-
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[False]
-    ) -> np.float64 | Array1D[np.float64]: ...
-    @overload
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: Literal[True]
-    ) -> np.float64: ...
-    @override
-    def asymptotic_expected_equivalent_annual_cost(
-        self, total_sum: bool = False
-    ) -> np.float64 | Array1D[np.float64]:
-        timeline = np.atleast_2d(np.array(np.inf))  # (1, 1) to ensure broadcasting
-        value = self._expected_equivalent_annual_cost(timeline)
-        assert not is_array_2d(value)
-        if total_sum:
-            value = np.sum(value)
-        return value  # () or (m,)
+        integral = np.squeeze(np.where(mask, q0, q0 + integral))
+        if integral.ndim == 0:
+            return np.float64(integral)
+        return integral
 
 
 M = TypeVar("M")
 
 
-class ReplacementPolicy(ExpectedCostsABC, Generic[M], ABC):
+class BaseReplacementPolicy(Generic[M], ABC):
+    """
+    Base class of replacement policies.
+    """
+
     baseline_model: M
     discounting_rate: float
     _cost_structure: dict[
