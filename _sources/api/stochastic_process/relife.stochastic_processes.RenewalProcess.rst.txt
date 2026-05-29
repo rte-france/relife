@@ -22,6 +22,12 @@ RenewalProcess
     
         
         
+            ~RenewalProcess.expected_number_of_events
+        
+        
+            ~RenewalProcess.expected_number_of_preventive_renewals
+        
+        
             ~RenewalProcess.generate_failure_data
         
         

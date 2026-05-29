@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -35,10 +35,10 @@
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
 
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -194,11 +194,18 @@
       
         <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -211,8 +218,7 @@
           
           
           
-          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
+          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -223,8 +229,7 @@
           
           
           
-          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">PyPI</span></a>
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-lg" data-prefix="fa-custom" data-icon="pypi" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
         </li>
 </ul></div>
       
@@ -311,11 +316,18 @@
         
           <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -328,8 +340,7 @@
           
           
           
-          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
+          <a href="https://github.com/rte-france/relife/" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
         <li class="nav-item">
           
@@ -340,8 +351,7 @@
           
           
           
-          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-pypi fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">PyPI</span></a>
+          <a href="https://pypi.org/project/relife/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-custom fa-lg" data-prefix="fa-custom" data-icon="pypi" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
         </li>
 </ul></div>
         
@@ -408,16 +418,6 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.a0">a0 (relife.policies.AgeReplacementPolicy property)</a>
-
-      <ul>
-        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.a0">(relife.policies.OneCycleAgeReplacementPolicy property)</a>
-</li>
-        <li><a href="api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.a0">(relife.policies.OneCycleRunToFailurePolicy property)</a>
-</li>
-        <li><a href="api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.a0">(relife.policies.RunToFailurePolicy property)</a>
-</li>
-      </ul></li>
       <li><a href="api/policy/relife.policies.age_replacement_policy.html#relife.policies.age_replacement_policy">age_replacement_policy() (in module relife.policies)</a>
 </li>
       <li><a href="api/conditional_lifetime_models/relife.lifetime_models.AgeReplacementModel.html#relife.lifetime_models.AgeReplacementModel">AgeReplacementModel (class in relife.lifetime_models)</a>
@@ -426,15 +426,13 @@
 </li>
       <li><a href="api/economy/relife.rewards.AgeReplacementReward.html#relife.rewards.AgeReplacementReward">AgeReplacementReward (class in relife.rewards)</a>
 </li>
-      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.annual_number_of_replacements">annual_number_of_replacements() (relife.policies.AgeReplacementPolicy method)</a>
+      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.annual_number_of_failures">annual_number_of_failures() (relife.policies.AgeReplacementPolicy method)</a>
 </li>
-      <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.ar">ar (relife.policies.NonHomogeneousPoissonAgeReplacementPolicy property)</a>
+      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.annual_number_of_replacements">annual_number_of_replacements() (relife.policies.AgeReplacementPolicy method)</a>
 </li>
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">asymptotic_expected_equivalent_annual_cost() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
-</li>
         <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
 </li>
         <li><a href="api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">(relife.policies.OneCycleRunToFailurePolicy method)</a>
@@ -449,8 +447,6 @@
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.asymptotic_expected_net_present_value">asymptotic_expected_net_present_value() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
-</li>
         <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
 </li>
         <li><a href="api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value">(relife.policies.OneCycleRunToFailurePolicy method)</a>
@@ -520,6 +516,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.compute_optimal_ar">compute_optimal_ar() (relife.policies.AgeReplacementPolicy method)</a>
+
+      <ul>
+        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.compute_optimal_ar">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
+</li>
+      </ul></li>
       <li><a href="api/economy/relife.rewards.AgeReplacementReward.html#relife.rewards.AgeReplacementReward.conditional_expectation">conditional_expectation() (relife.rewards.AgeReplacementReward method)</a>
 
       <ul>
@@ -527,10 +529,6 @@
 </li>
       </ul></li>
       <li><a href="api/likelihoods/relife.lifetime_models.CoxPartialLifetimeLikelihood.html#relife.lifetime_models.CoxPartialLifetimeLikelihood">CoxPartialLifetimeLikelihood (class in relife.lifetime_models)</a>
-</li>
-      <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.cp">cp (relife.policies.NonHomogeneousPoissonAgeReplacementPolicy property)</a>
-</li>
-      <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.cr">cr (relife.policies.NonHomogeneousPoissonAgeReplacementPolicy property)</a>
 </li>
       <li><a href="api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.cumulative_intensity">cumulative_intensity() (relife.stochastic_processes.NonHomogeneousPoissonProcess method)</a>
 </li>
@@ -558,8 +556,14 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.discounting_rate">discounting_rate (relife.stochastic_processes.RenewalRewardProcess property)</a>
+      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.discounting_rate">discounting_rate (relife.policies.AgeReplacementPolicy attribute)</a>
+
+      <ul>
+        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.discounting_rate">(relife.policies.OneCycleAgeReplacementPolicy attribute)</a>
 </li>
+        <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.discounting_rate">(relife.stochastic_processes.RenewalRewardProcess property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -573,8 +577,6 @@
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.expected_equivalent_annual_cost">expected_equivalent_annual_cost() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
-</li>
         <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
 </li>
         <li><a href="api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">(relife.policies.OneCycleRunToFailurePolicy method)</a>
@@ -584,18 +586,28 @@
       </ul></li>
       <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.expected_equivalent_annual_worth">expected_equivalent_annual_worth() (relife.stochastic_processes.RenewalRewardProcess method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.expected_net_present_value">expected_net_present_value() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
-        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
-</li>
         <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.expected_net_present_value">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
 </li>
         <li><a href="api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_net_present_value">(relife.policies.OneCycleRunToFailurePolicy method)</a>
 </li>
         <li><a href="api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.expected_net_present_value">(relife.policies.RunToFailurePolicy method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalProcess.html#relife.stochastic_processes.RenewalProcess.expected_number_of_events">expected_number_of_events() (relife.stochastic_processes.RenewalProcess method)</a>
+
+      <ul>
+        <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.expected_number_of_events">(relife.stochastic_processes.RenewalRewardProcess method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalProcess.html#relife.stochastic_processes.RenewalProcess.expected_number_of_preventive_renewals">expected_number_of_preventive_renewals() (relife.stochastic_processes.RenewalProcess method)</a>
+
+      <ul>
+        <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.expected_number_of_preventive_renewals">(relife.stochastic_processes.RenewalRewardProcess method)</a>
 </li>
       </ul></li>
       <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.expected_total_reward">expected_total_reward() (relife.stochastic_processes.RenewalRewardProcess method)</a>
@@ -668,12 +680,6 @@
         <li><a href="api/stochastic_process/relife.stochastic_processes.RenewalRewardProcess.html#relife.stochastic_processes.RenewalRewardProcess.generate_failure_data">(relife.stochastic_processes.RenewalRewardProcess method)</a>
 </li>
       </ul></li>
-      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.get_ar">get_ar() (relife.policies.AgeReplacementPolicy method)</a>
-
-      <ul>
-        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.get_ar">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
-</li>
-      </ul></li>
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.get_cf">get_cf() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
@@ -693,10 +699,16 @@
       <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.get_cp">get_cp() (relife.policies.AgeReplacementPolicy method)</a>
 
       <ul>
+        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.get_cp">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
+</li>
         <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.get_cp">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
 </li>
       </ul></li>
+      <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.get_cr">get_cr() (relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
+</li>
       <li><a href="api/routines/relife.utils.get_nb_assets.html#relife.utils.get_nb_assets">get_nb_assets() (in module relife.utils)</a>
+</li>
+      <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.get_optimal_ar">get_optimal_ar() (relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
 </li>
       <li><a href="api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel.get_params">get_params() (relife.base.ParametricModel method)</a>
 
@@ -1129,12 +1141,6 @@
 </li>
         <li><a href="api/likelihoods/relife.lifetime_models.LifetimeLikelihood.html#relife.lifetime_models.LifetimeLikelihood.optimize">(relife.lifetime_models.LifetimeLikelihood method)</a>
 </li>
-        <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.optimize">(relife.policies.AgeReplacementPolicy method)</a>
-</li>
-        <li><a href="api/policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.optimize">(relife.policies.NonHomogeneousPoissonAgeReplacementPolicy method)</a>
-</li>
-        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.optimize">(relife.policies.OneCycleAgeReplacementPolicy method)</a>
-</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -1344,16 +1350,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/routines/relife.utils.to_column_2d_if_1d.html#relife.utils.to_column_2d_if_1d">to_column_2d_if_1d() (in module relife.utils)</a>
 </li>
-      <li><a href="api/routines/relife.utils.to_numpy_float64.html#relife.utils.to_numpy_float64">to_numpy_float64() (in module relife.utils)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/policy/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.tr1">tr1 (relife.policies.AgeReplacementPolicy property)</a>
-
-      <ul>
-        <li><a href="api/policy/relife.policies.OneCycleAgeReplacementPolicy.html#relife.policies.OneCycleAgeReplacementPolicy.tr1">(relife.policies.OneCycleAgeReplacementPolicy property)</a>
+      <li><a href="api/routines/relife.utils.to_numpy_float64.html#relife.utils.to_numpy_float64">to_numpy_float64() (in module relife.utils)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1422,8 +1422,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1457,7 +1457,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
 </p></div>
       
     </div>

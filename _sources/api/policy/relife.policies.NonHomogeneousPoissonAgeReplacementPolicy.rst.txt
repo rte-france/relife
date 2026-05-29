@@ -34,6 +34,18 @@ NonHomogeneousPoissonAgeReplacementPolicy
             ~NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value
         
         
-            ~NonHomogeneousPoissonAgeReplacementPolicy.optimize
+            ~NonHomogeneousPoissonAgeReplacementPolicy.get_cp
+        
+        
+            ~NonHomogeneousPoissonAgeReplacementPolicy.get_cr
+        
+        
+            ~NonHomogeneousPoissonAgeReplacementPolicy.get_optimal_ar
+        
+        
+            ~NonHomogeneousPoissonAgeReplacementPolicy.set_cp
+        
+        
+            ~NonHomogeneousPoissonAgeReplacementPolicy.set_cr
         
     

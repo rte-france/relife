@@ -28,25 +28,19 @@ OneCycleAgeReplacementPolicy
             ~OneCycleAgeReplacementPolicy.asymptotic_expected_net_present_value
         
         
+            ~OneCycleAgeReplacementPolicy.compute_optimal_ar
+        
+        
             ~OneCycleAgeReplacementPolicy.expected_equivalent_annual_cost
         
         
             ~OneCycleAgeReplacementPolicy.expected_net_present_value
         
         
-            ~OneCycleAgeReplacementPolicy.get_ar
-        
-        
             ~OneCycleAgeReplacementPolicy.get_cf
         
         
             ~OneCycleAgeReplacementPolicy.get_cp
-        
-        
-            ~OneCycleAgeReplacementPolicy.optimize
-        
-        
-            ~OneCycleAgeReplacementPolicy.set_ar
         
         
             ~OneCycleAgeReplacementPolicy.set_cf

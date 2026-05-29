@@ -31,6 +31,12 @@ RenewalRewardProcess
             ~RenewalRewardProcess.expected_equivalent_annual_worth
         
         
+            ~RenewalRewardProcess.expected_number_of_events
+        
+        
+            ~RenewalRewardProcess.expected_number_of_preventive_renewals
+        
+        
             ~RenewalRewardProcess.expected_total_reward
         
         
