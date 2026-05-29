@@ -177,9 +177,9 @@ class RenewalProcess(ParametricModel):
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
-        The renewal function :math:`m(t) = m_e(t) + m_p(t)`.
+        The renewal function.
 
-        The renewal function gives the expected total number of renewals.
+        It gives the expected total number of renewals.
         It is computed  by solving the renewal equation:
 
         .. math::
@@ -232,11 +232,13 @@ class RenewalProcess(ParametricModel):
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
-        r"""The renewal density :math:`\omega(t) = m'(t)`.
+        r"""The renewal density.
+
+        It is the derivative of the renewal function.
 
         .. math::
 
-            \omega(t) = f_1(t) + \int_0^t \omega(t-x) \mathrm{d}F(x)
+            \omega(t) = m'(t) = f_1(t) + \int_0^t \omega(t-x) \mathrm{d}F(x)
 
 
         - :math:`F` is the cumulative distribution function of the underlying
@@ -282,11 +284,27 @@ class RenewalProcess(ParametricModel):
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
-        The expected number of events :math:`m_e(t)`.
+        The expected number of observed events.
+
+        Here the events are assets failures, i.e. `ar` is given, only the assets failures
+        are counted.
+
+        If `a0` is not given or `first_lifetime_model` is not different than `lifetime_model`,
+        the equation is :
 
         .. math::
 
-            m_e(t) = F(min(t,~a_r)) + \int_0^{+\infty}m_e(t-x)d\hat{F}(x)
+            m_e(t) = F(min(t,~a_r)) + \int_0^{t}m_e(t-x)d\hat{F}(x)
+
+        Otherwise:
+
+        .. math::
+
+            m_e^D(t) = F_1(min(t,~a_r)) + \int_0^{t}m_e(t-x)d\hat{F_1}(x)
+
+
+        - \hat{F_1} : censored distribution of the first lifetime model
+
 
         Parameters
         ----------
@@ -348,11 +366,15 @@ class RenewalProcess(ParametricModel):
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""
-        The expected number of preventive renewals :math:`m_p(t)`.
+        The expected number of preventive renewals.
 
         .. math::
 
-            m_p(t) = \mathbb{1}_{t > a_r} \cdot (1 - F(a_r)) + \int_0^{+\infty}m_p(t-x)d\hat{F}(x)
+            m_p(t) = \mathbb{1}_{t > a_r} \cdot (1 - F(a_r)) + \int_0^{t}m_p(t-x)d\hat{F}(x)
+
+        .. math::
+
+            m_p^D(t) = \mathbb{1}_{t > a_r} \cdot (1 - F_1(a_r)) + \int_0^{t}m_p(t-x)d\hat{F_1}(x)
 
         Parameters
         ----------
