@@ -179,7 +179,7 @@ class RenewalProcess(ParametricModel):
         r"""
         The renewal function.
 
-        It gives the expected total number of renewals.
+        It gives the expected total number of renewals :math:`m`.
         It is computed  by solving the renewal equation:
 
         .. math::
@@ -188,12 +188,13 @@ class RenewalProcess(ParametricModel):
 
         where:
 
-        - :math:`m` is the renewal function.
-        - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model.
-        - :math:`F_1` is the cumulative distribution function of the underlying
-          lifetime model for the fist renewal in the case of a delayed renewal
-          process.
+        - :math:`F` is the cumulative distribution function of the time to failure :math:`X`.
+        - :math:`F_1` is the cumulative distribution function of the first time to failure :math:`X_1`.
+
+        If ``ar`` is given, :math:`F` becomes :math:`F_{a_r}` defined by :math:`T = \text{min}(X,~a_r) \sim F_{a_r}`.
+        The same applies for :math:`X_1`. :math:`F_1` becomes :math:`F_{1_{a_r}}` defined by :math:`T_1 = \text{min}(X_1,~a_r) \sim F_{a_r}`.
+
+        If ``a0`` is given, :math:`F_1` becomes :math:`\mathbb{P}(X \leq t |~ X > a_0)`.
 
         Parameters
         ----------
@@ -216,7 +217,7 @@ class RenewalProcess(ParametricModel):
         .. [1] Rausand, M., Barros, A., & Hoyland, A. (2020). System Reliability
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
-        """
+        """  # noqa: E501
 
         renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
@@ -234,18 +235,22 @@ class RenewalProcess(ParametricModel):
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         r"""The renewal density.
 
-        It is the derivative of the renewal function.
+        It is the derivative :math:`\omega` of the renewal function :math:`m`.
+        See the :py:meth:`~relife.stochastic_processes.RenewalProcess.renewal_function`.
 
         .. math::
 
             \omega(t) = m'(t) = f_1(t) + \int_0^t \omega(t-x) \mathrm{d}F(x)
 
+        where:
 
-        - :math:`F` is the cumulative distribution function of the underlying
-          lifetime model.
-        - :math:`f_1` is the probability density function of the underlying
-          lifetime model for the fist renewal in the case of a delayed renewal
-          process.
+        - :math:`F` is the cumulative distribution function of the time to failure :math:`X`.
+        - :math:`f_1` is the probability density function of the first time to failure :math:`X_1`.
+
+        If ``ar`` is given, :math:`F` becomes :math:`F_{a_r}` defined by :math:`T = \text{min}(X,~a_r) \sim F_{a_r}`.
+        The same applies for :math:`X_1`. :math:`F_1` becomes :math:`F_{1_{a_r}}` defined by :math:`T_1 = \text{min}(X_1,~a_r) \sim F_{1_{a_r}}`.
+
+        If ``a0`` is given, :math:`F_1` becomes :math:`\mathbb{P}(X \leq t |~ X > a_0)`.
 
         Parameters
         ----------
@@ -268,7 +273,7 @@ class RenewalProcess(ParametricModel):
         .. [1] Rausand, M., Barros, A., & Hoyland, A. (2020). System Reliability
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
-        """
+        """  # noqa: E501
         renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
             get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf,
@@ -286,25 +291,39 @@ class RenewalProcess(ParametricModel):
         r"""
         The expected number of observed events.
 
-        Here the events are assets failures, i.e. `ar` is given, only the assets failures
-        are counted.
+        Here, events are assets failures, i.e. only the assets failures are counted
+        (not the preventive replacements at ``ar``).
 
-        If `a0` is not given or `first_lifetime_model` is not different than `lifetime_model`,
-        the equation is :
-
-        .. math::
-
-            m_e(t) = F(min(t,~a_r)) + \int_0^{t}m_e(t-x)d\hat{F}(x)
-
-        Otherwise:
+        The function is noted :math:`m_e` and computed by solving :
 
         .. math::
 
-            m_e^D(t) = F_1(min(t,~a_r)) + \int_0^{t}m_e(t-x)d\hat{F_1}(x)
+            m_e(t) = F(\text{min}(t,~a_r)) + \int_0^{t}m_e(t-x)dF_{a_r}(x)
 
+        where:
 
-        - \hat{F_1} : censored distribution of the first lifetime model
+        - :math:`F` is the cumulative distribution function of the time to failure :math:`X`.
+        - :math:`F_{a_r}` is the cumulative distribution of :math:`T = \text{min}(X,~a_r)`.
 
+        If ``a0`` or ``first_lifetime_model`` is given, instead, we compute :math:`m_e^{\text{delayed}}` by solving:
+
+        .. math::
+
+            m_e^{\text{delayed}}(t) = F_1(\text{min}(t,~a_r)) + \int_0^{t}m_e(t-x)dF_{1_{a_r}}(x)
+
+        where:
+
+        - :math:`F_1` is the cumulative distribution function of the first time to failure :math:`X_1`.
+        - :math:`F_{1_{a_r}}` is the cumulative distribution of :math:`T_1 = \text{min}(X_1,~a_r)`.
+
+        .. note::
+
+            If ``ar`` is ``None``, :math:`a_r = \infty`.
+
+            This function is complementary to :py:meth:`~relife.stochastic_processes.RenewalProcess.expected_number_of_preventive_renewals`
+            i.e. :math:`m(t) = m_e(t) + m_p(t)`.
+
+            See also :py:meth:`~relife.stochastic_processes.RenewalProcess.renewal_function`.
 
         Parameters
         ----------
@@ -368,13 +387,36 @@ class RenewalProcess(ParametricModel):
         r"""
         The expected number of preventive renewals.
 
-        .. math::
-
-            m_p(t) = \mathbb{1}_{t > a_r} \cdot (1 - F(a_r)) + \int_0^{t}m_p(t-x)d\hat{F}(x)
+        The function is noted :math:`m_p` and computed by solving :
 
         .. math::
 
-            m_p^D(t) = \mathbb{1}_{t > a_r} \cdot (1 - F_1(a_r)) + \int_0^{t}m_p(t-x)d\hat{F_1}(x)
+            m_p(t) = \mathbb{1}_{t > a_r} \cdot (1 - F(a_r)) + \int_0^{t}m_p(t-x)dF_{a_r}(x)
+
+        where:
+
+        - :math:`F` is the cumulative distribution function of the time to failure :math:`X`.
+        - :math:`F_{a_r}` is the cumulative distribution of :math:`T = \text{min}(X,~a_r)`.
+
+        If ``a0`` or ``first_lifetime_model`` is given, instead, we compute :math:`m_p^{\text{delayed}}` by solving:
+
+        .. math::
+
+            m_p^{\text{delayed}}(t) = \mathbb{1}_{t > a_r} \cdot (1 - F_1(a_r)) + \int_0^{t}m_p(t-x)dF_{1_{a_r}}(x)
+
+        where:
+
+        - :math:`F_1` is the cumulative distribution function of the first time to failure :math:`X_1`.
+        - :math:`F_{1_{a_r}}` is the cumulative distribution of :math:`T_1 = \text{min}(X_1,~a_r)`.
+
+        .. note::
+
+            If ``ar`` is ``None``, :math:`a_r = \infty`.
+
+            This function is complementary to :py:meth:`~relife.stochastic_processes.RenewalProcess.expected_number_of_events`
+            i.e. :math:`m(t) = m_e(t) + m_p(t)`.
+
+            See also :py:meth:`~relife.stochastic_processes.RenewalProcess.renewal_function`.
 
         Parameters
         ----------
