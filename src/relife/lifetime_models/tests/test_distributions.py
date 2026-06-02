@@ -1,4 +1,4 @@
-from typing import TypeAlias
+from typing import Literal, TypeAlias
 
 import numpy as np
 import pytest
@@ -16,41 +16,60 @@ NumpyST: TypeAlias = np.floating | np.uint
 
 
 class TestBroadcasting:
+    @pytest.mark.parametrize(
+        "time_or_probability",
+        [np.ones(()) * 0.5, np.ones((1, 2)) * 0.5, np.ones((3, 5)) * 0.5],
+    )
+    @pytest.mark.parametrize(
+        "method",
+        [
+            "sf",
+            "hf",
+            "chf",
+            "cdf",
+            "ppf",
+            "pdf",
+            "dhf",
+            "ppf",
+            "ichf",
+            "isf",
+            "jac_sf",
+            "jac_chf",
+            "jac_cdf",
+            "jac_pdf",
+        ],
+    )
+    def test_probability_functions(
+        self,
+        distribution: LifetimeDistribution,
+        method: Literal[
+            "sf",
+            "hf",
+            "chf",
+            "cdf",
+            "ppf",
+            "pdf",
+            "dhf",
+            "ppf",
+            "ichf",
+            "isf",
+            "jac_sf",
+            "jac_chf",
+            "jac_cdf",
+            "jac_pdf",
+        ],
+        time_or_probability: ArrayND[np.float64],
+    ):
+        assert (
+            getattr(distribution, method)(time_or_probability).shape
+            == time_or_probability.shape
+        )
+
     def test_rvs(
         self, distribution: LifetimeDistribution, rvs_size: int | tuple[int, ...]
     ):
         expected_shape = (rvs_size,) if isinstance(rvs_size, int) else rvs_size
         assert distribution.rvs(rvs_size).shape == expected_shape
-
-    def test_sf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.sf(time).shape == np.broadcast(time).shape
-
-    def test_hf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.hf(time).shape == np.broadcast(time).shape
-
-    def test_chf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.chf(time).shape == np.broadcast(time).shape
-
-    def test_cdf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.cdf(time).shape == np.broadcast(time).shape
-
-    def test_pdf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.pdf(time).shape == np.broadcast(time).shape
-
-    def test_ppf(
-        self, distribution: LifetimeDistribution, probability: ArrayND[np.float64]
-    ):
-        assert distribution.ppf(probability).shape == np.broadcast(probability).shape
-
-    def test_ichf(
-        self, distribution: LifetimeDistribution, probability: ArrayND[np.float64]
-    ):
-        assert distribution.ichf(probability).shape == np.broadcast(probability).shape
-
-    def test_isf(
-        self, distribution: LifetimeDistribution, probability: ArrayND[np.float64]
-    ):
-        assert distribution.isf(probability).shape == np.broadcast(probability).shape
 
     def test_moment(self, distribution: LifetimeDistribution):
         assert distribution.moment(1).shape == ()
@@ -64,39 +83,6 @@ class TestBroadcasting:
 
     def test_median(self, distribution: LifetimeDistribution):
         assert distribution.median().shape == ()
-
-    def test_dhf(self, distribution: LifetimeDistribution, time: ArrayND[np.float64]):
-        assert distribution.dhf(time).shape == time.shape
-
-    def test_jac_sf(
-        self, distribution: LifetimeDistribution, time: ArrayND[np.float64]
-    ):
-        nb_params = distribution.get_params().size
-        assert distribution.jac_sf(time).shape == (nb_params,) + time.shape
-
-    def test_jac_hf(
-        self, distribution: LifetimeDistribution, time: ArrayND[np.float64]
-    ):
-        nb_params = distribution.get_params().size
-        assert distribution.jac_hf(time).shape == (nb_params,) + time.shape
-
-    def test_jac_chf(
-        self, distribution: LifetimeDistribution, time: ArrayND[np.float64]
-    ):
-        nb_params = distribution.get_params().size
-        assert distribution.jac_chf(time).shape == (nb_params,) + time.shape
-
-    def test_jac_cdf(
-        self, distribution: LifetimeDistribution, time: ArrayND[np.float64]
-    ):
-        nb_params = distribution.get_params().size
-        assert distribution.jac_cdf(time).shape == (nb_params,) + time.shape
-
-    def test_jac_pdf(
-        self, distribution: LifetimeDistribution, time: ArrayND[np.float64]
-    ):
-        nb_params = distribution.get_params().size
-        assert distribution.jac_pdf(time).shape == (nb_params,) + time.shape
 
     def test_ls_integrate(
         self,

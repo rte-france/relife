@@ -196,3 +196,19 @@ def integration_bound_b(
 )
 def ar(request: FixtureRequest[tuple[int, ...]]) -> ArrayND[np.float64]:
     return np.ones(request.param, dtype=np.float64)
+
+
+@pytest.fixture(
+    params=[(), (1, 3), (5, 3)],
+    ids=lambda shape: f"time{shape}",
+)
+def time(request: FixtureRequest[tuple[int, ...]]) -> ArrayND[np.float64]:
+    return np.ones(request.param, dtype=np.float64)
+
+
+def expected_output_shape(*inputs: tuple[int, ...]) -> tuple[int, ...] | None:
+    try:
+        output_shape = np.broadcast_shapes(*inputs)
+    except ValueError:
+        return None
+    return output_shape
