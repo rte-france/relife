@@ -10,9 +10,6 @@ from relife.base import ParametricModel
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
 )
-from relife.lifetime_models._conditional_models import (
-    get_conditional_lifetime_model,
-)
 from relife.rewards import ExponentialDiscounting, Reward
 from relife.stochastic_processes._sample import StochasticSampleMapping
 from relife.utils import to_column_2d_if_1d
@@ -219,8 +216,8 @@ class RenewalProcess(ParametricModel):
         """
 
         renewal_equation_solver = RenewalEquationSolver(
-            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-            get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf,
+            self.lifetime_model.apply_condition(ar=ar),
+            self.first_lifetime_model.apply_condition(ar=ar, a0=a0).cdf,
         )
         return renewal_equation_solver.solve(tf, nb_steps)
 
@@ -268,8 +265,8 @@ class RenewalProcess(ParametricModel):
             Sons.
         """
         renewal_equation_solver = RenewalEquationSolver(
-            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-            get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf,
+            self.lifetime_model.apply_condition(ar=ar),
+            self.first_lifetime_model.apply_condition(ar=ar, a0=a0).pdf,
         )
         return renewal_equation_solver.solve(tf, nb_steps)
 
@@ -317,23 +314,21 @@ class RenewalProcess(ParametricModel):
         def F1(
             t: ST | NumpyST | ArrayND[NumpyST],
         ) -> np.float64 | ArrayND[np.float64]:
-            left_truncated_model = get_conditional_lifetime_model(
-                self.first_lifetime_model, a0=a0
-            )
+            left_truncated_model = self.first_lifetime_model.apply_condition(a0=a0)
             _ar = ar if ar is not None else np.inf
             _a0 = a0 if a0 is not None else 0.0
             return left_truncated_model.cdf(np.minimum(t, _ar - _a0))
 
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
-                get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
+                self.first_lifetime_model.apply_condition(a0=a0, ar=ar),
                 F1,
             )
         else:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
             )
 
@@ -379,22 +374,19 @@ class RenewalProcess(ParametricModel):
             _a0 = a0 if a0 is not None else 0.0
             first_ar = ar - _a0
             return (
-                1
-                - get_conditional_lifetime_model(self.first_lifetime_model, a0=a0).cdf(
-                    first_ar
-                )
+                1 - self.first_lifetime_model.apply_condition(a0=a0).cdf(first_ar)
             ) * (t > first_ar)
 
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
-                get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
+                self.first_lifetime_model.apply_condition(a0=a0, ar=ar),
                 F1,
             )
         else:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
             )
 
@@ -632,9 +624,7 @@ class RenewalRewardProcess(RenewalProcess):
         """
 
         def F(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
-            return get_conditional_lifetime_model(
-                self.lifetime_model, ar=ar
-            ).ls_integrate(
+            return self.lifetime_model.apply_condition(ar=ar).ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x) * self.discounting.factor(x)
                 ),
@@ -644,9 +634,7 @@ class RenewalRewardProcess(RenewalProcess):
             )
 
         def F1(t: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
-            return get_conditional_lifetime_model(
-                self.first_lifetime_model, a0=a0, ar=ar
-            ).ls_integrate(
+            return self.first_lifetime_model.apply_condition(a0=a0, ar=ar).ls_integrate(
                 lambda x: (
                     self.first_reward.conditional_expectation(x, a0=a0)
                     * self.discounting.factor(x)
@@ -658,14 +646,14 @@ class RenewalRewardProcess(RenewalProcess):
 
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
-                get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
+                self.first_lifetime_model.apply_condition(a0=a0, ar=ar),
                 F1,
             )
         else:
             renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+                self.lifetime_model.apply_condition(ar=ar),
                 F,
             )
 
@@ -718,7 +706,7 @@ class RenewalRewardProcess(RenewalProcess):
             The assymptotic expected total reward of the process.
         """  # noqa: E501
 
-        lf = get_conditional_lifetime_model(self.lifetime_model, ar=ar).ls_integrate(
+        lf = self.lifetime_model.apply_condition(ar=ar).ls_integrate(
             lambda x: self.discounting.factor(x),
             np.float64(0.0),
             np.asarray(np.inf),
@@ -726,7 +714,7 @@ class RenewalRewardProcess(RenewalProcess):
         )  # () or (m, 1)
         if self.discounting_rate == 0.0:
             return np.full_like(np.squeeze(lf), np.inf)
-        ly = get_conditional_lifetime_model(self.lifetime_model, ar=ar).ls_integrate(
+        ly = self.lifetime_model.apply_condition(ar=ar).ls_integrate(
             lambda x: (
                 self.discounting.factor(x) * self.reward.conditional_expectation(x)
             ),
@@ -740,16 +728,12 @@ class RenewalRewardProcess(RenewalProcess):
             # Apply delay for the first renewal with a0
             # If no a0 are given, will result in the same solution
             lf1 = np.squeeze(
-                get_conditional_lifetime_model(
-                    self.first_lifetime_model, a0=a0, ar=ar
-                ).ls_integrate(
+                self.first_lifetime_model.apply_condition(a0=a0, ar=ar).ls_integrate(
                     lambda x: self.discounting.factor(x), 0.0, np.inf, deg=100
                 )
             )  # () or (m,)
             ly1 = np.squeeze(
-                get_conditional_lifetime_model(
-                    self.first_lifetime_model, a0=a0, ar=ar
-                ).ls_integrate(
+                self.first_lifetime_model.apply_condition(a0=a0, ar=ar).ls_integrate(
                     lambda x: (
                         self.discounting.factor(x)
                         * self.first_reward.conditional_expectation(x, a0)
@@ -801,7 +785,7 @@ class RenewalRewardProcess(RenewalProcess):
         q = z / (af + 1e-6)  # # (nb_steps,) or (m, nb_steps) avoid zero division
         q0 = self.reward.conditional_expectation(
             np.asarray(0.0)
-        ) * get_conditional_lifetime_model(self.lifetime_model, a0=a0).pdf(0.0)
+        ) * self.lifetime_model.apply_condition(a0=a0).pdf(0.0)
         # q0 : () or (m, 1)
         q0 = np.broadcast_to(q0, af.shape)  # (), (nb_steps,) or (m, nb_steps)
         eeac = np.where(af == 0, q0, q)  # (nb_steps,) or (m, nb_steps)
@@ -828,9 +812,7 @@ class RenewalRewardProcess(RenewalProcess):
             The assymptotic expected equivalent annual worth.
         """
         if self.discounting_rate == 0.0:
-            lifetime_model_applied = get_conditional_lifetime_model(
-                self.lifetime_model, ar=ar
-            )
+            lifetime_model_applied = self.lifetime_model.apply_condition(ar=ar)
             return np.squeeze(
                 np.asarray(
                     lifetime_model_applied.ls_integrate(

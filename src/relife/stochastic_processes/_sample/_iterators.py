@@ -11,7 +11,6 @@ from numpy.typing import NDArray
 from optype.numpy import Array1D, ArrayND
 from typing_extensions import override
 
-from relife.lifetime_models import LeftTruncatedModel
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
     is_frozen_parametric_lifetime_model,

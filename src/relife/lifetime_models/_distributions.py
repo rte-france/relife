@@ -35,10 +35,6 @@ from ._base import (
     LifetimeData,
     LifetimeLikelihood,
     ParametricLifetimeModel,
-    apply_condition,
-    approx_ls_integrate,
-    approx_moment,
-    approx_mrl,
     document_args,
 )
 
@@ -135,7 +131,7 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def rvs(
         self,
-        size: int | tuple[int, ...],
+        size: int | tuple[int, ...] | None = None,
         *,
         seed: int
         | np.random.Generator
@@ -148,6 +144,8 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
             seed=seed,
         )
 
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def ls_integrate(
         self,
         func: Callable[
@@ -156,84 +154,32 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
         b: ST | NumpyST | ArrayND[NumpyST],
+        *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        """
-        Lebesgue-Stieltjes integration.
+        return super().ls_integrate(func, a, b, deg=deg)
 
-        Parameters
-        ----------
-        func : Callable
-            A function of the form `y = func(x)` taking floats or ndarrays
-            as inputs and returning a np.float64 or an ndarray.
-        a : float or ndarray
-            The lower bound of the integration.
-        b : float or ndarray
-            The upper bound of the integration. Can't be `np.inf`.
-        deg : int, default is 10.
-            Number of sample points and weights for the quadrature
-
-        Returns
-        -------
-        out : np.ndarray
-            Lebesgue-Stieltjes integration of `func` from `a` to `b`.
-        """
-
-        return approx_ls_integrate(self, func, a, b, deg=deg)
-
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def moment(self, n: int) -> np.float64:
-        """
-        n-th order moment.
+        return np.float64(super().moment(n))
 
-        Parameters
-        ----------
-        n : int
-            order of the moment, at least 1.
-
-        Returns
-        -------
-        out : np.float64
-        """
-        return np.float64(approx_moment(self, n))
-
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def mean(self) -> np.float64:
-        """
-        The mean of the distribution.
+        return np.float64(super().mean())
 
-        Returns
-        -------
-        out : np.float64
-        """
-        return self.moment(1)
-
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def var(self) -> np.float64:
-        """
-        The variance of the distribution.
+        return np.float64(super().var())
 
-        Returns
-        -------
-        out : np.float64
-        """
-        return self.moment(2) - self.moment(1) ** 2
-
+    @override
+    @document_args(base_cls=FittableParametricLifetimeModel, args_docstring=[])
     def mrl(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        """
-        The mean residual life function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-
-        Returns
-        -------
-        out : np.float64 or np.ndarray
-            Function values at each given time(s).
-        """
-        return approx_mrl(self, time)
+        return super().mrl(time)
 
     @override
     def init_likelihood(
@@ -255,14 +201,6 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
         optimizer = LifetimeLikelihood(self, lifetime_data, config)
         return optimizer
-
-    def apply_condition(
-        self,
-        *,
-        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
-        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
-    ) -> ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:
-        return apply_condition(self, ar=ar, a0=a0)
 
 
 def init_distrib_params_from_lifetimes(

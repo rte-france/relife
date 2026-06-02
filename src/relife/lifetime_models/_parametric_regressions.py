@@ -30,12 +30,6 @@ from ._base import (
     FrozenParametricLifetimeModel,
     LifetimeData,
     LifetimeLikelihood,
-    ParametricLifetimeModel,
-    apply_condition,
-    approx_ls_integrate,
-    approx_mean,
-    approx_moment,
-    approx_var,
     document_args,
 )
 from ._distributions import (
@@ -282,6 +276,10 @@ class ParametricLifetimeRegression(
             seed=seed,
         )
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def ls_integrate(
         self,
         func: Callable[
@@ -293,22 +291,34 @@ class ParametricLifetimeRegression(
         *covar: ST | NumpyST | ArrayND[NumpyST],
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
-        return approx_ls_integrate(self, func, a, b, args=covar, deg=deg)
+        return super().ls_integrate(func, a, b, *covar, deg=deg)
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def moment(
         self, n: int, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return approx_moment(self, n, args=covar)
+        return super().moment(n, *covar)
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def mean(
         self, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return approx_mean(self, args=covar)
+        return super().mean(*covar)
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def var(
         self, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        return approx_var(self, args=covar)
+        return super().var(*covar)
 
     def freeze(
         self, *covar: ST | NumpyST | Array[AtMost2D, NumpyST]
@@ -382,14 +392,6 @@ class ParametricLifetimeRegression(
         covar_sequence = self._get_covar_fit(covar)
         self.covar_effect = LinearCovarEffect((0.0,) * len(covar_sequence))
         return super().fit(time, event, entry, **kwargs)
-
-    def apply_condition(
-        self,
-        *,
-        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
-        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
-    ) -> ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:
-        return apply_condition(self, ar=ar, a0=a0)
 
 
 def init_regression_params_from_lifetimes(

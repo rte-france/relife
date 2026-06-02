@@ -12,9 +12,6 @@ from optype.numpy import Array1D, Array2D, ArrayND
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.lifetime_models import (
-    AgeReplacementModel,
-)
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
 )
@@ -37,7 +34,6 @@ from ._base import BaseReplacementPolicy, OneCycleExpectedCosts
 
 __all__ = [
     "OneCycleAgeReplacementPolicy",
-    "AgeReplacementModel",
     "age_replacement_policy",
 ]
 

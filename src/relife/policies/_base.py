@@ -14,7 +14,6 @@ from optype.numpy import (
 from relife.lifetime_models._base import (
     ParametricLifetimeModel,
 )
-from relife.lifetime_models._conditional_models import get_conditional_lifetime_model
 from relife.rewards import ExponentialDiscounting, Reward
 from relife.stochastic_processes._renewal_processes import (
     reshape_a0_ar,
@@ -56,9 +55,7 @@ class OneCycleExpectedCosts:
     ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
         timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
         etc = np.asarray(
-            get_conditional_lifetime_model(
-                self.lifetime_model, a0=a0, ar=ar
-            ).ls_integrate(
+            self.lifetime_model.apply_condition(a0=a0, ar=ar).ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x, a0)
                     * self.discounting.factor(x)
@@ -98,9 +95,7 @@ class OneCycleExpectedCosts:
     ) -> np.float64 | Array1D[np.float64]:
         # reward partial expectation
         return np.squeeze(
-            get_conditional_lifetime_model(
-                self.lifetime_model, a0=a0, ar=ar
-            ).ls_integrate(
+            self.lifetime_model.apply_condition(a0=a0, ar=ar).ls_integrate(
                 lambda x: (
                     self.reward.conditional_expectation(x, a0)
                     * self.discounting.factor(x)
@@ -138,9 +133,7 @@ class OneCycleExpectedCosts:
                 / (self.discounting.annuity_factor(x) + 1e-6)
             )
 
-        conditional_model = get_conditional_lifetime_model(
-            self.lifetime_model, a0=a0, ar=ar
-        )
+        conditional_model = self.lifetime_model.apply_condition(a0=a0, ar=ar)
         q0 = conditional_model.cdf(self.period_before_discounting) * f(
             np.asarray(self.period_before_discounting, dtype=float)
         )  # () or (m, 1)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import functools
 import inspect
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import field
@@ -592,10 +593,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         *,
         ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
         a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
-    ) -> AgeReplacementModel | LeftTruncatedModel:
+    ) -> ParametricLifetimeModel[*Ts]:
         if ar is None and a0 is None:
-            raise ValueError(
+            warnings.warn(
                 "apply_condition must be called with ar or a0",
+                stacklevel=2,
             )
         # Apply left truncation first for numerical stability
         if a0 is not None:
@@ -650,7 +652,7 @@ def document_args(
     return decorator_extend_docstring
 
 
-class AgeReplacementModel:
+class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     r"""
     Age replacement model.
 
@@ -672,12 +674,12 @@ class AgeReplacementModel:
     plot
     """
 
-    baseline: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST]]]
+    baseline: ParametricLifetimeModel[*Ts]
     ar: ST | NumpyST | ArrayND[NumpyST]
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST]]],
+        baseline: ParametricLifetimeModel[*Ts],
         ar: ST | NumpyST | ArrayND[NumpyST],
     ):
         super().__init__()
@@ -699,14 +701,6 @@ class AgeReplacementModel:
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < self.ar, self.baseline.hf(time, *args), 0.0)
-
-    @override
-    def cdf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().cdf(time, *(self.ar, *args))
 
     @override
     def chf(
@@ -741,38 +735,6 @@ class AgeReplacementModel:
         return np.where(time < self.ar, self.baseline.pdf(time, *args), 0)
 
     @override
-    def ppf(
-        self,
-        probability: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.isf(1 - probability, self.ar, *args)
-
-    @override
-    def median(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.ppf(0.5, self.ar, *args)
-
-    @override
-    def rvs(
-        self,
-        size: int | tuple[int, ...] | None = None,
-        *args: *Ts,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.rvs(
-            size,
-            *(self.ar, *args),
-            seed=seed,
-        )
-
-    @override
     def ls_integrate(
         self,
         func: Callable[
@@ -785,42 +747,14 @@ class AgeReplacementModel:
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
         b = np.minimum(self.ar, b)
-        integration = self.baseline.ls_integrate(func, a, b, *(self.ar, *args), deg=deg)
+        integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         return integration + np.where(
             b == self.ar, func(self.ar, *args) * self.baseline.sf(self.ar, *args), 0
         )
 
-    @override
-    def moment(
-        self,
-        n: int,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.moment(n, *(self.ar, *args))
-
-    @override
-    def mean(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_mean(self.baseline, args=(self.ar, *args))
-
-    def var(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_var(self.baseline, args=(self.ar, *args))
-
-    def mrl(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_mrl(self.baseline, time, args=(self.ar, *args))
-
 
 class LeftTruncatedModel(
-    ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
+    ParametricLifetimeModel[*Ts],
 ):
     r"""Left truncated model.
 
@@ -844,12 +778,12 @@ class LeftTruncatedModel(
     plot
     """
 
-    baseline: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]
+    baseline: ParametricLifetimeModel[*Ts]
     a0: ST | NumpyST | ArrayND[NumpyST]
 
     def __init__(
         self,
-        baseline: ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]],
+        baseline: ParametricLifetimeModel[*Ts],
         a0: ST | NumpyST | ArrayND[NumpyST],
     ):
         super().__init__()
@@ -872,7 +806,7 @@ class LeftTruncatedModel(
         time: ST | NumpyST | ArrayND[NumpyST],
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.pdf(time, self.a0, *args)
+        return super().pdf(time, *args)
 
     @override
     def isf(
@@ -881,7 +815,7 @@ class LeftTruncatedModel(
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
-        return self.ichf(cumulative_hazard_rate, self.a0, *args)
+        return self.ichf(cumulative_hazard_rate, *args)
 
     @override
     def chf(
@@ -892,14 +826,6 @@ class LeftTruncatedModel(
         return self.baseline.chf(self.a0 + time, *args) - self.baseline.chf(
             self.a0, *args
         )
-
-    @override
-    def cdf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.cdf(time, self.a0, *args)
 
     @override
     def hf(
@@ -921,79 +847,6 @@ class LeftTruncatedModel(
             )
             - self.a0
         )
-
-    @override
-    def rvs(
-        self,
-        size: int | tuple[int, ...] | None = None,
-        *args: *Ts,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.rvs(
-            size,
-            *(self.a0, *args),
-            seed=seed,
-        )
-
-    @override
-    def median(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.median(self.a0, *args)
-
-    @override
-    def ppf(
-        self,
-        probability: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.ppf(probability, *(self.a0, *args))
-
-    def ls_integrate(
-        self,
-        func: Callable[
-            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
-            np.float64 | ArrayND[np.float64],
-        ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-        deg: int = 10,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_ls_integrate(
-            self.baseline, func, a, b, args=(self.a0, *args), deg=deg
-        )
-
-    def moment(
-        self,
-        n: int,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_moment(self.baseline, n, args=(self.a0, *args))
-
-    def mean(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_mean(self.baseline, args=(self.a0, *args))
-
-    def var(
-        self,
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_var(self.baseline, args=(self.a0, *args))
-
-    def mrl(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return approx_mrl(self.baseline, time, args=(self.a0, *args))
 
 
 class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
@@ -1092,6 +945,8 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
             seed=seed,
         )
 
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def ls_integrate(
         self,
         func: Callable[
@@ -1103,40 +958,29 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
         *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
+        return self.unfrozen.ls_integrate(func, a, b, *self.args, deg=deg)
 
-        if hasattr(self.unfrozen, "ls_integrate"):
-            return self.unfrozen.ls_integrate(func, a, b, *self.args, deg=deg)
-        return approx_ls_integrate(self.unfrozen, func, a, b, args=self.args, deg=deg)
-
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def moment(self, n: int) -> np.float64 | ArrayND[np.float64]:
-        if hasattr(self.unfrozen, "moment"):
-            return self.unfrozen.moment(n, *self.args)
-        return approx_moment(self.unfrozen, n, self.args)
+        return self.unfrozen.moment(n, *self.args)
 
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def mean(self) -> np.float64 | ArrayND[np.float64]:
-        if hasattr(self.unfrozen, "mean"):
-            return self.unfrozen.mean(*self.args)
-        return approx_mean(self.unfrozen, self.args)
+        return self.unfrozen.mean(*self.args)
 
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def var(self) -> np.float64 | ArrayND[np.float64]:
-        if hasattr(self.unfrozen, "var"):
-            return self.unfrozen.var(*self.args)
-        return approx_var(self.unfrozen, self.args)
+        return self.unfrozen.var(*self.args)
 
+    @override
+    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
     def mrl(
         self, time: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
-        if hasattr(self.unfrozen, "mrl"):
-            return self.unfrozen.mrl(time, *self.args)
-        return approx_mrl(self.unfrozen, time, self.args)
-
-    def apply_condition(
-        self,
-        *,
-        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
-        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
-    ) -> ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:
-        return apply_condition(self, ar=ar, a0=a0)
+        return self.unfrozen.mrl(time, *self.args)
 
     @override
     def __getattr__(self, key: str) -> Any:
