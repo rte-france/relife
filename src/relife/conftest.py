@@ -68,15 +68,6 @@ def regression(request):
 
 
 @pytest.fixture
-def distribution_likelihood(distribution, power_transformer_data):
-    return distribution.init_likelihood(
-        power_transformer_data["time"],
-        event=power_transformer_data["event"],
-        entry=power_transformer_data["entry"],
-    )
-
-
-@pytest.fixture
 def regression_likelihood(regression, insulator_string_data):
     covar = np.column_stack(
         (
@@ -158,34 +149,3 @@ def frozen_ar_regression(regression):
 @pytest.fixture(params=[0.0, 0.04], ids=lambda rate: f"discounting_rate:{rate}")
 def discounting_rate(request):
     return request.param
-
-    #######################################################################################
-    # FACTORY FIXTURE TO CONTROL IO SHAPES
-    #######################################################################################
-
-    # @pytest.fixture
-    # def expected_out_shape():
-    #     def _expected_out_shape(**kwargs: NDArray[np.float64]) -> tuple[int, ...]:
-    #         def shape_contrib(**kwargs: NDArray[np.float64]):
-    #             yield ()  # yield at least (), in case kwargs is empty
-    #             for k, v in kwargs.items():
-    #                 match k:
-    #                     case "covar" if v.ndim == 2:
-    #                         yield v.shape[0], 1
-    #                     case "covar" if v.ndim < 2:
-    #                         yield ()
-    #                     case "cf" | "cp" | "ar" | "a0" if v.ndim == 2 or v.ndim == 0:
-    #                         yield v.shape
-    #                     case "cf" | "cp" | "ar" | "a0" if v.ndim == 1:
-    #                         yield v.size, 1
-    #                     case "size":
-    #                         if isinstance(v, int):
-    #                             if v == 1:
-    #                                 yield ()
-    #                             yield (v,)
-    #                         yield v  # it is tuple
-    #                     case _:
-    #                         yield v.shape
-    #
-    #         return np.broadcast_shapes(*tuple(shape_contrib(**kwargs)))
-    # return _expected_out_shape

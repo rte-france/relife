@@ -5,9 +5,6 @@ import pytest
 from numpy.testing import assert_allclose
 from optype.numpy import Array1D, ArrayND
 
-from relife.lifetime_models import (
-    LifetimeLikelihood,
-)
 from relife.lifetime_models._distributions import LifetimeDistribution
 from relife.utils import to_numpy_float64
 
@@ -19,6 +16,7 @@ class TestBroadcasting:
     @pytest.mark.parametrize(
         "time_or_probability",
         [np.ones(()) * 0.5, np.ones((1, 2)) * 0.5, np.ones((3, 5)) * 0.5],
+        ids=lambda x: f"{x.shape}",
     )
     @pytest.mark.parametrize(
         "method",
@@ -33,10 +31,6 @@ class TestBroadcasting:
             "ppf",
             "ichf",
             "isf",
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
         ],
     )
     def test_probability_functions(
@@ -53,10 +47,6 @@ class TestBroadcasting:
             "ppf",
             "ichf",
             "isf",
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
         ],
         time_or_probability: ArrayND[np.float64],
     ):
@@ -65,11 +55,48 @@ class TestBroadcasting:
             == time_or_probability.shape
         )
 
-    def test_rvs(
-        self, distribution: LifetimeDistribution, rvs_size: int | tuple[int, ...]
+    @pytest.mark.parametrize(
+        "time",
+        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
+        ids=lambda x: f"{x.shape}",
+    )
+    @pytest.mark.parametrize(
+        "method",
+        [
+            "jac_sf",
+            "jac_chf",
+            "jac_cdf",
+            "jac_pdf",
+        ],
+    )
+    def test_jac_functions(
+        self,
+        distribution: LifetimeDistribution,
+        method: Literal[
+            "jac_sf",
+            "jac_chf",
+            "jac_cdf",
+            "jac_pdf",
+        ],
+        time: ArrayND[np.float64],
     ):
-        expected_shape = (rvs_size,) if isinstance(rvs_size, int) else rvs_size
-        assert distribution.rvs(rvs_size).shape == expected_shape
+        assert (
+            getattr(distribution, method)(time).shape
+            == (distribution.get_params().size,) + time.shape
+        )
+
+    @pytest.mark.parametrize(
+        "size",
+        [(), 3, (1, 2), (3, 4, 5)],
+        ids=lambda x: f"{x}",
+    )
+    def test_rvs(
+        self,
+        distribution: LifetimeDistribution,
+        size: int | tuple[int, ...],
+    ):
+        expected_shape = (size,) if isinstance(size, int) else size
+        assert distribution.rvs(size).shape == expected_shape
 
     def test_moment(self, distribution: LifetimeDistribution):
         assert distribution.moment(1).shape == ()
@@ -84,49 +111,91 @@ class TestBroadcasting:
     def test_median(self, distribution: LifetimeDistribution):
         assert distribution.median().shape == ()
 
+    @pytest.mark.parametrize(
+        "a",
+        [
+            np.ones(()) * 2,
+            np.ones((1, 2)) * 2,
+            np.ones((3, 2)) * 2,
+            np.ones((3, 5)) * 2,
+        ],
+        ids=lambda x: f"{x.shape}",
+    )
+    @pytest.mark.parametrize(
+        "b",
+        [
+            np.ones(()) * 8,
+            np.ones((1, 2)) * 8,
+            np.ones((3, 2)) * 8,
+            np.ones((3, 5)) * 8,
+        ],
+        ids=lambda x: f"{x.shape}",
+    )
     def test_ls_integrate(
         self,
         distribution: LifetimeDistribution,
-        integration_bound_a: ArrayND[np.float64],
-        integration_bound_b: ArrayND[np.float64],
+        a: ArrayND[np.float64],
+        b: ArrayND[np.float64],
     ):
-        expected_shape = np.broadcast_shapes(
-            integration_bound_a.shape, integration_bound_b.shape
-        )
-        integration = distribution.ls_integrate(
-            np.ones_like, integration_bound_a, integration_bound_b
-        )
-        assert integration.shape == expected_shape
+        try:
+            expected_shape = np.broadcast_shapes(a.shape, b.shape)
+        except ValueError:
+            with pytest.raises(
+                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
+            ):
+                _ = distribution.ls_integrate(np.ones_like, a, b)
+        else:
+            integration = distribution.ls_integrate(np.ones_like, a, b)
+            assert integration.shape == expected_shape
+
+    def test_apply_condition(
+        self,
+        distribution: LifetimeDistribution,
+        method,
+        ar: ArrayND[np.float64] | None,
+        a0: ArrayND[np.float64] | None,
+        time: ArrayND[np.float64],
+    ):
+        try:
+            ar_shape = ar.shape if ar else ()
+            a0_shape = a0.shape if a0 else ()
+            expected_shape = np.broadcast_shapes(ar_shape, a0_shape, time.shape)
+        except ValueError:
+            with pytest.raises(
+                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
+            ):
+                _ = getattr(distribution.apply_condition(ar=ar, a0=a0), method)(time)
+        else:
+            assert (
+                getattr(distribution.apply_condition(ar=ar, a0=a0), method)(time).shape
+                == expected_shape
+            )
 
 
-def test_sf_values(distribution: LifetimeDistribution, time: ArrayND[np.float64]):
+def test_sf_values(distribution: LifetimeDistribution):
     assert_allclose(
-        distribution.sf(np.full(time.shape, distribution.median())),
-        np.full(time.shape, 0.5),
+        distribution.sf(np.full((3, 5), distribution.median())),
+        np.full((3, 5), 0.5),
         rtol=1e-3,
     )
 
 
-def test_isf_values(
-    distribution: LifetimeDistribution, probability: ArrayND[np.float64]
-):
+def test_isf_values(distribution: LifetimeDistribution):
     assert_allclose(
-        distribution.isf(np.full(probability.shape, 0.5)),
-        np.full(probability.shape, distribution.median()),
+        distribution.isf(np.full((3, 5), 0.5)),
+        np.full((3, 5), distribution.median()),
     )
 
 
 def test_ls_integrate_values(
     distribution: LifetimeDistribution,
-    integration_bound_a: ArrayND[np.float64],
-    integration_bound_b: ArrayND[np.float64],
 ):
-    integration = distribution.ls_integrate(
-        np.ones_like, integration_bound_a, integration_bound_b, deg=100
-    )
+    a = np.ones((3, 5)) * 2
+    b = np.ones((3, 5)) * 8
+    integration = distribution.ls_integrate(np.ones_like, a, b, deg=100)
     assert_allclose(
         integration,
-        distribution.cdf(integration_bound_b) - distribution.cdf(integration_bound_a),
+        distribution.cdf(b) - distribution.cdf(a),
     )
 
     def func(x: ST | NumpyST | ArrayND[NumpyST]) -> np.float64 | ArrayND[np.float64]:
@@ -134,8 +203,8 @@ def test_ls_integrate_values(
 
     integration = distribution.ls_integrate(
         func,
-        np.zeros_like(integration_bound_a),
-        np.full_like(integration_bound_b, np.inf),
+        np.zeros_like(a),
+        np.full_like(b, np.inf),
         deg=100,
     )
     assert_allclose(
@@ -156,17 +225,26 @@ def test_fit(
 
 
 def test_negative_log(
-    distribution_likelihood: LifetimeLikelihood[LifetimeDistribution],
+    distribution: LifetimeDistribution, power_transformer_data: Array1D[np.void]
 ):
-    params = distribution_likelihood.model.get_params().copy()
-    assert isinstance(distribution_likelihood.negative_log(params), float)
+    likelihood = distribution.init_likelihood(
+        power_transformer_data["time"],
+        event=power_transformer_data["event"],
+        entry=power_transformer_data["entry"],
+    )
+    assert isinstance(likelihood.negative_log(distribution.get_params()), float)
 
 
 def test_jac_negative_log(
-    distribution_likelihood: LifetimeLikelihood[LifetimeDistribution],
+    distribution: LifetimeDistribution, power_transformer_data: Array1D[np.void]
 ):
-    params = distribution_likelihood.model.get_params().copy()
-    assert distribution_likelihood.jac_negative_log(params).shape == (params.size,)
+    likelihood = distribution.init_likelihood(
+        power_transformer_data["time"],
+        event=power_transformer_data["event"],
+        entry=power_transformer_data["entry"],
+    )
+    params = distribution.get_params()
+    assert likelihood.jac_negative_log(params).shape == (params.size,)
 
 
 class TestEquilibriumDistribution:

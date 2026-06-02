@@ -35,6 +35,7 @@ from ._base import (
     LifetimeData,
     LifetimeLikelihood,
     ParametricLifetimeModel,
+    apply_condition,
     approx_ls_integrate,
     approx_moment,
     approx_mrl,
@@ -254,6 +255,14 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
         optimizer = LifetimeLikelihood(self, lifetime_data, config)
         return optimizer
+
+    def apply_condition(
+        self,
+        *,
+        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
+    ) -> ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:
+        return apply_condition(self, ar=ar, a0=a0)
 
 
 def init_distrib_params_from_lifetimes(

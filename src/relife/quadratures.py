@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Concatenate, TypeAlias, TypeVarTuple
+from typing import Concatenate, TypeAlias
 
 import numpy as np
 from optype.numpy import ArrayND
@@ -14,7 +14,6 @@ __all__ = [
 
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
-Ts = TypeVarTuple("Ts")
 
 
 def _control_bounds(*bounds: ST | NumpyST | ArrayND[NumpyST]) -> None:

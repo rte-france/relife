@@ -6,11 +6,6 @@ from relife.lifetime_models._conditional_models import get_conditional_lifetime_
 from relife.lifetime_models._distributions import LifetimeDistribution
 
 
-
-def expected_output_shape(*inputs) -> tuple[int, ...] | ValueError:
-
-
-
 class TestBroadcasting:
     @pytest.mark.parametrize("size", [(), (1, 2), (3, 5)])
     @pytest.mark.parametrize("ar", [np.ones(()), np.ones((1, 2)), np.ones((3, 5))])
@@ -25,10 +20,17 @@ class TestBroadcasting:
         try:
             expected_shape = np.broadcast_shapes(size, ar.shape)
         except ValueError:
-            with pytest.raises(ValueError, match=r".* operands could not be broadcast together .*"):  # noqa: E501
+            with pytest.raises(
+                ValueError, match=r".* operands could not be broadcast together .*"
+            ):  # noqa: E501
                 _ = ar_distribution.rvs(size)
         else:
             assert ar_distribution.rvs(size).shape == expected_shape
+
+
+    def test_probability_functions_with_ar:
+    def test_probability_functions_with_a0:
+    def test_probability_functions_with_ar_and_a0:
 
 
 #     def test_sf(self, distribution, time, ar):

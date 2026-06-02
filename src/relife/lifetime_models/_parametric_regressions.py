@@ -30,6 +30,8 @@ from ._base import (
     FrozenParametricLifetimeModel,
     LifetimeData,
     LifetimeLikelihood,
+    ParametricLifetimeModel,
+    apply_condition,
     approx_ls_integrate,
     approx_mean,
     approx_moment,
@@ -380,6 +382,14 @@ class ParametricLifetimeRegression(
         covar_sequence = self._get_covar_fit(covar)
         self.covar_effect = LinearCovarEffect((0.0,) * len(covar_sequence))
         return super().fit(time, event, entry, **kwargs)
+
+    def apply_condition(
+        self,
+        *,
+        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
+        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
+    ) -> ParametricLifetimeModel[*tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:
+        return apply_condition(self, ar=ar, a0=a0)
 
 
 def init_regression_params_from_lifetimes(

@@ -41,13 +41,6 @@ Nonparametric models
     ECDF
     NelsonAalen
 
-Conditional models
-------------------
-
-    AgeReplacementModel
-    LeftTruncatedModel
-
-
 Likelihoods
 -----------
 
@@ -59,7 +52,6 @@ Likelihoods
 """
 
 from ._base import LifetimeLikelihood
-from ._conditional_models import AgeReplacementModel, LeftTruncatedModel
 from ._distributions import (
     EquilibriumDistribution,
     Exponential,
@@ -96,8 +88,6 @@ __all__ = [
     "KaplanMeier",
     "ECDF",
     "NelsonAalen",
-    "AgeReplacementModel",
-    "LeftTruncatedModel",
     "CoxPartialLifetimeLikelihood",
     "EfronPartialLifetimeLikelihood",
     "BreslowPartialLifetimeLikelihood",
