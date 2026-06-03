@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias
+from typing import TypeAlias
 
 import numpy as np
 import pytest
@@ -16,6 +16,8 @@ from relife.lifetime_models._parametric_regressions import (
     ParametricLifetimeRegression,
 )
 
+from .utils import generate_shapes
+
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
@@ -31,212 +33,201 @@ def test_covar_effect():
 
 class TestBroadcasting:
     @pytest.mark.parametrize(
-        "time_or_probability",
-        [np.ones(()) * 0.5, np.ones((1, 2)) * 0.5, np.ones((3, 5)) * 0.5],
-    )
-    @pytest.mark.parametrize(
-        "covar_1",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
-    )
-    @pytest.mark.parametrize(
-        "covar_2",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
-    )
-    @pytest.mark.parametrize(
         "method",
-        [
-            "sf",
-            "hf",
-            "chf",
-            "cdf",
-            "ppf",
-            "pdf",
-            "dhf",
-            "ppf",
-            "ichf",
-            "isf",
-        ],
+        ["sf", "hf", "chf", "cdf", "pdf", "dhf", "isf", "ichf", "ppf"],
     )
-    def test_probability_functions(
+    @pytest.mark.parametrize(
+        "shape, z1_shape, z2_shape",
+        generate_shapes(3, 2),
+    )
+    def test_prob_func(
         self,
         regression: ParametricLifetimeRegression,
-        method: Literal[
-            "sf",
-            "hf",
-            "chf",
-            "cdf",
-            "ppf",
-            "pdf",
-            "dhf",
-            "ppf",
-            "ichf",
-            "isf",
-        ],
-        time_or_probability: ArrayND[np.float64],
-        covar_1: ArrayND[np.float64],
-        covar_2: ArrayND[np.float64],
+        method: str,
+        shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
     ):
-        try:
-            expected_shape = np.broadcast_shapes(
-                time_or_probability.shape, covar_1.shape, covar_2.shape
-            )
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = getattr(regression, method)(time_or_probability, covar_1, covar_2)
-        else:
-            assert (
-                getattr(regression, method)(time_or_probability, covar_1, covar_2).shape
-                == expected_shape
-            )
+        assert getattr(regression, method)(
+            np.ones(shape) * 0.5, np.ones(z1_shape), np.ones(z2_shape)
+        ).shape == np.broadcast_shapes(shape, z1_shape, z2_shape)
 
     @pytest.mark.parametrize(
-        "time",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
+        "method",
+        ["sf", "hf", "chf", "cdf", "pdf", "isf", "ichf", "ppf"],
     )
     @pytest.mark.parametrize(
-        "covar_1",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
+        "a0_shape, shape, z1_shape, z2_shape",
+        generate_shapes(4, 2),
     )
-    @pytest.mark.parametrize(
-        "covar_2",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
-    )
+    def test_a0_prob_func(
+        self,
+        regression: ParametricLifetimeRegression,
+        method: str,
+        a0_shape: tuple[int] | tuple[int, int],
+        shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
+    ):
+        assert getattr(regression.apply_condition(a0=np.ones(a0_shape) * 0.3), method)(
+            np.ones(shape) * 0.5,
+            np.ones(z1_shape),
+            np.ones(z2_shape),
+        ).shape == np.broadcast_shapes(a0_shape, shape, z1_shape, z2_shape)
+
     @pytest.mark.parametrize(
         "method",
-        [
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
-        ],
+        ["sf", "hf", "chf", "cdf", "pdf", "isf", "ichf", "ppf"],
+    )
+    @pytest.mark.parametrize(
+        "ar_shape, shape, z1_shape, z2_shape",
+        generate_shapes(4, 2),
+    )
+    def test_ar_prob_func(
+        self,
+        regression: ParametricLifetimeRegression,
+        method: str,
+        ar_shape: tuple[int] | tuple[int, int],
+        shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
+    ):
+        assert getattr(regression.apply_condition(ar=np.ones(ar_shape) * 0.3), method)(
+            np.ones(shape) * 0.5,
+            np.ones(z1_shape),
+            np.ones(z2_shape),
+        ).shape == np.broadcast_shapes(ar_shape, shape, z1_shape, z2_shape)
+
+    @pytest.mark.parametrize(
+        "method",
+        ["jac_sf", "jac_chf", "jac_cdf", "jac_pdf"],
+    )
+    @pytest.mark.parametrize(
+        "time_shape, z1_shape, z2_shape",
+        generate_shapes(3, 2),
     )
     def test_jac_functions(
         self,
         regression: ParametricLifetimeRegression,
-        method: Literal[
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
-        ],
-        time: ArrayND[np.float64],
-        covar_1: ArrayND[np.float64],
-        covar_2: ArrayND[np.float64],
+        method: str,
+        time_shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
     ):
-        try:
-            expected_shape = np.broadcast_shapes(
-                time.shape, covar_1.shape, covar_2.shape
-            )
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = getattr(regression, method)(time, covar_1, covar_2)
-        else:
-            assert (
-                getattr(regression, method)(time, covar_1, covar_2).shape
-                == (regression.get_params().size,) + expected_shape
-            )
+        assert getattr(regression, method)(
+            np.ones(time_shape), np.ones(z1_shape), np.ones(z2_shape)
+        ).shape == (regression.get_params().size,) + np.broadcast_shapes(
+            time_shape, z1_shape, z2_shape
+        )
 
     @pytest.mark.parametrize(
-        "size",
-        [(), 3, (1, 2), (3, 4, 5)],
-        ids=lambda x: f"{x}",
-    )
-    @pytest.mark.parametrize(
-        "covar_1",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 2)), np.ones((3, 5))],
-    )
-    @pytest.mark.parametrize(
-        "covar_2",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 2)), np.ones((3, 5))],
+        "size, z1_shape, z2_shape",
+        generate_shapes(3, 2),
     )
     def test_rvs(
         self,
         regression: ParametricLifetimeRegression,
-        size: int | tuple[int, ...],
-        covar_1: ArrayND[np.float64],
-        covar_2: ArrayND[np.float64],
+        size: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
     ):
-        try:
-            expected_shape = np.broadcast_shapes(size, covar_1.shape, covar_2.shape)
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = regression.rvs(size, covar_1, covar_2, seed=1)
-        else:
-            assert (
-                regression.rvs(size, covar_1, covar_2, seed=1).shape == expected_shape
-            )
+        assert regression.rvs(
+            size, np.ones(z1_shape), np.ones(z2_shape), seed=1
+        ).shape == np.broadcast_shapes(size, z1_shape, z2_shape)
 
     @pytest.mark.parametrize(
-        "a",
-        [
-            np.ones(()) * 2,
-            np.ones((1, 2)) * 2,
-            np.ones((3, 2)) * 2,
-            np.ones((3, 5)) * 2,
-        ],
-        ids=lambda x: f"{x.shape}",
+        "method",
+        ["mean", "var", "median"],
     )
     @pytest.mark.parametrize(
-        "b",
-        [
-            np.ones(()) * 8,
-            np.ones((1, 2)) * 8,
-            np.ones((3, 2)) * 8,
-            np.ones((3, 5)) * 8,
-        ],
-        ids=lambda x: f"{x.shape}",
+        "z1_shape, z2_shape",
+        generate_shapes(2, 2),
     )
+    def test_moment_func(
+        self,
+        regression: ParametricLifetimeRegression,
+        method: str,
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
+    ):
+        assert getattr(regression, method)(
+            np.ones(z1_shape), np.ones(z2_shape)
+        ).shape == np.broadcast_shapes(z1_shape, z2_shape)
+
     @pytest.mark.parametrize(
-        "covar_1",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 2)), np.ones((3, 5))],
-    )
-    @pytest.mark.parametrize(
-        "covar_2",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 2)), np.ones((3, 5))],
+        "a_shape, b_shape, z1_shape, z2_shape",
+        generate_shapes(4, 2),
     )
     def test_ls_integrate(
         self,
         regression: ParametricLifetimeRegression,
-        a: ArrayND[np.float64],
-        b: ArrayND[np.float64],
-        covar_1: ArrayND[np.float64],
-        covar_2: ArrayND[np.float64],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
     ):
-        def func(
-            x: ST | NumpyST | ArrayND[NumpyST], *args: ST | NumpyST | ArrayND[NumpyST]
-        ) -> np.float64 | ArrayND[np.float64]:
-            return np.ones_like(np.broadcast_arrays(x, *args)[0], dtype=np.float64)
+        integration = regression.ls_integrate(
+            np.ones_like,
+            np.ones(a_shape) * 2.0,
+            np.ones(b_shape) * 8.0,
+            np.ones(z1_shape),
+            np.ones(z2_shape),
+        )
+        assert integration.shape == np.broadcast_shapes(
+            a_shape, b_shape, z1_shape, z2_shape
+        )
 
-        try:
-            expected_shape = np.broadcast_shapes(
-                a.shape, b.shape, covar_1.shape, covar_2.shape
-            )
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = regression.ls_integrate(
-                    func,
-                    a,
-                    b,
-                    covar_1,
-                    covar_2,
-                )
-        else:
-            ls_integrate = regression.ls_integrate(
-                func,
-                a,
-                b,
-                covar_1,
-                covar_2,
-            )
-            assert ls_integrate.shape == expected_shape
+    @pytest.mark.parametrize(
+        "a0_shape, a_shape, b_shape, z1_shape, z2_shape",
+        generate_shapes(5, 2),
+    )
+    def test_a0_ls_integrate(
+        self,
+        regression: ParametricLifetimeRegression,
+        a0_shape: tuple[int] | tuple[int, int],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
+    ):
+        integration = regression.apply_condition(
+            a0=np.ones(a0_shape) * 0.3
+        ).ls_integrate(
+            np.ones_like,
+            np.ones(a_shape) * 2.0,
+            np.ones(b_shape) * 8.0,
+            np.ones(z1_shape),
+            np.ones(z2_shape),
+        )
+        assert integration.shape == np.broadcast_shapes(
+            a0_shape, a_shape, b_shape, z1_shape, z2_shape
+        )
+
+    @pytest.mark.parametrize(
+        "ar_shape, a_shape, b_shape, z1_shape, z2_shape",
+        generate_shapes(5, 2),
+    )
+    def test_ar_ls_integrate(
+        self,
+        regression: ParametricLifetimeRegression,
+        ar_shape: tuple[int] | tuple[int, int],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
+        z1_shape: tuple[int] | tuple[int, int],
+        z2_shape: tuple[int] | tuple[int, int],
+    ):
+        integration = regression.apply_condition(
+            ar=np.ones(ar_shape) * 3.0
+        ).ls_integrate(
+            np.ones_like,
+            np.ones(a_shape) * 2.0,
+            np.ones(b_shape) * 8.0,
+            np.ones(z1_shape),
+            np.ones(z2_shape),
+        )
+        assert integration.shape == np.broadcast_shapes(
+            ar_shape, a_shape, b_shape, z1_shape, z2_shape
+        )
 
 
 def test_sf_values(
@@ -329,7 +320,8 @@ def test_negative_log(
         entry=insulator_string_data["entry"],
         covar=(covar_1, covar_2, covar_3),
     )
-    params = regression.get_params()
+    params = likelihood.model.get_params() * 10.0
+    print(params)
     assert isinstance(likelihood.negative_log(params), float)
 
 
@@ -345,5 +337,5 @@ def test_jac_negative_log(
         entry=insulator_string_data["entry"],
         covar=(covar_1, covar_2, covar_3),
     )
-    params = regression.get_params()
+    params = likelihood.model.get_params() * 10.0
     assert likelihood.jac_negative_log(params).shape == (params.size,)

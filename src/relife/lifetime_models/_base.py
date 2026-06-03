@@ -11,7 +11,6 @@ from collections.abc import Callable, Sequence
 from dataclasses import field
 from typing import (
     Any,
-    Concatenate,
     Generic,
     Literal,
     ParamSpec,
@@ -605,6 +604,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             if ar is not None:
                 # If both are applied, ar becomes ar - a0
                 return AgeReplacementModel(left_truncated_model, ar - a0)
+            return left_truncated_model
         if ar is not None:
             return AgeReplacementModel(self, ar)
         return self
@@ -738,7 +738,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     def ls_integrate(
         self,
         func: Callable[
-            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+            [ST | NumpyST | ArrayND[NumpyST]],
             np.float64 | ArrayND[np.float64],
         ],
         a: ST | NumpyST | ArrayND[NumpyST],
@@ -749,7 +749,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
         b = np.minimum(self.ar, b)
         integration = self.baseline.ls_integrate(func, a, b, *args, deg=deg)
         return integration + np.where(
-            b == self.ar, func(self.ar, *args) * self.baseline.sf(self.ar, *args), 0
+            b == self.ar, func(self.ar) * self.baseline.sf(self.ar, *args), 0
         )
 
 

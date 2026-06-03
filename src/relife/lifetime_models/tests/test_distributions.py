@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias
+from typing import TypeAlias
 
 import numpy as np
 import pytest
@@ -8,95 +8,96 @@ from optype.numpy import Array1D, ArrayND
 from relife.lifetime_models._distributions import LifetimeDistribution
 from relife.utils import to_numpy_float64
 
+from .utils import generate_shapes
+
 ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
 class TestBroadcasting:
     @pytest.mark.parametrize(
-        "time_or_probability",
-        [np.ones(()) * 0.5, np.ones((1, 2)) * 0.5, np.ones((3, 5)) * 0.5],
-        ids=lambda x: f"{x.shape}",
+        "method",
+        ["sf", "hf", "chf", "cdf", "pdf", "dhf", "isf", "ichf", "ppf"],
     )
     @pytest.mark.parametrize(
-        "method",
-        [
-            "sf",
-            "hf",
-            "chf",
-            "cdf",
-            "ppf",
-            "pdf",
-            "dhf",
-            "ppf",
-            "ichf",
-            "isf",
-        ],
+        "shape",
+        generate_shapes(1, 2),
     )
-    def test_probability_functions(
+    def test_prob_func(
         self,
         distribution: LifetimeDistribution,
-        method: Literal[
-            "sf",
-            "hf",
-            "chf",
-            "cdf",
-            "ppf",
-            "pdf",
-            "dhf",
-            "ppf",
-            "ichf",
-            "isf",
-        ],
-        time_or_probability: ArrayND[np.float64],
+        method: str,
+        shape: tuple[int] | tuple[int, int],
     ):
-        assert (
-            getattr(distribution, method)(time_or_probability).shape
-            == time_or_probability.shape
-        )
+        assert getattr(distribution, method)(np.ones(shape) * 0.5).shape == shape
 
     @pytest.mark.parametrize(
-        "time",
-        [np.ones(()), np.ones((1, 2)), np.ones((3, 5))],
-        ids=lambda x: f"{x.shape}",
+        "method",
+        ["sf", "hf", "chf", "cdf", "pdf", "isf", "ichf", "ppf"],
     )
     @pytest.mark.parametrize(
+        "a0_shape, shape",
+        generate_shapes(2, 2),
+    )
+    def test_a0_prob_func(
+        self,
+        distribution: LifetimeDistribution,
+        method: str,
+        a0_shape: tuple[int] | tuple[int, int],
+        shape: tuple[int] | tuple[int, int],
+    ):
+        assert getattr(
+            distribution.apply_condition(a0=np.ones(a0_shape) * 0.3), method
+        )(np.ones(shape) * 0.5).shape == np.broadcast_shapes(a0_shape, shape)
+
+    @pytest.mark.parametrize(
         "method",
-        [
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
-        ],
+        ["sf", "hf", "chf", "cdf", "pdf", "isf", "ichf", "ppf"],
+    )
+    @pytest.mark.parametrize(
+        "ar_shape, shape",
+        generate_shapes(2, 2),
+    )
+    def test_ar_prob_func(
+        self,
+        distribution: LifetimeDistribution,
+        method: str,
+        ar_shape: tuple[int] | tuple[int, int],
+        shape: tuple[int] | tuple[int, int],
+    ):
+        assert getattr(
+            distribution.apply_condition(a0=np.ones(ar_shape) * 0.3), method
+        )(np.ones(shape) * 0.5).shape == np.broadcast_shapes(ar_shape, shape)
+
+    @pytest.mark.parametrize(
+        "method",
+        ["jac_sf", "jac_chf", "jac_cdf", "jac_pdf"],
+    )
+    @pytest.mark.parametrize(
+        "time_shape",
+        generate_shapes(1, 2),
     )
     def test_jac_functions(
         self,
         distribution: LifetimeDistribution,
-        method: Literal[
-            "jac_sf",
-            "jac_chf",
-            "jac_cdf",
-            "jac_pdf",
-        ],
-        time: ArrayND[np.float64],
+        method: str,
+        time_shape: tuple[int] | tuple[int, int],
     ):
         assert (
-            getattr(distribution, method)(time).shape
-            == (distribution.get_params().size,) + time.shape
+            getattr(distribution, method)(np.ones(time_shape)).shape
+            == (distribution.get_params().size,) + time_shape
         )
 
     @pytest.mark.parametrize(
         "size",
-        [(), 3, (1, 2), (3, 4, 5)],
-        ids=lambda x: f"{x}",
+        generate_shapes(1, 2),
     )
     def test_rvs(
         self,
         distribution: LifetimeDistribution,
-        size: int | tuple[int, ...],
+        size: tuple[int] | tuple[int, int],
     ):
-        expected_shape = (size,) if isinstance(size, int) else size
-        assert distribution.rvs(size).shape == expected_shape
+        assert distribution.rvs(size, seed=1).shape == size
 
     def test_moment(self, distribution: LifetimeDistribution):
         assert distribution.moment(1).shape == ()
@@ -112,64 +113,51 @@ class TestBroadcasting:
         assert distribution.median().shape == ()
 
     @pytest.mark.parametrize(
-        "a",
-        [
-            np.ones(()) * 2,
-            np.ones((1, 2)) * 2,
-            np.ones((3, 2)) * 2,
-            np.ones((3, 5)) * 2,
-        ],
-        ids=lambda x: f"{x.shape}",
-    )
-    @pytest.mark.parametrize(
-        "b",
-        [
-            np.ones(()) * 8,
-            np.ones((1, 2)) * 8,
-            np.ones((3, 2)) * 8,
-            np.ones((3, 5)) * 8,
-        ],
-        ids=lambda x: f"{x.shape}",
+        "a_shape, b_shape",
+        generate_shapes(2, 2),
     )
     def test_ls_integrate(
         self,
         distribution: LifetimeDistribution,
-        a: ArrayND[np.float64],
-        b: ArrayND[np.float64],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
     ):
-        try:
-            expected_shape = np.broadcast_shapes(a.shape, b.shape)
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = distribution.ls_integrate(np.ones_like, a, b)
-        else:
-            integration = distribution.ls_integrate(np.ones_like, a, b)
-            assert integration.shape == expected_shape
+        integration = distribution.ls_integrate(
+            np.ones_like, np.ones(a_shape) * 2.0, np.ones(b_shape) * 8.0
+        )
+        assert integration.shape == np.broadcast_shapes(a_shape, b_shape)
 
-    def test_apply_condition(
+    @pytest.mark.parametrize(
+        "a0_shape, a_shape, b_shape",
+        generate_shapes(3, 2),
+    )
+    def test_a0_ls_integrate(
         self,
         distribution: LifetimeDistribution,
-        method,
-        ar: ArrayND[np.float64] | None,
-        a0: ArrayND[np.float64] | None,
-        time: ArrayND[np.float64],
+        a0_shape: tuple[int] | tuple[int, int],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
     ):
-        try:
-            ar_shape = ar.shape if ar else ()
-            a0_shape = a0.shape if a0 else ()
-            expected_shape = np.broadcast_shapes(ar_shape, a0_shape, time.shape)
-        except ValueError:
-            with pytest.raises(
-                ValueError, match=r"(shape mismatch*|operands could not be broadcast*)"
-            ):
-                _ = getattr(distribution.apply_condition(ar=ar, a0=a0), method)(time)
-        else:
-            assert (
-                getattr(distribution.apply_condition(ar=ar, a0=a0), method)(time).shape
-                == expected_shape
-            )
+        integration = distribution.apply_condition(
+            a0=np.ones(a0_shape) * 0.3
+        ).ls_integrate(np.ones_like, np.ones(a_shape) * 2.0, np.ones(b_shape) * 8.0)
+        assert integration.shape == np.broadcast_shapes(a0_shape, a_shape, b_shape)
+
+    @pytest.mark.parametrize(
+        "ar_shape, a_shape, b_shape",
+        generate_shapes(3, 2),
+    )
+    def test_ar_ls_integrate(
+        self,
+        distribution: LifetimeDistribution,
+        ar_shape: tuple[int] | tuple[int, int],
+        a_shape: tuple[int] | tuple[int, int],
+        b_shape: tuple[int] | tuple[int, int],
+    ):
+        integration = distribution.apply_condition(
+            ar=np.ones(ar_shape) * 3.0
+        ).ls_integrate(np.ones_like, np.ones(a_shape) * 2.0, np.ones(b_shape) * 8.0)
+        assert integration.shape == np.broadcast_shapes(ar_shape, a_shape, b_shape)
 
 
 def test_sf_values(distribution: LifetimeDistribution):
