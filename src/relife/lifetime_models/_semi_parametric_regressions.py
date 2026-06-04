@@ -1,4 +1,5 @@
 import copy
+from collections.abc import Sequence
 from typing import Any, Literal, TypedDict, final, overload
 
 import numpy as np
@@ -21,7 +22,7 @@ __all__ = [
 
 class CoxData:
     time: Array[tuple[int, Literal[1]], np.float64]
-    covar: Array2D[np.float64]
+    covar: tuple[Array[tuple[int, Literal[1]], np.float64], ...]
     event: Array[tuple[int, Literal[1]], np.bool_] | None
     entry: Array[tuple[int, Literal[1]], np.float64] | None
 
@@ -29,15 +30,16 @@ class CoxData:
     event_count: Array1D[np.int64]
     risk_set: Array2D[np.bool_]
     death_set: Array2D[np.bool_]
-    ordered_event_covar: Array2D[np.float64]
+    ordered_event_covar: tuple[Array[tuple[int, Literal[1]], np.float64], ...]
 
     def __init__(
         self,
         time: Array1D[np.float64],
-        covar: Array1D[np.float64] | Array2D[np.float64],
+        covar: Sequence[Array1D[np.float64]],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
     ) -> None:
+        breakpoint()
         self.time = to_column_2d_if_1d(time)
         self.event = (
             to_column_2d_if_1d(event)
@@ -49,8 +51,8 @@ class CoxData:
             if entry is not None
             else np.zeros_like(self.time, dtype=np.float64)
         )
-        self.covar = to_column_2d_if_1d(covar)
-        sizes = [len(x) for x in (self.time, self.event, self.entry, self.covar)]
+        self.covar = tuple(to_column_2d_if_1d(c) for c in covar)
+        sizes = [len(x) for x in (self.time, self.event, self.entry, *self.covar)]
 
         if len(set(sizes)) != 1:
             raise ValueError(
@@ -68,6 +70,7 @@ class CoxData:
             return_index=True,
             return_counts=True,
         )
+        breakpoint()
         # here risk_set is mask array on time
         # left truncated & right censored
         self.risk_set = np.logical_and(
@@ -85,9 +88,9 @@ class CoxData:
             [self.time[:, 0] * self.event[:, 0]] * len(self.ordered_event_time)
         ) == np.hstack([self.ordered_event_time[:, None]] * len(self.time))
 
-        self.ordered_event_covar = self.covar[self.event[:, 0] == 1][
-            ordered_event_index
-        ]
+        self.ordered_event_covar = tuple(
+            c[self.event[:, 0] == 1][ordered_event_index] for c in self.covar
+        )
 
 
 def psi(
@@ -370,7 +373,7 @@ class SemiParametricProportionalHazard:
     def init_likelihood(
         self,
         time: Array1D[np.float64],
-        covar: Array1D[np.float64] | Array2D[np.float64],
+        covar: Sequence[Array1D[np.float64]],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -453,7 +456,7 @@ class CoxPartialLifetimeLikelihood(
         self.model.set_params(params)  # changes model params
 
         return -(
-            self.data.ordered_event_covar.sum(axis=0)
+            np.column_stack(self.data.ordered_event_covar).sum(axis=0)
             - (psi(self.model, self.data, order=1) / psi(self.model, self.data)).sum(
                 axis=0
             )

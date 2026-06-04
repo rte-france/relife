@@ -59,7 +59,7 @@ class LinearCovarEffect(ParametricModel):
         Coefficients of the covariates effect.
     """
 
-    def __init__(self, coefficients: Sequence[ST]):
+    def __init__(self, coefficients: Sequence[ST | None] = (None,)):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coefficients)})
 
     def g(
@@ -137,11 +137,11 @@ class ParametricLifetimeRegression(
     def __init__(
         self,
         baseline: LifetimeDistribution,
-        coefficients: tuple[ST, ...] = (),
+        coefficients: Sequence[ST | None] = (None,),
     ):
         super().__init__()
-        self.baseline = baseline
         self.covar_effect = LinearCovarEffect(coefficients)
+        self.baseline = baseline
 
     def get_coefficients(self) -> Array1D[np.float64]:
         """
@@ -352,13 +352,14 @@ class ParametricLifetimeRegression(
     def init_likelihood(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-        *,
-        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
-        covar_sequence = self._get_covar_fit(covar)
+        if args is None:
+            raise ValueError("expected at least one covar in args.")
+        covar_sequence = self._get_covar_fit(args)
         regression = type(self)(
             type(self.baseline)(), coefficients=(0.0,) * len(covar_sequence)
         )  # init new regression object with appropriate number of covar
@@ -383,15 +384,16 @@ class ParametricLifetimeRegression(
     def fit(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-        *,
-        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         **kwargs: Any,
     ) -> Self:
-        covar_sequence = self._get_covar_fit(covar)
+        if args is None:
+            raise ValueError("expected at least one covar in args.")
+        covar_sequence = self._get_covar_fit(args)
         self.covar_effect = LinearCovarEffect((0.0,) * len(covar_sequence))
-        return super().fit(time, event, entry, **kwargs)
+        return super().fit(time, args, event, entry, **kwargs)
 
 
 def init_regression_params_from_lifetimes(

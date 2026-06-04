@@ -31,7 +31,6 @@ from numpy.typing import NDArray
 from optype.numpy import (
     Array,
     Array1D,
-    Array2D,
     ArrayND,
     AtMost2D,
     is_array_1d,
@@ -1159,6 +1158,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     def init_likelihood(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -1215,6 +1215,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
     def fit(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -1248,7 +1249,7 @@ class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
         out : the object instance
             The estimated parameters are setted inplace.
         """
-        optimizer = self.init_likelihood(time, event, entry, **kwargs)
+        optimizer = self.init_likelihood(time, args, event, entry, **kwargs)
         assert id(optimizer.model) != id(self)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
@@ -1343,9 +1344,15 @@ class LifetimeData:
     left_truncations: Array[tuple[int, Literal[1]], np.float64] = field(
         init=False, repr=False
     )
-    complete_time_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
-    censored_time_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
-    left_truncations_args: tuple[Array2D[Any], ...] = field(init=False, repr=False)
+    complete_time_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = field(
+        init=False, repr=False
+    )
+    censored_time_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = field(
+        init=False, repr=False
+    )
+    left_truncations_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = (
+        field(init=False, repr=False)
+    )
 
     def __init__(
         self,
@@ -1504,7 +1511,8 @@ def _complete_time_contrib(
 ) -> float:
     if data.complete_time.size == 0.0:
         return 0.0
-    return -np.sum(np.log(model.pdf(data.complete_time, *data.complete_time_args)))
+    res = -np.sum(np.log(model.pdf(data.complete_time, *data.complete_time_args)))
+    return res
 
 
 def _jac_complete_time_contrib(

@@ -6,10 +6,10 @@ import numpy as np
 
 def generate_without_duplicates(
     *inputs: list[tuple[int, ...]], repeat: int = 1
-) -> Generator[tuple[tuple[int, ...]]]:
-    seen = set()
+) -> Generator[tuple[tuple[int, ...], ...]]:
+    seen: set[frozenset[tuple[int, ...]]] = set()
     for prod in itertools.product(*inputs, repeat=repeat):
-        prod_set = frozenset(prod)
+        prod_set: frozenset[tuple[int, ...]] = frozenset(prod)
         if len(prod_set) == 1:  # all items are the same
             continue
         if prod_set not in seen:
@@ -19,7 +19,7 @@ def generate_without_duplicates(
 
 def generate_shapes(
     n: int, num_axes: int
-) -> list[tuple[tuple[int, ...]]] | list[tuple[int, ...]]:
+) -> list[tuple[tuple[int, ...], ...]] | list[tuple[int, ...]]:
     """
     Generate sets of mutually broadcastable shapes without repetitions and scalars.
 

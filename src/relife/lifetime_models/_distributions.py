@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import (
     Any,
     Concatenate,
@@ -18,7 +18,7 @@ from typing import (
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
 from numpy.typing import NDArray
-from optype.numpy import Array, Array1D, Array2D, ArrayND
+from optype.numpy import Array, Array1D, ArrayND
 from scipy.optimize import Bounds, newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
@@ -185,10 +185,13 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
     def init_likelihood(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> LifetimeLikelihood[Self]:
+        if args is not None:
+            raise ValueError("args are not expected for lifetime distribution")
         lifetime_data = LifetimeData(time, event=event, entry=entry)
         x0 = kwargs.get("x0", init_distrib_params_from_lifetimes(self, lifetime_data))
         config = FitConfig(x0)
@@ -201,6 +204,19 @@ class LifetimeDistribution(FittableParametricLifetimeModel[()], ABC):
         )
         optimizer = LifetimeLikelihood(self, lifetime_data, config)
         return optimizer
+
+    @override
+    def fit(
+        self,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> Self:
+        if args is not None:
+            raise ValueError("args are not expected for lifetime distribution")
+        return super().fit(time, args, event, entry, **kwargs)
 
 
 def init_distrib_params_from_lifetimes(
@@ -1040,10 +1056,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[AnyUnsignedInt]):
     def init_likelihood(
         self,
         time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -1070,10 +1083,7 @@ class MinimumDistribution(FittableParametricLifetimeModel[AnyUnsignedInt]):
     def fit(
         self,
         time: Array1D[np.float64],
-        args: Array1D[Any]
-        | Array2D[Any]
-        | tuple[Array1D[Any] | Array2D[Any], ...]
-        | None = None,
+        args: Array1D[np.float64] | Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,

@@ -287,15 +287,15 @@ def test_aft_pph_weibull_eq(insulator_string_data: Array1D[np.void]):
     covar_3 = zscore(boxcox(insulator_string_data["HNO3"])[0])
     weibull_aft = ParametricAcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
+        args=(covar_1, covar_2, covar_3),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
-        covar=(covar_1, covar_2, covar_3),
     )
     weibull_pph = ParametricProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
+        args=(covar_1, covar_2, covar_3),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
-        covar=(covar_1, covar_2, covar_3),
     )
 
     assert_allclose(
@@ -311,31 +311,30 @@ def test_aft_pph_weibull_eq(insulator_string_data: Array1D[np.void]):
 def test_negative_log(
     regression: ParametricLifetimeRegression, insulator_string_data: Array1D[np.void]
 ):
-    covar_1 = zscore(boxcox(insulator_string_data["pHCl"])[0])
-    covar_2 = zscore(boxcox(insulator_string_data["pH2SO4"])[0])
-    covar_3 = zscore(boxcox(insulator_string_data["HNO3"])[0])
     likelihood = regression.init_likelihood(
         insulator_string_data["time"],
+        args=(
+            insulator_string_data["pHCl"],
+            insulator_string_data["pH2SO4"],
+        ),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
-        covar=(covar_1, covar_2, covar_3),
     )
-    params = likelihood.model.get_params() * 10.0
-    print(params)
+    params = likelihood.model.get_params()
     assert isinstance(likelihood.negative_log(params), float)
 
 
 def test_jac_negative_log(
     regression: ParametricLifetimeRegression, insulator_string_data: Array1D[np.void]
 ):
-    covar_1 = zscore(boxcox(insulator_string_data["pHCl"])[0])
-    covar_2 = zscore(boxcox(insulator_string_data["pH2SO4"])[0])
-    covar_3 = zscore(boxcox(insulator_string_data["HNO3"])[0])
     likelihood = regression.init_likelihood(
         insulator_string_data["time"],
+        args=(
+            insulator_string_data["pHCl"],
+            insulator_string_data["pH2SO4"],
+        ),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
-        covar=(covar_1, covar_2, covar_3),
     )
-    params = likelihood.model.get_params() * 10.0
+    params = likelihood.model.get_params()
     assert likelihood.jac_negative_log(params).shape == (params.size,)
