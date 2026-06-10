@@ -12,8 +12,8 @@ from optype.numpy import Array1D, ArrayND
 from typing_extensions import override
 
 from relife.lifetime_models._base import (
+    FrozenParametricLifetimeModel,
     ParametricLifetimeModel,
-    is_frozen_parametric_lifetime_model,
 )
 from relife.lifetime_models._distributions import (
     EquilibriumDistribution,
@@ -45,7 +45,7 @@ def _expand_lifetime_model(
 
     expanded_lifetime_model = lifetime_model
 
-    if is_frozen_parametric_lifetime_model(lifetime_model):
+    if isinstance(lifetime_model, FrozenParametricLifetimeModel):
         broadcasted_args = list(
             np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
         )

@@ -5,7 +5,6 @@ from __future__ import annotations
 import copy
 import functools
 import inspect
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import field
@@ -37,7 +36,7 @@ from optype.numpy import (
 )
 from scipy import stats
 from scipy.optimize import newton
-from typing_extensions import TypeIs, override
+from typing_extensions import override
 
 from relife.base import (
     FitConfig,
@@ -592,11 +591,6 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
         a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
     ) -> ParametricLifetimeModel[*Ts]:
-        if ar is None and a0 is None:
-            warnings.warn(
-                "apply_condition must be called with ar or a0",
-                stacklevel=2,
-            )
         # Apply left truncation first for numerical stability
         if a0 is not None:
             left_truncated_model = LeftTruncatedModel(self, a0)
@@ -998,13 +992,6 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
         if inspect.ismethod(attr):
             return wrapper
         return attr
-
-
-# typeguard, narrowing type
-def is_frozen_parametric_lifetime_model(
-    model: ParametricLifetimeModel[*tuple[Any, ...]],
-) -> TypeIs[FrozenParametricLifetimeModel[*tuple[Any, ...]]]:
-    return isinstance(model, FrozenParametricLifetimeModel)
 
 
 M = TypeVar(

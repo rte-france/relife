@@ -3,14 +3,34 @@ import numpy as np
 import pytest
 from pytest import approx
 
-from relife.lifetime_models import EquilibriumDistribution, LeftTruncatedModel
-from relife.lifetime_models._conditional_models import AgeReplacementModel
+from relife.lifetime_models import EquilibriumDistribution
 from relife.rewards import RunToFailureReward
 from relife.stochastic_processes import RenewalProcess, RenewalRewardProcess
 from relife.stochastic_processes._sample._iterables import RenewalProcessIterable
 from relife.utils import get_nb_assets
 
 from .utils import select_from_struct
+
+NB_ASSETS = 3
+
+
+@pytest.fixture
+def frozen_regression(regression):
+    nb_coef = regression.covar_effect.get_params().size
+    covar = np.linspace(0.0, 0.5, num=NB_ASSETS * nb_coef).reshape(NB_ASSETS, nb_coef)
+    return regression.freeze(covar)
+
+
+@pytest.fixture
+def frozen_ar_distribution(distribution):
+    ar = distribution.isf(0.75)
+    return distribution.apply_condition(ar=ar)
+
+
+@pytest.fixture
+def frozen_ar_regression(frozen_regression):
+    ar = frozen_regression.isf(0.75)
+    return frozen_regression.apply_condition(ar=ar)
 
 
 class TestDistribution:
@@ -44,7 +64,7 @@ class TestDistribution:
         )
         rrp = RenewalRewardProcess(
             distribution,
-            RunToFailureReward(np.full((n, 1), cf)),
+            RunToFailureReward(np.full((n,), cf)),
             discounting_rate=0.04,
         )
 
@@ -65,11 +85,12 @@ class TestDistribution:
         success = 0
         n = 100
         renewal_process = RenewalProcess(distribution)
-        for i in range(n):
+        for _ in range(n):
             lifetime_data = renewal_process.generate_failure_data(
-                10000, 10 * q3, t0=0, seed=21
+                10000, (0, 10 * q3), seed=21
             )
-            try:  #  for gamma and loglogistic essentially (convergence errors may occcur)
+            #  for gamma and loglogistic essentially (convergence errors may occcur)
+            try:
                 distribution.fit(**lifetime_data)
             except RuntimeError:
                 continue
@@ -121,7 +142,7 @@ class TestAgeReplacementDistribution:
         )
         rrp = RenewalRewardProcess(
             frozen_ar_distribution,
-            RunToFailureReward(np.full((n, 1), cf)),
+            RunToFailureReward(np.full((n,), cf)),
             discounting_rate=0.04,
         )
         timeline_z, z = rrp.expected_total_reward(100, 200)  # (3, nb_steps)
@@ -170,7 +191,7 @@ class TestRegression:
         )
         rrp = RenewalRewardProcess(
             frozen_regression,
-            RunToFailureReward(np.full((n, 1), cf)),
+            RunToFailureReward(np.full((n,), cf)),
             discounting_rate=0.04,
         )
         timeline_z, z = rrp.expected_total_reward(100, 200)  # (3, nb_steps)
@@ -222,7 +243,7 @@ class TestAgeReplacementRegression:
         )
         rrp = RenewalRewardProcess(
             frozen_ar_regression,
-            RunToFailureReward(np.full((n, 1), cf)),
+            RunToFailureReward(np.full((n,), cf)),
             discounting_rate=0.04,
         )
         timeline_z, z = rrp.expected_total_reward(100, 200)  # (3, nb_steps)
@@ -244,7 +265,7 @@ def test_age_replacement_sampling(distribution, ar):
         first_lifetime_model=EquilibriumDistribution(distribution),
     )
 
-    trial_model = AgeReplacementModel(distribution).freeze(ar)
+    trial_model = distribution.apply_condition(ar=ar)
     nb_assets = get_nb_assets(*trial_model.args)
     ar_reshaped = trial_model.args[0]
 
@@ -272,7 +293,7 @@ def test_left_truncated_sampling(distribution, a0):
         first_lifetime_model=EquilibriumDistribution(distribution),
     )
 
-    trial_model = LeftTruncatedModel(distribution).freeze(a0)
+    trial_model = distribution.apply_condition(a0=a0)
     a0_reshaped = trial_model.args[0]
 
     tf = 10 * distribution.ppf(0.75)
@@ -299,7 +320,7 @@ def test_age_replacement_regression_sampling(frozen_regression, ar):
         first_lifetime_model=EquilibriumDistribution(frozen_regression),
     )
 
-    trial_model = AgeReplacementModel(frozen_regression).freeze(ar)
+    trial_model = frozen_regression.apply_condition(ar=ar)
     nb_assets = get_nb_assets(*trial_model.args)
     ar_reshaped = trial_model.args[0]
 

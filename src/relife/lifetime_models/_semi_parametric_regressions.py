@@ -1,6 +1,6 @@
 import copy
 from collections.abc import Sequence
-from typing import Any, Literal, TypedDict, final, overload
+from typing import Any, Literal, NamedTuple, TypeAlias, TypedDict, final, overload
 
 import numpy as np
 from numpy._typing import NDArray
@@ -18,6 +18,9 @@ __all__ = [
     "BreslowPartialLifetimeLikelihood",
     "EfronPartialLifetimeLikelihood",
 ]
+
+ST: TypeAlias = int | float
+NumpyST: TypeAlias = np.floating | np.uint
 
 
 class CoxData:
@@ -39,7 +42,6 @@ class CoxData:
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
     ) -> None:
-        breakpoint()
         self.time = to_column_2d_if_1d(time)
         self.event = (
             to_column_2d_if_1d(event)
@@ -70,7 +72,6 @@ class CoxData:
             return_index=True,
             return_counts=True,
         )
-        breakpoint()
         # here risk_set is mask array on time
         # left truncated & right censored
         self.risk_set = np.logical_and(
@@ -119,19 +120,25 @@ def psi(
 
     if order == 0:
         # shape [m]
-        return np.dot(i_set, covar_effect.g(data.covar))
+        return np.dot(i_set, covar_effect.g(*data.covar))
     elif order == 1:
         # shape [m, p]
-        return np.dot(i_set, data.covar * covar_effect.g(data.covar))
+        return np.dot(i_set, np.column_stack(data.covar) * covar_effect.g(*data.covar))
     elif order == 2:
         # shape [m, p, p]
         return np.tensordot(
             i_set[:, :None],
-            data.covar[:, None]
-            * data.covar[:, :, None]
-            * np.asarray(covar_effect.g(data.covar))[:, :, None],
+            np.column_stack(data.covar)[:, None]
+            * np.column_stack(data.covar)[:, :, None]
+            * np.asarray(covar_effect.g(*data.covar))[:, :, None],
             axes=1,
         ).astype(np.float64)
+
+
+class CoxEstimation(NamedTuple):
+    timeline: Array1D[np.float64]
+    values: Array1D[np.float64]
+    se: Array1D[np.float64] | None = None
 
 
 class _BreslowBaseline:
@@ -143,7 +150,7 @@ class _BreslowBaseline:
     covar_effect: LinearCovarEffect
 
     def __init__(self, covar_effect: LinearCovarEffect, data: CoxData):
-        assert data.covar.shape[-1] == covar_effect.get_params().size
+        assert len(data.covar) == covar_effect.get_params().size
         self.covar_effect = covar_effect
         self.data = data
 
@@ -170,23 +177,22 @@ class _BreslowBaseline:
             A tuple containing the timeline,
             the estimated values and optionally the estimated standard errors (if se is set to true)
         """
-        # TODO : comprendre le kp
-        if kp:
-            values = np.cumsum(
-                1
-                - (
-                    1
-                    - (
-                        self.covar_effect.g(self.data.ordered_event_covar)
-                        / psi(self.covar_effect, self.data)
-                    )
-                )
-                ** (self.covar_effect.g(self.data.ordered_event_covar))
-            )
-        else:
-            values = np.cumsum(
-                self.data.event_count[:, None] / psi(self.covar_effect, self.data)
-            )
+        # if kp:
+        #     values = np.cumsum(
+        #         1
+        #         - (
+        #             1
+        #             - (
+        #                 self.covar_effect.g(*self.data.ordered_event_covar)
+        #                 / psi(self.covar_effect, self.data)
+        #             )
+        #         )
+        #         ** (self.covar_effect.g(*self.data.ordered_event_covar))
+        #     )
+        # else:
+        values = np.cumsum(
+            self.data.event_count[:, None] / psi(self.covar_effect, self.data)
+        )
         if se:
             var = np.cumsum(
                 self.data.event_count[:, None] / psi(self.covar_effect, self.data) ** 2
@@ -234,8 +240,8 @@ class _BreslowBaseline:
 
 
 class _SF0(TypedDict):
-    timeline: NDArray[np.float64]
-    estimation: NDArray[np.float64]
+    timeline: Array1D[np.float64]
+    values: Array1D[np.float64]
 
 
 class NotFittedError(ValueError):
@@ -285,32 +291,9 @@ class SemiParametricProportionalHazard:
             self._sf0,
         )
 
-    @overload
     def sf(
-        self,
-        covar: NDArray[np.float64],
-        se: Literal[False],
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
-    @overload
-    def sf(
-        self,
-        covar: NDArray[np.float64],
-        se: Literal[True],
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]: ...
-    @overload
-    def sf(
-        self, covar: NDArray[np.float64], se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ): ...
-
-    def sf(
-        self, covar: NDArray[np.float64], se: bool = True
-    ) -> (
-        tuple[NDArray[np.float64], NDArray[np.float64]]
-        | tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-    ):
+        self, *covar: ST | NumpyST | Array1D[NumpyST], se: bool = True
+    ) -> CoxEstimation:
         """
         The survival function estimations.
 
@@ -330,19 +313,25 @@ class SemiParametricProportionalHazard:
         """
         fitting_results, covar_effect, _, sf0 = self._require_fitted()
         if se and fitting_results.covariance_matrix is not None:
-            return (
+            return CoxEstimation(
                 sf0["timeline"],
-                sf0["estimation"] ** covar_effect.g(covar),
-                sf0["estimation"] ** covar_effect.g(covar)
-                * np.sqrt(self._q1_q2_sum(covar, fitting_results.covariance_matrix)),
+                sf0["values"] ** to_column_2d_if_1d(covar_effect.g(*covar)),
+                se=sf0["values"] ** to_column_2d_if_1d(covar_effect.g(*covar))
+                * np.sqrt(
+                    self._q1_q2_sum(
+                        *covar, covariance_matrix=fitting_results.covariance_matrix
+                    )
+                ),
             )
-        return (
+        return CoxEstimation(
             sf0["timeline"],
-            sf0["estimation"] ** covar_effect.g(covar),
+            sf0["values"] ** to_column_2d_if_1d(covar_effect.g(*covar)),
         )
 
     def _q1_q2_sum(
-        self, covar: NDArray[np.float64], covariance_matrix: NDArray[np.float64]
+        self,
+        *covar: ST | NumpyST | Array1D[NumpyST],
+        covariance_matrix: NDArray[np.float64],
     ) -> NDArray[np.float64]:
         """
         Klein and Moeschberger: Survival Analysis Techniques for Censored and
@@ -354,7 +343,10 @@ class SemiParametricProportionalHazard:
         d_j_on_psi = training_data.event_count[:, None] / psi_values
 
         q3 = np.cumsum(
-            ((psi_order_1 / psi_values)[None, :, :] - covar[:, None, :])
+            (
+                (psi_order_1 / psi_values)[None, :, :]
+                - np.column_stack(covar)[:, None, :]
+            )
             * d_j_on_psi[None, :, :],
             axis=1,
         )  # [m: new sample for inference, t: timeline, p]
@@ -373,16 +365,16 @@ class SemiParametricProportionalHazard:
     def init_likelihood(
         self,
         time: Array1D[np.float64],
-        covar: Sequence[Array1D[np.float64]],
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
-    ) -> "CoxPartialLifetimeLikelihood|BreslowPartialLifetimeLikelihood|EfronPartialLifetimeLikelihood":
+    ) -> "CoxPartialLifetimeLikelihood|BreslowPartialLifetimeLikelihood|EfronPartialLifetimeLikelihood":  # noqa: E501
         # init covar_effect
-        covar = to_column_2d_if_1d(covar)
-        self.covar_effect = LinearCovarEffect((None,) * covar.shape[-1])
-
-        x0 = kwargs.get("x0", np.random.random(covar.shape[1]))
+        if not isinstance(covar, Sequence):
+            covar = (covar,)
+        self.covar_effect = LinearCovarEffect((None,) * len(covar))
+        x0 = kwargs.get("x0", np.random.random(len(covar)))
         config = FitConfig(x0)
         config.scipy_minimize_options["method"] = kwargs.get("method", "trust-exact")
         config.covariance_method = kwargs.get("covariance_method", "exact")
@@ -399,7 +391,7 @@ class SemiParametricProportionalHazard:
     def fit(
         self,
         time: Array1D[np.float64],
-        covar: Array1D[Any] | Array2D[Any],
+        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
@@ -413,7 +405,7 @@ class SemiParametricProportionalHazard:
         baseline = _BreslowBaseline(self.covar_effect, likelihood.data)
 
         timeline = likelihood.data.ordered_event_time.copy()
-        self._sf0 = _SF0(timeline=timeline, estimation=baseline.sf(se=False))
+        self._sf0 = _SF0(timeline=timeline, values=baseline.sf(se=False))
         return self
 
 
@@ -448,7 +440,7 @@ class CoxPartialLifetimeLikelihood(
     def negative_log(self, params: Array1D[np.float64]) -> float:
         self.model.set_params(params)
         return -(
-            np.log(self.model.g(self.data.ordered_event_covar)).sum()
+            np.log(self.model.g(*self.data.ordered_event_covar)).sum()
             - np.log(psi(self.model, self.data)).sum()
         )
 
@@ -502,7 +494,7 @@ class BreslowPartialLifetimeLikelihood(
         if "hess" not in self.config.scipy_minimize_options:
             self.config.scipy_minimize_options["hess"] = self.hess_negative_log
 
-        self.s_j = np.dot(self.data.death_set, self.data.covar)
+        self.s_j = np.dot(self.data.death_set, np.column_stack(self.data.covar))
 
     @property
     @override
@@ -514,7 +506,7 @@ class BreslowPartialLifetimeLikelihood(
         self.model.set_params(params)  # changes model params
 
         return -(
-            np.log(self.model.g(self.s_j)).sum()
+            np.log(self.model.g(*np.unstack(self.s_j, axis=-1))).sum()
             - (
                 self.data.event_count[:, None] * np.log(psi(self.model, self.data))
             ).sum()
@@ -575,7 +567,7 @@ class EfronPartialLifetimeLikelihood(
             self.config.scipy_minimize_options["jac"] = self.jac_negative_log
         if "hess" not in self.config.scipy_minimize_options:
             self.config.scipy_minimize_options["hess"] = self.hess_negative_log
-        self.s_j = np.dot(self.data.death_set, self.data.covar)
+        self.s_j = np.dot(self.data.death_set, np.column_stack(self.data.covar))
         self.discount_rates = (
             np.vstack(
                 (np.arange(self.data.event_count.max()),) * len(self.data.event_count)
@@ -639,7 +631,7 @@ class EfronPartialLifetimeLikelihood(
         # using where in np.log allows to avoid 0. masked elements
         m = self._psi_efron()
         neg_L = -(
-            np.log(self.model.g(self.s_j)).sum()
+            np.log(self.model.g(*np.unstack(self.s_j, axis=-1))).sum()
             - np.log(m, out=np.zeros_like(m), where=(m != 0))
             .sum(axis=1, keepdims=True)
             .sum()
