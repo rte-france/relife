@@ -88,14 +88,27 @@ class _Parameters:
 class ParametricModel:
     """
     Base class of every parametric models in ReLife.
+
+
+    Examples
+    --------
+    >>> class ModelA(ParametricModel):
+    ...     def __init__(self, a, b):
+    ...         super().__init__(a=a, b=b)
+    >>> class ModelB(ParametricModel):
+    ...     def __init__(self, baseline : ModelA):
+    ...         super().__init__()
+    ...         self.baseline = baseline
+    >>> model_a = ModelA(1, 2)
+    >>> model_b = ModelB(model_a)
+    >>> model_b.get_params()
+    array([1, 2])
     """
 
     _params: _Parameters
-    _baseline_models: dict[str, ParametricModel]
 
     def __init__(self, **kwparams: float | None) -> None:
         self._params = _Parameters(**kwparams)
-        self._baseline_models = {}
 
     def get_params(self) -> Array1D[np.float64]:
         """
@@ -151,18 +164,12 @@ class ParametricModel:
         """
         return self._params.all_names
 
-    def __getattr__(self, name: str) -> Any:
-        if name in self.__dict__:
-            return self.__dict__[name]
-        if name in super().__getattribute__("_baseline_models"):
-            return super().__getattribute__("_baseline_models").get(name)
-        raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
-
     @override
     def __setattr__(self, name: str, value: Any):
-        # automatically add params of new baseline model
+        # automatically add params of new component_model
         if isinstance(value, ParametricModel):
-            self._baseline_models[name] = value
+            # a reference of component._params is kept in the _Parameters tree
+            # thus changing model params will affect each component params
             self._params.set_leaf(f"{name}.params", value._params)
         super().__setattr__(name, value)
 
