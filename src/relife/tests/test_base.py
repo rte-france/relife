@@ -12,6 +12,8 @@ class ModelA(ParametricModel):
 
 
 class ModelB(ParametricModel):
+    baseline: ModelA
+
     def __init__(self, model: ModelA, coef: tuple[float, ...]):
         super().__init__(**{f"coef_{i + 1}": v for i, v in enumerate(coef)})
         self.baseline = model

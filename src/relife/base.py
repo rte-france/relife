@@ -6,7 +6,6 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from itertools import chain
 from typing import (
     Any,
     Generic,
@@ -33,104 +32,83 @@ class _Parameters:
     Every ``ParametricModel`` are composed of a ``_Parameters`` instance.
     """
 
-    parent: Self | None
     _leaves: dict[str, _Parameters]
     _mapping: dict[str, float]
-    _all_values: tuple[float, ...]
-    _all_names: tuple[str, ...]
 
     def __init__(self, **kwargs: float | None) -> None:
-        self.parent = None
         self._leaves = {}
         self._mapping = {}
-        self._all_values = ()
-        self._all_names = ()
         if bool(kwargs):
             self._mapping = {
                 k: v if v is not None else np.nan for k, v in kwargs.items()
             }
-            self.update_tree()  # update _names and _values
 
-    @property
-    def all_names(self) -> tuple[str, ...]:
-        return self._all_names
+    def _iter_values(self) -> Iterator[float]:
+        yield from self._mapping.values()
+        for leaf in self._leaves.values():
+            yield from leaf._iter_values()
+
+    def _iter_names(self) -> Iterator[str]:
+        yield from self._mapping.keys()
+        for leaf in self._leaves.values():
+            yield from leaf._iter_names()
 
     @property
     def all_values(self) -> tuple[float, ...]:
-        return self._all_values
+        return tuple(self._iter_values())
+
+    @property
+    def all_names(self) -> tuple[str, ...]:
+        return tuple(self._iter_names())
 
     @property
     def size(self) -> int:
-        return len(self.all_values)
+        return len(self._mapping) + sum(leaf.size for leaf in self._leaves.values())
 
     def set_leaf(self, leaf_name: str, leaf: Self) -> None:
         """
         set a leaf or new leaf
         """
-        if leaf_name not in self._leaves:
-            leaf.parent = self
         self._leaves[leaf_name] = leaf
-        self.update_tree()  # update _names and _values
 
     def set_all_values(self, values: tuple[float | None, ...]) -> None:
-        """set values of all tree"""
+        """Set values of the whole parameter tree."""
         if len(values) != self.size:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
-        pos = len(self._mapping.items())
-        self._mapping.update(
-            zip(
-                self._mapping.keys(),
-                (np.nan if v is None else v for v in values[:pos]),
-                strict=False,
-            )
-        )
-        self._all_values = tuple(np.nan if v is None else v for v in values)
+        iterator = iter(np.nan if v is None else v for v in values)
+        self._set_values_from(iterator)  # consume values and updates _mapping
+
+    def _set_values_from(self, iterator: Iterator[float]) -> None:
+        for name in self._mapping:
+            self._mapping[name] = next(iterator)
         for leaf in self._leaves.values():
-            leaf.set_all_values(values[pos : pos + leaf.size])
-            pos += leaf.size
-        if self.parent is not None:
-            self.parent.update_tree()
-
-    def __getitem__(self, name: str) -> float:
-        try:
-            return self._mapping[name]
-        except KeyError as err:
-            raise ValueError(f"Parameter {name} does not exist") from err
-
-    def update_tree(self) -> None:
-        """update names and values of current and parent nodes"""
-
-        def items_walk(
-            parameters: _Parameters,
-        ) -> Iterator[tuple[tuple[str, float], ...]]:
-            yield tuple(parameters._mapping.items())
-            for leaf in parameters._leaves.values():
-                yield tuple(chain.from_iterable(items_walk(leaf)))
-
-        generator = chain.from_iterable(items_walk(self))
-        try:
-            _k, _v = zip(*generator, strict=False)
-            self._all_names = _k
-            self._all_values = _v
-            # self._allnames, self._allvalues = zip(*generator)
-        except StopIteration:
-            pass
-        # recursively update parent
-        if self.parent is not None:
-            self.parent.update_tree()
+            leaf._set_values_from(iterator)
 
 
 class ParametricModel:
     """
     Base class of every parametric models in ReLife.
+
+
+    Examples
+    --------
+    >>> class ModelA(ParametricModel):
+    ...     def __init__(self, a, b):
+    ...         super().__init__(a=a, b=b)
+    >>> class ModelB(ParametricModel):
+    ...     def __init__(self, baseline : ModelA):
+    ...         super().__init__()
+    ...         self.baseline = baseline
+    >>> model_a = ModelA(1, 2)
+    >>> model_b = ModelB(model_a)
+    >>> model_b.get_params()
+    array([1, 2])
     """
 
     _params: _Parameters
-    _baseline_models: dict[str, ParametricModel]
 
     def __init__(self, **kwparams: float | None) -> None:
         self._params = _Parameters(**kwparams)
-        self._baseline_models = {}
 
     def get_params(self) -> Array1D[np.float64]:
         """
@@ -186,18 +164,12 @@ class ParametricModel:
         """
         return self._params.all_names
 
-    def __getattr__(self, name: str) -> Any:
-        if name in self.__dict__:
-            return self.__dict__[name]
-        if name in super().__getattribute__("_baseline_models"):
-            return super().__getattribute__("_baseline_models").get(name)
-        raise AttributeError(f"{type(self).__name__} has no attribute named {name}")
-
     @override
     def __setattr__(self, name: str, value: Any):
-        # automatically add params of new baseline model
+        # automatically add params of new component_model
         if isinstance(value, ParametricModel):
-            self._baseline_models[name] = value
+            # a reference of component._params is kept in the _Parameters tree
+            # thus changing model params will affect each component params
             self._params.set_leaf(f"{name}.params", value._params)
         super().__setattr__(name, value)
 
