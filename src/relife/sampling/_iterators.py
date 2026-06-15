@@ -13,6 +13,7 @@ from typing_extensions import override
 
 from relife.lifetime_models._base import (
     FrozenParametricLifetimeModel,
+    LeftTruncatedModel,
     ParametricLifetimeModel,
 )
 from relife.lifetime_models._distributions import (
@@ -24,6 +25,8 @@ __all__ = [
     "RenewalProcessIterator",
     "RenewalRewardProcessIterator",
     "NonHomogeneousPoissonProcessIterator",
+    "Kijima1ProcessIterator",
+    "Kijima2ProcessIterator",
 ]
 
 ST: TypeAlias = int | float

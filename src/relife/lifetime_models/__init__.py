@@ -51,7 +51,11 @@ Likelihoods
 
 """
 
-from ._base import LifetimeLikelihood
+from ._base import (
+    FrozenParametricLifetimeModel,
+    LifetimeLikelihood,
+    ParametricLifetimeModel,
+)
 from ._distributions import (
     EquilibriumDistribution,
     Exponential,
@@ -74,6 +78,8 @@ from ._semi_parametric_regressions import (
 )
 
 __all__ = [
+    "ParametricLifetimeModel",
+    "FrozenParametricLifetimeModel",
     "LifetimeLikelihood",
     "Exponential",
     "Weibull",

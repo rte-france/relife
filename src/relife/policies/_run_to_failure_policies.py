@@ -9,8 +9,8 @@ from typing_extensions import override
 
 from relife.lifetime_models._base import ParametricLifetimeModel
 from relife.rewards import RunToFailureReward
+from relife.sampling import StochasticSampleMapping
 from relife.stochastic_processes._renewal_processes import RenewalRewardProcess
-from relife.stochastic_processes._sample import StochasticSampleMapping
 from relife.utils import flatten_if_at_least_2d, to_column_2d_if_1d
 
 from ._base import BaseReplacementPolicy, OneCycleExpectedCosts

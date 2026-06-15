@@ -412,9 +412,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         out : float or ndarray
             The sample values.
         """  # noqa: E501
-        rng = np.random.default_rng(seed)
-        probability = rng.uniform(0.0, 1.0, size)
-        return self.isf(probability, *args)
+        from relife.sampling import sample_lifetime
+
+        return sample_lifetime(self, size, *args, seed=seed)
 
     def plot(
         self,
@@ -601,6 +601,9 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         if ar is not None:
             return AgeReplacementModel(self, ar)
         return self
+
+    def freeze(self, *args: *Ts) -> FrozenParametricLifetimeModel[*Ts]:
+        return FrozenParametricLifetimeModel(self, *args)
 
 
 def is_valide_args(
@@ -842,18 +845,14 @@ class LeftTruncatedModel(
         )
 
 
-class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
-    args: tuple[ST | NumpyST | Array[AtMost2D, NumpyST], ...]
-    unfrozen: ParametricLifetimeModel[
-        *tuple[ST | NumpyST | Array[AtMost2D, NumpyST], ...]
-    ]
+class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
+    args: tuple[*Ts]
+    unfrozen: ParametricLifetimeModel[*Ts]
 
     def __init__(
         self,
-        model: ParametricLifetimeModel[
-            *tuple[ST | NumpyST | Array[AtMost2D, NumpyST], ...]
-        ],
-        *args: ST | NumpyST | Array[AtMost2D, NumpyST],
+        model: ParametricLifetimeModel[*Ts],
+        *args: *Ts,
     ) -> None:
         super().__init__()
         self.unfrozen = model
@@ -975,7 +974,6 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()]):
     ) -> np.float64 | ArrayND[np.float64]:
         return self.unfrozen.mrl(time, *self.args)
 
-    @override
     def __getattr__(self, key: str) -> Any:
         # __getattr__ needed to catch jac_<func> if it exists
         frozen_type = self.unfrozen.__class__.__name__

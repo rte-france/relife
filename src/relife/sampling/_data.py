@@ -28,7 +28,8 @@ class StochasticSampleMapping(
 ):
     """
     Mapping class to manipulate Stochastic samples.
-    Access to 2D matrixes of events, renewals and rewards and method for selecting sub-samples of the full data.
+    Access to 2D matrixes of events, renewals and rewards and method for
+    selecting sub-samples of the full data.
     """
 
     nb_assets: int
@@ -54,7 +55,8 @@ class StochasticSampleMapping(
         cls, struct_array: NDArray[np.void], nb_assets: int, nb_samples: int
     ) -> StochasticSampleMapping:
         """
-        Class method to build the _StochasticSample and timeline from a struct_array before initiating.
+        Class method to build the _StochasticSample and timeline from a
+        struct_array before initiating.
         """
 
         # assets x samples are placed on axis 0
@@ -77,7 +79,7 @@ class StochasticSampleMapping(
         preventive_renewals[row_index, col_timeline] = ~struct_array["event"]
         preventive_renewals[:, -1] = False
 
-        if "rewards" in struct_array.dtype.fields.keys():
+        if "rewards" in struct_array.dtype.fields:
             rewards = np.zeros((nb_assets * nb_samples, timeline.size), dtype=float)
             rewards[row_index, col_timeline] = struct_array["reward"]
         else:
@@ -99,7 +101,8 @@ class StochasticSampleMapping(
     def __getitem__(self, key: str) -> NDArray[np.float64] | NDArray[np.bool_] | None:
         if key not in self._stochastic_data_sample:
             raise KeyError(
-                f"Key {key} does not exists. Allowed keys are 'events', 'preventive_renewals' or 'rewards'"
+                f"Key {key} does not exists. Allowed keys are 'events', "
+                "'preventive_renewals' or 'rewards'"
             )
         return self._stochastic_data_sample.get(key)
 
@@ -116,7 +119,8 @@ class StochasticSampleMapping(
     ) -> StochasticSampleMapping:
         """
         Select a sub part of the sample based on assets and samples ids.
-        Returns a truncated StochasticSampleMapping by selecting the corresponding rows in the 2D matrixes.
+        Returns a truncated StochasticSampleMapping by selecting the
+        corresponding rows in the 2D matrixes.
         """
         if asset_id is None:
             asset_id = np.arange(self.nb_assets)

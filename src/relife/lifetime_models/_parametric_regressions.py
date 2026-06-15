@@ -18,7 +18,6 @@ from optype.numpy import (
     Array,
     Array1D,
     ArrayND,
-    AtMost2D,
 )
 from scipy.optimize import Bounds
 from typing_extensions import override
@@ -27,7 +26,6 @@ from relife.base import FitConfig, ParametricModel
 
 from ._base import (
     FittableParametricLifetimeModel,
-    FrozenParametricLifetimeModel,
     LifetimeData,
     LifetimeLikelihood,
     document_args,
@@ -319,26 +317,6 @@ class ParametricLifetimeRegression(
         self, *covar: ST | NumpyST | ArrayND[NumpyST]
     ) -> np.float64 | ArrayND[np.float64]:
         return super().var(*covar)
-
-    def freeze(
-        self, *covar: ST | NumpyST | Array[AtMost2D, NumpyST]
-    ) -> FrozenParametricLifetimeModel:
-        """
-        Freeze regression covar.
-
-        Parameters
-        ----------
-        covar : float or np.ndarray
-            Covariates values. float can only be valid if the regression has one coefficients.
-            Otherwise it must be a ndarray of shape `(nb_coef,)` or `(m, nb_coef)`.
-
-        Returns
-        -------
-        out: frozen regression
-            The same object but with `covar` stored as object data. Calling methods
-            from the frozen regression does not need `covar`.
-        """  # noqa: E501
-        return FrozenParametricLifetimeModel(self, *covar)
 
     def _get_covar_fit(
         self, covar: Array1D[np.float64] | Sequence[Array1D[np.float64]]
