@@ -13,6 +13,7 @@ from typing_extensions import override
 
 from relife.lifetime_models._base import (
     FrozenParametricLifetimeModel,
+    LeftTruncatedModel,
     ParametricLifetimeModel,
 )
 from relife.lifetime_models._distributions import (
@@ -30,47 +31,10 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _expand_lifetime_model(
-    lifetime_model: ParametricLifetimeModel, nb_samples: int
-) -> ParametricLifetimeModel:
-    """
-    Expand a lifetime model by duplicating its arguments.
-
-    A regression with n_assets assets will result in a new regression with n_assets * n_samples assets.
-    """  # noqa: E501
-    if isinstance(lifetime_model, EquilibriumDistribution):
-        return EquilibriumDistribution(
-            _expand_lifetime_model(lifetime_model.baseline, nb_samples)
-        )
-
-    expanded_lifetime_model = lifetime_model
-
-    if isinstance(lifetime_model, FrozenParametricLifetimeModel):
-        broadcasted_args = list(
-            np.repeat(arg, nb_samples, axis=0) for arg in lifetime_model.args
-        )
-        expanded_lifetime_model = lifetime_model.unfrozen.freeze(*broadcasted_args)
-
-    return expanded_lifetime_model
-
-
-def _reshape_arr_to_assets(
-    x: ST | NumpyST | ArrayND[np.float64] | None, nb_assets: int
-) -> ArrayND[np.float64] | None:
-
-    if x is None:
-        return None
-
-    x = np.asarray(x)
-
-    if x.size == 0:
-        return None
-
-    if x.size == 1:
-        return np.full(nb_assets, x.item())
-
-    if x.size == nb_assets:
-        return x.reshape(nb_assets)
+def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None):
+    a0_shape = np.array(a0).shape
+    ar_shape = np.array(ar).shape
+    return np.broadcast_shapes((nb_samples,), a0_shape, ar_shape)
 
 
 @dataclass
@@ -81,15 +45,15 @@ class SampleStep:
 
 
 class TimeWindowObserver:
-    def __init__(self, sample_size: int, time_window: tuple[float, float]):
+    def __init__(self, sample_shape, time_window: tuple[float, float]):
 
         self.t0, self.tf = time_window
 
         self._crossed_t0_counter: NDArray[np.int_] = np.zeros(
-            sample_size, dtype=np.int64
+            sample_shape, dtype=np.int64
         )
         self._crossed_tf_counter: NDArray[np.int_] = np.zeros(
-            sample_size, dtype=np.int64
+            sample_shape, dtype=np.int64
         )
 
     def update(self, timeline: NDArray[np.float64]):
@@ -221,36 +185,30 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         seed=None,
     ) -> None:
         self.process = process
-        self.sample_size = nb_assets * nb_samples
+        self.a0 = np.asarray(a0)
+        self.ar = np.asarray(ar)
+        self.sample_shape = _get_rvs_shape(nb_samples,a0,ar) # TODO: ne marche que pour les distributions. Dans le cas des régessions, il faut pouvoir accéder à la shape des covariables broadcastées
 
-        self._expanded_lifetime_model = _expand_lifetime_model(
-            self.process.lifetime_model, nb_samples
-        )
+        self.ages = np.broadcast_to(a0,self.sample_shape) if a0 is not None else np.zeros(self.sample_shape)
+        self.timeline = np.zeros(self.sample_shape)
 
         self.time_window_observer = TimeWindowObserver(
-            sample_size=self.sample_size, time_window=time_window
+            sample_shape=self.sample_shape, time_window=time_window
         )
 
         self.structarray_builder = StructArrayBuilder(
             nb_assets=nb_assets, nb_samples=nb_samples
         )
 
-        a0 = _reshape_arr_to_assets(a0, nb_assets)
-        if a0 is None:
-            a0 = np.zeros(nb_assets, dtype=np.float64)
-        self.ages = np.repeat(a0, nb_samples, axis=0)
-
-        ar = _reshape_arr_to_assets(ar, nb_assets)
-        self.ar = np.repeat(ar, nb_samples, axis=0) if ar is not None else None
-
-        self.timeline = np.zeros(self.sample_size)
-
         self.replacement_cycle = 0
+
         self.seed = np.random.default_rng(seed)
+
+
 
     @property
     @abstractmethod
-    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
+    def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         """
         Use the lifetime model modified at each iteration according to each stochastic process specific properties
         """  # noqa: E501
@@ -268,17 +226,18 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         self,
     ) -> SampleStep:
 
-        residual_time = self._expanded_dynamic_lifetime_model.rvs(
-            (self.sample_size, 1),
+        residual_time = self._dynamic_lifetime_model.rvs(
+            self.sample_shape,
             seed=self.seed,
         )
-        residual_time = residual_time.flatten()
+
+        residual_time = np.asarray(residual_time)
 
         event = np.ones_like(residual_time, dtype=np.bool_)
         entry = self.ages.copy()
 
         if self.ar is not None:
-            preventive_replacements = self.ages + residual_time >= self.ar
+            preventive_replacements = (self.ages + residual_time) >= self.ar
             residual_time[preventive_replacements] = (
                 self.ar[preventive_replacements] - self.ages[preventive_replacements]
             )
@@ -330,38 +289,15 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
 
 class RenewalProcessIterator(StochasticDataIterator):
-    def __init__(
-        self,
-        process,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
-        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        nb_assets: int = 1,
-        seed=None,
-    ) -> None:
-        super().__init__(
-            process=process,
-            nb_samples=nb_samples,
-            time_window=time_window,
-            a0=a0,
-            ar=ar,
-            nb_assets=nb_assets,
-            seed=seed,
-        )
-        first_lifetime_model = _expand_lifetime_model(
-            self.process.first_lifetime_model, nb_samples
-        )
-        self._expanded_first_lifetime_model = LeftTruncatedModel(
-            first_lifetime_model
-        ).freeze(self.ages.copy())
 
     @property
-    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
+    def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         return (
-            self._expanded_first_lifetime_model
+            self.process.first_lifetime_model
             if self.replacement_cycle == 0
-            else self._expanded_lifetime_model
+            else LeftTruncatedModel(
+                    self.process.first_lifetime_model, self.ages
+                )
         )
 
     def update_ages(
@@ -371,7 +307,7 @@ class RenewalProcessIterator(StochasticDataIterator):
         """
         In a Renewal process, ages are reset to 0 after each iteration.
         """
-        self.ages = np.zeros(self.sample_size, dtype=np.float64)
+        self.ages = np.zeros(self.sample_shape, dtype=np.float64)
 
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
@@ -388,12 +324,10 @@ class RenewalRewardProcessIterator(RenewalProcessIterator):
 
 class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     @property
-    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
+    def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
-            self.ages.copy()
-        )
+        return LeftTruncatedModel(self.process.lifetime_model,self.ages)
 
     def update_ages(
         self,
@@ -432,12 +366,10 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         self.virtual_ages = self.ages.copy()
 
     @property
-    def _expanded_dynamic_lifetime_model(self) -> ParametricLifetimeModel:
+    def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        return LeftTruncatedModel(self._expanded_lifetime_model).freeze(
-            self.virtual_ages.copy()
-        )
+        return LeftTruncatedModel(self.process.lifetime_model, self.virtual_ages)
 
     @override
     def make_one_step(self):
