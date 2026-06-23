@@ -8,16 +8,12 @@ from typing import TypeAlias
 import numpy as np
 from numpy.lib import recfunctions as rfn
 from numpy.typing import NDArray
-from optype.numpy import Array1D, ArrayND
+from optype.numpy import Array1D
 from typing_extensions import override
 
 from relife.lifetime_models._base import (
-    FrozenParametricLifetimeModel,
     LeftTruncatedModel,
     ParametricLifetimeModel,
-)
-from relife.lifetime_models._distributions import (
-    EquilibriumDistribution,
 )
 
 __all__ = [
@@ -31,7 +27,12 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None, lifetime_model: ParametricLifetimeModel) -> tuple[int, ...]:
+def _get_rvs_shape(
+    nb_samples: int,
+    a0: ST | NumpyST | Array1D[NumpyST] | None,
+    ar: ST | NumpyST | Array1D[NumpyST] | None,
+    lifetime_model: ParametricLifetimeModel,
+) -> tuple[int, ...]:
     a0_shape = np.array(a0).shape
     ar_shape = np.array(ar).shape
     broadcasted_shape = np.broadcast_shapes(a0_shape, ar_shape, lifetime_model.shape)
@@ -106,7 +107,6 @@ class TimeWindowObserver:
 
 
 class StructArrayBuilder:
-
     def __init__(self, sample_shape: tuple[int, ...]):
         self.sample_id = np.arange(np.prod(sample_shape)).reshape(sample_shape)
 
@@ -119,23 +119,26 @@ class StructArrayBuilder:
 
         struct_arr = np.zeros(
             observed_step.sum(),
-            dtype = np.dtype([
-                ("timeline", np.float64),
-                ("time", np.float64),
-                ("event", np.bool_),
-                ("entry", np.float64),
-                ("id", np.int64)
-            ])
+            dtype=np.dtype(
+                [
+                    ("timeline", np.float64),
+                    ("time", np.float64),
+                    ("event", np.bool_),
+                    ("entry", np.float64),
+                    ("id", np.int64),
+                ]
+            ),
         )
 
         struct_arr["timeline"] = timeline[observed_step]
-        struct_arr["time"] = sample_step.residual_time[observed_step] + sample_step.entry[observed_step]
+        struct_arr["time"] = (
+            sample_step.residual_time[observed_step] + sample_step.entry[observed_step]
+        )
         struct_arr["event"] = sample_step.event[observed_step]
         struct_arr["entry"] = sample_step.entry[observed_step]
         struct_arr["id"] = self.sample_id[observed_step]
-        
-        return struct_arr
 
+        return struct_arr
 
     @staticmethod
     def add_field(
@@ -167,10 +170,14 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         seed=None,
     ) -> None:
         self.process = process
-        self.sample_shape = _get_rvs_shape(nb_samples,a0,ar, process.lifetime_model)
+        self.sample_shape = _get_rvs_shape(nb_samples, a0, ar, process.lifetime_model)
         self.ar = np.broadcast_to(np.asarray(ar), self.sample_shape)
 
-        self.ages = np.broadcast_to(a0,self.sample_shape) if a0 is not None else np.zeros(self.sample_shape)
+        self.ages = (
+            np.broadcast_to(a0, self.sample_shape)
+            if a0 is not None
+            else np.zeros(self.sample_shape)
+        )
         self.timeline = np.zeros(self.sample_shape)
 
         self.time_window_observer = TimeWindowObserver(
@@ -182,8 +189,6 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         self.replacement_cycle = 0
 
         self.seed = np.random.default_rng(seed)
-
-
 
     @property
     @abstractmethod
@@ -268,7 +273,6 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
 
 
 class RenewalProcessIterator(StochasticDataIterator):
-
     @property
     def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         return (
@@ -314,7 +318,7 @@ class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
     def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         # Apply a Left truncation based on current ages on the model
         # self.ages is always 1d in LeftTruncatedModel
-        return LeftTruncatedModel(self.process.lifetime_model,self.ages)
+        return LeftTruncatedModel(self.process.lifetime_model, self.ages)
 
     def update_ages(
         self,

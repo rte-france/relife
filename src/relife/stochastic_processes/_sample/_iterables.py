@@ -11,8 +11,6 @@ from numpy.typing import NDArray
 from optype.numpy import Array1D
 from typing_extensions import override
 
-from relife.utils import get_nb_assets, to_column_2d_if_1d
-
 from ._iterators import (
     Kijima1ProcessIterator,
     Kijima2ProcessIterator,
@@ -56,7 +54,7 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
                 f"Incorrect time window. Got {time_window}. Values must be positive and first value can't lower than second value."  # noqa: E501
             )
         self.time_window = t0, tf
-        
+
         self.a0 = a0
         self.ar = ar
         self.nb_samples = nb_samples
