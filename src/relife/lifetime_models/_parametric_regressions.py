@@ -38,8 +38,8 @@ from ._distributions import (
 )
 
 __all__ = [
-    "ParametricAcceleratedFailureTime",
     "ParametricProportionalHazard",
+    "ParametricAcceleratedFailureTime",
 ]
 
 ST: TypeAlias = int | float

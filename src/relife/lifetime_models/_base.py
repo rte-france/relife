@@ -49,8 +49,6 @@ from relife.utils import to_column_2d_if_1d, to_numpy_float64
 
 __all__ = [
     "ParametricLifetimeModel",
-    "FittableParametricLifetimeModel",
-    "LifetimeData",
     "LifetimeLikelihood",
 ]
 
