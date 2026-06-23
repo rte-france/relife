@@ -31,10 +31,11 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None):
+def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None, lifetime_model: ParametricLifetimeModel):
     a0_shape = np.array(a0).shape
     ar_shape = np.array(ar).shape
-    return np.broadcast_shapes((nb_samples,), a0_shape, ar_shape)
+    broadcasted_shape = np.broadcast_shapes(a0_shape, ar_shape, lifetime_model.shape)
+    return (nb_samples, *broadcasted_shape)
 
 
 @dataclass
@@ -185,9 +186,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         seed=None,
     ) -> None:
         self.process = process
-        self.a0 = np.asarray(a0)
         self.ar = np.asarray(ar)
-        self.sample_shape = _get_rvs_shape(nb_samples,a0,ar) # TODO: ne marche que pour les distributions. Dans le cas des régessions, il faut pouvoir accéder à la shape des covariables broadcastées
+        self.sample_shape = _get_rvs_shape(nb_samples,a0,ar, process.lifetime_model)
 
         self.ages = np.broadcast_to(a0,self.sample_shape) if a0 is not None else np.zeros(self.sample_shape)
         self.timeline = np.zeros(self.sample_shape)
@@ -293,11 +293,9 @@ class RenewalProcessIterator(StochasticDataIterator):
     @property
     def _dynamic_lifetime_model(self) -> ParametricLifetimeModel:
         return (
-            self.process.first_lifetime_model
+            LeftTruncatedModel(self.process.first_lifetime_model, self.ages)
             if self.replacement_cycle == 0
-            else LeftTruncatedModel(
-                    self.process.first_lifetime_model, self.ages
-                )
+            else self.process.lifetime_model
         )
 
     def update_ages(
