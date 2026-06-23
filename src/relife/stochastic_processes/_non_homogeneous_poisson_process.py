@@ -138,38 +138,8 @@ class NonHomogeneousPoissonProcess(ParametricModel):
             Random seed, by default None.
 
         """
-
-        from ._sample import NonHomogeneousPoissonProcessIterable
-
         frozen_nhpp = self.freeze(*args)
-        iterable = NonHomogeneousPoissonProcessIterable(
-            frozen_nhpp, nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
-        )
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(
-            struct_array, order=("asset_id", "sample_id", "timeline")
-        )
-        return StochasticSampleMapping.from_struct_array(
-            struct_array, iterable.nb_assets, nb_samples
-        )
-
-    def generate_failure_data(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        *args: ST | NumpyST | ArrayND[NumpyST],
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> dict[str, Any]:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
-        )
+        return frozen_nhpp.sample(nb_samples, time_window, a0=a0, ar=ar, seed=seed)
 
     def fit(
         self,
@@ -333,7 +303,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -350,40 +320,16 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
             Random seed, by default None.
 
         """
-        return self.unfrozen.sample(
-            nb_samples, time_window, *self.args, a0=a0, ar=ar, seed=seed
+        from ._sample import NonHomogeneousPoissonProcessIterable
+
+        iterable = NonHomogeneousPoissonProcessIterable(
+            self, nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
         )
-
-    def generate_failure_data(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> dict[str, Any]:
-        """Generates failure data.
-
-        Generates failure data that can be used to fit a non-homogeneous Poisson process.
-
-        Parameters
-        ----------
-        nb_samples : int
-            The number of samples.
-        time_window : tuple of two floats
-            Time window in which data are sampled
-        seed : int, optional
-            Random seed, by default None.
-
-        Returns
-        -------
-        A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids
-        """  # noqa: E501
-        return self.unfrozen.generate_failure_data(
-            nb_samples, time_window, *self.args, seed=seed
+        struct_array = np.concatenate(tuple(iterable))
+        struct_array = np.sort(
+            struct_array, order=("sample_id", "timeline")
         )
+        return struct_array
 
 
 # typeguard function

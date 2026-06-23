@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Generic, Self, TypeAlias, TypeVar, TypeVarTuple
 
 import numpy as np
+from numpy.typing import NDArray
 from optype.numpy import Array1D, ArrayND
 
 from relife.base import FittingResults, ParametricModel
@@ -64,7 +65,7 @@ class Kijima1Process(ParametricModel, Generic[M]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         Samples data and encapsulates them in a StochasticSampleMapping object.
@@ -84,14 +85,6 @@ class Kijima1Process(ParametricModel, Generic[M]):
         frozen_kijima = self.freeze(*args)
         return frozen_kijima.sample(
             nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
-        )
-
-    def generate_failure_data(self) -> dict[str, Any]:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
         )
 
     def fit(self) -> Self:
@@ -131,7 +124,7 @@ class FrozenKijima1Process(ParametricModel, Generic[M]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         Samples data and encapsulates them in a StochasticSampleMapping object.
@@ -156,19 +149,9 @@ class FrozenKijima1Process(ParametricModel, Generic[M]):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("asset_id", "sample_id", "timeline")
+            struct_array, order=("sample_id", "timeline")
         )
-        return StochasticSampleMapping.from_struct_array(
-            struct_array, iterable.nb_assets, nb_samples
-        )
-
-    def generate_failure_data(self) -> dict[str, Any]:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
-        )
+        return struct_array
 
 
 class Kijima2Process(ParametricModel, Generic[M]):
@@ -215,7 +198,7 @@ class Kijima2Process(ParametricModel, Generic[M]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         Samples data and encapsulates them in a StochasticSampleMapping object.
@@ -235,14 +218,6 @@ class Kijima2Process(ParametricModel, Generic[M]):
         frozen_kijima = self.freeze(*args)
         return frozen_kijima.sample(
             nb_samples=nb_samples, time_window=time_window, a0=a0, ar=ar, seed=seed
-        )
-
-    def generate_failure_data(self) -> dict[str, Any]:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
         )
 
     def fit(self) -> Self:
@@ -282,7 +257,7 @@ class FrozenKijima2Process(ParametricModel, Generic[M]):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         Samples data and encapsulates them in a StochasticSampleMapping object.
@@ -307,16 +282,6 @@ class FrozenKijima2Process(ParametricModel, Generic[M]):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("asset_id", "sample_id", "timeline")
+            struct_array, order=("sample_id", "timeline")
         )
-        return StochasticSampleMapping.from_struct_array(
-            struct_array, iterable.nb_assets, nb_samples
-        )
-
-    def generate_failure_data(self) -> dict[str, Any]:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Failure data methods for stochastic processes will be introduced in a future release"  # noqa: E501
-        )
+        return struct_array

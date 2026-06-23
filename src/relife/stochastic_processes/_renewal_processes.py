@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any, Literal, ParamSpec, TypeAlias, TypedDict, TypeVar
 
 import numpy as np
+from numpy.typing import NDArray
 from optype.numpy import Array, Array1D, Array2D, ArrayND, is_array_1d
 
 from relife.base import ParametricModel
@@ -392,7 +393,6 @@ class RenewalProcess(ParametricModel):
 
         return renewal_equation_solver.solve(tf, nb_steps)
 
-    @reshape_a0_ar
     def sample(
         self,
         nb_samples: int,
@@ -404,7 +404,7 @@ class RenewalProcess(ParametricModel):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.
@@ -431,76 +431,9 @@ class RenewalProcess(ParametricModel):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("asset_id", "sample_id", "timeline")
+            struct_array, order=("sample_id", "timeline")
         )
-        return StochasticSampleMapping.from_struct_array(
-            struct_array, iterable.nb_assets, nb_samples
-        )
-
-    @reshape_a0_ar
-    def generate_failure_data(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
-        ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> LifetimeFitArgs:
-        """Generate lifetime data
-
-        This function will generate lifetime data that can be used to fit a lifetime model.
-
-        Parameters
-        ----------
-        nb_samples : int
-            The size of the desired sample
-        time_window : tuple of two floats
-            Time window in which data are sampled
-        a0 : float or np.ndarray, optional
-            Initial ages of the assets.
-        ar : float or np.ndarray, optional
-            Preventive ages of replacements.
-        seed : int, optional
-            Random seed, by default None.
-
-        Returns
-        -------
-        A dict of time, event, entry and args (covariates)
-
-        """  # noqa: E501
-
-        from ._sample import RenewalProcessIterable
-
-        if self.first_lifetime_model:
-            raise ValueError(
-                "Calling sample_lifetime_data with first_lifetime_model is ambiguous."  # noqa: E501
-            )
-        iterable = RenewalProcessIterable(
-            self, nb_samples, time_window, a0=a0, ar=ar, seed=seed
-        )
-        struct_array = np.concatenate(tuple(iterable))
-        struct_array = np.sort(
-            struct_array, order=("sample_id", "asset_id", "timeline")
-        )
-
-        args_2d = tuple(
-            np.atleast_2d(arg) for arg in getattr(self.lifetime_model, "args", ())
-        )
-        tuple_args_arr = tuple(
-            np.take(np.asarray(arg), struct_array["asset_id"], axis=0)
-            for arg in args_2d
-        )
-
-        return LifetimeFitArgs(
-            time=struct_array["time"].copy(),
-            event=struct_array["event"].copy(),
-            entry=struct_array["entry"].copy(),
-            args=tuple_args_arr,
-        )
+        return struct_array
 
 
 class RenewalRewardProcess(RenewalProcess):

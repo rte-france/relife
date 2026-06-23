@@ -31,7 +31,7 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None, lifetime_model: ParametricLifetimeModel):
+def _get_rvs_shape(nb_samples:int, a0: ST | NumpyST | Array1D[NumpyST] | None, ar : ST | NumpyST | Array1D[NumpyST] | None, lifetime_model: ParametricLifetimeModel) -> tuple[int, ...]:
     a0_shape = np.array(a0).shape
     ar_shape = np.array(ar).shape
     broadcasted_shape = np.broadcast_shapes(a0_shape, ar_shape, lifetime_model.shape)
@@ -106,30 +106,9 @@ class TimeWindowObserver:
 
 
 class StructArrayBuilder:
-    def __init__(self, nb_assets: int, nb_samples: int):
-        self.nb_assets = nb_assets
-        self.nb_samples = nb_samples
 
-    def _init_structarray(self, observed_step: NDArray[np.bool_]) -> NDArray[np.void]:
-        """Construct the struct array to return"""
-        observed_index = np.where(observed_step)[0]
-
-        asset_id = observed_index // self.nb_samples
-        sample_id = observed_index % self.nb_samples
-
-        struct_array = np.zeros(
-            sample_id.size,
-            dtype=np.dtype(
-                [
-                    ("asset_id", np.uint32),  #  unsigned 32bit integer
-                    ("sample_id", np.uint32),  #  unsigned 32bit integer
-                ]
-            ),
-        )
-
-        struct_array["asset_id"] = asset_id.astype(np.uint32)
-        struct_array["sample_id"] = sample_id.astype(np.uint32)
-        return struct_array
+    def __init__(self, sample_shape: tuple[int, ...]):
+        self.sample_id = np.arange(np.prod(sample_shape)).reshape(sample_shape)
 
     def build_structarray(
         self,
@@ -138,22 +117,25 @@ class StructArrayBuilder:
         sample_step: SampleStep,
     ) -> NDArray[np.void]:
 
-        base_struct_array = self._init_structarray(observed_step)
-        struct_arr = rfn.append_fields(  #  works on structured_array too
-            base_struct_array,
-            ("timeline", "time", "event", "entry"),
-            (
-                timeline[observed_step],
-                sample_step.residual_time[observed_step]
-                + sample_step.entry[observed_step],
-                sample_step.event[observed_step],
-                sample_step.entry[observed_step],
-            ),
-            (np.float64, np.float64, np.bool_, np.float64),
-            usemask=False,
-            asrecarray=False,
+        struct_arr = np.zeros(
+            observed_step.sum(),
+            dtype = np.dtype([
+                ("timeline", np.float64),
+                ("time", np.float64),
+                ("event", np.bool_),
+                ("entry", np.float64),
+                ("id", np.int64)
+            ])
         )
+
+        struct_arr["timeline"] = timeline[observed_step]
+        struct_arr["time"] = sample_step.residual_time[observed_step] + sample_step.entry[observed_step]
+        struct_arr["event"] = sample_step.event[observed_step]
+        struct_arr["entry"] = sample_step.entry[observed_step]
+        struct_arr["id"] = self.sample_id[observed_step]
+        
         return struct_arr
+
 
     @staticmethod
     def add_field(
@@ -182,7 +164,6 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         time_window: tuple[float, float],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        nb_assets: int = 1,
         seed=None,
     ) -> None:
         self.process = process
@@ -196,9 +177,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
             sample_shape=self.sample_shape, time_window=time_window
         )
 
-        self.structarray_builder = StructArrayBuilder(
-            nb_assets=nb_assets, nb_samples=nb_samples
-        )
+        self.structarr_builder = StructArrayBuilder(self.sample_shape)
 
         self.replacement_cycle = 0
 
@@ -265,7 +244,7 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         sample_step = self.sample_step()
         sample_step = self.apply_observation_bias(sample_step)
 
-        struct_arr = self.structarray_builder.build_structarray(
+        struct_arr = self.structarr_builder.build_structarray(
             self.time_window_observer.observed_step, self.timeline, sample_step
         )
 
@@ -310,14 +289,24 @@ class RenewalProcessIterator(StochasticDataIterator):
 
 class RenewalRewardProcessIterator(RenewalProcessIterator):
     @override
-    def __next__(self) -> NDArray[np.void]:
-        struct_arr = super().__next__()
-        return StructArrayBuilder.add_field(
+    def make_one_step(self):
+        sample_step = self.sample_step()
+        sample_step = self.apply_observation_bias(sample_step)
+
+        struct_arr = self.structarr_builder.build_structarray(
+            self.time_window_observer.observed_step, self.timeline, sample_step
+        )
+        struct_arr = self.structarr_builder.add_field(
             struct_arr,
             "reward",
             self.process.reward.sample(struct_arr["time"])
             * self.process.discounting.factor(struct_arr["timeline"]),
         )
+
+        self.update_ages(sample_step.residual_time)
+        self.replacement_cycle += 1
+
+        return struct_arr
 
 
 class NonHomogeneousPoissonProcessIterator(StochasticDataIterator):
@@ -349,7 +338,6 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         time_window: tuple[float, float],
         a0: ST | NumpyST | Array1D[NumpyST] | None = None,
         ar: ST | NumpyST | Array1D[NumpyST] | None = None,
-        nb_assets: int = 1,
         seed=None,
     ) -> None:
         super().__init__(
@@ -358,7 +346,6 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
             time_window,
             ar=ar,
             a0=a0,
-            nb_assets=nb_assets,
             seed=seed,
         )
         self.virtual_ages = self.ages.copy()
@@ -374,10 +361,10 @@ class VirtualAgeProcessIterator(StochasticDataIterator):
         sample_step = self.sample_step()
         sample_step = self.apply_observation_bias(sample_step)
 
-        struct_arr = self.structarray_builder.build_structarray(
+        struct_arr = self.structarr_builder.build_structarray(
             self.time_window_observer.observed_step, self.timeline, sample_step
         )
-        struct_arr = StructArrayBuilder.add_field(
+        struct_arr = self.structarr_builder.add_field(
             struct_arr,
             "virtual_age",
             self.virtual_ages[self.time_window_observer.observed_step],

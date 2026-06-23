@@ -50,19 +50,13 @@ class StochasticDataIterable(Iterable[NDArray[np.void]], ABC):
     ):
         self.process = process
 
-        args = list(getattr(self.process.lifetime_model, "args", []))
-        if ar is not None:
-            args += [to_column_2d_if_1d(ar)]
-        if a0 is not None:
-            args += [to_column_2d_if_1d(a0)]
-        self.nb_assets = get_nb_assets(*args)
-
         t0, tf = time_window
         if t0 < 0 or tf < 0 or t0 > tf:
             raise ValueError(
                 f"Incorrect time window. Got {time_window}. Values must be positive and first value can't lower than second value."  # noqa: E501
             )
         self.time_window = t0, tf
+        
         self.a0 = a0
         self.ar = ar
         self.nb_samples = nb_samples
@@ -92,7 +86,6 @@ class RenewalProcessIterable(StochasticDataIterable):
                 self.time_window,
                 self.a0,
                 self.ar,
-                nb_assets=self.nb_assets,
                 seed=self.seed,
             )
         if isinstance(self.process, RenewalProcess):
@@ -102,7 +95,6 @@ class RenewalProcessIterable(StochasticDataIterable):
                 self.time_window,
                 self.a0,
                 self.ar,
-                nb_assets=self.nb_assets,
                 seed=self.seed,
             )
         raise ValueError
@@ -116,7 +108,6 @@ class NonHomogeneousPoissonProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=self.nb_assets,
             seed=self.seed,
         )
 
@@ -129,7 +120,6 @@ class Kijima1ProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=self.nb_assets,
             seed=self.seed,
         )
 
@@ -142,6 +132,5 @@ class Kijima2ProcessIterable(StochasticDataIterable):
             self.time_window,
             a0=self.a0,
             ar=self.ar,
-            nb_assets=self.nb_assets,
             seed=self.seed,
         )
