@@ -1,4 +1,3 @@
-from ._data import StochasticSampleMapping
 from ._iterables import (
     Kijima1ProcessIterable,
     Kijima2ProcessIterable,
@@ -7,7 +6,6 @@ from ._iterables import (
 )
 
 __all__ = [
-    "StochasticSampleMapping",
     "NonHomogeneousPoissonProcessIterable",
     "RenewalProcessIterable",
     "Kijima1ProcessIterable",

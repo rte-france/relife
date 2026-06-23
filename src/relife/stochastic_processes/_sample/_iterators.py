@@ -167,8 +167,8 @@ class StochasticDataIterator(Iterator[NDArray[np.void]], ABC):
         seed=None,
     ) -> None:
         self.process = process
-        self.ar = np.asarray(ar)
         self.sample_shape = _get_rvs_shape(nb_samples,a0,ar, process.lifetime_model)
+        self.ar = np.broadcast_to(np.asarray(ar), self.sample_shape)
 
         self.ages = np.broadcast_to(a0,self.sample_shape) if a0 is not None else np.zeros(self.sample_shape)
         self.timeline = np.zeros(self.sample_shape)

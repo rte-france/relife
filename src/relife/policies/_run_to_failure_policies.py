@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 from typing import Any, Literal, TypeAlias, overload
 
 import numpy as np
+from numpy.typing import NDArray
 from optype.numpy import Array, Array1D, Array2D
 from typing_extensions import override
 
 from relife.lifetime_models._base import ParametricLifetimeModel
 from relife.rewards import RunToFailureReward
 from relife.stochastic_processes._renewal_processes import RenewalRewardProcess
-from relife.stochastic_processes._sample import StochasticSampleMapping
 from relife.utils import flatten_if_at_least_2d, to_column_2d_if_1d
 
 from ._base import BaseReplacementPolicy, OneCycleExpectedCosts
@@ -379,7 +379,7 @@ class RunToFailurePolicy(BaseRunToFailure):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         This function will sample data and encapsulate them in an object.

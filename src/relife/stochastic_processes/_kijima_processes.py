@@ -8,7 +8,6 @@ from optype.numpy import Array1D, ArrayND
 
 from relife.base import FittingResults, ParametricModel
 from relife.lifetime_models._base import FittableParametricLifetimeModel
-from relife.stochastic_processes._sample import StochasticSampleMapping
 
 __all__ = ["Kijima1Process", "Kijima2Process"]
 
@@ -149,7 +148,7 @@ class FrozenKijima1Process(ParametricModel, Generic[M]):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("sample_id", "timeline")
+            struct_array, order=("id", "timeline")
         )
         return struct_array
 
@@ -282,6 +281,6 @@ class FrozenKijima2Process(ParametricModel, Generic[M]):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("sample_id", "timeline")
+            struct_array, order=("id", "timeline")
         )
         return struct_array

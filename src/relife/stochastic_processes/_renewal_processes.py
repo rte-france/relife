@@ -12,7 +12,6 @@ from relife.lifetime_models._base import (
     ParametricLifetimeModel,
 )
 from relife.rewards import ExponentialDiscounting, Reward
-from relife.stochastic_processes._sample import StochasticSampleMapping
 from relife.utils import to_column_2d_if_1d
 
 ST: TypeAlias = int | float
@@ -431,7 +430,7 @@ class RenewalProcess(ParametricModel):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("sample_id", "timeline")
+            struct_array, order=("id", "timeline")
         )
         return struct_array
 

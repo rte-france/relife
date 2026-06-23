@@ -12,9 +12,9 @@ from optype.numpy import Array1D, Array2D, ArrayND
 from relife.base import FittingResults, ParametricModel
 from relife.lifetime_models._base import (
     FittableParametricLifetimeModel,
+    FrozenParametricLifetimeModel,
     LifetimeLikelihood,
 )
-from relife.stochastic_processes._sample import StochasticSampleMapping
 
 __all__ = [
     "NonHomogeneousPoissonProcess",
@@ -121,7 +121,7 @@ class NonHomogeneousPoissonProcess(ParametricModel):
         | np.random.BitGenerator
         | np.random.RandomState
         | None = None,
-    ) -> StochasticSampleMapping:
+    ) -> NDArray[np.void]:
         """Renewal data sampling.
 
         Samples data and encapsulates them in a StochasticSampleMapping object.
@@ -240,8 +240,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
     Non-homogeneous Poisson process.
     """
 
-    unfrozen: NonHomogeneousPoissonProcess
-    args: tuple[ST | NumpyST | ArrayND[NumpyST], ...]
+    lifetime_model: FrozenParametricLifetimeModel
 
     def __init__(
         self,
@@ -249,8 +248,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
         *args: ST | NumpyST | ArrayND[NumpyST],
     ):
         super().__init__()
-        self.unfrozen = nhpp
-        self.args = args
+        self.lifetime_model = nhpp.lifetime_model.freeze(*args)
 
     def intensity(
         self, time: ST | NumpyST | ArrayND[NumpyST]
@@ -269,7 +267,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self.unfrozen.intensity(time, *self.args)
+        return self.lifetime_model.hf(time)
 
     def cumulative_intensity(
         self, time: ST | NumpyST | ArrayND[NumpyST]
@@ -290,7 +288,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self.unfrozen.cumulative_intensity(time, *self.args)
+        return self.lifetime_model.chf(time)
 
     def sample(
         self,
@@ -327,7 +325,7 @@ class FrozenNonHomogeneousPoissonProcess(ParametricModel):
         )
         struct_array = np.concatenate(tuple(iterable))
         struct_array = np.sort(
-            struct_array, order=("sample_id", "timeline")
+            struct_array, order=("id", "timeline")
         )
         return struct_array
 
