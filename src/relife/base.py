@@ -2,26 +2,21 @@
 
 from __future__ import annotations
 
-import warnings
-from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import (
     Any,
-    Generic,
     Literal,
     Self,
-    TypeVar,
     final,
 )
 
 import numpy as np
-from optype.numpy import Array, Array1D, Array2D, ToFloat, ToFloat1D
+from optype.numpy import Array, Array1D, Array2D, ToFloat1D
 from scipy import stats
-from scipy.optimize import approx_fprime, minimize
 from typing_extensions import override
 
-__all__ = ["ParametricModel", "MaximumLikelihoodOptimizer"]
+__all__ = ["ParametricModel"]
 
 
 @final
@@ -106,9 +101,17 @@ class ParametricModel:
     """
 
     _params: _Parameters
+    fitting_results: FittingResults | None
 
     def __init__(self, **kwparams: float | None) -> None:
         self._params = _Parameters(**kwparams)
+        self.fitting_results = None
+
+    def is_parametrized(self) -> bool:
+        return bool(~np.all(np.isnan(self.get_params())))
+
+    def is_fitted(self) -> bool:
+        return self.fitting_results is not None
 
     def get_params(self) -> Array1D[np.float64]:
         """
@@ -172,84 +175,6 @@ class ParametricModel:
             # thus changing model params will affect each component params
             self._params.set_leaf(f"{name}.params", value._params)
         super().__setattr__(name, value)
-
-
-# _ParametricModel_T = TypeVar("_ParametricModel_T", bound=ParametricModel)
-#
-# Ts = TypeVarTuple("Ts")
-#
-#
-# class FrozenParametricModel(ParametricModel, Generic[_ParametricModel_T, *Ts]):
-#     """
-#     Class of every frozen parametric models.
-#
-#     Frozen models encapsulate additional arguments values allowing to request
-#     the object without giving them.
-#     """
-#
-#     _args: tuple[*Ts]
-#     _unfrozen_model: _ParametricModel_T
-#
-#     def __init__(self, model: _ParametricModel_T, *args: *Ts):
-#         super().__init__()
-#         if np.any(np.isnan(model.params)):
-#             raise ValueError(
-#                 f"""
-#                 Can't freeze a model with np.nan parameters. Model params is
-#                 {model.set_params}
-#                 """
-#             )
-#         self._unfrozen_model = model
-#         self._args = args
-#
-#     @property
-#     def args(self) -> tuple[*Ts]:
-#         return self._args
-#
-#     @args.setter
-#     def args(self, value: tuple[*Ts]) -> None:
-#         if len(value) != len(self._args):
-#             raise ValueError
-#         self._args = value
-#
-#     def unfreeze(self) -> _ParametricModel_T:
-#         return self._unfrozen_model
-#
-#     @override
-#     def __getattr__(self, key: str) -> Any:
-#         frozen_type = self._unfrozen_model.__class__.__name__
-#         if key == "fit":
-#             raise AttributeError("Frozen model can't be fit")
-#         try:
-#             attr = getattr(self._unfrozen_model, key)
-#         except AttributeError as err:
-#             raise AttributeError(
-#                 f"Frozen {frozen_type} has no attribute {key}"
-#             ) from err
-#
-#         def wrapper(*args: Any, **kwargs: Any):
-#             return attr(*(*args, *self.args), **kwargs)
-#
-#         if inspect.ismethod(attr):
-#             return wrapper
-#         return attr
-#
-#
-# @overload
-# def is_frozen(model: FrozenParametricModel[ParametricModel, *Ts]) -> Literal[True]: ...
-# @overload
-# def is_frozen(
-#     model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
-# ) -> bool: ...
-# def is_frozen(
-#     model: ParametricModel | FrozenParametricModel[ParametricModel, *Ts],
-# ) -> bool:
-#     """
-#     Checks if model is frozen
-#     """
-#     from relife.base import FrozenParametricModel
-#
-#     return isinstance(model, FrozenParametricModel)
 
 
 @dataclass
@@ -316,159 +241,3 @@ class FittingResults:
                 value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
             lines.append(f"{name:<{max_name_length}} : {value_str}")
         return "\n".join(lines)
-
-
-M = TypeVar("M", bound=ParametricModel)
-D = TypeVar("D")
-
-
-@dataclass
-class FitConfig:
-    x0: ToFloat | ToFloat1D
-    scipy_minimize_options: dict[str, Any] = field(default_factory=dict)
-    covariance_method: Literal["cs", "2point", "exact", False] = False
-
-
-class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
-    """
-    Abstract maximum likelihood optimizer.
-
-    Notes
-    -----
-    Jacobian and hessian are not required but they can be implemented in
-    concrete likelihoods. To use the jacobian or hessian implementations in the
-    likelihood, pass them into `config["scipy_minimize_options"]`.
-
-    Attributes
-    ----------
-    nb_observations : int
-        The number of observations.
-    """
-
-    model: M
-    data: D
-    config: FitConfig
-
-    @property
-    @abstractmethod
-    def nb_observations(self) -> int: ...
-
-    @abstractmethod
-    def negative_log(self, params: Array1D[np.float64]) -> float:
-        """
-        Negative log likelihood.
-
-        Parameters
-        ----------
-        params : 1d array
-            Parameters values.
-
-        Returns
-        -------
-        out : np.float64
-            Negative log likelihood value.
-        """
-
-    def optimize(self) -> FittingResults:
-        """
-        Search parameters values that maximize the likelihood given data.
-
-        Returns
-        -------
-        out : FittingResults
-            An object that encapsulates optimal parameters and fitting
-            information (AIC, variance, etc.).
-        """
-
-        optimizer = minimize(
-            self.negative_log,
-            self.config.x0,
-            **self.config.scipy_minimize_options,
-        )
-
-        fitting_results = FittingResults(
-            self.nb_observations,
-            np.copy(optimizer.x),
-            optimizer.success,
-            optimizer.fun,
-        )
-
-        if not fitting_results.success:
-            warnings.warn(
-                "The negative log-likelihood minimization did not exited successfully.",
-                stacklevel=2,
-            )
-
-        if self.config.covariance_method is False:
-            return fitting_results
-
-        jac = self.config.scipy_minimize_options.get("jac", None)
-        hess = self.config.scipy_minimize_options.get("hess", None)
-        if jac is not None and self.config.covariance_method != "exact":
-            fitting_results.covariance_matrix = approx_parameters_covariance(
-                fitting_results.optimal_params,
-                jac,
-                method=self.config.covariance_method,
-            )
-        if hess is not None and self.config.covariance_method == "exact":
-            fitting_results.covariance_matrix = np.linalg.pinv(
-                hess(fitting_results.optimal_params)
-            )
-        return fitting_results
-
-
-def approx_parameters_covariance(
-    params: Array1D[np.float64],
-    jac_negative_log: Callable[[Array1D[np.number]], Array1D[np.number]],
-    method: Literal["2point", "cs"] = "cs",
-) -> Array2D[np.float64] | None:
-    """
-    Approximate parameters covariance.
-
-    Parameters
-    ----------
-    params : 1darray of float
-        The parameters values.
-    jac_negative_log : callable
-        A function taking 1d array of numbers and returning 1d array of numbers.
-    method : "2point" or "cs", default to "cs"
-        The approximation method to use.
-    """
-
-    size = params.size
-    eps = 1e-6
-    hess = np.empty((size, size), dtype=np.float64)
-
-    # hessian 2 point
-    if method == "2point":
-        for i in range(size):
-            hess[i] = approx_fprime(
-                params,
-                lambda x: jac_negative_log(x)[i],
-                eps,
-            )
-        return hess
-    # hessian cs
-    u = eps * 1j * np.eye(size)
-    complex_params = params.astype(np.complex64)  # change params to complex
-    for i in range(size):
-        for j in range(i, size):
-            hess[i, j] = np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
-            if i != j:
-                hess[j, i] = hess[i, j]
-    covariance_matrix = None
-    try:
-        covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
-    except Exception as err:
-        warnings.warn(
-            f"""
-            Failed to compute parameters covariance due to non-invertible
-            hessian matrix. Numpy pseudo-inversion algorithm returned : {err}
-
-            You can skip parameters covariance computation by setting
-            covariance_method to False. 
-            """,
-            stacklevel=2,
-        )
-
-    return covariance_matrix
