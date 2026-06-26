@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import warnings
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import (
     Any,
+    Generic,
     Literal,
     Self,
+    TypeVar,
     final,
 )
 
 import numpy as np
-from optype.numpy import Array, Array1D, Array2D, ToFloat1D
+from optype.numpy import Array, Array1D, Array2D, ToFloat, ToFloat1D
 from scipy import stats
+from scipy.optimize import approx_fprime, minimize
 from typing_extensions import override
 
-__all__ = ["ParametricModel"]
+__all__ = ["ParametricModel", "MaximumLikelihoodOptimizer", "FitConfig"]
 
 
 @final
@@ -28,37 +33,24 @@ class _Parameters:
     """
 
     _leaves: dict[str, _Parameters]
-    _mapping: dict[str, float]
+    _values: list[float]
 
-    def __init__(self, **kwargs: float | None) -> None:
+    def __init__(self, values: list[float] | None = None) -> None:
+        self._values = values if values else []
         self._leaves = {}
-        self._mapping = {}
-        if bool(kwargs):
-            self._mapping = {
-                k: v if v is not None else np.nan for k, v in kwargs.items()
-            }
 
     def _iter_values(self) -> Iterator[float]:
-        yield from self._mapping.values()
+        yield from self._values
         for leaf in self._leaves.values():
             yield from leaf._iter_values()
-
-    def _iter_names(self) -> Iterator[str]:
-        yield from self._mapping.keys()
-        for leaf in self._leaves.values():
-            yield from leaf._iter_names()
 
     @property
     def all_values(self) -> tuple[float, ...]:
         return tuple(self._iter_values())
 
     @property
-    def all_names(self) -> tuple[str, ...]:
-        return tuple(self._iter_names())
-
-    @property
     def size(self) -> int:
-        return len(self._mapping) + sum(leaf.size for leaf in self._leaves.values())
+        return len(self._values) + sum(leaf.size for leaf in self._leaves.values())
 
     def set_leaf(self, leaf_name: str, leaf: Self) -> None:
         """
@@ -66,16 +58,20 @@ class _Parameters:
         """
         self._leaves[leaf_name] = leaf
 
-    def set_all_values(self, values: tuple[float | None, ...]) -> None:
+    def set_all_values(self, values: list[float]) -> None:
         """Set values of the whole parameter tree."""
-        if len(values) != self.size:
+        if len(values) != self.size and self._leaves:
             raise ValueError(f"Expected {self.size} values but got {len(values)}")
-        iterator = iter(np.nan if v is None else v for v in values)
-        self._set_values_from(iterator)  # consume values and updates _mapping
+        if not self._leaves:
+            self._values = values
+        else:
+            self._set_values_from(
+                iter(values)
+            )  # consume values to update _values and leaf _values
 
     def _set_values_from(self, iterator: Iterator[float]) -> None:
-        for name in self._mapping:
-            self._mapping[name] = next(iterator)
+        for i in range(len(self._values)):
+            self._values[i] = next(iterator)
         for leaf in self._leaves.values():
             leaf._set_values_from(iterator)
 
@@ -103,8 +99,8 @@ class ParametricModel:
     _params: _Parameters
     fitting_results: FittingResults | None
 
-    def __init__(self, **kwparams: float | None) -> None:
-        self._params = _Parameters(**kwparams)
+    def __init__(self, params: list[float] | None = None) -> None:
+        self._params = _Parameters(params)
         self.fitting_results = None
 
     def is_parametrized(self) -> bool:
@@ -150,22 +146,7 @@ class ParametricModel:
         # not @params.setter to allow a different type for the values to set
         new_params = np.asarray(new_params)
         assert new_params.ndim == 1
-        self._params.set_all_values(tuple(v.item() for v in new_params))
-
-    def get_params_names(self) -> tuple[str, ...]:
-        """
-        Parameters names.
-
-        Returns
-        -------
-        list of str
-            Parameters names
-
-        Notes
-        -----
-        Parameters values can be requested (a.k.a. get) by their name at instance level.
-        """
-        return self._params.all_names
+        self._params.set_all_values(list(new_params))
 
     @override
     def __setattr__(self, name: str, value: Any):
@@ -241,3 +222,159 @@ class FittingResults:
                 value_str = f"{value:.6g}" if isinstance(value, float) else str(value)
             lines.append(f"{name:<{max_name_length}} : {value_str}")
         return "\n".join(lines)
+
+
+M = TypeVar("M", bound=ParametricModel)
+D = TypeVar("D")
+
+
+@dataclass
+class FitConfig:
+    x0: ToFloat | ToFloat1D
+    scipy_minimize_options: dict[str, Any] = field(default_factory=dict)
+    covariance_method: Literal["cs", "2point", "exact", False] = False
+
+
+class MaximumLikelihoodOptimizer(Generic[M, D], ABC):
+    """
+    Abstract maximum likelihood optimizer.
+
+    Notes
+    -----
+    Jacobian and hessian are not required but they can be implemented in
+    concrete likelihoods. To use the jacobian or hessian implementations in the
+    likelihood, pass them into `config["scipy_minimize_options"]`.
+
+    Attributes
+    ----------
+    nb_observations : int
+        The number of observations.
+    """
+
+    model: M
+    data: D
+    config: FitConfig
+
+    @property
+    @abstractmethod
+    def nb_observations(self) -> int: ...
+
+    @abstractmethod
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        """
+        Negative log likelihood.
+
+        Parameters
+        ----------
+        params : 1d array
+            Parameters values.
+
+        Returns
+        -------
+        out : np.float64
+            Negative log likelihood value.
+        """
+
+    def optimize(self) -> FittingResults:
+        """
+        Search parameters values that maximize the likelihood given data.
+
+        Returns
+        -------
+        out : FittingResults
+            An object that encapsulates optimal parameters and fitting
+            information (AIC, variance, etc.).
+        """
+
+        optimizer = minimize(
+            self.negative_log,
+            self.config.x0,
+            **self.config.scipy_minimize_options,
+        )
+
+        fitting_results = FittingResults(
+            self.nb_observations,
+            np.copy(optimizer.x),
+            optimizer.success,
+            optimizer.fun,
+        )
+
+        if not fitting_results.success:
+            warnings.warn(
+                "The negative log-likelihood minimization did not exited successfully.",
+                stacklevel=2,
+            )
+
+        if self.config.covariance_method is False:
+            return fitting_results
+
+        jac = self.config.scipy_minimize_options.get("jac", None)
+        hess = self.config.scipy_minimize_options.get("hess", None)
+        if jac is not None and self.config.covariance_method != "exact":
+            fitting_results.covariance_matrix = approx_parameters_covariance(
+                fitting_results.optimal_params,
+                jac,
+                method=self.config.covariance_method,
+            )
+        if hess is not None and self.config.covariance_method == "exact":
+            fitting_results.covariance_matrix = np.linalg.pinv(
+                hess(fitting_results.optimal_params)
+            )
+        return fitting_results
+
+
+def approx_parameters_covariance(
+    params: Array1D[np.float64],
+    jac_negative_log: Callable[[Array1D[np.number]], Array1D[np.number]],
+    method: Literal["2point", "cs"] = "cs",
+) -> Array2D[np.float64] | None:
+    """
+    Approximate parameters covariance.
+
+    Parameters
+    ----------
+    params : 1darray of float
+        The parameters values.
+    jac_negative_log : callable
+        A function taking 1d array of numbers and returning 1d array of numbers.
+    method : "2point" or "cs", default to "cs"
+        The approximation method to use.
+    """
+
+    size = params.size
+    eps = 1e-6
+    hess = np.empty((size, size), dtype=np.float64)
+
+    # hessian 2 point
+    if method == "2point":
+        for i in range(size):
+            hess[i] = approx_fprime(
+                params,
+                lambda x: jac_negative_log(x)[i],
+                eps,
+            )
+        return hess
+    # hessian cs
+    u = eps * 1j * np.eye(size)
+    complex_params = params.astype(np.complex64)  # change params to complex
+    for i in range(size):
+        for j in range(i, size):
+            hess[i, j] = np.imag(jac_negative_log(complex_params + u[i])[j]) / eps
+            if i != j:
+                hess[j, i] = hess[i, j]
+    covariance_matrix = None
+    try:
+        covariance_matrix = np.linalg.pinv(hess).astype(np.float64)
+    except Exception as err:
+        warnings.warn(
+            f"""
+            Failed to compute parameters covariance due to non-invertible
+            hessian matrix. Numpy pseudo-inversion algorithm returned : {err}
+
+            You can skip parameters covariance computation by setting
+            covariance_method to False. 
+            """,
+            stacklevel=2,
+        )
+
+    return covariance_matrix

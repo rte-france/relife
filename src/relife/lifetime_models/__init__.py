@@ -53,7 +53,6 @@ Likelihoods
 
 from ._base import ParametricLifetimeModel
 from ._distributions import (
-    EquilibriumDistribution,
     Exponential,
     Gamma,
     Gompertz,
@@ -61,8 +60,11 @@ from ._distributions import (
     LogLogistic,
     Weibull,
 )
+from ._equilibrium_distribution import EquilibriumDistribution
+from ._minimum_distribution import MinimumDistribution
 from ._non_parametric_models import ECDF, KaplanMeier, NelsonAalen
 from ._parametric_regressions import (
+    LinearCovarEffect,
     ParametricAcceleratedFailureTime,
     ParametricLifetimeRegression,
     ParametricProportionalHazard,
@@ -80,7 +82,10 @@ __all__ += [
     "LogLogistic",
     "Weibull",
 ]
+__all__ += ["EquilibriumDistribution"]
+__all__ += ["MinimumDistribution"]
 __all__ += [
+    "LinearCovarEffect",
     "ParametricAcceleratedFailureTime",
     "ParametricLifetimeRegression",
     "ParametricProportionalHazard",

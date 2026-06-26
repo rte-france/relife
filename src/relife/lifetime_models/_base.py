@@ -32,11 +32,9 @@ from scipy import stats
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.base import (
-    ParametricModel,
-)
+from relife.base import ParametricModel
 from relife.quadratures import legendre_quadrature, unweighted_laguerre_quadrature
-from relife.typing import ST, NumpyST, Ts
+from relife.typing import ST, VT, NumpyST, Ts
 from relife.utils import to_numpy_float64
 
 
@@ -96,7 +94,7 @@ def plot_probability_function(
 
 
 class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
-    r"""Base class for parametric lifetime models in ReLife.
+    r"""Base class for parametric lifetime models.
 
     This class is a blueprint for implementing parametric lifetime models. The
     interface is generic and can define a variadic set of arguments. It expects
@@ -118,9 +116,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     """
 
     @abstractmethod
-    def sf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def sf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The survival function.
 
@@ -155,9 +151,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             )
 
     @abstractmethod
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The hazard function.
 
@@ -185,9 +179,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             )
 
     @abstractmethod
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative hazard function.
 
@@ -218,9 +210,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             )
 
     @abstractmethod
-    def pdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def pdf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The probability density function.
 
@@ -247,9 +237,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             """
             ) from err
 
-    def cdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def cdf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The cumulative density function.
 
@@ -268,9 +256,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return 1 - self.sf(time, *args)
 
-    def ppf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ppf(self, probability: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The percent point function.
 
@@ -305,9 +291,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
         return self.ppf(0.5, *args)
 
-    def isf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
+    def isf(self, probability: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
         The inverse survival function.
 
@@ -336,7 +320,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def ichf(
         self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
+        cumulative_hazard_rate: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         """
@@ -446,11 +430,11 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            [VT],
             np.float64 | ArrayND[np.float64],
         ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
+        a: VT,
+        b: VT,
         *args: *Ts,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
@@ -480,7 +464,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
 
         def integrand(
-            x: ST | NumpyST | ArrayND[NumpyST],
+            x: VT,
             *args: *Ts,
         ) -> np.float64 | ArrayND[np.float64]:
             return func(x) * self.pdf(x, *args)
@@ -527,7 +511,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
             raise ValueError("order of the moment must be at least 1")
 
         def func(
-            x: ST | NumpyST | ArrayND[NumpyST],
+            x: VT,
         ) -> np.float64 | ArrayND[np.float64]:
             return np.power(x, n, dtype=np.float64)
 
@@ -571,7 +555,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
     def mrl(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         """
@@ -592,7 +576,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         """
 
         def func(
-            x: ST | NumpyST | ArrayND[NumpyST],
+            x: VT,
         ) -> np.float64 | ArrayND[np.float64]:
             return to_numpy_float64(x - time)
 
@@ -601,8 +585,8 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
     def apply_condition(
         self,
         *,
-        ar: ST | NumpyST | ArrayND[NumpyST] | None = None,
-        a0: ST | NumpyST | ArrayND[NumpyST] | None = None,
+        ar: VT | None = None,
+        a0: VT | None = None,
     ) -> ParametricLifetimeModel[*Ts]:
         # Apply left truncation first for numerical stability
         if a0 is not None:
@@ -621,7 +605,7 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
 
 def is_valide_args(
     args: tuple[object, ...],
-) -> TypeGuard[tuple[ST | NumpyST | ArrayND[NumpyST], ...]]:  # noqa: E501
+) -> TypeGuard[tuple[VT, ...]]:  # noqa: E501
     """Determines whether all objects in the list are strings"""
     return all(isinstance(x, (float, np.ndarray)) for x in args)
 
@@ -684,12 +668,12 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     """
 
     baseline: ParametricLifetimeModel[*Ts]
-    ar: ST | NumpyST | ArrayND[NumpyST]
+    ar: VT
 
     def __init__(
         self,
         baseline: ParametricLifetimeModel[*Ts],
-        ar: ST | NumpyST | ArrayND[NumpyST],
+        ar: VT,
     ):
         super().__init__()
         self.baseline = baseline
@@ -698,7 +682,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def sf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < self.ar, self.baseline.sf(time, *args), 0.0)
@@ -706,7 +690,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def hf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < self.ar, self.baseline.hf(time, *args), 0.0)
@@ -714,7 +698,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def chf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < self.ar, self.baseline.chf(time, *args), 0.0)
@@ -722,7 +706,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def isf(
         self,
-        probability: ST | NumpyST | ArrayND[NumpyST],
+        probability: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.minimum(self.baseline.isf(probability, *args), self.ar)
@@ -730,7 +714,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
+        cumulative_hazard_rate: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.minimum(self.baseline.ichf(cumulative_hazard_rate, *args), self.ar)
@@ -738,7 +722,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     @override
     def pdf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return np.where(time < self.ar, self.baseline.pdf(time, *args), 0)
@@ -747,11 +731,11 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            [VT],
             np.float64 | ArrayND[np.float64],
         ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
+        a: VT,
+        b: VT,
         *args: *Ts,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
@@ -788,12 +772,12 @@ class LeftTruncatedModel(
     """
 
     baseline: ParametricLifetimeModel[*Ts]
-    a0: ST | NumpyST | ArrayND[NumpyST]
+    a0: VT
 
     def __init__(
         self,
         baseline: ParametricLifetimeModel[*Ts],
-        a0: ST | NumpyST | ArrayND[NumpyST],
+        a0: VT,
     ):
         super().__init__()
         self.baseline = baseline
@@ -802,7 +786,7 @@ class LeftTruncatedModel(
     @override
     def sf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return self.baseline.sf(time + self.a0, *args) / self.baseline.sf(
@@ -812,7 +796,7 @@ class LeftTruncatedModel(
     @override
     def pdf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return super().pdf(time, *args)
@@ -820,7 +804,7 @@ class LeftTruncatedModel(
     @override
     def isf(
         self,
-        probability: ST | NumpyST | ArrayND[NumpyST],
+        probability: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(probability + 1e-6)  # avoid division by zero
@@ -829,7 +813,7 @@ class LeftTruncatedModel(
     @override
     def chf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return self.baseline.chf(self.a0 + time, *args) - self.baseline.chf(
@@ -839,7 +823,7 @@ class LeftTruncatedModel(
     @override
     def hf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return self.baseline.hf(self.a0 + time, *args)
@@ -847,7 +831,7 @@ class LeftTruncatedModel(
     @override
     def ichf(
         self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
+        cumulative_hazard_rate: VT,
         *args: *Ts,
     ) -> np.float64 | ArrayND[np.float64]:
         return (
@@ -955,11 +939,11 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
     def ls_integrate(
         self,
         func: Callable[
-            [ST | NumpyST | ArrayND[NumpyST]],
+            [VT],
             np.float64 | ArrayND[np.float64],
         ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
+        a: VT,
+        b: VT,
         *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
@@ -982,9 +966,7 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def mrl(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return self.unfrozen.mrl(time, *self.args)
 
     def __getattr__(self, key: str) -> Any:

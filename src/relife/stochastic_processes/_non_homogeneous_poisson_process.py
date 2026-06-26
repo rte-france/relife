@@ -10,12 +10,8 @@ from numpy.typing import NDArray
 from optype.numpy import Array1D, Array2D, ArrayND
 from typing_extensions import override
 
-from relife.base import FittingResults, ParametricModel
-from relife.lifetime_models import ParametricLifetimeModel
-from relife.lifetime_models._base import (
-    FittableParametricLifetimeModel,
-    LifetimeLikelihood,
-)
+from relife.base import ParametricModel
+from relife.typing import AnyFittableParametricLifetimeModel
 
 __all__ = [
     "NonHomogeneousPoissonProcess",
@@ -27,16 +23,16 @@ ST: TypeAlias = int | float
 NumpyST: TypeAlias = np.floating | np.uint
 
 
-class BaseNHPP(ParametricModel, Generic[*Ts]):
+class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
     """
     Non-homogeneous Poisson process base class.
     """
 
-    lifetime_model: ParametricLifetimeModel[*Ts]
+    lifetime_model: AnyFittableParametricLifetimeModel[*Ts]
 
     def __init__(
         self,
-        lifetime_model: ParametricLifetimeModel[*Ts],
+        lifetime_model: AnyFittableParametricLifetimeModel[*Ts],
     ):
         super().__init__()
         self.lifetime_model = lifetime_model
@@ -101,20 +97,6 @@ class BaseNHPP(ParametricModel, Generic[*Ts]):
         FrozenParametricModel
         """
         return FrozenNonHomogeneousPoissonProcess(self, *args)
-
-
-class NonHomogeneousPoissonProcess(BaseNHPP[*Ts]):
-    """
-    Non-homogeneous Poisson process.
-    """
-
-    fitting_results: FittingResults | None
-    lifetime_model: ParametricLifetimeModel[*Ts]
-
-    def __init__(self, lifetime_model: ParametricLifetimeModel[*Ts]) -> None:
-        super().__init__(lifetime_model)
-        assert hasattr(lifetime_model, "fit")  # check if the model can be fitted
-        self.fitting_results = None
 
     def fit(
         self,
@@ -210,7 +192,9 @@ class NonHomogeneousPoissonProcess(BaseNHPP[*Ts]):
         return self
 
 
-class FrozenNonHomogeneousPoissonProcess(BaseNHPP[()], Generic[*Ts]):
+class FrozenNonHomogeneousPoissonProcess(
+    NonHomogeneousPoissonProcess[()], Generic[*Ts]
+):
     """
     Non-homogeneous Poisson process.
     """

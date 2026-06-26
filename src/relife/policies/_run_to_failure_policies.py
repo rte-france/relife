@@ -9,7 +9,6 @@ from typing_extensions import override
 
 from relife.lifetime_models._base import ParametricLifetimeModel
 from relife.rewards import RunToFailureReward
-from relife.sampling import StochasticSampleMapping
 from relife.stochastic_processes._renewal_processes import RenewalRewardProcess
 from relife.utils import flatten_if_at_least_2d, to_column_2d_if_1d
 
@@ -367,35 +366,4 @@ class RunToFailurePolicy(BaseRunToFailure):
             self._stochastic_reward_process.asymptotic_expected_equivalent_annual_worth(
                 a0=a0
             )
-        )
-
-    def sample(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ) -> StochasticSampleMapping:
-        """Renewal data sampling.
-
-        This function will sample data and encapsulate them in an object.
-
-        Parameters
-        ----------
-        nb_samples : int
-            The size of the desired sample
-        time_window : tuple of two floats
-            Time window in which data are sampled
-        a0 : float or np.ndarray, optional
-            Initial ages of the assets.
-        seed : int, optional
-            Random seed, by default None.
-
-        """
-        return self._stochastic_reward_process.sample(
-            nb_samples, time_window, a0=a0, seed=seed
         )

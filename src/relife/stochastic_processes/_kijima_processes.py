@@ -5,7 +5,7 @@ from typing import Generic, Self, TypeAlias, TypeVarTuple
 import numpy as np
 
 from relife.base import FittingResults, ParametricModel
-from relife.lifetime_models._base import FittableParametricLifetimeModel
+from relife.typing import FittableParametricLifetimeModel
 
 __all__ = [
     "Kijima1Process",

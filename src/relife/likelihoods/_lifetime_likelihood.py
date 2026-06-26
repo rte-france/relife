@@ -1,22 +1,21 @@
-import copy
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, TypeAlias, TypeVar, final
+from typing import Any, Literal, TypeAlias, final
 
 import numpy as np
 from optype.numpy import Array, Array1D, ArrayND
 from scipy.optimize import Bounds
 from typing_extensions import override
 
+from relife.base import FitConfig, MaximumLikelihoodOptimizer
 from relife.lifetime_models import (
     Gamma,
     Gompertz,
     LifetimeDistribution,
+    MinimumDistribution,
     ParametricLifetimeRegression,
 )
 from relife.utils import to_column_2d_if_1d
-
-from ._base import FitConfig, MaximumLikelihoodOptimizer
 
 __all__ = ["LifetimeLikelihood"]
 
@@ -114,9 +113,8 @@ class LifetimeData:
             )
 
 
-T = TypeVar("T", bound="LifetimeLikelihood")
 FittableParametricLifetimeModel: TypeAlias = (
-    LifetimeDistribution | ParametricLifetimeRegression
+    LifetimeDistribution | ParametricLifetimeRegression | MinimumDistribution
 )
 
 
@@ -157,7 +155,7 @@ class LifetimeLikelihood(
         data: LifetimeData,
         config: FitConfig,
     ):
-        self.model = copy.deepcopy(model)
+        self.model = model
         self.data = data
         self.config = config
         if "jac" not in self.config.scipy_minimize_options:
@@ -172,9 +170,9 @@ class LifetimeLikelihood(
     def negative_log(self, params: Array1D[np.float64]) -> float:
         self.model.set_params(params)
         return (
-            _complete_time_contrib(self.model, self.data)
-            + _censored_time_contrib(self.model, self.data)
-            + _left_truncations_contrib(self.model, self.data)
+            complete_time_contrib(self.model, self.data)
+            + censored_time_contrib(self.model, self.data)
+            + left_truncations_contrib(self.model, self.data)
         )
 
     def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
@@ -194,75 +192,109 @@ class LifetimeLikelihood(
         """
         self.model.set_params(params)
         return (
-            _jac_complete_time_contrib(self.model, self.data)
-            + _jac_censored_time_contrib(self.model, self.data)
-            + _jac_left_truncations_contrib(self.model, self.data)
+            jac_complete_time_contrib(self.model, self.data)
+            + jac_censored_time_contrib(self.model, self.data)
+            + jac_left_truncations_contrib(self.model, self.data)
         )
 
     @classmethod
-    def from_distribution(
-        cls: type[T],
-        model: LifetimeDistribution,
+    def from_data(
+        cls: type["LifetimeLikelihood"],
+        model: FittableParametricLifetimeModel,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Sequence[Array1D[np.float64]] = (),
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
-    ) -> T:
-        lifetime_data = LifetimeData(time, event=event, entry=entry)
-        fresh_distrib = type(model)()
-        x0 = kwargs.get(
-            "x0", init_distrib_params_from_lifetimes(fresh_distrib, lifetime_data)
+    ) -> "LifetimeLikelihood":
+        if isinstance(model, LifetimeDistribution):
+            return init_likelihood_from_distribution(
+                model, time, event, entry, **kwargs
+            )
+        if isinstance(model, ParametricLifetimeRegression):
+            return init_likelihood_from_regression(
+                model, time, args, event, entry, **kwargs
+            )
+        return init_likelihood_from_minimum_distribution(
+            model, time, args, event, entry, **kwargs
         )
-        config = FitConfig(x0)
-        config.scipy_minimize_options["bounds"] = kwargs.get(
-            "bounds", get_distrib_params_bounds(fresh_distrib)
-        )
-        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
-        config.covariance_method = kwargs.get(
-            "covariance_method", "2point" if isinstance(fresh_distrib, Gamma) else "cs"
-        )
-        return cls(fresh_distrib, lifetime_data, config)
-
-    @classmethod
-    def from_regression(
-        cls: type[T],
-        model: ParametricLifetimeRegression,
-        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
-        covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],
-        event: Array1D[np.bool_] | None = None,
-        entry: Array1D[np.float64] | None = None,
-        **kwargs: Any,
-    ) -> T:
-        if not isinstance(covar, Sequence):
-            covar = (covar,)
-        fresh_regression = type(model)(
-            type(model.baseline)(), coefficients=(0.0,) * len(covar)
-        )  # init new regression object with appropriate number of covar
-        lifetime_data = LifetimeData(time, event, entry, covar)
-        x0 = kwargs.get(
-            "x0", init_regression_params_from_lifetimes(fresh_regression, lifetime_data)
-        )
-        fresh_regression.set_params(x0)
-        config = FitConfig(x0)
-        config.scipy_minimize_options["bounds"] = kwargs.get(
-            "bounds", get_regression_params_bounds(fresh_regression)
-        )
-        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
-        config.covariance_method = kwargs.get(
-            "covariance_method",
-            "2point" if isinstance(fresh_regression.baseline, Gamma) else "cs",
-        )
-        return cls(fresh_regression, lifetime_data, config)
 
 
-    @classmethod
-    def from minimum_distribution(
-        cls : type[T],
-        model : MinimumDistribution,
+def init_likelihood_from_distribution(
+    model: LifetimeDistribution,
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+    event: Array1D[np.bool_] | None = None,
+    entry: Array1D[np.float64] | None = None,
+    **kwargs: Any,
+) -> LifetimeLikelihood:
+    lifetime_data = LifetimeData(time, event=event, entry=entry)
+    fresh_distrib = type(model)()
+    x0 = kwargs.get(
+        "x0", init_distrib_params_from_lifetimes(fresh_distrib, lifetime_data)
+    )
+    config = FitConfig(x0)
+    config.scipy_minimize_options["bounds"] = kwargs.get(
+        "bounds", get_distrib_params_bounds(fresh_distrib)
+    )
+    config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
+    config.covariance_method = kwargs.get(
+        "covariance_method", "2point" if isinstance(fresh_distrib, Gamma) else "cs"
+    )
+    return LifetimeLikelihood(fresh_distrib, lifetime_data, config)
 
 
+def init_likelihood_from_regression(
+    model: ParametricLifetimeRegression,
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+    covar: Sequence[Array1D[np.float64]],
+    event: Array1D[np.bool_] | None = None,
+    entry: Array1D[np.float64] | None = None,
+    **kwargs: Any,
+) -> LifetimeLikelihood:
+    fresh_regression = type(model)(
+        type(model.baseline)(), coefficients=(0.0,) * len(covar)
+    )  # init new regression object with appropriate number of covar
+    lifetime_data = LifetimeData(time, event, entry, covar)
+    x0 = kwargs.get(
+        "x0", init_regression_params_from_lifetimes(fresh_regression, lifetime_data)
+    )
+    fresh_regression.set_params(x0)
+    config = FitConfig(x0)
+    config.scipy_minimize_options["bounds"] = kwargs.get(
+        "bounds", get_regression_params_bounds(fresh_regression)
+    )
+    config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
+    config.covariance_method = kwargs.get(
+        "covariance_method",
+        "2point" if isinstance(fresh_regression.baseline, Gamma) else "cs",
+    )
+    return LifetimeLikelihood(fresh_regression, lifetime_data, config)
 
-def _complete_time_contrib(
+
+def init_likelihood_from_minimum_distribution(
+    model: MinimumDistribution,
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+    args: Sequence[Array1D[np.float64]] = (),
+    event: Array1D[np.bool_] | None = None,
+    entry: Array1D[np.float64] | None = None,
+    **kwargs: Any,
+) -> LifetimeLikelihood:
+    if isinstance(model.baseline, LifetimeDistribution):
+        likelihood = init_likelihood_from_distribution(
+            model.baseline, time, event, entry, **kwargs
+        )
+    else:
+        likelihood = init_likelihood_from_regression(
+            model.baseline, time, args, event, entry, **kwargs
+        )
+    assert isinstance(
+        likelihood.model, (LifetimeDistribution, ParametricLifetimeRegression)
+    )
+    likelihood.model = MinimumDistribution(likelihood.model, model.n)
+    return likelihood
+
+
+def complete_time_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> float:
@@ -272,7 +304,7 @@ def _complete_time_contrib(
     return res
 
 
-def _jac_complete_time_contrib(
+def jac_complete_time_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> ArrayND[np.float64]:
@@ -285,7 +317,7 @@ def _jac_complete_time_contrib(
     return np.sum(jac, axis=(1, 2))
 
 
-def _censored_time_contrib(
+def censored_time_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> float:
@@ -305,7 +337,7 @@ def _censored_time_contrib(
         return np.sum(model.chf(data.censored_time, *data.censored_time_args))
 
 
-def _jac_censored_time_contrib(
+def jac_censored_time_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> ArrayND[np.float64]:
@@ -331,7 +363,7 @@ def _jac_censored_time_contrib(
         )
 
 
-def _left_truncations_contrib(
+def left_truncations_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> float:
@@ -340,7 +372,7 @@ def _left_truncations_contrib(
     return -np.sum(model.chf(data.left_truncations, *data.left_truncations_args))
 
 
-def _jac_left_truncations_contrib(
+def jac_left_truncations_contrib(
     model: FittableParametricLifetimeModel,
     data: LifetimeData,
 ) -> ArrayND[np.float64]:

@@ -8,32 +8,22 @@ from typing import (
     Any,
     Concatenate,
     Literal,
-    Protocol,
     Self,
     final,
 )
 
 import numpy as np
 import numpydoc.docscrape as docscrape  # pyright: ignore[reportMissingTypeStubs]
-from numpy.typing import NDArray
 from optype.numpy import Array, Array1D, ArrayND
-from scipy.optimize import newton
 from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import FittingResults
+from relife.likelihoods import LifetimeLikelihood
 from relife.quadratures import (
     laguerre_quadrature,
-    legendre_quadrature,
 )
-from relife.typing import (
-    ST,
-    AnyParametricLifetimeModel,
-    DifferentiableParametricLifetimeModel,
-    FittableParametricLifetimeModel,
-    NumpyST,
-    Ts,
-)
+from relife.typing import VT
 
 from ._base import (
     ParametricLifetimeModel,
@@ -48,21 +38,14 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
     fitting_results: FittingResults | None
 
-    def __init__(self, **kwparams: ST | None):
-        super().__init__(**kwparams)
-
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def sf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def sf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return super().sf(time)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def isf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def isf(self, probability: VT) -> np.float64 | ArrayND[np.float64]:
         cumulative_hazard_rate = -np.log(
             np.clip(probability, 0, 1 - np.finfo(float).resolution)
         )
@@ -70,23 +53,17 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def cdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def cdf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return super().cdf(time)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def pdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def pdf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return super().pdf(time)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def ppf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ppf(self, probability: VT) -> np.float64 | ArrayND[np.float64]:
         return super().ppf(probability)
 
     @override
@@ -101,7 +78,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @abstractmethod
     def jac_hf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
     ) -> ArrayND[np.float64]:
         """
         The jacobian of the hazard function.
@@ -118,7 +95,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     @abstractmethod
     def jac_chf(
         self,
-        time: ST | NumpyST | ArrayND[NumpyST],
+        time: VT,
     ) -> ArrayND[np.float64]:
         """
         The jacobian of the cumulative hazard function.
@@ -133,7 +110,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         """
 
     @abstractmethod
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         """
         The derivate of the hazard function.
 
@@ -146,7 +123,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         out : np.float64 or np.ndarray
         """
 
-    def jac_sf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_sf(self, time: VT) -> ArrayND[np.float64]:
         """
         The derivate of the survival function.
 
@@ -161,7 +138,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         jac_chf, sf = self.jac_chf(time), self.sf(time)
         return -jac_chf * sf
 
-    def jac_cdf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_cdf(self, time: VT) -> ArrayND[np.float64]:
         """
         The derivate of the cumulative distribution function.
 
@@ -175,7 +152,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         """
         return -self.jac_sf(time)
 
-    def jac_pdf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_pdf(self, time: VT) -> ArrayND[np.float64]:
         """
         The derivate of the probability density function.
 
@@ -213,11 +190,11 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
     def ls_integrate(
         self,
         func: Callable[
-            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
+            Concatenate[VT, ...],
             np.float64 | ArrayND[np.float64],
         ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
+        a: VT,
+        b: VT,
         *,
         deg: int = 10,
     ) -> np.float64 | ArrayND[np.float64]:
@@ -240,9 +217,7 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def mrl(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return super().mrl(time)
 
     def fit(
@@ -253,11 +228,8 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         **kwargs: Any,
     ) -> Self:
 
-        # local import to avoid circular import
-        from relife.likelihoods import LifetimeLikelihood
-
-        optimizer = LifetimeLikelihood.from_distribution(
-            self, time, event, entry, **kwargs
+        optimizer = LifetimeLikelihood.from_data(
+            self, time, event=event, entry=entry, **kwargs
         )
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
@@ -295,33 +267,26 @@ class Exponential(LifetimeDistribution):
         If the model is not fitted, the value is None.
     """
 
-    def __init__(self, rate: ST | None = None):
-        super().__init__(rate=rate)
+    def __init__(self, rate: float = np.nan):
+        super().__init__([rate])
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return self.get_params()[0] * np.ones_like(time)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return self.get_params()[0] * time
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ichf(self, cumulative_hazard_rate: VT) -> np.float64 | ArrayND[np.float64]:
         return cumulative_hazard_rate / self.get_params()[0]
 
     @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_hf(self, time: VT) -> ArrayND[np.float64]:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(np.ones_like(time, dtype=np.float64), axis=0)
         else:
@@ -329,8 +294,7 @@ class Exponential(LifetimeDistribution):
         return jac
 
     @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_chf(self, time: VT) -> ArrayND[np.float64]:
         if isinstance(time, np.ndarray):
             jac = np.expand_dims(time, axis=0).astype(np.float64)
         else:
@@ -338,8 +302,7 @@ class Exponential(LifetimeDistribution):
         return jac
 
     @override
-    @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         if isinstance(time, np.ndarray):
             return np.zeros_like(time, dtype=np.float64)
         return np.asarray(0, dtype=np.float64)
@@ -353,9 +316,7 @@ class Exponential(LifetimeDistribution):
         return 1 / self.get_params()[0] ** 2
 
     @override
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def mrl(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         return 1 / self.get_params()[0] * np.ones_like(time)
 
     @override
@@ -400,36 +361,29 @@ class Weibull(LifetimeDistribution):
     rate
     """
 
-    def __init__(self, shape: ST | None = None, rate: float | None = None):
-        super().__init__(shape=shape, rate=rate)
+    def __init__(self, shape: float = np.nan, rate: float = np.nan):
+        super().__init__([shape, rate])
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return shape * rate * (rate * np.asarray(time)) ** (shape - 1)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return (rate * np.asarray(time)) ** shape
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ichf(self, cumulative_hazard_rate: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.asarray(cumulative_hazard_rate) ** (1 / shape) / rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_hf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.stack(
             (
@@ -439,8 +393,7 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_chf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.stack(
             (
@@ -450,8 +403,7 @@ class Weibull(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.asarray(
             shape * (shape - 1) * rate**2 * (rate * time) ** (shape - 2),
@@ -468,9 +420,7 @@ class Weibull(LifetimeDistribution):
         return gamma(1 + 2 / shape) / rate**2 - self.mean() ** 2
 
     @override
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def mrl(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return (
             gamma(1 / shape)
@@ -521,36 +471,29 @@ class Gompertz(LifetimeDistribution):
         If the model is not fitted, the value is None.
     """
 
-    def __init__(self, shape: ST | None = None, rate: float | None = None):
-        super().__init__(shape=shape, rate=rate)
+    def __init__(self, shape: float = np.nan, rate: float = np.nan):
+        super().__init__([shape, rate])
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return shape * rate * np.exp(rate * time)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return shape * np.expm1(rate * time)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ichf(self, cumulative_hazard_rate: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return 1 / rate * np.log1p(cumulative_hazard_rate / shape)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_hf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.stack(
             (
@@ -560,8 +503,7 @@ class Gompertz(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_chf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.stack(
             (
@@ -571,8 +513,7 @@ class Gompertz(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return shape * rate**2 * np.exp(rate * time)
 
@@ -586,9 +527,7 @@ class Gompertz(LifetimeDistribution):
         return super().var()
 
     @override
-    def mrl(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def mrl(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         z = shape * np.exp(rate * time)
         return np.exp(z) * exp1(z) / rate
@@ -633,23 +572,19 @@ class Gamma(LifetimeDistribution):
         If the model is not fitted, the value is None.
     """
 
-    def __init__(self, shape: ST | None = None, rate: float | None = None):
-        super().__init__(shape=shape, rate=rate)
+    def __init__(self, shape: float = np.nan, rate: float = np.nan):
+        super().__init__([shape, rate])
 
-    def _uppergamma(
-        self, x: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def _uppergamma(self, x: VT) -> np.float64 | ArrayND[np.float64]:
         shape, _ = self.get_params()
         x = np.asarray(x, dtype=np.float64)
         return gammaincc(shape, x) * gamma(shape)
 
-    def _jac_uppergamma_shape(
-        self, x: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def _jac_uppergamma_shape(self, x: VT) -> np.float64 | ArrayND[np.float64]:
         shape, _ = self.get_params()
 
         def func(
-            s: ST | NumpyST | ArrayND[NumpyST],
+            s: VT,
         ) -> np.float64 | ArrayND[np.float64]:
             return np.log(s) * s ** (shape - 1)
 
@@ -657,27 +592,21 @@ class Gamma(LifetimeDistribution):
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = np.asarray(rate * time)
         return rate * x ** (shape - 1) * np.exp(-x) / self._uppergamma(x)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = np.asarray(rate * time)
         return np.log(gamma(shape)) - np.log(self._uppergamma(x))
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ichf(self, cumulative_hazard_rate: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return (
             1
@@ -688,8 +617,7 @@ class Gamma(LifetimeDistribution):
         )
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_hf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * time
         y = x ** (shape - 1) * np.exp(-x) / self._uppergamma(x) ** 2
@@ -704,8 +632,7 @@ class Gamma(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_chf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * time
         jac = (
@@ -715,8 +642,7 @@ class Gamma(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         return np.asarray(
             self.hf(time) * ((shape - 1) / time - rate + self.hf(time)),
@@ -772,38 +698,31 @@ class LogLogistic(LifetimeDistribution):
         If the model is not fitted, the value is None.
     """
 
-    def __init__(self, shape: ST | None = None, rate: float | None = None):
-        super().__init__(shape=shape, rate=rate)
+    def __init__(self, shape: float = np.nan, rate: float = np.nan):
+        super().__init__([shape, rate])
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def hf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * np.asarray(time)
         return shape * rate * x ** (shape - 1) / (1 + x**shape)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def chf(self, time: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * time
         return np.log(1 + x**shape)
 
     @override
     @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def ichf(
-        self, cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST]
-    ) -> np.float64 | ArrayND[np.float64]:
+    def ichf(self, cumulative_hazard_rate: VT) -> np.float64 | ArrayND[np.float64]:
         shape, rate = self.get_params()
         return ((np.exp(cumulative_hazard_rate) - 1) ** (1 / shape)) / rate
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_hf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_hf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * time
         jac = (
@@ -814,8 +733,7 @@ class LogLogistic(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def jac_chf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def jac_chf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * time
         jac = (
@@ -825,8 +743,7 @@ class LogLogistic(LifetimeDistribution):
         return np.stack(jac)
 
     @override
-    @document_args(base_cls=LifetimeDistribution, args_docstring=[])
-    def dhf(self, time: ST | NumpyST | ArrayND[NumpyST]) -> ArrayND[np.float64]:
+    def dhf(self, time: VT) -> ArrayND[np.float64]:
         shape, rate = self.get_params()
         x = rate * np.asarray(time)
         return (
@@ -857,261 +774,3 @@ class LogLogistic(LifetimeDistribution):
     def __repr__(self) -> str:
         params = self.get_params()
         return f"LogLogistic(shape={params[0]!r}, rate={params[1]!r})"
-
-
-@final
-class EquilibriumDistribution(ParametricLifetimeModel[*Ts]):
-    r"""
-    Equilibrium distribution.
-
-    The equilibirum distribution is the distribution that makes the renewal process
-    stationnary.
-
-    Parameters
-    ----------
-    baseline : any parametric lifetime model
-        Lifetime model.
-
-    References
-    ----------
-    .. [1] Ross, S. M. (1996). Stochastic stochastic_process. New York: Wiley.
-    """
-
-    baseline: ParametricLifetimeModel[*Ts]
-
-    def __init__(self, baseline: ParametricLifetimeModel[*Ts]):
-        super().__init__()
-        self.baseline = baseline
-
-    @override
-    def cdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        return legendre_quadrature(
-            lambda x: np.asarray(self.baseline.sf(x, *args), dtype=float), 0, time
-        ) / self.baseline.mean(*args)
-
-    @override
-    def sf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        return 1 - self.cdf(time, *args)
-
-    @override
-    def pdf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.sf(time, *args) / self.baseline.mean(*args)
-
-    @override
-    def hf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        return 1 / self.baseline.mrl(time, *args)
-
-    @override
-    def chf(
-        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        return -np.log(self.sf(time, *args))
-
-    @override
-    def isf(
-        self, probability: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
-    ) -> np.float64 | ArrayND[np.float64]:
-        def func(x: NDArray[np.float64]) -> np.float64:
-            return np.sum(self.sf(x, *args) - probability)
-
-        return newton(
-            func,
-            x0=np.asarray(self.baseline.isf(probability, *args)),
-            args=args,
-        )
-
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.isf(np.exp(-cumulative_hazard_rate), *args)
-
-
-class MinimumDistributionBaseline(
-    AnyParametricLifetimeModel[*Ts],
-    FittableParametricLifetimeModel[*Ts],
-    DifferentiableParametricLifetimeModel[*Ts],
-    Protocol[*Ts],
-):
-    pass
-
-
-@final
-class MinimumDistribution(
-    ParametricLifetimeModel[*tuple[int | np.uint | NDArray[np.uint], *Ts]]
-):
-    r"""
-    Series structure of n identical and independent components.
-
-    The hazard function of the system is given by:
-
-    .. math::
-
-        h(t) = n \cdot  h_0(t)
-
-    where :math:`h_0` is the baseline hazard function of the components.
-
-    Parameters
-    ----------
-    baseline : lifetime distribution or regression
-        Lifetime model.
-
-    Examples
-    --------
-
-    Computing the survival (or reliability) function for 3 structures of 3,6 and
-    9 identical and idependent components:
-
-    .. code-block::
-
-        model = MinimumDistribution(Weibull(2, 0.05))
-        t = np.arange(0, 10, 0.1)
-        n = np.array([3, 6, 9]).reshape(-1, 1)
-        model.sf(t, n)
-    """
-
-    baseline: MinimumDistributionBaseline[*Ts]
-
-    def __init__(self, baseline: MinimumDistributionBaseline[*Ts]):
-        super().__init__()
-        self.baseline = baseline
-
-    @override
-    def sf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().sf(time, n, *args)
-
-    @override
-    def pdf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().pdf(time, n, *args)
-
-    @override
-    def hf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return n * self.baseline.hf(time, *args)
-
-    @override
-    def chf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return n * self.baseline.chf(time, *args)
-
-    @override
-    def ichf(
-        self,
-        cumulative_hazard_rate: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return self.baseline.ichf(cumulative_hazard_rate / n, *args)
-
-    @override
-    def ls_integrate(
-        self,
-        func: Callable[
-            Concatenate[ST | NumpyST | ArrayND[NumpyST], ...],
-            np.float64 | ArrayND[np.float64],
-        ],
-        a: ST | NumpyST | ArrayND[NumpyST],
-        b: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-        deg: int = 10,
-    ) -> np.float64 | ArrayND[np.float64]:
-        return super().ls_integrate(func, a, b, n, *args, deg=deg)
-
-    def dhf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        return n * self.baseline.dhf(time, *args)
-
-    def jac_chf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        return n * self.baseline.jac_chf(time, *args)
-
-    def jac_hf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        return n * self.baseline.jac_chf(time, *args)
-
-    def jac_sf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        jac_chf, sf = (
-            self.jac_chf(time, n, *args),
-            self.sf(time, n, *args),
-        )
-        return -jac_chf * sf
-
-    def jac_cdf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        return -self.jac_sf(time, n, *args)
-
-    def jac_pdf(
-        self,
-        time: ST | NumpyST | ArrayND[NumpyST],
-        n: int | np.uint | NDArray[np.uint],
-        *args: *Ts,
-    ) -> ArrayND[np.float64]:
-        jac_hf, hf = self.jac_hf(time, n, *args), self.hf(time, n, *args)
-        jac_sf, sf = self.jac_sf(time, n, *args), self.sf(time, n, *args)
-        return jac_hf * sf + jac_sf * hf
-
-    def fit(
-        self,
-        time: Array1D[np.float64],
-        n: Array1D[np.uint],
-        event: Array1D[np.bool_] | None = None,
-        entry: Array1D[np.float64] | None = None,
-        **kwargs: Any,
-    ) -> Self:
-        return super().fit(
-            time,
-            args=args,
-            event=event,
-            entry=entry,
-            **kwargs,
-        )
