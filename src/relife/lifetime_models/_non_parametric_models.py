@@ -1,6 +1,6 @@
 """Nonparametric lifetime models."""
 
-from typing import Any, Generic, Literal, NamedTuple, Self, TypeVar, final
+from typing import Any, Generic, Literal, NamedTuple, TypeVar, final
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -59,24 +59,21 @@ class NonParametricLifetimeModel(Generic[KT]):
 class ECDF(NonParametricLifetimeModel[Literal["sf", "cdf"]]):
     """
     Empirical Cumulative Distribution Function.
+
+    Parameters
+    ----------
+    time : ndarray
+        Observed lifetime values.
     """
 
-    def fit(self, time: Array1D[np.float64]) -> Self:
-        """
-        Compute the non-parametric estimations with respect to lifetime data.
-
-        Parameters
-        ----------
-        time : 1darray
-            Observed lifetime values.
-        """
+    def __init__(self, time: Array1D[np.float64]) -> None:
+        super().__init__()
         timeline, counts = np.unique(time, return_counts=True)
         timeline = np.insert(timeline, 0, 0)
         cdf = np.insert(np.cumsum(counts), 0, 0) / np.sum(counts)
         se = np.sqrt((1 - cdf) / len(time))
         self._estimations["sf"] = NonParametricEstimation(timeline, 1 - cdf, se)
         self._estimations["cdf"] = NonParametricEstimation(timeline, cdf, se)
-        return self
 
     def sf(self) -> NonParametricEstimation | None:
         """
@@ -110,6 +107,15 @@ class KaplanMeier(NonParametricLifetimeModel[Literal["sf"]]):
     Compute the non-parametric Kaplan-Meier estimator (also known as the product
     limit estimator) of the survival function from lifetime data.
 
+    Parameters
+    ----------
+    time : ndarray
+        Observed lifetime values.
+    event : ndarray of boolean values (1d), default is None
+        Boolean indicators tagging lifetime values as right censored or complete.
+    entry : ndarray of float (1d), default is None
+        Left truncations applied to lifetime values.
+
     Notes
     -----
     For a given time instant :math:`t` and :math:`n` total observations, this
@@ -142,25 +148,13 @@ class KaplanMeier(NonParametricLifetimeModel[Literal["sf"]]):
 
     """
 
-    def fit(
+    def __init__(
         self,
         time: Array1D[np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-    ) -> Self:
-        """
-        Compute the non-parametric estimations with respect to lifetime data.
-
-        Parameters
-        ----------
-        time : ndarray
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        """
-
+    ) -> None:
+        super().__init__()
         if event is None:
             event = np.ones_like(time).astype(bool)
 
@@ -185,7 +179,6 @@ class KaplanMeier(NonParametricLifetimeModel[Literal["sf"]]):
             np.insert(sf, 0, 1),
             np.insert(np.sqrt(var), 0, 0),
         )
-        return self
 
     def sf(self) -> NonParametricEstimation | None:
         """
@@ -206,6 +199,15 @@ class NelsonAalen(NonParametricLifetimeModel[Literal["chf"]]):
 
     Compute the non-parametric Nelson-Aalen estimator of the cumulative hazard
     function from lifetime data.
+
+    Parameters
+    ----------
+    time : ndarray
+        Observed lifetime values.
+    event : ndarray of boolean values (1d), default is None
+        Boolean indicators tagging lifetime values as right censored or complete.
+    entry : ndarray of float (1d), default is None
+        Left truncations applied to lifetime values.
 
     Notes
     -----
@@ -241,25 +243,13 @@ class NelsonAalen(NonParametricLifetimeModel[Literal["chf"]]):
 
     _ci_bounds: tuple[float, float] = (0.0, np.inf)
 
-    def fit(
+    def __init__(
         self,
         time: Array1D[np.float64],
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
-    ) -> Self:
-        """
-        Compute the non-parametric estimations with respect to lifetime data.
-
-        Parameters
-        ----------
-        time : ndarray
-            Observed lifetime values.
-        event : ndarray of boolean values (1d), default is None
-            Boolean indicators tagging lifetime values as right censored or complete.
-        entry : ndarray of float (1d), default is None
-            Left truncations applied to lifetime values.
-        """
-
+    ) -> None:
+        super().__init__()
         if event is None:
             event = np.ones_like(time).astype(bool)
 
@@ -284,7 +274,6 @@ class NelsonAalen(NonParametricLifetimeModel[Literal["chf"]]):
             np.insert(chf, 0, 0),
             np.insert(np.sqrt(var), 0, 0),
         )
-        return self
 
     def chf(self) -> NonParametricEstimation | None:
         """

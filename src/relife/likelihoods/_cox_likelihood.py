@@ -82,7 +82,7 @@ class CoxData:
         )
 
 
-def init_cox_likelihood(
+def cox_likelihood(
     model: LinearCovarEffect,
     time: Array1D[np.float64],
     covar: Array1D[np.float64] | Sequence[Array1D[np.float64]],

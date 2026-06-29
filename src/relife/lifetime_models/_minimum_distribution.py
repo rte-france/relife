@@ -5,7 +5,6 @@ import numpy as np
 from optype.numpy import Array, Array1D, ArrayND
 from typing_extensions import override
 
-from relife.likelihoods import LifetimeLikelihood
 from relife.typing import VT
 
 from ._base import ParametricLifetimeModel
@@ -167,9 +166,9 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
         **kwargs: Any,
     ) -> Self:
 
-        optimizer = LifetimeLikelihood.from_data(
-            self, time, event=event, entry=entry, **kwargs
-        )
+        from relife.likelihoods import lifetime_likelihood
+
+        optimizer = lifetime_likelihood(self, time, event=event, entry=entry, **kwargs)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
 

@@ -31,7 +31,6 @@ from ._base import (
 from ._distributions import (
     LifetimeDistribution,
 )
-from ._lifetime_likelihood import LifetimeLikelihood
 
 
 class LinearCovarEffect(ParametricModel):
@@ -330,9 +329,11 @@ class ParametricLifetimeRegression(ParametricLifetimeModel[*tuple[VT, ...]], ABC
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
+        from relife.likelihoods import lifetime_likelihood
+
         if not isinstance(covar, Sequence):
             covar = (covar,)
-        optimizer = LifetimeLikelihood.from_data(
+        optimizer = lifetime_likelihood(
             self, time, args=covar, event=event, entry=entry, **kwargs
         )
         self.fitting_results = optimizer.optimize()

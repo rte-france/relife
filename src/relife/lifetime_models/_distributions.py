@@ -19,7 +19,6 @@ from scipy.special import digamma, exp1, gamma, gammaincc, gammainccinv
 from typing_extensions import override
 
 from relife.base import FittingResults
-from relife.likelihoods import LifetimeLikelihood
 from relife.quadratures import (
     laguerre_quadrature,
 )
@@ -228,9 +227,9 @@ class LifetimeDistribution(ParametricLifetimeModel[()], ABC):
         **kwargs: Any,
     ) -> Self:
 
-        optimizer = LifetimeLikelihood.from_data(
-            self, time, event=event, entry=entry, **kwargs
-        )
+        from relife.likelihoods import lifetime_likelihood
+
+        optimizer = lifetime_likelihood(self, time, event=event, entry=entry, **kwargs)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
 

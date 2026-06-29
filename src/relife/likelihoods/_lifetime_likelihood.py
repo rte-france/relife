@@ -197,27 +197,24 @@ class LifetimeLikelihood(
             + jac_left_truncations_contrib(self.model, self.data)
         )
 
-    @classmethod
-    def from_data(
-        cls: type["LifetimeLikelihood"],
-        model: FittableParametricLifetimeModel,
-        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
-        args: Sequence[Array1D[np.float64]] = (),
-        event: Array1D[np.bool_] | None = None,
-        entry: Array1D[np.float64] | None = None,
-        **kwargs: Any,
-    ) -> "LifetimeLikelihood":
-        if isinstance(model, LifetimeDistribution):
-            return init_likelihood_from_distribution(
-                model, time, event, entry, **kwargs
-            )
-        if isinstance(model, ParametricLifetimeRegression):
-            return init_likelihood_from_regression(
-                model, time, args, event, entry, **kwargs
-            )
-        return init_likelihood_from_minimum_distribution(
+
+def lifetime_likelihood(
+    model: FittableParametricLifetimeModel,
+    time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+    args: Sequence[Array1D[np.float64]] = (),
+    event: Array1D[np.bool_] | None = None,
+    entry: Array1D[np.float64] | None = None,
+    **kwargs: Any,
+) -> LifetimeLikelihood:
+    if isinstance(model, LifetimeDistribution):
+        return init_likelihood_from_distribution(model, time, event, entry, **kwargs)
+    if isinstance(model, ParametricLifetimeRegression):
+        return init_likelihood_from_regression(
             model, time, args, event, entry, **kwargs
         )
+    return init_likelihood_from_minimum_distribution(
+        model, time, args, event, entry, **kwargs
+    )
 
 
 def init_likelihood_from_distribution(
