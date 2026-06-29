@@ -226,7 +226,7 @@ class FrozenNonHomogeneousPoissonProcess(
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self.unfrozen.intensity(time, *self.args)
+        return self.lifetime_model.hf(time)
 
     @override
     def cumulative_intensity(
@@ -248,7 +248,7 @@ class FrozenNonHomogeneousPoissonProcess(
         np.float64 or np.ndarray
             Function values at each given time(s).
         """
-        return self.unfrozen.cumulative_intensity(time, *self.args)
+        return self.lifetime_model.chf(time)
 
 
 class NHPPData:

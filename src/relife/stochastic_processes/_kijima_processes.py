@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Generic, Self, TypeAlias, TypeVarTuple
+from typing import Generic
 
 import numpy as np
 
 from relife.base import FittingResults, ParametricModel
 from relife.lifetime_models import FittableParametricLifetimeModel
+from relife.typing import Ts
 
 __all__ = [
     "Kijima1Process",
@@ -13,10 +14,6 @@ __all__ = [
     "FrozenKijima1Process",
     "FrozenKijima2Process",
 ]
-
-Ts = TypeVarTuple("Ts")
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
 
 
 class Kijima1Process(ParametricModel, Generic[*Ts]):
@@ -54,14 +51,6 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
         FrozenParametricModel
         """
         return FrozenKijima1Process(self, *args)
-
-    def fit(self) -> Self:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Fitting methods for Kijima processes will be introduced in a future release"  # noqa: E501
-        )
 
 
 class FrozenKijima1Process(ParametricModel, Generic[*Ts]):
@@ -117,14 +106,6 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
         FrozenParametricModel
         """
         return FrozenKijima2Process(self, *args)
-
-    def fit(self) -> Self:
-        r"""
-        .. warning:: Not implemented yet
-        """
-        raise NotImplementedError(
-            "Fitting methods for Kijima processes will be introduced in a future release"  # noqa: E501
-        )
 
 
 class FrozenKijima2Process(ParametricModel, Generic[*Ts]):

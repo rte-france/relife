@@ -117,6 +117,10 @@ class ParametricLifetimeModel(ParametricModel, ABC, Generic[*Ts]):
         pdf: Abstract method to compute the probability density function.
     """
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return ()
+
     @abstractmethod
     def sf(self, time: VT, *args: *Ts) -> np.float64 | ArrayND[np.float64]:
         """
@@ -681,6 +685,10 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
         self.baseline = baseline
         self.ar = ar
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return np.broadcast_shapes(np.asarray(self.ar), self.baseline.shape)
+
     @override
     def sf(
         self,
@@ -785,6 +793,10 @@ class LeftTruncatedModel(
         self.baseline = baseline
         self.a0 = a0
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return np.broadcast_shapes(np.asarray(self.a0), self.baseline.shape)
+
     @override
     def sf(
         self,
@@ -856,6 +868,10 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
         super().__init__()
         self.unfrozen = model
         self.args = args
+        
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return np.broadcast_shapes(*(np.asarray(arg).shape for arg in self.args))
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=[])
