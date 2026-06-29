@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, Concatenate, Literal, Self, final
 
 import numpy as np
@@ -7,13 +7,14 @@ from typing_extensions import override
 
 from relife.typing import VT
 
-from ._base import ParametricLifetimeModel
-from ._distributions import LifetimeDistribution
-from ._parametric_regressions import ParametricLifetimeRegression
+from ._base import (
+    FittableParametricLifetimeModel,
+    LifetimeLikelihood,
+)
 
 
 @final
-class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
+class MinimumDistribution(FittableParametricLifetimeModel[*tuple[VT, ...]]):
     r"""
     Series structure of n identical and independent components.
 
@@ -44,12 +45,12 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
         model.sf(t, n)
     """
 
-    baseline: LifetimeDistribution | ParametricLifetimeRegression
+    baseline: FittableParametricLifetimeModel[*tuple[VT, ...]]
     n: int
 
     def __init__(
         self,
-        baseline: LifetimeDistribution | ParametricLifetimeRegression,
+        baseline: FittableParametricLifetimeModel[*tuple[VT, ...]],
         n: int,
     ):
         super().__init__()
@@ -110,6 +111,7 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
     ) -> np.float64 | ArrayND[np.float64]:
         return super().ls_integrate(func, a, b, *args, deg=deg)
 
+    @override
     def dhf(
         self,
         time: VT,
@@ -117,6 +119,7 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
     ) -> ArrayND[np.float64]:
         return self.n * self.baseline.dhf(time, *args)
 
+    @override
     def jac_chf(
         self,
         time: VT,
@@ -124,6 +127,7 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
     ) -> ArrayND[np.float64]:
         return self.n * self.baseline.jac_chf(time, *args)
 
+    @override
     def jac_hf(
         self,
         time: VT,
@@ -131,44 +135,29 @@ class MinimumDistribution(ParametricLifetimeModel[*tuple[VT, ...]]):
     ) -> ArrayND[np.float64]:
         return self.n * self.baseline.jac_chf(time, *args)
 
-    def jac_sf(
+    @override
+    def init_likelihood(
         self,
-        time: VT,
-        *args: VT,
-    ) -> ArrayND[np.float64]:
-        jac_chf, sf = (
-            self.jac_chf(time, self.n, *args),
-            self.sf(time, self.n, *args),
-        )
-        return -jac_chf * sf
-
-    def jac_cdf(
-        self,
-        time: VT,
-        *args: VT,
-    ) -> ArrayND[np.float64]:
-        return -self.jac_sf(time, self.n, *args)
-
-    def jac_pdf(
-        self,
-        time: VT,
-        *args: VT,
-    ) -> ArrayND[np.float64]:
-        jac_hf, hf = self.jac_hf(time, self.n, *args), self.hf(time, self.n, *args)
-        jac_sf, sf = self.jac_sf(time, self.n, *args), self.sf(time, self.n, *args)
-        return jac_hf * sf + jac_sf * hf
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Sequence[Array1D[np.float64]] | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> LifetimeLikelihood:
+        likelihood = self.baseline.init_likelihood(time, args, event, entry, **kwargs)
+        likelihood.model = MinimumDistribution(likelihood.model, self.n)
+        return likelihood
 
     def fit(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Sequence[Array1D[np.float64]] | None = None,
         event: Array1D[np.bool_] | None = None,
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
 
-        from relife.likelihoods import lifetime_likelihood
-
-        optimizer = lifetime_likelihood(self, time, event=event, entry=entry, **kwargs)
+        optimizer = self.init_likelihood(time, args, event, entry, **kwargs)
         self.fitting_results = optimizer.optimize()
         self.set_params(self.fitting_results.optimal_params)
 

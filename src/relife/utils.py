@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias, overload
+from typing import Literal, overload
 
 import numpy as np
 from optype.numpy import (
@@ -9,6 +9,8 @@ from optype.numpy import (
     ArrayND,
     is_array_0d,
 )
+
+from .typing import ST, NumpyST
 
 __all__ = [
     "to_column_2d_if_1d",
@@ -34,10 +36,6 @@ def to_numpy_float64(
     if isinstance(v, (int, float)):
         return np.float64(v)
     return np.asarray(v, dtype=np.float64)
-
-
-ST: TypeAlias = int | float | bool
-NumpyST: TypeAlias = np.floating | np.uint | np.bool
 
 
 @overload

@@ -5,7 +5,7 @@ from typing import Generic, Self, TypeAlias, TypeVarTuple
 import numpy as np
 
 from relife.base import FittingResults, ParametricModel
-from relife.typing import FittableParametricLifetimeModel
+from relife.lifetime_models import FittableParametricLifetimeModel
 
 __all__ = [
     "Kijima1Process",
@@ -30,9 +30,9 @@ class Kijima1Process(ParametricModel, Generic[*Ts]):
     def __init__(
         self,
         lifetime_model: FittableParametricLifetimeModel[*Ts],
-        q: float | None = None,
+        q: float = np.nan,
     ):
-        super().__init__(q=q)
+        super().__init__([q])
         self.lifetime_model = lifetime_model
         self.fitting_results = None
 
@@ -93,9 +93,9 @@ class Kijima2Process(ParametricModel, Generic[*Ts]):
     def __init__(
         self,
         lifetime_model: FittableParametricLifetimeModel[*Ts],
-        q: float | None = None,
+        q: float = np.nan,
     ):
-        super().__init__(q=q)
+        super().__init__([q])
         self.lifetime_model = lifetime_model
         self.fitting_results = None
 

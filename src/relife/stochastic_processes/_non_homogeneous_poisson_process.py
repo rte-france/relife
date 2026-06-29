@@ -3,24 +3,19 @@ from __future__ import annotations
 import warnings
 from collections.abc import Sequence
 from dataclasses import field
-from typing import Any, Generic, Self, TypeAlias, TypeVarTuple
+from typing import Any, Generic, Self
 
 import numpy as np
 from numpy.typing import NDArray
 from optype.numpy import Array1D, Array2D, ArrayND
 from typing_extensions import override
 
-from relife.base import ParametricModel
-from relife.typing import AnyFittableParametricLifetimeModel
-
-__all__ = [
-    "NonHomogeneousPoissonProcess",
-    "FrozenNonHomogeneousPoissonProcess",
-]
-
-Ts = TypeVarTuple("Ts")
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
+from relife.base import FittingResults, ParametricModel
+from relife.lifetime_models import (
+    FittableParametricLifetimeModel,
+    ParametricLifetimeModel,
+)
+from relife.typing import ST, NumpyST, Ts
 
 
 class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
@@ -28,11 +23,12 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
     Non-homogeneous Poisson process base class.
     """
 
-    lifetime_model: AnyFittableParametricLifetimeModel[*Ts]
+    fitting_results: FittingResults | None
+    lifetime_model: ParametricLifetimeModel[*Ts]  # not accurate is case of fit
 
     def __init__(
         self,
-        lifetime_model: AnyFittableParametricLifetimeModel[*Ts],
+        lifetime_model: ParametricLifetimeModel[*Ts],
     ):
         super().__init__()
         self.lifetime_model = lifetime_model
@@ -173,6 +169,7 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
         warnings.warn(  # noqa: B028
             "Fit method of NHPP will change in a future release", DeprecationWarning
         )
+        assert isinstance(self.lifetime_model, FittableParametricLifetimeModel)
 
         nhpp_data = NHPPData(
             ages_at_events,
@@ -183,9 +180,9 @@ class NonHomogeneousPoissonProcess(ParametricModel, Generic[*Ts]):
             assets_ids=assets_ids,
         )
         time, event, entry, args = nhpp_data.to_lifetime_data()
-        optimizer: LifetimeLikelihood[
-            FittableParametricLifetimeModel[*tuple[Any, ...]]
-        ] = self.lifetime_model.init_likelihood(time, args, event, entry, **kwargs)
+        optimizer = self.lifetime_model.init_likelihood(
+            time, args, event, entry, **kwargs
+        )
         fitting_results = optimizer.optimize()
         self.set_params(fitting_results.optimal_params)
         self.fitting_results = fitting_results
@@ -417,7 +414,7 @@ class NHPPData:
         Array1D[np.float64],
         Array1D[np.bool_],
         Array1D[np.float64],
-        Array1D[Any] | Array2D[Any] | tuple[Array1D[Any] | Array2D[Any], ...] | None,
+        tuple[Array1D[np.float64], ...],
     ]:
         event = np.ones_like(self.ages_at_events, dtype=np.bool_)
         # insert_index = np.cumsum(nb_ages_per_asset)

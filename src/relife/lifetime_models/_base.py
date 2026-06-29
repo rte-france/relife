@@ -5,7 +5,8 @@ from __future__ import annotations
 import functools
 import inspect
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
 from typing import (
     Any,
     Generic,
@@ -13,6 +14,7 @@ from typing import (
     ParamSpec,
     TypeGuard,
     TypeVar,
+    final,
     overload,
 )
 
@@ -32,10 +34,10 @@ from scipy import stats
 from scipy.optimize import newton
 from typing_extensions import override
 
-from relife.base import ParametricModel
+from relife.base import FitConfig, MaximumLikelihoodOptimizer, ParametricModel
 from relife.quadratures import legendre_quadrature, unweighted_laguerre_quadrature
 from relife.typing import ST, VT, NumpyST, Ts
-from relife.utils import to_numpy_float64
+from relife.utils import to_column_2d_if_1d, to_numpy_float64
 
 
 # matplotlib typing is still buggy
@@ -1017,3 +1019,463 @@ def estimate_se(
         )
         return se
     return None
+
+
+class FittableParametricLifetimeModel(ParametricLifetimeModel[*Ts], ABC):
+    @abstractmethod
+    def jac_hf(
+        self,
+        time: ST | NumpyST | ArrayND[NumpyST],
+        *args: *Ts,
+    ) -> ArrayND[np.float64]:
+        """
+        The jacobian of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+
+    @abstractmethod
+    def jac_chf(
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
+        """
+        The jacobian of the cumulative hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+
+    @abstractmethod
+    def dhf(
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
+        """
+        The derivate of the hazard function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            Function values at each given time(s).
+        """
+
+    def jac_sf(
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
+        """
+        The jacobian of the survival function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+        return -self.jac_chf(time, *args) * self.sf(time, *args)
+
+    def jac_cdf(
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
+        """
+        The jacobian of the cumulative density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+        """
+        return -self.jac_sf(time, *args)
+
+    def jac_pdf(
+        self, time: ST | NumpyST | ArrayND[NumpyST], *args: *Ts
+    ) -> ArrayND[np.float64]:
+        """
+        The jacobian of the probability density function.
+
+        Parameters
+        ----------
+        time : float or np.ndarray
+            Elapsed time value(s) at which to compute the function.
+            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
+        *args
+            Any additonal args.
+
+        Returns
+        -------
+        out : np.float64 or np.ndarray
+            The derivatives with respect to each parameter. If the result is
+            an `np.ndarray`, the first dimension holds the number of parameters.
+
+        """
+        jac = self.jac_hf(time, *args) * self.sf(time, *args) + self.jac_sf(
+            time, *args
+        ) * self.hf(time, *args)
+        return jac
+
+    @abstractmethod
+    def init_likelihood(
+        self,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Sequence[Array1D[np.float64]] | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> LifetimeLikelihood:
+        r"""
+        Initialize the lifetime likelihood used to fit the parameters.
+
+        `fit` method is the preferred way to fit model parameters. However,
+        users can also interact with the likelihood returned by
+        `init_likelihood` to study the optimization process.
+
+        This method implementation is usally composed of 3 steps:
+            1. Initialize an object to preprocess and encapsulate observation values.
+            2. Create a `OptimizerConfig` config instance depending on the model needs.
+            3. Instanciate and return a LifetimeLikelihood.
+
+        `init_likelihood` is separated from `fit` in order to reuse existing
+        likelihood parametrization in case of model composition. Any parameters
+        initialization needed by the likelihood optimizer (e.g. `x0` or
+        `bounds` as required in step 2.) are left to specific functions
+        alongside concrete model implementations. These functions are invoked
+        within `init_likelihood`.
+
+        Parameters
+        ----------
+        time : 1d array
+            Observed lifetime values.
+        args : any ndarray or tuple of ndarray, default is None
+            Additional arguments required by the model (e.g. covar).
+        event : 1d array of bool, default is None
+            Boolean indicators tagging lifetime values as right censored or complete.
+        entry : 1d array, default is None
+            Left truncations applied to lifetime values.
+        **kwargs
+            Extra arguments to control the parameters optimization. It can be:
+
+                - those used by `scipy.optimize.minimize
+                  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+                  to search for the paremeters that minimize the negative
+                  log-likelihood.
+                - `covariance_method` to control the method used to estimate
+                  parameters covariance. Values can be `"cs"`, `"2point"`,
+                  `"exact"` or `False`. To skip parameters covariance
+                  estimation, set `covariance_method` to `False`, otherwise the
+                  default method associated to the model will be used. If
+                  `covariance_method` is `"exact"` the `hess` must be passed
+                  too.
+
+        Returns
+        -------
+        out : LifetimeLikelihood instance
+        """
+
+
+@dataclass
+class LifetimeData:
+    nb_observations: int = field(init=False)
+    complete_time: Array[tuple[int, Literal[1]], np.float64] = field(
+        init=False, repr=False
+    )
+    censored_time: (
+        Array[tuple[int, Literal[1]], np.float64]
+        | Array[tuple[int, Literal[2]], np.float64]
+    ) = field(init=False, repr=False)
+    left_truncations: Array[tuple[int, Literal[1]], np.float64] = field(
+        init=False, repr=False
+    )
+    complete_time_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = field(
+        init=False, repr=False
+    )
+    censored_time_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = field(
+        init=False, repr=False
+    )
+    left_truncations_args: tuple[Array[tuple[int, Literal[1]], np.float64], ...] = (
+        field(init=False, repr=False)
+    )
+
+    def __init__(
+        self,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+        args: Sequence[Array1D[np.float64]] = (),
+    ) -> None:
+        column_time = to_column_2d_if_1d(time)
+        if column_time.shape[-1] == 2 and event is not None:
+            raise ValueError("If time is given as intervals, event must be None")
+        column_event = None
+        if column_time.shape[-1] == 1:
+            column_event = (
+                to_column_2d_if_1d(event)
+                if event is not None
+                else np.ones_like(time, dtype=np.bool_)
+            )
+        column_entry = (
+            to_column_2d_if_1d(entry)
+            if entry is not None
+            else np.zeros(len(time), dtype=np.float64)
+        )
+        if np.any(column_time <= column_entry):
+            raise ValueError("All time values must be greater than entry values")
+        column_args = tuple(to_column_2d_if_1d(arg) for arg in args)
+        sizes = [
+            len(x)
+            for x in (column_time, column_event, column_entry, *column_args)
+            if x is not None
+        ]
+        if len(set(sizes)) != 1:
+            raise ValueError(
+                f"""
+                All lifetime data must have the same number of values. Fields
+                length are different. Got {tuple(sizes)}
+                """
+            )
+        non_zero_entry = np.flatnonzero(column_entry)
+        if column_event is not None:
+            non_zero_event = np.flatnonzero(column_event)
+            zero_event = np.flatnonzero(column_event == 0)
+            self.nb_observations = len(time)
+            self.complete_time = column_time[non_zero_event]
+            self.censored_time = column_time[zero_event]
+            self.left_truncations = column_entry[non_zero_entry]
+            self.complete_time_args = tuple(arg[non_zero_event] for arg in column_args)
+            self.censored_time_args = tuple(arg[zero_event] for arg in column_args)
+            self.left_truncations_args = tuple(
+                arg[non_zero_entry] for arg in column_args
+            )
+        else:
+            complete_time_index = np.flatnonzero(column_time[:, 0] == column_time[:, 1])
+            non_complete_time_index = np.flatnonzero(
+                column_time[:, 0] != column_time[:, 1]
+            )
+            self.nb_observations = len(time)
+            self.complete_time = column_time[:, 1][complete_time_index]
+            self.censored_time = column_time[non_complete_time_index]
+            self.left_truncations = column_entry[non_zero_entry]
+            self.complete_time_args = tuple(
+                arg[complete_time_index] for arg in column_args
+            )
+            self.censored_time_args = tuple(
+                arg[non_complete_time_index] for arg in column_args
+            )
+            self.left_truncations_args = tuple(
+                arg[non_zero_entry] for arg in column_args
+            )
+
+
+@final
+class LifetimeLikelihood(
+    MaximumLikelihoodOptimizer[
+        FittableParametricLifetimeModel[*tuple[VT, ...]], LifetimeData
+    ]
+):
+    """
+    Maximum likelihood estimator from lifetime data.
+
+    Parameters
+    ----------
+    model : generic FittableParametricLifetimeModel
+        Every model parameters must be initialized before passing it to the
+        likelihood.
+    data : LifetimeData
+        An object that encapsulate and preprocess lifetime observations and
+        truncations.
+    config : OptimizerConfig
+        An object that groups configurations used by the optimizer.
+
+    Attributes
+    ----------
+    model: FittableParametricLifetimeModel
+        A copy of the original model.
+    data : LifetimeData
+        An object that encapsulate and preprocess lifetime observations and
+        truncations.
+    config : OptimizerConfig
+        An object that groups configurations used by the optimizer.
+    """
+
+    data: LifetimeData
+
+    def __init__(
+        self,
+        model: FittableParametricLifetimeModel[*tuple[VT, ...]],
+        data: LifetimeData,
+        config: FitConfig,
+    ):
+        self.model = model
+        self.data = data
+        self.config = config
+        if "jac" not in self.config.scipy_minimize_options:
+            self.config.scipy_minimize_options["jac"] = self.jac_negative_log
+
+    @property
+    @override
+    def nb_observations(self) -> int:
+        return self.data.nb_observations
+
+    @override
+    def negative_log(self, params: Array1D[np.float64]) -> float:
+        self.model.set_params(params)
+        return (
+            self._complete_time_contrib()
+            + self._censored_time_contrib()
+            + self._left_truncations_contrib()
+        )
+
+    def jac_negative_log(self, params: Array1D[np.float64]) -> Array1D[np.float64]:
+        """
+        Jacobian of the negative log likelihood.
+
+        The jacobian is computed with respect to parameters.
+
+        Parameters
+        ----------
+        model : parametric model
+            A parametrized model with appropriate parameters values.
+
+        Returns
+        -------
+        out : ndarray
+        """
+        self.model.set_params(params)
+        return (
+            self._jac_complete_time_contrib()
+            + self._jac_censored_time_contrib()
+            + self._jac_left_truncations_contrib()
+        )
+
+    def _complete_time_contrib(self) -> float:
+        if self.data.complete_time.size == 0.0:
+            return 0.0
+        res = -np.sum(
+            np.log(
+                self.model.pdf(self.data.complete_time, *self.data.complete_time_args)
+            )
+        )
+        return res
+
+    def _jac_complete_time_contrib(self) -> ArrayND[np.float64]:
+        if self.data.complete_time.size == 0:
+            return np.zeros_like(self.model.get_params())
+        jac = -self.model.jac_pdf(
+            self.data.complete_time, *self.data.complete_time_args
+        ) / self.model.pdf(self.data.complete_time, *self.data.complete_time_args)
+
+        return np.sum(jac, axis=(1, 2))
+
+    def _censored_time_contrib(self) -> float:
+        if self.data.censored_time.size == 0:
+            return 0.0
+        if self.data.censored_time.shape[-1] > 1:
+            # interval censored time
+            return np.sum(
+                -np.log(
+                    10**-10
+                    + self.model.cdf(
+                        self.data.censored_time[:, 1], *self.data.censored_time_args
+                    )
+                    - self.model.cdf(
+                        self.data.censored_time[:, 0], *self.data.censored_time_args
+                    )
+                ),
+            )
+        else:
+            # right censored time
+            return np.sum(
+                self.model.chf(self.data.censored_time, *self.data.censored_time_args)
+            )
+
+    def _jac_censored_time_contrib(self) -> ArrayND[np.float64]:
+        if self.data.censored_time.size == 0:
+            return np.zeros_like(self.model.get_params())
+        if self.data.censored_time.shape[-1] > 1:
+            # interval censored time
+            jac_interval_censored = (
+                self.model.jac_sf(
+                    self.data.censored_time[:, 1], *self.data.censored_time_args
+                )
+                - self.model.jac_sf(
+                    self.data.censored_time[:, 0], *self.data.censored_time_args
+                )
+            ) / (
+                10**-10
+                + self.model.cdf(
+                    self.data.censored_time[:, 1], *self.data.censored_time_args
+                )
+                - self.model.cdf(
+                    self.data.censored_time[:, 0], *self.data.censored_time_args
+                )
+            )
+
+            return np.sum(jac_interval_censored, axis=(1, 2))
+        else:
+            # right censored time
+            return np.sum(
+                self.model.jac_chf(
+                    self.data.censored_time, *self.data.censored_time_args
+                ),
+                axis=(1, 2),
+            )
+
+    def _left_truncations_contrib(self) -> float:
+        if self.data.left_truncations.size == 0.0:
+            return 0.0
+        return -np.sum(
+            self.model.chf(self.data.left_truncations, *self.data.left_truncations_args)
+        )
+
+    def _jac_left_truncations_contrib(self) -> ArrayND[np.float64]:
+        if self.data.left_truncations.size == 0.0:
+            return np.zeros_like(self.model.get_params())
+        jac = -self.model.jac_chf(
+            self.data.left_truncations, *self.data.left_truncations_args
+        )
+        return np.sum(jac, axis=(1, 2))

@@ -8,7 +8,7 @@ ProportionalHazard is not Cox regression (Cox is semiparametric).
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable, Sequence
 from typing import Any, Concatenate, Literal, Self, final
 
@@ -19,17 +19,24 @@ from optype.numpy import (
     Array1D,
     ArrayND,
 )
+from scipy.optimize import Bounds
 from typing_extensions import override
 
-from relife.base import FittingResults, ParametricModel
+from relife.base import FitConfig, FittingResults, ParametricModel
 from relife.typing import VT
 
 from ._base import (
+    FittableParametricLifetimeModel,
+    LifetimeData,
+    LifetimeLikelihood,
     ParametricLifetimeModel,
     document_args,
 )
 from ._distributions import (
+    Gamma,
     LifetimeDistribution,
+    get_distrib_params_bounds,
+    init_distrib_params_from_lifetimes,
 )
 
 
@@ -106,7 +113,9 @@ _covar_docstring = [
 ]
 
 
-class ParametricLifetimeRegression(ParametricLifetimeModel[*tuple[VT, ...]], ABC):
+class ParametricLifetimeRegression(
+    FittableParametricLifetimeModel[*tuple[VT, ...]], ABC
+):
     """
     Base class for lifetime regression.
     """
@@ -187,91 +196,38 @@ class ParametricLifetimeRegression(ParametricLifetimeModel[*tuple[VT, ...]], ABC
     def median(self, *covar: VT) -> np.float64 | ArrayND[np.float64]:
         return super().median(*covar)
 
-    @abstractmethod
-    def jac_hf(
-        self,
-        time: VT,
-        *covar: VT,
-    ) -> ArrayND[np.float64]:
-        """
-        The jacobian of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-            Elapsed time value(s) at which to compute the function.
-            If ndarray, allowed shapes are `()`, `(n,)` or `(m, n)`.
-        *args
-            Any additonal args.
-
-        Returns
-        -------
-        out : np.ndarray
-        """
-
-    @abstractmethod
-    def jac_chf(
-        self,
-        time: VT,
-        *covar: VT,
-    ) -> ArrayND[np.float64]:
-        """
-        The jacobian of the cumulative hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-        *args
-            Any additonal args.
-
-        Returns
-        -------
-        out : np.ndarray
-        """
-
-    @abstractmethod
-    def dhf(
-        self,
-        time: VT,
-        *covar: VT,
-    ) -> ArrayND[np.float64]:
-        """
-        The derivate of the hazard function.
-
-        Parameters
-        ----------
-        time : float or np.ndarray
-        *args
-            Any additonal args.
-
-        Returns
-        -------
-        out : np.ndarray
-        """
-
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_sf(
         self,
         time: VT,
         *covar: VT,
     ) -> ArrayND[np.float64]:
-        return -self.jac_chf(time, *covar) * self.sf(time, *covar)
+        return super().jac_sf(time, *covar)
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_cdf(
         self,
         time: VT,
         *covar: VT,
     ) -> ArrayND[np.float64]:
-        return -self.jac_sf(time, *covar)
+        return super().jac_cdf(time, *covar)
 
+    @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_pdf(
         self,
         time: VT,
         *covar: VT,
     ) -> ArrayND[np.float64]:
-        jac = self.jac_hf(time, *covar) * self.sf(time, *covar) + self.jac_sf(
-            time, *covar
-        ) * self.hf(time, *covar)
-        return jac
+        return super().jac_pdf(time, *covar)
 
     @override
     @document_args(base_cls=ParametricLifetimeModel, args_docstring=_covar_docstring)
@@ -321,6 +277,35 @@ class ParametricLifetimeRegression(ParametricLifetimeModel[*tuple[VT, ...]], ABC
     def var(self, *covar: VT) -> np.float64 | ArrayND[np.float64]:
         return super().var(*covar)
 
+    @override
+    def init_likelihood(
+        self,
+        time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
+        args: Sequence[Array1D[np.float64]] | None = None,
+        event: Array1D[np.bool_] | None = None,
+        entry: Array1D[np.float64] | None = None,
+        **kwargs: Any,
+    ) -> LifetimeLikelihood:
+        assert args is not None
+        fresh_regression = type(self)(
+            type(self.baseline)(), coefficients=(0.0,) * len(args)
+        )  # init new regression object with appropriate number of covar
+        lifetime_data = LifetimeData(time, event, entry, args)
+        x0 = kwargs.get(
+            "x0", init_regression_params_from_lifetimes(fresh_regression, lifetime_data)
+        )
+        fresh_regression.set_params(x0)
+        config = FitConfig(x0)
+        config.scipy_minimize_options["bounds"] = kwargs.get(
+            "bounds", get_regression_params_bounds(fresh_regression)
+        )
+        config.scipy_minimize_options["method"] = kwargs.get("method", "L-BFGS-B")
+        config.covariance_method = kwargs.get(
+            "covariance_method",
+            "2point" if isinstance(fresh_regression.baseline, Gamma) else "cs",
+        )
+        return LifetimeLikelihood(fresh_regression, lifetime_data, config)
+
     def fit(
         self,
         time: Array1D[np.float64] | Array[tuple[int, Literal[2]], np.float64],
@@ -329,17 +314,45 @@ class ParametricLifetimeRegression(ParametricLifetimeModel[*tuple[VT, ...]], ABC
         entry: Array1D[np.float64] | None = None,
         **kwargs: Any,
     ) -> Self:
-        from relife.likelihoods import lifetime_likelihood
-
         if not isinstance(covar, Sequence):
             covar = (covar,)
-        optimizer = lifetime_likelihood(
-            self, time, args=covar, event=event, entry=entry, **kwargs
+        optimizer = self.init_likelihood(
+            time, args=covar, event=event, entry=entry, **kwargs
         )
         self.fitting_results = optimizer.optimize()
+        self.covar_effect.set_params([0.0] * len(covar))  # modify nb coef inplace
         self.set_params(self.fitting_results.optimal_params)
 
         return self
+
+
+def init_regression_params_from_lifetimes(
+    model: ParametricLifetimeRegression, data: LifetimeData
+) -> Array1D[np.float64]:
+    param0 = np.zeros_like(model.get_params(), dtype=np.float64)
+    param0[-model.baseline.get_params().size :] = init_distrib_params_from_lifetimes(
+        model.baseline, data
+    )
+    return param0
+
+
+def get_regression_params_bounds(model: ParametricLifetimeRegression) -> Bounds:
+    nb_coefficients = model.covar_effect.get_params().size
+    lb = np.concatenate(
+        (
+            np.full(nb_coefficients, -np.inf),
+            get_distrib_params_bounds(
+                model.baseline
+            ).lb,  # baseline has _params_bounds according to typing
+        )
+    )
+    ub = np.concatenate(
+        (
+            np.full(nb_coefficients, np.inf),
+            get_distrib_params_bounds(model.baseline).ub,
+        )
+    )
+    return Bounds(lb, ub)
 
 
 @final
@@ -422,6 +435,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         return self.baseline.ichf(cumulative_hazard_rate / self.covar_effect.g(*covar))
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def dhf(
         self,
         time: VT,
@@ -430,6 +446,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         return self.covar_effect.g(*covar) * self.baseline.dhf(time)
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_hf(
         self,
         time: VT,
@@ -443,6 +462,9 @@ class ParametricProportionalHazard(ParametricLifetimeRegression):
         return np.concatenate((u, v), axis=0)  # (p + nb_coef, ...)
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_chf(
         self,
         time: VT,
@@ -542,6 +564,9 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         return self.covar_effect.g(*covar) * self.baseline.ichf(cumulative_hazard_rate)
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def dhf(
         self,
         time: VT,
@@ -551,6 +576,9 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         return self.baseline.dhf(t0) / self.covar_effect.g(*covar) ** 2
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_hf(
         self,
         time: VT,
@@ -576,6 +604,9 @@ class ParametricAcceleratedFailureTime(ParametricLifetimeRegression):
         )  # (p + nb_coef, ...)
 
     @override
+    @document_args(
+        base_cls=FittableParametricLifetimeModel, args_docstring=_covar_docstring
+    )
     def jac_chf(
         self,
         time: VT,

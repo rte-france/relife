@@ -51,7 +51,7 @@ Likelihoods
 
 """
 
-from ._base import ParametricLifetimeModel
+from ._base import FittableParametricLifetimeModel, ParametricLifetimeModel
 from ._distributions import (
     Exponential,
     Gamma,
@@ -72,7 +72,7 @@ from ._parametric_regressions import (
 from ._semi_parametric_regressions import SemiParametricProportionalHazard
 
 __all__: list[str] = []
-__all__ += ["ParametricLifetimeModel"]
+__all__ += ["FittableParametricLifetimeModel", "ParametricLifetimeModel"]
 __all__ += [
     "EquilibriumDistribution",
     "Exponential",

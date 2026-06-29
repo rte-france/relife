@@ -5,7 +5,7 @@ import inspect
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Any, Literal, ParamSpec, TypeAlias, TypeVar, overload
+from typing import Any, Literal, ParamSpec, TypeVar, overload
 
 import numpy as np
 from optype.numpy import Array1D, Array2D, ArrayND
@@ -17,13 +17,12 @@ from relife.lifetime_models._base import (
 )
 from relife.quadratures import legendre_quadrature
 from relife.rewards import AgeReplacementReward, ExponentialDiscounting
-from relife.stochastic_processes._non_homogeneous_poisson_process import (
-    FrozenNonHomogeneousPoissonProcess,
-)
+from relife.stochastic_processes import NonHomogeneousPoissonProcess
 from relife.stochastic_processes._renewal_processes import (
     RenewalRewardProcess,
     reshape_a0_ar,
 )
+from relife.typing import ST, NumpyST
 from relife.utils import (
     flatten_if_at_least_2d,
     to_column_2d_if_1d,
@@ -31,14 +30,6 @@ from relife.utils import (
 )
 
 from ._base import BaseReplacementPolicy, OneCycleExpectedCosts
-
-__all__ = [
-    "OneCycleAgeReplacementPolicy",
-    "age_replacement_policy",
-]
-
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
 
 R = TypeVar("R")
 P = ParamSpec("P")
@@ -86,13 +77,13 @@ def age_replacement_policy(
 ) -> AgeReplacementPolicy: ...
 @overload
 def age_replacement_policy(
-    baseline_model: FrozenNonHomogeneousPoissonProcess,
+    baseline_model: NonHomogeneousPoissonProcess[()],
     cost_structure: dict[str, ST | NumpyST | Array1D[NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
 ) -> NonHomogeneousPoissonAgeReplacementPolicy: ...
 def age_replacement_policy(
-    baseline_model: ParametricLifetimeModel[()] | FrozenNonHomogeneousPoissonProcess,
+    baseline_model: ParametricLifetimeModel[()] | NonHomogeneousPoissonProcess[()],
     cost_structure: dict[str, ST | NumpyST | Array1D[NumpyST]],
     one_cycle: bool = False,
     **kwargs: Any,
@@ -125,7 +116,7 @@ def age_replacement_policy(
     ValueError
         If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.
     """  # noqa: E501
-    if isinstance(baseline_model, FrozenNonHomogeneousPoissonProcess):
+    if isinstance(baseline_model, NonHomogeneousPoissonProcess):
         try:
             cr = to_numpy_float64(cost_structure["cr"])
             cp = to_numpy_float64(cost_structure["cp"])
@@ -661,82 +652,9 @@ class AgeReplacementPolicy(BaseAgeReplacementPolicy):
 
         return newton(eq, x0)  # pyright: ignore
 
-    @check_impossible_replacements
-    @reshape_a0_ar
-    def generate_failure_data(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ):
-        """Generate failure data
-
-        This function will generate failure data that can be used to fit a lifetime model.
-
-        Parameters
-        ----------
-        ar : float or np.ndarray
-            Ages of replacements
-        nb_samples : int
-            The number of samples.
-        time_window : tuple of two floats
-            Time window in which data are sampled.
-        seed : int, optional
-            Random seed, by default None.
-        a0 : float or np.ndarray or None
-            Optional, initial ages
-
-        Returns
-        -------
-        A dict of time, event, entry and args (covariates)
-
-        """  # noqa: E501
-        return self._stochastic_reward_process(ar=ar).generate_failure_data(
-            nb_samples, time_window, ar=ar, a0=a0, seed=seed
-        )
-
-    @check_impossible_replacements
-    @reshape_a0_ar
-    def sample(
-        self,
-        nb_samples: int,
-        time_window: tuple[float, float],
-        ar: ST | NumpyST | Array1D[NumpyST],
-        a0: ST | NumpyST | Array1D[NumpyST] | None = None,
-        seed: int
-        | np.random.Generator
-        | np.random.BitGenerator
-        | np.random.RandomState
-        | None = None,
-    ):
-        """Renewal data sampling.
-
-        This function will sample data and encapsulate them in an object.
-
-        Parameters
-        ----------
-        nb_samples : int
-            The number of samples.
-        time_window : tuple of two floats
-            Time window in which data are sampled.
-        seed : int, optional
-            Random seed, by default None.
-
-        """
-
-        return self._stochastic_reward_process(ar=ar).sample(
-            nb_samples, time_window, ar=ar, a0=a0, seed=seed
-        )
-
 
 class NonHomogeneousPoissonAgeReplacementPolicy(
-    BaseReplacementPolicy[FrozenNonHomogeneousPoissonProcess]
+    BaseReplacementPolicy[NonHomogeneousPoissonProcess[()]]
 ):
     r"""Age replacement policy for non-Homogeneous Poisson process.
 
@@ -761,7 +679,7 @@ class NonHomogeneousPoissonAgeReplacementPolicy(
 
     def __init__(
         self,
-        process: FrozenNonHomogeneousPoissonProcess,
+        process: NonHomogeneousPoissonProcess[()],
         cr: ST | NumpyST | Array1D[NumpyST],
         cp: ST | NumpyST | Array1D[NumpyST],
         discounting_rate: float = 0.0,

@@ -57,13 +57,12 @@ def test_cox_params_eq(insulator_string_data):
         dtype=np.float64,
     )
 
-    re_model = SemiParametricProportionalHazard()
     covar = (
         insulator_string_data["pHCl"],
         insulator_string_data["pH2SO4"],
         insulator_string_data["HNO3"],
     )
-    re_model.fit(
+    re_model = SemiParametricProportionalHazard(
         time=insulator_string_data["time"],
         covar=covar,
         event=insulator_string_data["event"],

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Literal, TypeAlias, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 from optype.numpy import Array, Array1D, Array2D
@@ -10,14 +10,10 @@ from typing_extensions import override
 from relife.lifetime_models._base import ParametricLifetimeModel
 from relife.rewards import RunToFailureReward
 from relife.stochastic_processes._renewal_processes import RenewalRewardProcess
+from relife.typing import ST, NumpyST
 from relife.utils import flatten_if_at_least_2d, to_column_2d_if_1d
 
 from ._base import BaseReplacementPolicy, OneCycleExpectedCosts
-
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
-
-__all__ = ["run_to_failure_policy", "OneCycleRunToFailurePolicy", "RunToFailurePolicy"]
 
 
 @overload

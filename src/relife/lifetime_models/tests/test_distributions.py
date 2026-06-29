@@ -1,17 +1,13 @@
-from typing import TypeAlias
-
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 from optype.numpy import Array1D, ArrayND
 
 from relife.lifetime_models._distributions import LifetimeDistribution
+from relife.typing import ST, NumpyST
 from relife.utils import to_numpy_float64
 
 from .utils import generate_shapes
-
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
 
 
 class TestBroadcasting:

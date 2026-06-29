@@ -7,24 +7,10 @@ import numpy as np
 from optype.numpy import Array1D, Array2D, ArrayND, is_array_1d
 
 from relife.base import ParametricModel
-from relife.lifetime_models._base import (
-    ParametricLifetimeModel,
-)
+from relife.lifetime_models import ParametricLifetimeModel
 from relife.rewards import ExponentialDiscounting, Reward
+from relife.typing import ST, NumpyST
 from relife.utils import to_column_2d_if_1d
-
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
-ModelArgs: TypeAlias = tuple[ST | NumpyST | ArrayND[NumpyST], ...]
-LifetimeModelInput: TypeAlias = ParametricLifetimeModel[
-    *tuple[ST | NumpyST | ArrayND[NumpyST], ...]
-]
-
-
-__all__ = [
-    "RenewalProcess",
-    "RenewalRewardProcess",
-]
 
 FT: TypeAlias = Callable[
     [ST | NumpyST | ArrayND[NumpyST]],
@@ -428,20 +414,15 @@ class RenewalRewardProcess(RenewalProcess):
 
     def __init__(
         self,
-        lifetime_model: LifetimeModelInput,
+        lifetime_model: ParametricLifetimeModel[()],
         reward: Reward,
         discounting_rate: float = 0.0,
-        first_lifetime_model: LifetimeModelInput | None = None,
+        first_lifetime_model: ParametricLifetimeModel[()] | None = None,
         first_reward: Reward | None = None,
-        *,
-        model_args: ModelArgs = (),
-        first_model_args: ModelArgs | None = None,
     ) -> None:
         super().__init__(
             lifetime_model,
             first_lifetime_model,
-            model_args=model_args,
-            first_model_args=first_model_args,
         )
         self.reward = reward
         self.first_reward = first_reward if first_reward is not None else self.reward

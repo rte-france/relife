@@ -287,13 +287,13 @@ def test_aft_pph_weibull_eq(insulator_string_data: Array1D[np.void]):
     covar_3 = zscore(boxcox(insulator_string_data["HNO3"])[0])
     weibull_aft = ParametricAcceleratedFailureTime(Weibull()).fit(
         insulator_string_data["time"],
-        args=(covar_1, covar_2, covar_3),
+        covar=(covar_1, covar_2, covar_3),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
     weibull_pph = ParametricProportionalHazard(Weibull()).fit(
         insulator_string_data["time"],
-        args=(covar_1, covar_2, covar_3),
+        covar=(covar_1, covar_2, covar_3),
         event=insulator_string_data["event"],
         entry=insulator_string_data["entry"],
     )
