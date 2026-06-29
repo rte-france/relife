@@ -686,6 +686,7 @@ class AgeReplacementModel(ParametricLifetimeModel[*Ts]):
         self.ar = ar
 
     @property
+    @override
     def shape(self) -> tuple[int, ...]:
         return np.broadcast_shapes(np.asarray(self.ar), self.baseline.shape)
 
@@ -794,6 +795,7 @@ class LeftTruncatedModel(
         self.a0 = a0
 
     @property
+    @override
     def shape(self) -> tuple[int, ...]:
         return np.broadcast_shapes(np.asarray(self.a0), self.baseline.shape)
 
@@ -868,8 +870,9 @@ class FrozenParametricLifetimeModel(ParametricLifetimeModel[()], Generic[*Ts]):
         super().__init__()
         self.unfrozen = model
         self.args = args
-        
+
     @property
+    @override
     def shape(self) -> tuple[int, ...]:
         return np.broadcast_shapes(*(np.asarray(arg).shape for arg in self.args))
 
