@@ -8,13 +8,6 @@ from relife.base import FittingResults, ParametricModel
 from relife.lifetime_models import FittableParametricLifetimeModel
 from relife.typing import Ts
 
-__all__ = [
-    "Kijima1Process",
-    "Kijima2Process",
-    "FrozenKijima1Process",
-    "FrozenKijima2Process",
-]
-
 
 class Kijima1Process(ParametricModel, Generic[*Ts]):
     """

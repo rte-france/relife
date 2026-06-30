@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Generic, Literal, TypeAlias, TypeVar
+from typing import Generic, Literal, TypeVar
 
 import numpy as np
 from optype.numpy import (
@@ -18,11 +18,7 @@ from relife.rewards import ExponentialDiscounting, Reward
 from relife.stochastic_processes._renewal_processes import (
     reshape_a0_ar,
 )
-
-__all__ = ["OneCycleExpectedCosts", "BaseReplacementPolicy"]
-
-ST: TypeAlias = int | float
-NumpyST: TypeAlias = np.floating | np.uint
+from relife.typing import ST, NumpyST
 
 
 class OneCycleExpectedCosts:
