@@ -39,33 +39,36 @@ class RenewalEquationSolver:
 
     lifetime_model: ParametricLifetimeModel[()]
     first_lifetime_model: ParametricLifetimeModel[()] | None
-    func: FT
-    func1: FT | None
 
     def __init__(
         self,
         lifetime_model: ParametricLifetimeModel[()],
-        func: FT,
         first_lifetime_model: ParametricLifetimeModel[()] | None = None,
-        func1: FT | None = None,
     ) -> None:
         self.lifetime_model = lifetime_model
-        self.func = func
-        if first_lifetime_model:
-            assert func1 is not None
         self.first_lifetime_model = first_lifetime_model
-        self.func1 = func1
+
+    @staticmethod
+    def make_timeline(tf: float, nb_steps: int) -> Array1D[np.float64]:
+        return np.linspace(0, tf, nb_steps, dtype=np.float64)
 
     def solve(
-        self, tf: float, nb_steps: int, discounting_rate: float = 0.0
-    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]]:
+        self,
+        timeline: Array1D[np.float64],
+        y: ArrayND[np.float64],
+        y1: ArrayND[np.float64] | None = None,
+        discounting_rate: float = 0.0,
+    ) -> Array1D[np.float64] | Array2D[np.float64]:
+
+        if y1 is not None:
+            assert self.first_lifetime_model is not None
 
         discounting = ExponentialDiscounting(discounting_rate)
-        timeline = np.atleast_2d(np.linspace(0, tf, nb_steps, dtype=np.float64))
+        timeline = np.atleast_2d(timeline)
         tm = 0.5 * (timeline[:, 1:] + timeline[:, :-1])  # (1, nb_steps - 1)
         f = np.atleast_2d(self.lifetime_model.cdf(timeline))  # (m, nb_steps)
         fm = np.atleast_2d(self.lifetime_model.cdf(tm))  # (m, nb_steps - 1)
-        y = np.atleast_2d(self.func(timeline))  # (1, nb_steps)
+        y = np.atleast_2d(y)  # (1, nb_steps)
         d = np.asarray(discounting.factor(timeline))  # (m, nb_steps)
         z = np.empty(y.shape)
         u = d * np.insert(f[:, 1:] - fm, 0, 1, axis=-1)
@@ -80,10 +83,10 @@ class RenewalEquationSolver:
                 + np.sum(z[:, 1:n][:, ::-1] * v[:, 1:n], axis=-1)
             )
 
-        if self.first_lifetime_model is not None and self.func1 is not None:
+        if self.first_lifetime_model is not None and y1 is not None:
             f1 = np.atleast_2d(self.first_lifetime_model.cdf(timeline))  # (m, nb_steps)
             f1m = np.atleast_2d(self.first_lifetime_model.cdf(tm))  # (m, nb_steps - 1)
-            y1 = np.atleast_2d(self.func1(timeline))  # (m, nb_steps - 1)
+            y1 = np.atleast_2d(y1)  # (m, nb_steps - 1)
             z1 = np.empty(y1.shape)
             u1 = d * np.insert(f1[:, 1:] - f1m, 0, 1, axis=-1)
             v1 = d[:, :-1] * np.insert(np.diff(f1m), 0, 1, axis=-1)
@@ -96,8 +99,8 @@ class RenewalEquationSolver:
                     + z[:, n] * d[:, 0] * f1m[:, 0]
                     + np.sum(z[:, 1:n][:, ::-1] * v1[:, 1:n], axis=-1)
                 )
-            return np.squeeze(timeline), np.squeeze(z1)
-        return np.squeeze(timeline), np.squeeze(z)
+            return np.squeeze(z1)
+        return np.squeeze(z)
 
 
 R = TypeVar("R")
@@ -218,12 +221,14 @@ class RenewalProcess(ParametricModel):
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
         """  # noqa: E501
-
         renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-            get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).cdf,
         )
-        return renewal_equation_solver.solve(tf, nb_steps)
+        timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+        scores = get_conditional_lifetime_model(
+            self.first_lifetime_model, ar=ar, a0=a0
+        ).cdf(timeline)
+        return timeline, renewal_equation_solver.solve(timeline, scores)
 
     @reshape_a0_ar
     def renewal_density(
@@ -274,11 +279,15 @@ class RenewalProcess(ParametricModel):
             Theory: Models, Statistical Methods, and Applications. John Wiley &
             Sons.
         """  # noqa: E501
+
         renewal_equation_solver = RenewalEquationSolver(
             get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-            get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0).pdf,
         )
-        return renewal_equation_solver.solve(tf, nb_steps)
+        timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+        scores = get_conditional_lifetime_model(
+            self.first_lifetime_model, ar=ar, a0=a0
+        ).pdf(timeline)
+        return timeline, renewal_equation_solver.solve(timeline, scores)
 
     @reshape_a0_ar
     def expected_number_of_events(
@@ -364,17 +373,19 @@ class RenewalProcess(ParametricModel):
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
                 get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
                 get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
-                F1,
             )
-        else:
-            renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
-            )
+            timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+            scores = F(timeline)
+            scores_1 = F1(timeline)
+            return timeline, renewal_equation_solver.solve(timeline, scores, scores_1)
 
-        return renewal_equation_solver.solve(tf, nb_steps)
+        renewal_equation_solver = RenewalEquationSolver(
+            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+        )
+        timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+        scores = F(timeline)
+        return timeline, renewal_equation_solver.solve(timeline, scores)
 
     @reshape_a0_ar
     def expected_number_of_preventive_renewals(
@@ -452,17 +463,19 @@ class RenewalProcess(ParametricModel):
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
                 get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
                 get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
-                F1,
             )
-        else:
-            renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
-            )
+            timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+            scores = F(timeline)
+            scores_1 = F1(timeline)
+            return timeline, renewal_equation_solver.solve(timeline, scores, scores_1)
 
-        return renewal_equation_solver.solve(tf, nb_steps)
+        renewal_equation_solver = RenewalEquationSolver(
+            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
+        )
+        timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+        scores = F(timeline)
+        return timeline, renewal_equation_solver.solve(timeline, scores)
 
     @reshape_a0_ar
     def sample(
@@ -723,19 +736,19 @@ class RenewalRewardProcess(RenewalProcess):
         if self._different_first_lifetime_model or a0 is not None:
             renewal_equation_solver = RenewalEquationSolver(
                 get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
                 get_conditional_lifetime_model(self.first_lifetime_model, a0=a0, ar=ar),
-                F1,
             )
-        else:
-            renewal_equation_solver = RenewalEquationSolver(
-                get_conditional_lifetime_model(self.lifetime_model, ar=ar),
-                F,
-            )
+            timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+            scores = F(timeline)
+            scores_1 = F1(timeline)
+            return timeline, renewal_equation_solver.solve(timeline, scores, scores_1)
 
-        return renewal_equation_solver.solve(
-            tf, nb_steps, discounting_rate=self.discounting_rate
+        renewal_equation_solver = RenewalEquationSolver(
+            get_conditional_lifetime_model(self.lifetime_model, ar=ar),
         )
+        timeline = renewal_equation_solver.make_timeline(tf, nb_steps)
+        scores = F(timeline)
+        return timeline, renewal_equation_solver.solve(timeline, scores)
 
     @reshape_a0_ar
     def asymptotic_expected_total_reward(
