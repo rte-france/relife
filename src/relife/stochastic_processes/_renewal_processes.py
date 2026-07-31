@@ -247,12 +247,27 @@ class RenewalProcess(ParametricModel):
             e(t) = t(1-F(t)) + \int_0^t e(t-x) \mathrm{d}F(x)
     
         where :
-        math: 'F' is the cumulative distribution function of the time to failure :math: 'X'
+        - :math: `F` is the cumulative distribution function 
+          of the time to failure :math: `X`.
+        - :math:`F_1` is the cumulative distribution function 
+          of the first time to failure :math:`X_1`.
+        
+        If "ar" is given, :math:'F' becomes :math:'F_{a_r}',
+        defined by, 
+        
+        .. math::
+        
+           T = text{min}(X, ~a_r) \sim F_{a_r}.
+         
+        The same applies for :math: 'X_1'. In this case,
+        :math:'F_1' becomes :math:'F_{1_{a_r}}' defined by,
+        
+        .. math::
+         
+           T_1 = \text{min}(X_1, ~a_r) \sim F_{a_r}.
     
-        If "ar" is given, :math:'F' becomes :math:'F_{a_r}' defined by :math:'T= text{min}(X, ~a_r) \sim F_{a_r}'.
-        The same applies for :math: 'X_1'. :math:'F_1' becomes :math:'F_{1_{a_r}}' defined by :math: 'T_1 = \text{min}(X_1, ~a_r) \sim F_{a_r}'.
-    
-        If "a0" is given, :math: 'F_1' becomes :math:'\mathbb{P}(X \leq t | ~ X > a_0)'.
+        If "a0" is given, :math: 'F_1' becomes 
+        :math:'\mathbb{P}(X \leq t | ~ X > a_0)'.
     
         Parameters
         ----------
@@ -270,32 +285,35 @@ class RenewalProcess(ParametricModel):
         out : tuple of two ndarrays
         A timeline and the corresponding values.
     
-    
         """
-        
         # Simple case: no initial age (a0 = 0) 
-        conditional_model = get_conditional_lifetime_model(self.lifetime_model,ar=ar)
-        def source_term (t):
+        conditional_model = get_conditional_lifetime_model(
+            self.lifetime_model,
+            ar=ar
+        )
+        def F(t):
             return t * conditional_model.sf(t)
         
         # Delayed case: the first asset has a non-zero initial age a0 
-        
         if self._different_first_lifetime_model or a0 is not None :
-            first_conditional_model = get_conditional_lifetime_model(self.first_lifetime_model,ar=ar, a0=a0)
-            def delayed_source_term(t) :
+            first_conditional_model = get_conditional_lifetime_model(
+                self.first_lifetime_model,
+                ar=ar,
+                a0=a0
+            )
+            def F1(t) :
                 return (t+a0) * first_conditional_model.sf(t)
             renewal_equation_solver = RenewalEquationSolver(
                 conditional_model, 
-                source_term, 
+                F, 
                 first_conditional_model, 
-                delayed_source_term
+                F1
             )
         else :
             renewal_equation_solver = RenewalEquationSolver(
                 conditional_model,
-                source_term
+                F
             )
-             
         return renewal_equation_solver.solve(tf, nb_steps)
     
     
@@ -316,15 +334,30 @@ class RenewalProcess(ParametricModel):
     
         .. math::
         
-          h(t) = t^2 (1-F(t)) + \int_0^t h(t-x) \mathrm{d}F(x)
+            h(t) = t^2 (1-F(t)) + \int_0^t h(t-x) \mathrm{d}F(x)
     
         where :
-        - math: 'F' is the cumulative distribution function of the time to failure :math: 'X'
+        - :math: `F` is the cumulative distribution function 
+          of the time to failure :math: `X`.
+        - :math:`F_1` is the cumulative distribution function 
+          of the first time to failure :math:`X_1`.
     
-        If "ar" is given, :math:'F' becomes :math:'F_{a_r}' defined by :math:'T= text{min}(X, ~a_r) \sim F_{a_r}'.
-        The same applies for :math: 'X_1'. :math:'F_1' becomes :math:'F_{1_{a_r}}' defined by :math: 'T_1 = \text{min}(X_1, ~a_r) \sim F_{a_r}'.
+        If "ar" is given, :math:'F' becomes :math:'F_{a_r}',
+        defined by,
+        
+        .. math::
+        
+            T= text{min}(X, ~a_r) \sim F_{a_r}.
+        The same applies for :math: 'X_1'. In this case,
+        :math:'F_1' becomes :math:'F_{1_{a_r}}',
+        defined by,
+        
+        .. math:
+         
+            T_1 = \text{min}(X_1, ~a_r) \sim F_{a_r}.
     
-        If "a0" is given, :math: 'F_1' becomes :math:'\mathbb{P}(X \leq t | ~ X > a_0)'.
+        If "a0" is given, :math: 'F_1' becomes 
+        :math:'\mathbb{P}(X \leq t | ~ X > a_0)'.
     
         Parameters
         ----------
@@ -337,45 +370,104 @@ class RenewalProcess(ParametricModel):
         ar : float or np.ndarray, optional
         Preventive ages of replacements.
     
-    
         Returns
         -------
         out : tuple of two ndarrays
         A timeline and the corresponding values.
             
         """
-        
         # Simple case : no initial age(a0 = 0)
-        conditional_model = get_conditional_lifetime_model(self.lifetime_model,ar=ar)
-        def source_term (t):
+        conditional_model = get_conditional_lifetime_model(
+            self.lifetime_model,
+            ar=ar
+        )
+        def F(t):
             return t**2 * conditional_model.sf(t)
         
         # Delayed case : the first asset has a non-zero initial age a0
-        
         if self._different_first_lifetime_model or a0 is not None :
-            first_conditional_model = get_conditional_lifetime_model(self.first_lifetime_model, ar=ar, a0=a0)
-            def delayed_source_term (t):
+            first_conditional_model = get_conditional_lifetime_model(
+                self.first_lifetime_model, 
+                ar=ar, 
+                a0=a0
+            )
+            def F1(t):
                 return (t+a0)**2 * first_conditional_model.sf(t)
-            
             renewal_equation_solver = RenewalEquationSolver(
                 conditional_model,
-                source_term,
+                F,
                 first_conditional_model,
-                delayed_source_term
+                F1
             )
         else :
             renewal_equation_solver = RenewalEquationSolver(
                 conditional_model,
-                source_term
+                F
             )
-        
         return renewal_equation_solver.solve(tf, nb_steps) 
     
      
     @reshape_a0_ar
-    def var_age(self, tf:float, nb_steps, a0=None,ar=None):
+    def var_age(
+        self, 
+        tf:float, 
+        nb_steps:int, 
+        a0:ST | NumpyST | Array1D[NumpyST] | None = None,
+        ar:ST | NumpyST | Array1D[NumpyST] | None = None
+    ) -> tuple[Array1D[np.float64], Array1D[np.float64] | Array2D[np.float64]] :
+        
+        r""" 
+        The variance of age of asset
+        It measures the dispersion of asset ages around the mean age:
+        math:'Var[A(t)]'
+        It is computed by solving the renewal equation
+            
+        .. math::
+        
+            Var[A(t)] = t^2 (1-F(t)) + \int_0^t h(t-x) \mathrm{d}F(x) - e(t)^2
+            
+        where :
+        
+        - :math:`F` is the cumulative distribution function 
+          of the time to failure :math:`X`.
+        - :math:`f_1` is the probability density function 
+          of the first time to failure :math:`X_1`.
+        
+            
+        If "ar" is given, :math:'F' becomes :math:'F_{a_r}',
+        defined by,
+        .. math:
+        
+           T= text{min}(X, ~a_r) \sim F_{a_r}.
+        The same applies for :math: 'X_1'. :math:'F_1' becomes 
+        :math:'F_{1_{a_r}}', 
+        defined by,
+        .. math:
+         
+           T_1 = \text{min}(X_1, ~a_r) \sim F_{a_r}.
+            
+        If "a0" is given, :math: 'F_1' becomes 
+        :math:'\mathbb{P}(X \leq t | ~ X > a_0)'.
+            
+        Parameters
+        ----------
+        tf : float
+        The final time
+        nb_steps : int
+        The number of steps used to discretized the time.
+        a0 : float or np.ndarray, optional
+        Initial ages of the assets.
+        ar : float or np.ndarray, optional
+        Preventive ages of replacements.
+            
+        Returns
+        -------
+        out : tuple of two ndarrays
+        A timeline and the corresponding values.
+                    
+        """
         #Compute variance of age using mean_age and mean_square_age
-        timeline, mean_age = self.mean_age(tf, nb_steps, a0,ar)
+        timeline, mean_age = self.mean_age(tf,nb_steps,a0,ar)
         _, mean_square_age = self.mean_square_age(tf,nb_steps,a0,ar)
         return timeline, mean_square_age - mean_age**2   
     
