@@ -1,0 +1,6 @@
+﻿CoercibleFloat64\_ND
+====================
+
+.. currentmodule:: relife.typing
+
+.. autodata:: CoercibleFloat64_ND

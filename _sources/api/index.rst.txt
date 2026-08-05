@@ -37,6 +37,8 @@ Parametric lifetime models
     Gompertz
     Gamma
     LogLogistic
+    EquilibriumDistribution
+    MinimumDistribution
 
 .. rubric:: Parametric lifetime regressions
 
@@ -75,21 +77,6 @@ Non parametric lifetime models
     ECDF
 
 
-Conditional lifetime models
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. rubric:: Conditional lifetime models
-
-.. autosummary::
-    :toctree: conditional_lifetime_models
-    :template: class_template.rst
-    :caption: Conditional lifetime models
-    :nosignatures:
-
-    LeftTruncatedModel
-    AgeReplacementModel
-
-
 Stochastic processes
 --------------------
 
@@ -108,23 +95,11 @@ Stochastic processes
 Maintenance policies
 --------------------
 
-Convenient functions to instanciate a policy based on the given model and cost structure.
-
 .. currentmodule:: relife.policies
 
 .. autosummary::
-    :toctree: policy
+    :toctree: maintenance_policies
     :caption: Maintenance policies
-    :template: function_template.rst
-    :nosignatures:
-
-    age_replacement_policy
-    run_to_failure_policy
-
-Lower-level policy classes that can be used in addition to the above functions.
-
-.. autosummary::
-    :toctree: policy
     :template: class_template.rst
     :nosignatures:
 
@@ -134,28 +109,13 @@ Lower-level policy classes that can be used in addition to the above functions.
     OneCycleRunToFailurePolicy
     NonHomogeneousPoissonAgeReplacementPolicy
 
-Rewards
--------
-
-.. currentmodule:: relife.rewards
-
-.. autosummary::
-    :toctree: economy
-    :template: class_template.rst
-    :caption: Economy
-    :nosignatures:
-
-    RunToFailureReward
-    AgeReplacementReward
-    ExponentialDiscounting
-
 Built-in datasets
 -----------------
 
 .. currentmodule:: relife.datasets
 
 .. autosummary::
-    :toctree: data
+    :toctree: datasets
     :template: function_template.rst
     :caption: Built-in datasets
     :nosignatures:
@@ -163,23 +123,6 @@ Built-in datasets
     ~load_circuit_breaker
     ~load_insulator_string
     ~load_power_transformer
-
-
-Likelihoods
------------
-
-.. currentmodule:: relife.lifetime_models
-
-.. autosummary::
-    :toctree: likelihoods
-    :template: class_template.rst
-    :caption: Likelihoods
-    :nosignatures:
-
-    LifetimeLikelihood
-    CoxPartialLifetimeLikelihood
-    EfronPartialLifetimeLikelihood
-    BreslowPartialLifetimeLikelihood
 
 
 Quadratures
@@ -191,8 +134,9 @@ support automatic broadcasting of 2D bounds.
 .. currentmodule:: relife.quadratures
 
 .. autosummary::
-    :toctree: routines
+    :toctree: quadratures
     :template: function_template.rst
+    :caption: Quadratures
     :nosignatures:
 
     ~legendre_quadrature
@@ -200,21 +144,23 @@ support automatic broadcasting of 2D bounds.
     ~unweighted_laguerre_quadrature
 
 
-Utils
------
+Typing
+------
 
-Various utilities to help with development.
-
-.. currentmodule:: relife.utils
+.. currentmodule:: relife.typing
 
 .. autosummary::
-    :toctree: routines
-    :template: function_template.rst
-    :caption: Utils
+    :toctree: typing
+    :template: data_template.rst
+    :caption: Typing
     :nosignatures:
 
-    ~to_numpy_float64
-    ~to_column_2d_if_1d
-    ~flatten_if_at_least_2d
-    ~get_nb_assets
+    ~CovarTs
+    ~CoercibleFloat64_ND
+    ~CoercibleFloat64_1D
+    ~Float64_ND
+    ~Float64_1D
+    ~Timeline
+    ~Seed
+
 

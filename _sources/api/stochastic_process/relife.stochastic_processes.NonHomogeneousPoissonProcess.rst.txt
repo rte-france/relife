@@ -31,19 +31,16 @@ NonHomogeneousPoissonProcess
             ~NonHomogeneousPoissonProcess.freeze
         
         
-            ~NonHomogeneousPoissonProcess.generate_failure_data
-        
-        
             ~NonHomogeneousPoissonProcess.get_params
-        
-        
-            ~NonHomogeneousPoissonProcess.get_params_names
         
         
             ~NonHomogeneousPoissonProcess.intensity
         
         
-            ~NonHomogeneousPoissonProcess.sample
+            ~NonHomogeneousPoissonProcess.is_fitted
+        
+        
+            ~NonHomogeneousPoissonProcess.is_parametrized
         
         
             ~NonHomogeneousPoissonProcess.set_params

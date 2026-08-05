@@ -1,0 +1,114 @@
+﻿
+
+
+
+MinimumDistribution
+===================
+
+.. currentmodule:: relife.lifetime_models
+
+.. autoclass:: MinimumDistribution
+    :members:
+    :inherited-members:
+    :exclude-members: __init__, __new__
+    :member-order: alphabetical
+
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+
+    
+        
+        
+            ~MinimumDistribution.apply_condition
+        
+        
+            ~MinimumDistribution.cdf
+        
+        
+            ~MinimumDistribution.chf
+        
+        
+            ~MinimumDistribution.dhf
+        
+        
+            ~MinimumDistribution.fit
+        
+        
+            ~MinimumDistribution.freeze
+        
+        
+            ~MinimumDistribution.get_params
+        
+        
+            ~MinimumDistribution.hf
+        
+        
+            ~MinimumDistribution.ichf
+        
+        
+            ~MinimumDistribution.init_likelihood
+        
+        
+            ~MinimumDistribution.is_fitted
+        
+        
+            ~MinimumDistribution.is_parametrized
+        
+        
+            ~MinimumDistribution.isf
+        
+        
+            ~MinimumDistribution.jac_cdf
+        
+        
+            ~MinimumDistribution.jac_chf
+        
+        
+            ~MinimumDistribution.jac_hf
+        
+        
+            ~MinimumDistribution.jac_pdf
+        
+        
+            ~MinimumDistribution.jac_sf
+        
+        
+            ~MinimumDistribution.ls_integrate
+        
+        
+            ~MinimumDistribution.mean
+        
+        
+            ~MinimumDistribution.median
+        
+        
+            ~MinimumDistribution.moment
+        
+        
+            ~MinimumDistribution.mrl
+        
+        
+            ~MinimumDistribution.pdf
+        
+        
+            ~MinimumDistribution.plot
+        
+        
+            ~MinimumDistribution.ppf
+        
+        
+            ~MinimumDistribution.rvs
+        
+        
+            ~MinimumDistribution.set_params
+        
+        
+            ~MinimumDistribution.sf
+        
+        
+            ~MinimumDistribution.var
+        
+    

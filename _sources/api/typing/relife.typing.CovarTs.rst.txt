@@ -1,0 +1,6 @@
+﻿CovarTs
+=======
+
+.. currentmodule:: relife.typing
+
+.. autodata:: CovarTs

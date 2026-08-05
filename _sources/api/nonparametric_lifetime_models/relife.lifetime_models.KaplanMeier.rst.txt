@@ -22,9 +22,6 @@ KaplanMeier
     
         
         
-            ~KaplanMeier.fit
-        
-        
             ~KaplanMeier.plot
         
         

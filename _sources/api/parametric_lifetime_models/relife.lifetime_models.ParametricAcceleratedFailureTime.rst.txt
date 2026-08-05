@@ -22,6 +22,9 @@ ParametricAcceleratedFailureTime
     
         
         
+            ~ParametricAcceleratedFailureTime.apply_condition
+        
+        
             ~ParametricAcceleratedFailureTime.cdf
         
         
@@ -43,9 +46,6 @@ ParametricAcceleratedFailureTime
             ~ParametricAcceleratedFailureTime.get_params
         
         
-            ~ParametricAcceleratedFailureTime.get_params_names
-        
-        
             ~ParametricAcceleratedFailureTime.hf
         
         
@@ -53,6 +53,12 @@ ParametricAcceleratedFailureTime
         
         
             ~ParametricAcceleratedFailureTime.init_likelihood
+        
+        
+            ~ParametricAcceleratedFailureTime.is_fitted
+        
+        
+            ~ParametricAcceleratedFailureTime.is_parametrized
         
         
             ~ParametricAcceleratedFailureTime.isf

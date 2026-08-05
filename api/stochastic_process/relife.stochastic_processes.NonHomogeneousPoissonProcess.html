@@ -54,11 +54,11 @@
     <link rel="icon" href="../../_static/relife_favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="age_replacement_policy" href="../policy/relife.policies.age_replacement_policy.html" />
+    <link rel="next" title="AgeReplacementPolicy" href="../maintenance_policies/relife.policies.AgeReplacementPolicy.html" />
     <link rel="prev" title="RenewalRewardProcess" href="relife.stochastic_processes.RenewalRewardProcess.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -137,7 +137,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -389,6 +389,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gompertz.html">Gompertz</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gamma.html">Gamma</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.MinimumDistribution.html">MinimumDistribution</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
@@ -404,11 +406,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_models.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_models.ECDF.html">ECDF</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.AgeReplacementModel.html">AgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="relife.stochastic_processes.RenewalProcess.html">RenewalProcess</a></li>
@@ -417,46 +414,33 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.age_replacement_policy.html">age_replacement_policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.run_to_failure_policy.html">run_to_failure_policy</a></li>
-</ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.RunToFailureReward.html">RunToFailureReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.AgeReplacementReward.html">AgeReplacementReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Quadratures</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Typing</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_numpy_float64.html">to_numpy_float64</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_column_2d_if_1d.html">to_column_2d_if_1d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.flatten_if_at_least_2d.html">flatten_if_at_least_2d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_nb_assets.html">get_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CovarTs.html">CovarTs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_ND.html">CoercibleFloat64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_1D.html">CoercibleFloat64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_ND.html">Float64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_1D.html">Float64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Timeline.html">Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Seed.html">Seed</a></li>
 </ul>
 </div>
 </nav></div>
@@ -523,6 +507,14 @@
 <dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.stochastic_processes.</span></span><span class="sig-name descname"><span class="pre">NonHomogeneousPoissonProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lifetime_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_processes/_non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess" title="Link to this definition">#</a></dt>
 <dd><p>Non-homogeneous Poisson process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>lifetime_model</strong><span class="classifier">ParametricLifetimeModel</span></dt><dd><p>Lifetime model defining the process intensity.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
@@ -530,27 +522,24 @@
 <td><p>The cumulative intensity function of the process.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.fit" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Estimation of the process parameters from recurrent failure data.</p></td>
+<td><p>Estimate process parameters from recurrent failure data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freeze</span></code></a></p></td>
-<td><p>Freeze any arguments required by the process into the object data.</p></td>
+<td><p>Return a process with additional arguments stored.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_failure_data</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a></p></td>
 <td><p>Get the parameters of this model.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params_names" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params_names</span></code></a></p></td>
-<td><p>Parameters names.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.intensity" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.intensity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intensity</span></code></a></p></td>
 <td><p>The intensity function of the process.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.sample" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a></p></td>
-<td><p>Renewal data sampling.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_fitted" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.is_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_fitted</span></code></a></p></td>
+<td><p>Whether fitting results are set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.set_params" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_parametrized" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.is_parametrized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_parametrized</span></code></a></p></td>
+<td><p>Whether at least one parameter value is set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.set_params" title="relife.stochastic_processes.NonHomogeneousPoissonProcess.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a></p></td>
 <td><p>Set the parameters of this model.</p></td>
 </tr>
 </tbody>
@@ -563,8 +552,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.</p>
 </dd>
 <dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
@@ -582,46 +570,41 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ages_at_events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_assets_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_ages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lifetime_model_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_processes/_non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.fit" title="Link to this definition">#</a></dt>
-<dd><p>Estimation of the process parameters from recurrent failure data.</p>
+<dd><p>Estimate process parameters from recurrent failure data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>ages_at_events</strong><span class="classifier">1D array of float</span></dt><dd><p>Array of float containing the ages of each asset when the events occured</p>
+<dt><strong>ages_at_events</strong><span class="classifier">1d array of floats</span></dt><dd><p>Ages of each asset when events occurred.</p>
 </dd>
-<dt><strong>events_assets_ids</strong><span class="classifier">sequence of hashable</span></dt><dd><p>Sequence object containing the ids of each assets corresponding to
-each ages.</p>
+<dt><strong>events_assets_ids</strong><span class="classifier">sequence of hashable</span></dt><dd><p>Asset ids corresponding to <code class="docutils literal notranslate"><span class="pre">ages_at_events</span></code>.</p>
 </dd>
-<dt><strong>first_ages</strong><span class="classifier">1D array of float, optional</span></dt><dd><p>Array of float containing the ages of each asset before observing
-events. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is needed and its length
-must equal the size of <code class="docutils literal notranslate"><span class="pre">first_ages</span></code>.</p>
+<dt><strong>first_ages</strong><span class="classifier">1d array of floats, optional</span></dt><dd><p>Asset ages before the observation period. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is
+required and must have the same length.</p>
 </dd>
-<dt><strong>last_ages</strong><span class="classifier">1D array of float, optional</span></dt><dd><p>Array of float containing the ages of each asset at the end of the
-observation period. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is needed and its length
-must equal the size of <code class="docutils literal notranslate"><span class="pre">last_ages</span></code>.</p>
+<dt><strong>last_ages</strong><span class="classifier">1d array of floats, optional</span></dt><dd><p>Asset ages at the end of the observation period. If set,
+<code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is required and must have the same length.</p>
 </dd>
-<dt><strong>lifetime_model_args</strong><span class="classifier">tuple of np.ndarray, optional</span></dt><dd><p>Additional arguments needed by the model. If set, <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is
-needed. For 1D array, the size must equal the length of
-<code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>. For 2D array (e.g. covar of regression), the length
-of first axis must equal the length of <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>.</p>
+<dt><strong>lifetime_model_args</strong><span class="classifier">tuple of np.ndarray, optional</span></dt><dd><p>Additional arguments needed by the lifetime model. If set,
+<code class="docutils literal notranslate"><span class="pre">assets_ids</span></code> is required. For 1d arrays, the size must equal the
+length of <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>. For 2d arrays, the first axis length must
+equal the length of <code class="docutils literal notranslate"><span class="pre">assets_ids</span></code>.</p>
 </dd>
-<dt><strong>assets_ids</strong><span class="classifier">sequence of hashable, optional</span></dt><dd><p>Only needed if either <code class="docutils literal notranslate"><span class="pre">first_ages</span></code>, <code class="docutils literal notranslate"><span class="pre">last_ages</span></code> or
-<code class="docutils literal notranslate"><span class="pre">model_args</span></code> is filled. It must be a sequence object containing
-the unique ids corresponding to each values contained in
-<code class="docutils literal notranslate"><span class="pre">first_ages</span></code>, <code class="docutils literal notranslate"><span class="pre">last_ages</span></code> and/or <code class="docutils literal notranslate"><span class="pre">model_args</span></code></p>
+<dt><strong>assets_ids</strong><span class="classifier">sequence of hashable, optional</span></dt><dd><p>Unique asset ids corresponding to values in <code class="docutils literal notranslate"><span class="pre">first_ages</span></code>,
+<code class="docutils literal notranslate"><span class="pre">last_ages</span></code> and/or <code class="docutils literal notranslate"><span class="pre">lifetime_model_args</span></code>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Self</dt><dd><p>The current object with the estimated parameters setted inplace.</p>
+<dt>Self</dt><dd><p>The current object with estimated parameters set in place.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
 <p>Ages of assets AB2 and CX13 at each event.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcess</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Weibull</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_processes</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcess</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nhpp</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">Weibull</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nhpp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
 <span class="go">    np.array([11., 13., 21., 25., 27.]),</span>
@@ -629,15 +612,15 @@ the unique ids corresponding to each values contained in
 <span class="go">)</span>
 </pre></div>
 </div>
-<p>With additional information and model args (regression of 2 coefficients)</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricProportionalHazard</span>
+<p>With additional information and lifetime model args.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricProportionalHazard</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nhpp</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">ParametricProportionalHazard</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nhpp</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
 <span class="go">    np.array([11., 13., 21., 25., 27.]),</span>
 <span class="go">    (&quot;AB2&quot;, &quot;CX13&quot;, &quot;AB2&quot;, &quot;AB2&quot;, &quot;CX13&quot;),</span>
 <span class="go">    first_ages = np.array([10., 12.]),</span>
 <span class="go">    last_ages = np.array([35., 60.]),</span>
-<span class="go">    model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)</span>
+<span class="go">    lifetime_model_args=(np.array([[1.2, 5.5], [37.2, 22.2]]),)</span>
 <span class="go">)</span>
 </pre></div>
 </div>
@@ -646,7 +629,7 @@ the unique ids corresponding to each values contained in
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze">
 <span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_processes/_non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze" title="Link to this definition">#</a></dt>
-<dd><p>Freeze any arguments required by the process into the object data.</p>
+<dd><p>Return a process with additional arguments stored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -656,19 +639,10 @@ the unique ids corresponding to each values contained in
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>FrozenParametricModel</dt><dd></dd>
+<dt>FrozenNonHomogeneousPoissonProcess</dt><dd></dd>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data">
-<span class="sig-name descname"><span class="pre">generate_failure_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_processes/_non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.generate_failure_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data" title="Link to this definition">#</a></dt>
-<dd><div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Not implemented yet</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -678,29 +652,13 @@ the unique ids corresponding to each values contained in
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">1darray of number</span></dt><dd><p>Model parameters.</p>
+<dt><strong>out</strong><span class="classifier">1darray of floats</span></dt><dd><p>Model parameters.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>If parameter values are not set, they default to <cite>np.nan</cite> values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params_names">
-<span class="sig-name descname"><span class="pre">get_params_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params_names" title="Link to this definition">#</a></dt>
-<dd><p>Parameters names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list of str</dt><dd><p>Parameters names</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Parameters values can be requested (a.k.a. get) by their name at instance level.</p>
+<p>If parameter values are not set, they default to <code class="docutils literal notranslate"><span class="pre">np.nan</span></code> values.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -710,8 +668,7 @@ the unique ids corresponding to each values contained in
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.
-If ndarray, allowed shapes are <code class="docutils literal notranslate"><span class="pre">()</span></code>, <code class="docutils literal notranslate"><span class="pre">(n,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n)</span></code>.</p>
+<dt><strong>time</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Elapsed time value(s) at which to compute the function.</p>
 </dd>
 <dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
 </dd>
@@ -727,24 +684,15 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_window</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/stochastic_processes/_non_homogeneous_poisson_process.html#NonHomogeneousPoissonProcess.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.sample" title="Link to this definition">#</a></dt>
-<dd><p>Renewal data sampling.</p>
-<p>Samples data and encapsulates them in a StochasticSampleMapping object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>nb_samples</strong><span class="classifier">int</span></dt><dd><p>The number of samples</p>
-</dd>
-<dt><strong>time_window</strong><span class="classifier">tuple of two floats</span></dt><dd><p>Time window in which data are sampled</p>
-</dd>
-<dt><strong>*args</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Additional arguments needed by the model.</p>
-</dd>
-<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Random seed, by default None.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.is_fitted">
+<span class="sig-name descname"><span class="pre">is_fitted</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_fitted" title="Link to this definition">#</a></dt>
+<dd><p>Whether fitting results are set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.stochastic_processes.NonHomogeneousPoissonProcess.is_parametrized">
+<span class="sig-name descname"><span class="pre">is_parametrized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_parametrized" title="Link to this definition">#</a></dt>
+<dd><p>Whether at least one parameter value is set.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -754,17 +702,17 @@ If ndarray, allowed shapes are <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>new_params</strong><span class="classifier">array-like of floats</span></dt><dd><p>Model parameters.</p>
+<dt><strong>new_params</strong><span class="classifier">1d array-like of floats</span></dt><dd><p>Model parameters.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p><cite>set_params</cite> definition expects an array-like of floats. At runtime,
+<p><code class="docutils literal notranslate"><span class="pre">set_params</span></code> definition expects an array-like of floats. At runtime,
 complex parameters might be setted temporarily to approximate fitted
 parameters covariance. This is contradictory to the given typing. At
 the moment, we don’t see a better solution and we believe that this is
-actually a limitation of what be expressed in the static typesystem.</p>
+actually a limitation of what can be expressed in the static typesystem.</p>
 </dd></dl>
 
 </dd></dl>
@@ -798,11 +746,10 @@ actually a limitation of what be expressed in the static typesystem.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.cumulative_intensity"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.cumulative_intensity()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.fit"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.fit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.freeze()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.generate_failure_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.get_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.get_params_names"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.get_params_names()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.intensity"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.intensity()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.sample"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.sample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_fitted"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.is_fitted()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.is_parametrized"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.is_parametrized()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.stochastic_processes.NonHomogeneousPoissonProcess.set_params"><code class="docutils literal notranslate"><span class="pre">NonHomogeneousPoissonProcess.set_params()</span></code></a></li>
 </ul>
 </li>

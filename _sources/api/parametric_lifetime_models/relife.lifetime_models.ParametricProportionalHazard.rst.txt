@@ -22,6 +22,9 @@ ParametricProportionalHazard
     
         
         
+            ~ParametricProportionalHazard.apply_condition
+        
+        
             ~ParametricProportionalHazard.cdf
         
         
@@ -43,9 +46,6 @@ ParametricProportionalHazard
             ~ParametricProportionalHazard.get_params
         
         
-            ~ParametricProportionalHazard.get_params_names
-        
-        
             ~ParametricProportionalHazard.hf
         
         
@@ -53,6 +53,12 @@ ParametricProportionalHazard
         
         
             ~ParametricProportionalHazard.init_likelihood
+        
+        
+            ~ParametricProportionalHazard.is_fitted
+        
+        
+            ~ParametricProportionalHazard.is_parametrized
         
         
             ~ParametricProportionalHazard.isf

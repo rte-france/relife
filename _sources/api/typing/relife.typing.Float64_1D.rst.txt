@@ -1,0 +1,6 @@
+﻿Float64\_1D
+===========
+
+.. currentmodule:: relife.typing
+
+.. autodata:: Float64_1D

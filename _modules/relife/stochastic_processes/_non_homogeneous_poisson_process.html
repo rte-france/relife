@@ -55,7 +55,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -134,7 +134,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -415,64 +415,56 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.stochastic_processes._non_homogeneous_poisson_process</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span></span><span class="sd">&quot;&quot;&quot;Non-homogeneous Poisson process models.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVarTuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">no_type_check</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">optype.numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array2D</span><span class="p">,</span> <span class="n">ArrayND</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optype.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">onp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">FittingResults</span><span class="p">,</span> <span class="n">ParametricModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_models._base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FittableParametricLifetimeModel</span><span class="p">,</span>
-    <span class="n">FrozenParametricLifetimeModel</span><span class="p">,</span>
-    <span class="n">LifetimeLikelihood</span><span class="p">,</span>
+    <span class="n">ParametricLifetimeModel</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_processes._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">StochasticSampleMapping</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;NonHomogeneousPoissonProcess&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;FrozenNonHomogeneousPoissonProcess&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="n">Ts</span> <span class="o">=</span> <span class="n">TypeVarTuple</span><span class="p">(</span><span class="s2">&quot;Ts&quot;</span><span class="p">)</span>
-<span class="n">ST</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span>
-<span class="n">NumpyST</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">uint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoercibleFloat64_ND</span><span class="p">,</span> <span class="n">CovarTs</span><span class="p">,</span> <span class="n">Float64_ND</span>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Non-homogeneous Poisson process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lifetime_model : ParametricLifetimeModel</span>
+<span class="sd">        Lifetime model defining the process intensity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">FittableParametricLifetimeModel</span><span class="p">[</span>
-        <span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-    <span class="p">]</span>
     <span class="n">fitting_results</span><span class="p">:</span> <span class="n">FittingResults</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]</span>  <span class="c1"># not accurate is case of fit</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">FittableParametricLifetimeModel</span><span class="p">[</span>
-            <span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-        <span class="p">],</span>
+        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">],</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">lifetime_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.intensity">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.intensity">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">intensity</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">time</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="n">time</span><span class="p">:</span> <span class="n">CoercibleFloat64_ND</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">CovarTs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_ND</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The intensity function of the process.</span>
 
@@ -480,7 +472,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        time : float or np.ndarray</span>
 <span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
 <span class="sd">        *args : float or np.ndarray</span>
 <span class="sd">            Additional arguments needed by the model.</span>
 
@@ -496,9 +487,9 @@
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.cumulative_intensity">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cumulative_intensity</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">time</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="n">time</span><span class="p">:</span> <span class="n">CoercibleFloat64_ND</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">CovarTs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_ND</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative intensity function of the process.</span>
 
@@ -506,7 +497,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        time : float or np.ndarray</span>
 <span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
 <span class="sd">        *args : float or np.ndarray</span>
 <span class="sd">            Additional arguments needed by the model.</span>
 
@@ -520,11 +510,9 @@
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.freeze">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.freeze">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">CovarTs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Freeze any arguments required by the process into the object data.</span>
+<span class="sd">        Return a process with additional arguments stored.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -533,146 +521,84 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        FrozenParametricModel</span>
+<span class="sd">        FrozenNonHomogeneousPoissonProcess</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">FrozenNonHomogeneousPoissonProcess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="NonHomogeneousPoissonProcess.sample">
-<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">BitGenerator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span>
-        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticSampleMapping</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
-
-<span class="sd">        Samples data and encapsulates them in a StochasticSampleMapping object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            The number of samples</span>
-<span class="sd">        time_window : tuple of two floats</span>
-<span class="sd">            Time window in which data are sampled</span>
-<span class="sd">        *args : float or np.ndarray</span>
-<span class="sd">            Additional arguments needed by the model.</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Random seed, by default None.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">frozen_nhpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">frozen_nhpp</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
-            <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="NonHomogeneousPoissonProcess.generate_failure_data">
-<a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.generate_failure_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">BitGenerator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span>
-        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        .. warning:: Not implemented yet</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;Failure data methods for stochastic processes will be introduced in a future release&quot;</span>  <span class="c1"># noqa: E501</span>
-        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonProcess.fit">
 <a class="viewcode-back" href="../../../api/stochastic_process/relife.stochastic_processes.NonHomogeneousPoissonProcess.html#relife.stochastic_processes.NonHomogeneousPoissonProcess.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">events_assets_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">first_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">last_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">lifetime_model_args</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
-        <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+        <span class="n">first_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">last_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">lifetime_model_args</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
         <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">assets_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Estimation of the process parameters from recurrent failure data.</span>
+<span class="sd">        Estimate process parameters from recurrent failure data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        ages_at_events : 1D array of float</span>
-<span class="sd">            Array of float containing the ages of each asset when the events occured</span>
+<span class="sd">        ages_at_events : 1d array of floats</span>
+<span class="sd">            Ages of each asset when events occurred.</span>
 <span class="sd">        events_assets_ids : sequence of hashable</span>
-<span class="sd">            Sequence object containing the ids of each assets corresponding to</span>
-<span class="sd">            each ages.</span>
-<span class="sd">        first_ages : 1D array of float, optional</span>
-<span class="sd">            Array of float containing the ages of each asset before observing</span>
-<span class="sd">            events. If set, ``assets_ids`` is needed and its length</span>
-<span class="sd">            must equal the size of ``first_ages``.</span>
-<span class="sd">        last_ages : 1D array of float, optional</span>
-<span class="sd">            Array of float containing the ages of each asset at the end of the</span>
-<span class="sd">            observation period. If set, ``assets_ids`` is needed and its length</span>
-<span class="sd">            must equal the size of ``last_ages``.</span>
+<span class="sd">            Asset ids corresponding to ``ages_at_events``.</span>
+<span class="sd">        first_ages : 1d array of floats, optional</span>
+<span class="sd">            Asset ages before the observation period. If set, ``assets_ids`` is</span>
+<span class="sd">            required and must have the same length.</span>
+<span class="sd">        last_ages : 1d array of floats, optional</span>
+<span class="sd">            Asset ages at the end of the observation period. If set,</span>
+<span class="sd">            ``assets_ids`` is required and must have the same length.</span>
 <span class="sd">        lifetime_model_args : tuple of np.ndarray, optional</span>
-<span class="sd">            Additional arguments needed by the model. If set, ``assets_ids`` is</span>
-<span class="sd">            needed. For 1D array, the size must equal the length of</span>
-<span class="sd">            ``assets_ids``. For 2D array (e.g. covar of regression), the length</span>
-<span class="sd">            of first axis must equal the length of ``assets_ids``.</span>
+<span class="sd">            Additional arguments needed by the lifetime model. If set,</span>
+<span class="sd">            ``assets_ids`` is required. For 1d arrays, the size must equal the</span>
+<span class="sd">            length of ``assets_ids``. For 2d arrays, the first axis length must</span>
+<span class="sd">            equal the length of ``assets_ids``.</span>
 <span class="sd">        assets_ids : sequence of hashable, optional</span>
-<span class="sd">            Only needed if either ``first_ages``, ``last_ages`` or</span>
-<span class="sd">            ``model_args`` is filled. It must be a sequence object containing</span>
-<span class="sd">            the unique ids corresponding to each values contained in</span>
-<span class="sd">            ``first_ages``, ``last_ages`` and/or ``model_args``</span>
+<span class="sd">            Unique asset ids corresponding to values in ``first_ages``,</span>
+<span class="sd">            ``last_ages`` and/or ``lifetime_model_args``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Self</span>
-<span class="sd">            The current object with the estimated parameters setted inplace.</span>
+<span class="sd">            The current object with estimated parameters set in place.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 
 <span class="sd">        Ages of assets AB2 and CX13 at each event.</span>
 
-<span class="sd">        &gt;&gt;&gt; from relife.lifetime_model import Weibull</span>
-<span class="sd">        &gt;&gt;&gt; from relife.stochastic_process import NonHomogeneousPoissonProcess</span>
+<span class="sd">        &gt;&gt;&gt; from relife.lifetime_models import Weibull</span>
+<span class="sd">        &gt;&gt;&gt; from relife.stochastic_processes import NonHomogeneousPoissonProcess</span>
 <span class="sd">        &gt;&gt;&gt; nhpp = NonHomogeneousPoissonProcess(Weibull())</span>
 <span class="sd">        &gt;&gt;&gt; nhpp.fit(</span>
 <span class="sd">            np.array([11., 13., 21., 25., 27.]),</span>
 <span class="sd">            (&quot;AB2&quot;, &quot;CX13&quot;, &quot;AB2&quot;, &quot;AB2&quot;, &quot;CX13&quot;),</span>
 <span class="sd">        )</span>
 
-<span class="sd">        With additional information and model args (regression of 2 coefficients)</span>
+<span class="sd">        With additional information and lifetime model args.</span>
 
-<span class="sd">        &gt;&gt;&gt; from relife.lifetime_model import ParametricProportionalHazard</span>
+<span class="sd">        &gt;&gt;&gt; from relife.lifetime_models import ParametricProportionalHazard</span>
 <span class="sd">        &gt;&gt;&gt; nhpp = NonHomogeneousPoissonProcess(ParametricProportionalHazard())</span>
 <span class="sd">        &gt;&gt;&gt; nhpp.fit(</span>
 <span class="sd">            np.array([11., 13., 21., 25., 27.]),</span>
 <span class="sd">            (&quot;AB2&quot;, &quot;CX13&quot;, &quot;AB2&quot;, &quot;AB2&quot;, &quot;CX13&quot;),</span>
 <span class="sd">            first_ages = np.array([10., 12.]),</span>
 <span class="sd">            last_ages = np.array([35., 60.]),</span>
-<span class="sd">            model_args = (np.array([[1.2, 5.5], [37.2, 22.2]]),) # 2d array of 2 raws (2 assets) and 2 columns (2 coefficients)</span>
+<span class="sd">            lifetime_model_args=(np.array([[1.2, 5.5], [37.2, 22.2]]),)</span>
 <span class="sd">        )</span>
 <span class="sd">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>  <span class="c1"># noqa: B028</span>
             <span class="s2">&quot;Fit method of NHPP will change in a future release&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span>
         <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">FittableParametricLifetimeModel</span><span class="p">)</span>
 
         <span class="n">nhpp_data</span> <span class="o">=</span> <span class="n">NHPPData</span><span class="p">(</span>
             <span class="n">ages_at_events</span><span class="p">,</span>
@@ -683,9 +609,9 @@
             <span class="n">assets_ids</span><span class="o">=</span><span class="n">assets_ids</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">time</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">nhpp_data</span><span class="o">.</span><span class="n">to_lifetime_data</span><span class="p">()</span>
-        <span class="n">optimizer</span><span class="p">:</span> <span class="n">LifetimeLikelihood</span><span class="p">[</span>
-            <span class="n">FittableParametricLifetimeModel</span><span class="p">[</span><span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">init_likelihood</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">init_likelihood</span><span class="p">(</span>
+            <span class="n">time</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
         <span class="n">fitting_results</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">fitting_results</span><span class="o">.</span><span class="n">optimal_params</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="o">=</span> <span class="n">fitting_results</span>
@@ -694,26 +620,25 @@
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">FrozenNonHomogeneousPoissonProcess</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Non-homogeneous Poisson process.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrozenNonHomogeneousPoissonProcess</span><span class="p">(</span>
+    <span class="n">NonHomogeneousPoissonProcess</span><span class="p">[()],</span> <span class="n">Generic</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-homogeneous Poisson process with additional arguments stored.&quot;&quot;&quot;</span>
 
-    <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">FrozenParametricLifetimeModel</span><span class="p">[</span>
-        <span class="o">*</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-    <span class="p">]</span>
+    <span class="n">unfrozen</span><span class="p">:</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]</span>
+    <span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nhpp</span><span class="p">:</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
+        <span class="n">nhpp</span><span class="p">:</span> <span class="n">NonHomogeneousPoissonProcess</span><span class="p">[</span><span class="o">*</span><span class="n">CovarTs</span><span class="p">],</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="o">*</span><span class="n">CovarTs</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span> <span class="o">=</span> <span class="n">nhpp</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nhpp</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen</span> <span class="o">=</span> <span class="n">nhpp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">intensity</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">CoercibleFloat64_ND</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_ND</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The intensity function of the process.</span>
 
@@ -721,7 +646,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        time : float or np.ndarray</span>
 <span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -730,9 +654,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">hf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">cumulative_intensity</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">ArrayND</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cumulative_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">CoercibleFloat64_ND</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_ND</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The cumulative intensity function of the process.</span>
 
@@ -740,7 +663,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        time : float or np.ndarray</span>
 <span class="sd">            Elapsed time value(s) at which to compute the function.</span>
-<span class="sd">            If ndarray, allowed shapes are ``()``, ``(n,)`` or ``(m, n)``.</span>
 <span class="sd">        *args : float or np.ndarray</span>
 <span class="sd">            Additional arguments needed by the model.</span>
 
@@ -751,114 +673,34 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">chf</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ar</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">BitGenerator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span>
-        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticSampleMapping</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
-
-<span class="sd">        This function will sample data and encapsulate them in an object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            The number of samples.</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            Time at the end of the observation.</span>
-<span class="sd">        t0 : float, default 0</span>
-<span class="sd">            Time at the beginning of the observation.</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Random seed, by default None.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonHomogeneousPoissonProcessIterable</span>
-
-        <span class="n">iterable</span> <span class="o">=</span> <span class="n">NonHomogeneousPoissonProcessIterable</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="o">=</span><span class="n">time_window</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="n">ar</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
-        <span class="p">)</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-        <span class="n">struct_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
-            <span class="n">struct_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset_id&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_id&quot;</span><span class="p">,</span> <span class="s2">&quot;timeline&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">StochasticSampleMapping</span><span class="o">.</span><span class="n">from_struct_array</span><span class="p">(</span>
-            <span class="n">struct_array</span><span class="p">,</span> <span class="n">iterable</span><span class="o">.</span><span class="n">nb_assets</span><span class="p">,</span> <span class="n">nb_samples</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_failure_data</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">BitGenerator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span>
-        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates failure data.</span>
-
-<span class="sd">        Generates failure data that can be used to fit a non-homogeneous Poisson process.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            The number of samples.</span>
-<span class="sd">        time_window : tuple of two floats</span>
-<span class="sd">            Time window in which data are sampled</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Random seed, by default None.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        A dict of ages_at_events, events_assets_ids, first_ages, last_ages, model_args and assets_ids</span>
-<span class="sd">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;Failure data methods for stochastic processes will be introduced in a future release&quot;</span>  <span class="c1"># noqa: E501</span>
-        <span class="p">)</span>
-
-
-<span class="c1"># typeguard function</span>
-<span class="c1"># def is_non_homogeneous_poisson_process(</span>
-<span class="c1">#     model: NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M],</span>
-<span class="c1"># ) -&gt; TypeIs[NonHomogeneousPoissonProcess[M] | FrozenParametricLifetimeModel[M]]:</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     Checks if model is a non-homogeneous Poisson process.</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#     return isinstance(</span>
-<span class="c1">#         model, (NonHomogeneousPoissonProcess, FrozenNonHomogeneousPoissonProcess)</span>
-<span class="c1">#     )</span>
-
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NHPPData</span><span class="p">:</span>
-    <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
-    <span class="n">events_assets_ids</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">]</span>
-    <span class="n">first_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">last_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">model_args</span><span class="p">:</span> <span class="p">(</span>
-        <span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="p">)</span>
-    <span class="n">assets_ids</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocessed recurrent event data for NHPP fitting.&quot;&quot;&quot;</span>
 
-    <span class="n">first_age_index</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">last_age_index</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+    <span class="n">events_assets_ids</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">]</span>
+    <span class="n">first_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">last_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">model_args</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">assets_ids</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+
+    <span class="n">first_age_index</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">last_age_index</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">ages_at_events</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
         <span class="n">events_assets_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">first_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">last_ages</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model_args</span><span class="p">:</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
-        <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
-        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+        <span class="n">first_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">last_ages</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model_args</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
         <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">assets_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -968,14 +810,14 @@
                     <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
                     <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s2">&quot;Invalid arg shape in model_args. Arrays must be 0, 1 or 2d&quot;</span>
+                            <span class="s2">&quot;Invalid arg shape in model_args. onp.Arrays must be 0, 1 or 2d&quot;</span>  <span class="c1"># noqa: E501</span>
                         <span class="p">)</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">_</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assets_ids</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
                     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
 <span class="w">                            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">                            Invalid arg shape in model_args. Arrays must</span>
+<span class="sd">                            Invalid arg shape in model_args. onp.Arrays must</span>
 <span class="sd">                            coherent with the number of assets given by</span>
 <span class="sd">                            assets_ids</span>
 <span class="sd">                            &quot;&quot;&quot;</span>
@@ -994,14 +836,16 @@
                     <span class="s2">&quot;If model_args is given, corresponding asset ids must be given in assets_ids&quot;</span>  <span class="c1"># noqa: E501</span>
                 <span class="p">)</span>
 
+    <span class="nd">@no_type_check</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_lifetime_data</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
-        <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
-        <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span>
+        <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="nb">tuple</span><span class="p">[</span><span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return lifetime data arrays used by lifetime likelihood fitting.&quot;&quot;&quot;</span>
         <span class="n">event</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ages_at_events</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span>
         <span class="c1"># insert_index = np.cumsum(nb_ages_per_asset)</span>
         <span class="c1"># insert_index = last_age_index + 1</span>

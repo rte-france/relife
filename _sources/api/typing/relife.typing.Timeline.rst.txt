@@ -1,0 +1,6 @@
+﻿Timeline
+========
+
+.. currentmodule:: relife.typing
+
+.. autodata:: Timeline

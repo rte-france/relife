@@ -61,7 +61,7 @@
     <link rel="prev" title="Non-parametric lifetime models" href="non_parametric_lifetime_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -140,7 +140,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -383,11 +383,24 @@
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="about_numpy.html">About NumPy</a></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workflow_demo.html">Data collection</a></li>
+
+
+
+
+
+
+
+</ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="non_parametric_lifetime_models.html">Non-parametric lifetime models</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Lifetime distributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lifetime_regressions.html">Lifetime regressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="semiparametric_regression.html">Cox (semiparametric proportional hazard)</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling</a></li>
 </ul>
 </div>
 </nav></div>
@@ -496,8 +509,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">weibull</span><span class="o">.</span><span class="n">get_params_names</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">weibull</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">weibull</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -506,8 +518,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&#39;shape&#39;, &#39;rate&#39;)
-[nan nan]
+[None None]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -525,15 +536,15 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;relife.lifetime_models._distributions.Gompertz at 0x7144e425ff90&gt;
+Gompertz(shape=0.003907810339258283, rate=0.0757954646405569)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">weibull</span><span class="o">.</span><span class="n">get_params_names</span><span class="p">(),</span> <span class="n">weibull</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">gompertz</span><span class="o">.</span><span class="n">get_params_names</span><span class="p">(),</span> <span class="n">gompertz</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">weibull</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gompertz</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -542,8 +553,8 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&#39;shape&#39;, &#39;rate&#39;) [3.7267452  0.01232326]
-(&#39;shape&#39;, &#39;rate&#39;) [0.00390781 0.07579546]
+[3.7267452  0.01232326]
+[0.00390781 0.07579546]
 </pre></div></div>
 </div>
 <p>After fitting, parameters are setted inplace.</p>

@@ -55,7 +55,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -134,7 +134,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -415,440 +415,204 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.policies._run_to_failure_policies</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span></span><span class="sd">&quot;&quot;&quot;Run-to-failure maintenance policies.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">overload</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">optype.numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Array1D</span><span class="p">,</span> <span class="n">Array2D</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">optype.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">onp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.lifetime_models._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParametricLifetimeModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.rewards</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunToFailureReward</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_processes._renewal_processes</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenewalRewardProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.stochastic_processes._sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">StochasticSampleMapping</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">relife.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten_if_at_least_2d</span><span class="p">,</span> <span class="n">to_column_2d_if_1d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">relife.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span> <span class="n">Float64_1D</span><span class="p">,</span> <span class="n">Timeline</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseReplacementPolicy</span><span class="p">,</span> <span class="n">OneCycleExpectedCosts</span>
-
-<span class="n">ST</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span>
-<span class="n">NumpyST</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">uint</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;run_to_failure_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;OneCycleRunToFailurePolicy&quot;</span><span class="p">,</span> <span class="s2">&quot;RunToFailurePolicy&quot;</span><span class="p">]</span>
-
-
-<span class="nd">@overload</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_policy</span><span class="p">(</span>
-    <span class="n">baseline_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[()],</span>
-    <span class="n">cf</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-    <span class="n">one_cycle</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OneCycleRunToFailurePolicy</span><span class="p">:</span> <span class="o">...</span>
-<span class="nd">@overload</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_policy</span><span class="p">(</span>
-    <span class="n">baseline_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[()],</span>
-    <span class="n">cf</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-    <span class="n">one_cycle</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunToFailurePolicy</span><span class="p">:</span> <span class="o">...</span>
-<div class="viewcode-block" id="run_to_failure_policy">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.run_to_failure_policy.html#relife.policies.run_to_failure_policy">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_to_failure_policy</span><span class="p">(</span>
-    <span class="n">baseline_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[()],</span>
-    <span class="n">cf</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-    <span class="n">one_cycle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OneCycleRunToFailurePolicy</span> <span class="o">|</span> <span class="n">RunToFailurePolicy</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates a run-to-failure policy.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    baseline_model : parametric model</span>
-<span class="sd">        Parametric model required by the policy.</span>
-<span class="sd">    cf : float or 1d-array</span>
-<span class="sd">        Cost of failure.</span>
-<span class="sd">    one_cycle : bool, default False</span>
-<span class="sd">        If True, returns the one cycle variation of the policy.</span>
-<span class="sd">    **kwargs</span>
-<span class="sd">        Extra arguments required by the policy (a0, discounting_rate, etc.)</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Policy</span>
-<span class="sd">        Policy corresponding to the ``baseline_model`` and the ``cost_structure``.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If ``baseline_model`` or ``cost_structure`` does not have a corresponding policy.</span>
-<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
-    <span class="k">if</span> <span class="n">one_cycle</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">OneCycleRunToFailurePolicy</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">RunToFailurePolicy</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">BaseRunToFailure</span><span class="p">(</span><span class="n">BaseReplacementPolicy</span><span class="p">[</span><span class="n">ParametricLifetimeModel</span><span class="p">[()]],</span> <span class="n">ABC</span><span class="p">):</span>
-    <span class="n">_a0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[()],</span>
-        <span class="n">cf</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">lifetime_model</span><span class="p">,</span>
-            <span class="p">{</span><span class="s2">&quot;cf&quot;</span><span class="p">:</span> <span class="n">to_column_2d_if_1d</span><span class="p">(</span><span class="n">cf</span><span class="p">)},</span>
-            <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cost of failure.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">flatten_if_at_least_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cost_structure</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_column_2d_if_1d</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_net_present_value</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The expected net present value.</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            z(t) = \mathbb{E}(Z_t) = \int_{0}^{\infty}\mathbb{E}(Z_t~|~X_1 = x)dF(x)</span>
-
-<span class="sd">        where :</span>
-
-<span class="sd">        - :math:`t` is the time</span>
-<span class="sd">        - :math:`X_1 \sim F` is the random lifetime of the first asset</span>
-<span class="sd">        - :math:`Z_t` are the random costs at each time :math:`t`</span>
-<span class="sd">        - :math:`\delta` is the discounting rate</span>
-
-<span class="sd">        It is computed by solving the renewal equation.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            The final time.</span>
-<span class="sd">        nb_steps : int</span>
-<span class="sd">            The number of steps used to discretized the time.</span>
-<span class="sd">        a0 : float or np.ndarray, optional</span>
-<span class="sd">            Initial ages of the assets.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple of two ndarrays</span>
-<span class="sd">            A tuple containing the timeline and the computed values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The expected equivalent annual cost.</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            q(t) = \dfrac{\delta z(t)}{1 - e^{-\delta t}}</span>
-
-<span class="sd">        where :</span>
-
-<span class="sd">        - :math:`t` is the time.</span>
-<span class="sd">        - :math:`z(t)` is the expected net present value at time :math:`t`.</span>
-<span class="sd">        - :math:`\delta` is the discounting rate.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tf : float</span>
-<span class="sd">            The final time.</span>
-<span class="sd">        nb_steps : int</span>
-<span class="sd">            The number of steps used to discretized the time.</span>
-<span class="sd">        a0 : float or np.ndarray, optional</span>
-<span class="sd">            Initial ages of the assets.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple of two ndarrays</span>
-<span class="sd">            A tuple containing the timeline and the computed values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_net_present_value</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymtotic expected net present value.</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            \lim_{t\to\infty} z(t)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        a0 : float or np.ndarray, optional</span>
-<span class="sd">            Initial ages of the assets.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The asymtotic expected equivalent annual cost.</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            \lim_{t\to\infty} q(t)</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        a0 : float or np.ndarray, optional</span>
-<span class="sd">            Initial ages of the assets.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ndarray</span>
-<span class="sd">            The asymptotic expected values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRunToFailurePolicy</span><span class="p">,</span> <span class="n">OneCycleExpectedCosts</span>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleRunToFailurePolicy</span><span class="p">(</span><span class="n">BaseRunToFailure</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One cyle run-to-failure policy.</span>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OneCycleRunToFailurePolicy</span><span class="p">(</span><span class="n">BaseRunToFailurePolicy</span><span class="p">[</span><span class="n">ParametricLifetimeModel</span><span class="p">[()]]):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cycle run-to-failure policy.</span>
 
-<span class="sd">    Asset is replaced upon failure with cost :math:`c_f`.</span>
-
-<span class="sd">    .. note::</span>
-
-<span class="sd">        ``OneCycleRunToFailurePolicy`` differs from ``RunToFailurePolicy``</span>
-<span class="sd">        because only one cycle of replacement is considered.</span>
+<span class="sd">    Asset is replaced upon failure with cost :math:`c_f`. Only one replacement</span>
+<span class="sd">    cycle is considered.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    lifetime_model : any lifetime distribution or frozen lifetime model</span>
-<span class="sd">        A lifetime model representing the durations between events.</span>
-<span class="sd">    cf : float or 1darray</span>
-<span class="sd">        Costs of failures</span>
-<span class="sd">    discounting_rate : float, default is 0.</span>
-<span class="sd">        The discounting rate value used in the exponential discounting function</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    cf</span>
-<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+<span class="sd">    lifetime_model : ParametricLifetimeModel</span>
+<span class="sd">        Lifetime model representing durations between events.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">period_before_discounting</span><span class="p">:</span> <span class="nb">float</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">lifetime_model</span><span class="p">:</span> <span class="n">ParametricLifetimeModel</span><span class="p">[()],</span>
-        <span class="n">cf</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">],</span>
-        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">period_before_discounting</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lifetime_model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span> <span class="o">=</span> <span class="n">period_before_discounting</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_expected_costs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OneCycleExpectedCosts</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">OneCycleExpectedCosts</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="p">,</span>
-            <span class="n">RunToFailureReward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cf</span><span class="p">()),</span>
-            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span>
             <span class="n">period_before_discounting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">period_before_discounting</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy.expected_net_present_value">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_net_present_value">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_net_present_value">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_net_present_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">expected_net_present_value</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span></div>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">expected_net_present_value</span><span class="p">(</span>
+            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span></div>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">expected_equivalent_annual_cost</span><span class="p">(</span>
+            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_net_present_value">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_net_present_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">asymptotic_expected_net_present_value</span><span class="p">(</span><span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span></div>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_1D</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">asymptotic_expected_net_present_value</span><span class="p">(</span>
+            <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html#relife.policies.OneCycleRunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span><span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span></div>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_1D</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_costs</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
+            <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+        <span class="p">)</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="RunToFailurePolicy">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RunToFailurePolicy</span><span class="p">(</span><span class="n">BaseRunToFailure</span><span class="p">):</span>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RunToFailurePolicy</span><span class="p">(</span><span class="n">BaseRunToFailurePolicy</span><span class="p">[</span><span class="n">ParametricLifetimeModel</span><span class="p">[()]]):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run-to-failure renewal policy.</span>
 
 <span class="sd">    Asset is replaced upon failure with cost :math:`c_f`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    lifetime_model : any lifetime distribution or frozen lifetime model</span>
-<span class="sd">        A lifetime model representing the durations between events.</span>
-<span class="sd">    cf : float or 1darray</span>
-<span class="sd">        Costs of failures</span>
-<span class="sd">    discounting_rate : float, default is 0.</span>
-<span class="sd">        The discounting rate value used in the exponential discounting function</span>
-
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    cf</span>
+<span class="sd">    lifetime_model : ParametricLifetimeModel</span>
+<span class="sd">        Lifetime model representing durations between events.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Van der Weide, J. A. M., &amp; Van Noortwijk, J. M. (2008). Renewal</span>
 <span class="sd">        theory with exponential and hyperbolic discounting. Probability in</span>
 <span class="sd">        the Engineering and Informational Sciences, 22(1), 53-74.</span>
-<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_stochastic_reward_process</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenewalRewardProcess</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_model</span><span class="p">,</span>
-            <span class="n">RunToFailureReward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cf</span><span class="p">()),</span>
-            <span class="n">discounting_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">discounting_rate</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">RenewalRewardProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RunToFailurePolicy.expected_net_present_value">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.expected_net_present_value">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.expected_net_present_value">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_net_present_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">expected_total_reward</span><span class="p">(</span>
-            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span>
+            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunToFailurePolicy.expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.expected_equivalent_annual_cost">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tf</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">nb_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">expected_equivalent_annual_worth</span><span class="p">(</span>
-            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span>
+            <span class="n">tf</span><span class="p">,</span> <span class="n">nb_steps</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunToFailurePolicy.asymptotic_expected_net_present_value">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.asymptotic_expected_net_present_value">[docs]</a>
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.asymptotic_expected_net_present_value">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_net_present_value</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">(</span><span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_worth</span><span class="p">(</span>
-                <span class="n">a0</span><span class="o">=</span><span class="n">a0</span>
-            <span class="p">)</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_1D</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">asymptotic_expected_total_reward</span><span class="p">(</span>
+            <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RunToFailurePolicy.sample">
-<a class="viewcode-back" href="../../../api/policy/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+<div class="viewcode-block" id="RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">
+<a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.RunToFailurePolicy.html#relife.policies.RunToFailurePolicy.asymptotic_expected_equivalent_annual_cost">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">asymptotic_expected_equivalent_annual_cost</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">nb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">time_window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">a0</span><span class="p">:</span> <span class="n">ST</span> <span class="o">|</span> <span class="n">NumpyST</span> <span class="o">|</span> <span class="n">Array1D</span><span class="p">[</span><span class="n">NumpyST</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">BitGenerator</span>
-        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span>
-        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticSampleMapping</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renewal data sampling.</span>
-
-<span class="sd">        This function will sample data and encapsulate them in an object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_samples : int</span>
-<span class="sd">            The size of the desired sample</span>
-<span class="sd">        time_window : tuple of two floats</span>
-<span class="sd">            Time window in which data are sampled</span>
-<span class="sd">        a0 : float or np.ndarray, optional</span>
-<span class="sd">            Initial ages of the assets.</span>
-<span class="sd">        seed : int, optional</span>
-<span class="sd">            Random seed, by default None.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
-            <span class="n">nb_samples</span><span class="p">,</span> <span class="n">time_window</span><span class="p">,</span> <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">cf</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
+        <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_1D</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stochastic_reward_process</span><span class="o">.</span><span class="n">asymptotic_expected_equivalent_annual_worth</span><span class="p">(</span>
+                <span class="n">a0</span><span class="o">=</span><span class="n">a0</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="n">cf</span><span class="p">,</span> <span class="n">discounting_rate</span><span class="o">=</span><span class="n">discounting_rate</span>
+            <span class="p">)</span>
         <span class="p">)</span></div>
 </div>
 

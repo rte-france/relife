@@ -22,6 +22,9 @@ Weibull
     
         
         
+            ~Weibull.apply_condition
+        
+        
             ~Weibull.cdf
         
         
@@ -34,10 +37,10 @@ Weibull
             ~Weibull.fit
         
         
+            ~Weibull.freeze
+        
+        
             ~Weibull.get_params
-        
-        
-            ~Weibull.get_params_names
         
         
             ~Weibull.hf
@@ -47,6 +50,12 @@ Weibull
         
         
             ~Weibull.init_likelihood
+        
+        
+            ~Weibull.is_fitted
+        
+        
+            ~Weibull.is_parametrized
         
         
             ~Weibull.isf

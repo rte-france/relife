@@ -60,7 +60,7 @@
     <link rel="prev" title="SemiParametricProportionalHazard" href="../semiparametric_lifetime_models/relife.lifetime_models.SemiParametricProportionalHazard.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -139,7 +139,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -391,6 +391,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gompertz.html">Gompertz</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gamma.html">Gamma</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.MinimumDistribution.html">MinimumDistribution</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
@@ -406,11 +408,6 @@
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_models.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="relife.lifetime_models.ECDF.html">ECDF</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.AgeReplacementModel.html">AgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_processes.RenewalProcess.html">RenewalProcess</a></li>
@@ -419,46 +416,33 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.age_replacement_policy.html">age_replacement_policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.run_to_failure_policy.html">run_to_failure_policy</a></li>
-</ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.RunToFailureReward.html">RunToFailureReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.AgeReplacementReward.html">AgeReplacementReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Quadratures</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Typing</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_numpy_float64.html">to_numpy_float64</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_column_2d_if_1d.html">to_column_2d_if_1d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.flatten_if_at_least_2d.html">flatten_if_at_least_2d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_nb_assets.html">get_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CovarTs.html">CovarTs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_ND.html">CoercibleFloat64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_1D.html">CoercibleFloat64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_ND.html">Float64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_1D.html">Float64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Timeline.html">Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Seed.html">Seed</a></li>
 </ul>
 </div>
 </nav></div>
@@ -523,10 +507,22 @@
 <h1>KaplanMeier<a class="headerlink" href="#kaplanmeier" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.lifetime_models.KaplanMeier">
-<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.lifetime_models.</span></span><span class="sig-name descname"><span class="pre">KaplanMeier</span></span><a class="reference internal" href="../../_modules/relife/lifetime_models/_non_parametric_models.html#KaplanMeier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_models.KaplanMeier" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.lifetime_models.</span></span><span class="sig-name descname"><span class="pre">KaplanMeier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_models/_non_parametric_models.html#KaplanMeier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_models.KaplanMeier" title="Link to this definition">#</a></dt>
 <dd><p>Kaplan-Meier estimator.</p>
 <p>Compute the non-parametric Kaplan-Meier estimator (also known as the product
 limit estimator) of the survival function from lifetime data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">ndarray</span></dt><dd><p>Observed lifetime values.</p>
+</dd>
+<dt><strong>event</strong><span class="classifier">ndarray of boolean values (1d), default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
+</dd>
+<dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">Notes</p>
 <p>For a given time instant <span class="math notranslate nohighlight">\(t\)</span> and <span class="math notranslate nohighlight">\(n\)</span> total observations, this
 estimator is defined as:</p>
@@ -556,36 +552,15 @@ association, 53(282), 457-481.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_models.KaplanMeier.fit" title="relife.lifetime_models.KaplanMeier.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
-<td><p>Compute the non-parametric estimations with respect to lifetime data.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.lifetime_models.KaplanMeier.sf" title="relife.lifetime_models.KaplanMeier.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.lifetime_models.KaplanMeier.sf" title="relife.lifetime_models.KaplanMeier.sf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sf</span></code></a></p></td>
 <td><p>The estimation of the survival function.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="relife.lifetime_models.KaplanMeier.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_models/_non_parametric_models.html#KaplanMeier.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_models.KaplanMeier.fit" title="Link to this definition">#</a></dt>
-<dd><p>Compute the non-parametric estimations with respect to lifetime data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>time</strong><span class="classifier">ndarray</span></dt><dd><p>Observed lifetime values.</p>
-</dd>
-<dt><strong>event</strong><span class="classifier">ndarray of boolean values (1d), default is None</span></dt><dd><p>Boolean indicators tagging lifetime values as right censored or complete.</p>
-</dd>
-<dt><strong>entry</strong><span class="classifier">ndarray of float (1d), default is None</span></dt><dd><p>Left truncations applied to lifetime values.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="relife.lifetime_models.KaplanMeier.sf">
 <span class="sig-name descname"><span class="pre">sf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/lifetime_models/_non_parametric_models.html#KaplanMeier.sf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.lifetime_models.KaplanMeier.sf" title="Link to this definition">#</a></dt>
@@ -629,7 +604,6 @@ estimated standard errors.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_models.KaplanMeier"><code class="docutils literal notranslate"><span class="pre">KaplanMeier</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_models.KaplanMeier.fit"><code class="docutils literal notranslate"><span class="pre">KaplanMeier.fit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.lifetime_models.KaplanMeier.sf"><code class="docutils literal notranslate"><span class="pre">KaplanMeier.sf()</span></code></a></li>
 </ul>
 </li>

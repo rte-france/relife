@@ -28,22 +28,19 @@ RenewalProcess
             ~RenewalProcess.expected_number_of_preventive_renewals
         
         
-            ~RenewalProcess.generate_failure_data
-        
-        
             ~RenewalProcess.get_params
         
         
-            ~RenewalProcess.get_params_names
+            ~RenewalProcess.is_fitted
+        
+        
+            ~RenewalProcess.is_parametrized
         
         
             ~RenewalProcess.renewal_density
         
         
             ~RenewalProcess.renewal_function
-        
-        
-            ~RenewalProcess.sample
         
         
             ~RenewalProcess.set_params

@@ -1,0 +1,6 @@
+﻿Seed
+====
+
+.. currentmodule:: relife.typing
+
+.. autodata:: Seed

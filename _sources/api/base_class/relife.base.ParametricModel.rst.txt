@@ -25,7 +25,10 @@ ParametricModel
             ~ParametricModel.get_params
         
         
-            ~ParametricModel.get_params_names
+            ~ParametricModel.is_fitted
+        
+        
+            ~ParametricModel.is_parametrized
         
         
             ~ParametricModel.set_params

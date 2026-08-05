@@ -40,22 +40,19 @@ RenewalRewardProcess
             ~RenewalRewardProcess.expected_total_reward
         
         
-            ~RenewalRewardProcess.generate_failure_data
-        
-        
             ~RenewalRewardProcess.get_params
         
         
-            ~RenewalRewardProcess.get_params_names
+            ~RenewalRewardProcess.is_fitted
+        
+        
+            ~RenewalRewardProcess.is_parametrized
         
         
             ~RenewalRewardProcess.renewal_density
         
         
             ~RenewalRewardProcess.renewal_function
-        
-        
-            ~RenewalRewardProcess.sample
         
         
             ~RenewalRewardProcess.set_params

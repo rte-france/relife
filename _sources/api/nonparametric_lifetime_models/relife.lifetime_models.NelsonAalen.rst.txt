@@ -25,9 +25,6 @@ NelsonAalen
             ~NelsonAalen.chf
         
         
-            ~NelsonAalen.fit
-        
-        
             ~NelsonAalen.plot
         
     

@@ -22,6 +22,9 @@ Exponential
     
         
         
+            ~Exponential.apply_condition
+        
+        
             ~Exponential.cdf
         
         
@@ -34,10 +37,10 @@ Exponential
             ~Exponential.fit
         
         
+            ~Exponential.freeze
+        
+        
             ~Exponential.get_params
-        
-        
-            ~Exponential.get_params_names
         
         
             ~Exponential.hf
@@ -47,6 +50,12 @@ Exponential
         
         
             ~Exponential.init_likelihood
+        
+        
+            ~Exponential.is_fitted
+        
+        
+            ~Exponential.is_parametrized
         
         
             ~Exponential.isf

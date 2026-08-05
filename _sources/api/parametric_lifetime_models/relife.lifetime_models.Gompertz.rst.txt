@@ -22,6 +22,9 @@ Gompertz
     
         
         
+            ~Gompertz.apply_condition
+        
+        
             ~Gompertz.cdf
         
         
@@ -34,10 +37,10 @@ Gompertz
             ~Gompertz.fit
         
         
+            ~Gompertz.freeze
+        
+        
             ~Gompertz.get_params
-        
-        
-            ~Gompertz.get_params_names
         
         
             ~Gompertz.hf
@@ -47,6 +50,12 @@ Gompertz
         
         
             ~Gompertz.init_likelihood
+        
+        
+            ~Gompertz.is_fitted
+        
+        
+            ~Gompertz.is_parametrized
         
         
             ~Gompertz.isf

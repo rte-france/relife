@@ -25,9 +25,6 @@ ECDF
             ~ECDF.cdf
         
         
-            ~ECDF.fit
-        
-        
             ~ECDF.plot
         
         

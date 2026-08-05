@@ -22,6 +22,9 @@ Gamma
     
         
         
+            ~Gamma.apply_condition
+        
+        
             ~Gamma.cdf
         
         
@@ -34,10 +37,10 @@ Gamma
             ~Gamma.fit
         
         
+            ~Gamma.freeze
+        
+        
             ~Gamma.get_params
-        
-        
-            ~Gamma.get_params_names
         
         
             ~Gamma.hf
@@ -47,6 +50,12 @@ Gamma
         
         
             ~Gamma.init_likelihood
+        
+        
+            ~Gamma.is_fitted
+        
+        
+            ~Gamma.is_parametrized
         
         
             ~Gamma.isf

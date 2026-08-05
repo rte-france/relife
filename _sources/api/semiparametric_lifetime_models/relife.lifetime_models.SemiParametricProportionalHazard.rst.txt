@@ -22,9 +22,6 @@ SemiParametricProportionalHazard
     
         
         
-            ~SemiParametricProportionalHazard.fit
-        
-        
             ~SemiParametricProportionalHazard.get_params
         
         

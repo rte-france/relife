@@ -22,6 +22,9 @@ LogLogistic
     
         
         
+            ~LogLogistic.apply_condition
+        
+        
             ~LogLogistic.cdf
         
         
@@ -34,10 +37,10 @@ LogLogistic
             ~LogLogistic.fit
         
         
+            ~LogLogistic.freeze
+        
+        
             ~LogLogistic.get_params
-        
-        
-            ~LogLogistic.get_params_names
         
         
             ~LogLogistic.hf
@@ -47,6 +50,12 @@ LogLogistic
         
         
             ~LogLogistic.init_likelihood
+        
+        
+            ~LogLogistic.is_fitted
+        
+        
+            ~LogLogistic.is_parametrized
         
         
             ~LogLogistic.isf

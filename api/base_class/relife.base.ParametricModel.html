@@ -58,7 +58,7 @@
     <link rel="prev" title="API" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.9.2" />
+  <meta name="docsearch:version" content="3.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -137,7 +137,7 @@
 </a></div>
     
       <div class="navbar-item"><!-- This will display the version of the docs -->
-2.9.2</div>
+3.0.0</div>
     
   </div>
   
@@ -389,6 +389,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gompertz.html">Gompertz</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.Gamma.html">Gamma</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.LogLogistic.html">LogLogistic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.EquilibriumDistribution.html">EquilibriumDistribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.MinimumDistribution.html">MinimumDistribution</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../parametric_lifetime_models/relife.lifetime_models.ParametricProportionalHazard.html">ParametricProportionalHazard</a></li>
@@ -404,11 +406,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_models.NelsonAalen.html">NelsonAalen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonparametric_lifetime_models/relife.lifetime_models.ECDF.html">ECDF</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conditional lifetime models</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.LeftTruncatedModel.html">LeftTruncatedModel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../conditional_lifetime_models/relife.lifetime_models.AgeReplacementModel.html">AgeReplacementModel</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Stochastic processes</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../stochastic_process/relife.stochastic_processes.RenewalProcess.html">RenewalProcess</a></li>
@@ -417,46 +414,33 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Maintenance policies</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.age_replacement_policy.html">age_replacement_policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.run_to_failure_policy.html">run_to_failure_policy</a></li>
-</ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../policy/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Economy</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.RunToFailureReward.html">RunToFailureReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.AgeReplacementReward.html">AgeReplacementReward</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../economy/relife.rewards.ExponentialDiscounting.html">ExponentialDiscounting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.AgeReplacementPolicy.html">AgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleAgeReplacementPolicy.html">OneCycleAgeReplacementPolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.RunToFailurePolicy.html">RunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.OneCycleRunToFailurePolicy.html">OneCycleRunToFailurePolicy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance_policies/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html">NonHomogeneousPoissonAgeReplacementPolicy</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Built-in datasets</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_circuit_breaker.html">load_circuit_breaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_insulator_string.html">load_insulator_string</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/relife.datasets.load_power_transformer.html">load_power_transformer</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Likelihoods</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Quadratures</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.LifetimeLikelihood.html">LifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.CoxPartialLifetimeLikelihood.html">CoxPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.EfronPartialLifetimeLikelihood.html">EfronPartialLifetimeLikelihood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../likelihoods/relife.lifetime_models.BreslowPartialLifetimeLikelihood.html">BreslowPartialLifetimeLikelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quadratures/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
 </ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Typing</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.legendre_quadrature.html">legendre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.laguerre_quadrature.html">laguerre_quadrature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.quadratures.unweighted_laguerre_quadrature.html">unweighted_laguerre_quadrature</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_numpy_float64.html">to_numpy_float64</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.to_column_2d_if_1d.html">to_column_2d_if_1d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.flatten_if_at_least_2d.html">flatten_if_at_least_2d</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../routines/relife.utils.get_nb_assets.html">get_nb_assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CovarTs.html">CovarTs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_ND.html">CoercibleFloat64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.CoercibleFloat64_1D.html">CoercibleFloat64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_ND.html">Float64_ND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Float64_1D.html">Float64_1D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Timeline.html">Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../typing/relife.typing.Seed.html">Seed</a></li>
 </ul>
 </div>
 </nav></div>
@@ -521,18 +505,37 @@
 <h1>ParametricModel<a class="headerlink" href="#parametricmodel" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="relife.base.ParametricModel">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.base.</span></span><span class="sig-name descname"><span class="pre">ParametricModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwparams</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#ParametricModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.base.ParametricModel" title="Link to this definition">#</a></dt>
-<dd><p>Base class of every parametric models in ReLife.</p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">relife.base.</span></span><span class="sig-name descname"><span class="pre">ParametricModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#ParametricModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.base.ParametricModel" title="Link to this definition">#</a></dt>
+<dd><p>Base class for ReLife models with parameters.</p>
+<p>The class stores parameters in a tree structure, exposes them as a flat
+vector with <code class="docutils literal notranslate"><span class="pre">get_params</span></code> and <code class="docutils literal notranslate"><span class="pre">set_params</span></code>, and tracks fitting results.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">ModelA</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">ModelB</span><span class="p">(</span><span class="n">ParametricModel</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline</span> <span class="p">:</span> <span class="n">ModelA</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_a</span> <span class="o">=</span> <span class="n">ModelA</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_b</span> <span class="o">=</span> <span class="n">ModelB</span><span class="p">(</span><span class="n">model_a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_b</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+<span class="go">array([1, 2])</span>
+</pre></div>
+</div>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#relife.base.ParametricModel.get_params" title="relife.base.ParametricModel.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a></p></td>
 <td><p>Get the parameters of this model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#relife.base.ParametricModel.get_params_names" title="relife.base.ParametricModel.get_params_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params_names</span></code></a></p></td>
-<td><p>Parameters names.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.base.ParametricModel.is_fitted" title="relife.base.ParametricModel.is_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_fitted</span></code></a></p></td>
+<td><p>Whether fitting results are set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#relife.base.ParametricModel.set_params" title="relife.base.ParametricModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#relife.base.ParametricModel.is_parametrized" title="relife.base.ParametricModel.is_parametrized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_parametrized</span></code></a></p></td>
+<td><p>Whether at least one parameter value is set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#relife.base.ParametricModel.set_params" title="relife.base.ParametricModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a></p></td>
 <td><p>Set the parameters of this model.</p></td>
 </tr>
 </tbody>
@@ -545,29 +548,25 @@
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">1darray of number</span></dt><dd><p>Model parameters.</p>
+<dt><strong>out</strong><span class="classifier">1darray of floats</span></dt><dd><p>Model parameters.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>If parameter values are not set, they default to <cite>np.nan</cite> values.</p>
+<p>If parameter values are not set, they default to <code class="docutils literal notranslate"><span class="pre">np.nan</span></code> values.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="relife.base.ParametricModel.get_params_names">
-<span class="sig-name descname"><span class="pre">get_params_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#ParametricModel.get_params_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.base.ParametricModel.get_params_names" title="Link to this definition">#</a></dt>
-<dd><p>Parameters names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list of str</dt><dd><p>Parameters names</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Parameters values can be requested (a.k.a. get) by their name at instance level.</p>
+<dt class="sig sig-object py" id="relife.base.ParametricModel.is_fitted">
+<span class="sig-name descname"><span class="pre">is_fitted</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#ParametricModel.is_fitted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.base.ParametricModel.is_fitted" title="Link to this definition">#</a></dt>
+<dd><p>Whether fitting results are set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="relife.base.ParametricModel.is_parametrized">
+<span class="sig-name descname"><span class="pre">is_parametrized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/relife/base.html#ParametricModel.is_parametrized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#relife.base.ParametricModel.is_parametrized" title="Link to this definition">#</a></dt>
+<dd><p>Whether at least one parameter value is set.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -577,17 +576,17 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>new_params</strong><span class="classifier">array-like of floats</span></dt><dd><p>Model parameters.</p>
+<dt><strong>new_params</strong><span class="classifier">1d array-like of floats</span></dt><dd><p>Model parameters.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p><cite>set_params</cite> definition expects an array-like of floats. At runtime,
+<p><code class="docutils literal notranslate"><span class="pre">set_params</span></code> definition expects an array-like of floats. At runtime,
 complex parameters might be setted temporarily to approximate fitted
 parameters covariance. This is contradictory to the given typing. At
 the moment, we don’t see a better solution and we believe that this is
-actually a limitation of what be expressed in the static typesystem.</p>
+actually a limitation of what can be expressed in the static typesystem.</p>
 </dd></dl>
 
 </dd></dl>
@@ -619,7 +618,8 @@ actually a limitation of what be expressed in the static typesystem.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel"><code class="docutils literal notranslate"><span class="pre">ParametricModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel.get_params"><code class="docutils literal notranslate"><span class="pre">ParametricModel.get_params()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel.get_params_names"><code class="docutils literal notranslate"><span class="pre">ParametricModel.get_params_names()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel.is_fitted"><code class="docutils literal notranslate"><span class="pre">ParametricModel.is_fitted()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel.is_parametrized"><code class="docutils literal notranslate"><span class="pre">ParametricModel.is_parametrized()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#relife.base.ParametricModel.set_params"><code class="docutils literal notranslate"><span class="pre">ParametricModel.set_params()</span></code></a></li>
 </ul>
 </li>

@@ -10,13 +10,29 @@ User guides
 
     about_numpy
 
+Workflow demo
+-------------
+
+.. toctree::
+    :maxdepth: 2
+
+    workflow_demo.ipynb
+
 Lifetime models
 ---------------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     non_parametric_lifetime_models.ipynb
     lifetime_distributions.ipynb
     lifetime_regressions.ipynb
     semiparametric_regression.ipynb
+
+Sampling
+--------
+
+.. toctree::
+    :maxdepth: 1
+
+    sampling.ipynb
