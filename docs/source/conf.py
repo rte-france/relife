@@ -93,7 +93,7 @@ html_theme_options = {
     "navigation_with_keys": False,
     "navbar_align": "left",  # align to the left header bar sections
     "header_links_before_dropdown": 5,  # control the number of section displayed in the header bar
-    "show_prev_next": False,  # hide previous and next button
+    "show_prev_next": True,  # previous / next buttons at the bottom of each page
     "show_nav_level": 2,  # unfold nav section by 2 levels
     "icon_links": [
         {
