@@ -1,12 +1,7 @@
 Getting Started
 ===============
 
-.. figure:: /_static/workflow.png
-    :align: center
-
-    ReLife's workflow: from data collection to the consequences of a maintenance policy
-
-ReLife's workflow has four steps, left to right in the figure above:
+ReLife's workflow has common steps for most cases:
 
 1. You **collect data** on a fleet of assets.
 2. You **fit a statistical model** to that data.
@@ -14,21 +9,25 @@ ReLife's workflow has four steps, left to right in the figure above:
 4. You **compute the consequences** of that policy (for instance the expected number of
    replacements per year).
 
-The four steps never change, but what goes inside each of them depends on the **event of
-interest**, and on the modelling approach that event calls for. ReLife covers, or aims to
-cover, three:
+These steps can change since the workflow depends on the **event of interest**, and on the 
+modeling approach of that event:
 
 - **lifetime models**, for a single terminal event: the asset fails once and is replaced. What
-  is modelled is a duration.
+  is modeled is a duration.
 - **non-homogeneous Poisson processes**, for repairable assets: the same asset fails several
   times and each repair is *minimal*, meaning it restores service without rejuvenating the
-  asset. What is modelled is the rate of recurrent failures.
-- **gamma processes**, for gradual deterioration measured on the asset (corrosion, wear, loss
-  of thickness): the event of interest is a threshold crossing rather than a failure. Not
-  implemented yet.
+  asset. What is modeled is the rate of recurrent failures.
+- **gamma processes** (not implemented yet), for gradual deterioration measured on the asset 
+  (corrosion, loss of thickness): the event of interest is a threshold crossing rather than a failure.
 
 That choice propagates through the whole workflow: it decides what the field data has to
 record, which model is fitted to it, and which policies that model can then be plugged into.
+
+.. figure:: /_static/workflow.png
+    :align: center
+
+    ReLife's workflow example (lifetime modeling): from data collection to the consequences of a 
+    maintenance policy
 
 This page walks the four steps for the **lifetime model** approach, on a built-in dataset: one
 asset, one failure, one replacement. It is the most common case, not the only one. See the
@@ -64,7 +63,7 @@ array([ True,  True,  True])
 array([34., 44., 52.])
 
 Censoring and truncation are not details to be cleaned away. They carry information, and
-every ReLife estimator accounts for them. See
+most ReLife estimator accounts for them. See
 :doc:`user_guides/background/lifetime_modeling/censoring_and_truncation`.
 
 .. note::
@@ -149,7 +148,7 @@ the parametric shape you chose is compatible with what the data shows on its own
 
 .. note::
 
-    **Every model ReLife fits is a model, and they all share one interface.** They
+    **Every object ReLife fits is a model, and they all share one interface.** They
     are built either unparametrized or with known parameter values, ``fit`` estimates the
     parameters from data by maximum likelihood, and ``get_params`` / ``set_params`` read and
     write them as a flat vector. That interface is not specific to distributions: a regression
