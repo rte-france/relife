@@ -62,21 +62,12 @@ Maximum likelihood
 ------------------------------------------
 
 Fitting maximizes the likelihood of the observed data under the chosen shape. Each row
-contributes a factor that depends on what was actually observed. Consider :math:`\theta` for
-the parameters, :math:`f` for the probability density, :math:`S` for the survival function,
-:math:`H = -\log S` for the cumulative hazard, :math:`\mathcal{D}` for the set of observed
-failures and :math:`\mathcal{C}` for the right-censored ones, each entering the study at age
-:math:`a_i`. A failure is informative about the density at :math:`t_i`; a right-censored unit 
-only tells us it was still alive at :math:`t_i`, hence :math:`S(t_i;\theta)`; and left truncation
-conditions each factor on having survived up to the entry age :math:`a_i`, which is what the
-denominators do. ``fit`` minimizes the negative log-likelihood, which is the form actually
-implemented:
-
-.. math::
-
-    -\log L(\theta) = - \sum_{i \in \mathcal{D}} \log f(t_i; \theta)
-                      + \sum_{i \in \mathcal{C}} H(t_i; \theta)
-                      - \sum_i H(a_i; \theta)
+contributes a factor that depends on what was actually observed: a failure is informative
+about the density at :math:`t_i`, a right-censored unit only tells us it was still alive at
+:math:`t_i`, an interval only tells us the failure fell inside it, and left truncation
+conditions each factor on having survived up to the entry age. ``fit`` minimizes the
+resulting negative log-likelihood, written out term by term in
+:doc:`../going_further/likelihood`.
 
 Dropping the ``event`` and ``entry`` arguments is not a neutral simplification, it 
 changes which of these terms are used, and therefore the estimate.

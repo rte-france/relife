@@ -218,7 +218,7 @@ explains where these numbers come from.
     non-homogeneous Poisson process rather than on a lifetime model. Each policy also comes in
     a *renewal* variant, for planning a fleet over the long run, and a *one-cycle* variant, for
     a decision about the asset currently in service. See
-    :doc:`user_guides/background/from_process_to_policy`.
+    :doc:`user_guides/going_further/from_process_to_policy`.
 
 4. Projection of consequences
 -----------------------------

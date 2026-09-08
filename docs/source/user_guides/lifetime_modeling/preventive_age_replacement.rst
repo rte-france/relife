@@ -89,7 +89,7 @@ Projecting the replacements
 ------------------------------
 
 A cost figure says nothing about the workload that produces it. On top of the four cost
-methods shared by every policy (see :doc:`../background/from_process_to_policy`),
+methods shared by every policy (see :doc:`../going_further/from_process_to_policy`),
 ``AgeReplacementPolicy`` projects the
 replacements themselves, year by year:
 
@@ -108,7 +108,7 @@ maintenance schedule.
 
 These two methods are the year-by-year form of the counters ``expected_number_of_events`` and
 ``expected_number_of_preventive_renewals`` described in
-:doc:`../background/reward_framework`, which report
+:doc:`../going_further/reward_framework`, which report
 the same information cumulated since time 0 over an arbitrary timeline rather than aggregated
 per year.
 
@@ -136,7 +136,7 @@ Because the criterion being minimized is not the same, the optimal age isn't eit
 Both optima sit in the same region: the lifetime model, not the horizon, does most of the
 work. But the one-cycle optimum lands slightly earlier here, and its annualized cost (12.77)
 is not directly comparable to the renewal policy's 11.69: the two numbers annualize over
-different horizons (see :doc:`../background/from_process_to_policy`). Use the one-cycle
+different horizons (see :doc:`../going_further/from_process_to_policy`). Use the one-cycle
 policies to rank options
 for a single asset, and the renewal policies to plan a fleet over the long run.
 

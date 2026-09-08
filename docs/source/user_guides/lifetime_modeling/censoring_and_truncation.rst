@@ -6,7 +6,9 @@ time". Assets are still working when the study ends, monitoring starts after som
 have already been in service for a while, and installation dates are sometimes only
 approximately known. Any of these turns a simple "failed at time :math:`t`" record into
 something less direct, and ignoring that distinction leads to systematically wrong
-estimates. ReLife handles it through two arguments: ``event`` and ``entry``.
+estimates. ReLife handles it through two arguments, ``event`` and ``entry``, and, when the
+failure date itself is only known to fall inside a window, through a two-column ``time``
+array.
 
 The observation scheme
 -------------------------
@@ -17,19 +19,24 @@ failed (:math:`t_{fail}`, if that was actually observed). The figure below lines
 assets on the same calendar to show every combination that can occur:
 
 .. figure:: /_static/figures/observation_scheme.png
-    :alt: Observation scheme for six assets, showing complete observations, right-censoring, left-censoring and left-truncation.
+    :alt: Observation scheme for six assets, showing complete observations, right-censoring, left-censoring, left-truncation and right-truncation.
     :width: 100%
 
-    Observation scheme for six assets. A filled circle is an observed failure; an open circle means the asset was still working
-    when the observation window ended at :math:`t_{end}` (**right-censoring**); a
-    right-pointing triangle before :math:`t_{start}` means the asset was already installed
-    before observation began (**left-truncation** if it fails after :math:`t_{start}`, or
-    **left-censoring**, dashed, if a failure before :math:`t_{start}` is only known to have
-    happened, without knowing exactly when).
+    Observation scheme for six assets. A filled circle is an observed failure; an open circle
+    means the asset was still working when the observation window ended at :math:`t_{end}`
+    (**right-censoring**, assets 1 and 5); a left-pointing triangle means the asset was found
+    already broken, so it did fail during the study but the exact date was never recorded
+    (**left-censoring**, asset 2); a right-pointing triangle before :math:`t_{start}` means
+    the asset was already installed before observation began (**left-truncation**, asset 4);
+    and the dashed line is an asset that had already failed before :math:`t_{start}`
+    (**right-truncation**, asset 6).
 
 ReLife's ``event``/``entry`` pair covers the two cases that dominate industrial asset data
 (right-censoring and left-truncation), which is why they are the two arguments widely used in ReLife's functions. 
-Note that left-censoring (asset 6 above) is rarer in practice and isn't part of ReLife's data model.
+The rarer cases, left-censoring (asset 2 above) and interval-censoring, are expressed by
+giving ``time`` as intervals instead of durations, see `Left censoring`_ and
+:doc:`../going_further/interval_censoring`. Right-truncated assets are left out of the study
+altogether, see `Right truncation`_.
 
 Right censoring
 ----------------
@@ -77,6 +84,49 @@ the fleet in this dataset was already in service before observation:
 >>> (dataset["entry"] > 0).sum(), len(dataset)
 (np.int64(1158), 1650)
 
+Left censoring
+----------------
+
+An observation is **left-censored** when the asset did fail while it was part of the study,
+but the exact failure date is unknown: it was found already broken, so all that is known is
+that its lifetime is *at most* the age at which that was noticed. It is the mirror image of
+right censoring, and the opposite of it in terms of what is missing: there the failure had not
+happened yet, here it happened without being dated.
+
+``event`` cannot express this, since it only distinguishes "failed at ``time``" from "still
+working at ``time``". A left-censored observation is written as an interval whose lower bound
+is the start of the asset's life, ``[0., b]``, see
+:doc:`../going_further/interval_censoring`.
+
+Interval censoring
+--------------------
+
+An observation is **interval-censored** when the failure date is known to fall between two
+dates and no better than that, typically between two periodic inspections. Left censoring is
+the special case where the lower bound is the beginning of the asset's life. Both are passed
+by giving ``time`` as a two-column array of interval bounds instead of a one-dimensional array
+of durations, described in :doc:`../going_further/interval_censoring`.
+
+Right truncation
+------------------
+
+An observation is **right-truncated** when the asset failed *before* the observation window
+opened, like asset 6 in the figure above: nothing about it falls inside the window, so it
+provides neither an age at which it was seen working nor a failure date the study can place.
+
+There is no argument for this case because there is nothing to pass: such an asset is simply
+excluded from the study. The likelihood (see :doc:`../going_further/likelihood`) has terms for
+complete, right-censored, interval-censored and left-truncated observations, and none for
+right truncation.
+
+The exclusion is not neutral, though, and it is the reason ``entry`` matters. The assets
+dropped this way are precisely the short-lived ones, so what remains in the window is a
+population that survived long enough to be seen, which is the survivor bias described in
+`Why getting this right matters`_ below. Keeping such a record instead of dropping it would
+mean committing to what is known about it, namely that the failure happened somewhere between
+installation and :math:`t_{start}`, which is an interval observation (see
+:doc:`../going_further/interval_censoring`).
+
 Why getting this right matters
 ---------------------------------
 
@@ -100,7 +150,7 @@ ones. Ignoring left-truncation (survivor bias) does the opposite: it *overestima
 lifetimes, because units that failed before observation are invisible to the
 sample, leaving only the units hardy enough to have survived that long. This is exactly why
 every ReLife lifetime model accounts for both directly in its likelihood (see
-:doc:`distributions`), rather than requiring you to drop or approximate
+:doc:`../going_further/likelihood`), rather than requiring you to drop or approximate
 either kind of observation.
 
 Fitting with censoring and truncation

@@ -114,14 +114,8 @@ as a rate multiplier.
 Likelihood with covariates
 ------------------------------------------
 
-The likelihood is the one described in :doc:`distributions`, with the covariate effect
-substituted into :math:`H`. Nothing else changes:
-
-.. math::
-
-    -\log L(\beta, \theta) = - \sum_{i \in \mathcal{D}} \log f(t_i, x_i; \beta, \theta)
-                             + \sum_{i \in \mathcal{C}} H(t_i, x_i; \beta, \theta)
-                             - \sum_i H(a_i, x_i; \beta, \theta)
+The likelihood is the one described in :doc:`../going_further/likelihood`, with the covariate
+effect substituted into the density and the cumulative hazard. Nothing else changes.
 
 The important point is that the coefficients :math:`\beta` and the baseline parameters
 :math:`\theta` are estimated **jointly**, in a single optimization: the covariate effect you
@@ -151,22 +145,14 @@ That is possible because of how the proportional hazard form factorizes, for the
 the hazard ratio above is baseline-free. At an observed failure time, the probability that
 *this* unit is the one that failed, given that one of the units still at risk did, depends
 only on the coefficients: the unknown baseline appears in every term of the ratio and
-cancels. Multiplying these conditional probabilities over the
-observed failure times gives Cox's **partial** likelihood, where :math:`\mathcal{R}_j` is the
-risk set just prior to :math:`t_j` (see :doc:`non_parametric_models` for the at-risk
-bookkeeping), :math:`\mathcal{D}_j` the units failing at :math:`t_j`, and
-:math:`d_j = |\mathcal{D}_j|`:
-
-.. math::
-
-    L(\beta) = \prod_j \frac{\exp \left( \beta \cdot \sum_{i \in \mathcal{D}_j} x_i \right)}
-                            {\left( \sum_{i \in \mathcal{R}_j} e^{\beta \cdot x_i} \right)^{d_j}}
+cancels. Multiplying these conditional probabilities over the observed failure times gives
+Cox's **partial** likelihood, written out in :doc:`../going_further/likelihood` (see
+:doc:`non_parametric_models` for the at-risk bookkeeping it relies on).
 
 It is called partial because it discards the information carried by *when* the failures
 happened, keeping only their order. That is the price of not having to commit to a baseline
-shape. The expression above is Breslow's handling of ties; ReLife inspects the observed tie
-counts and switches to Efron's correction, which is more accurate, when failure times are
-heavily tied.
+shape. Ties get Breslow's handling, and ReLife inspects the observed tie counts to switch to
+Efron's correction, which is more accurate, when failure times are heavily tied.
 
 >>> from relife.lifetime_models import SemiParametricProportionalHazard
 >>> cox = SemiParametricProportionalHazard(

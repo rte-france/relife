@@ -70,7 +70,7 @@ Pushing the horizon out makes the convergence visible:
 
 This is the mechanism that everything else in the maintenance-policy layer is built on: a
 policy replaces "renewal" with "renewal *and its cost*" (see
-:doc:`../background/reward_framework`) to
+:doc:`../going_further/reward_framework`) to
 go from "how many replacements do I expect" to "how much will they cost".
 
 The one exception is the one-cycle policies (``OneCycleRunToFailurePolicy`` and
