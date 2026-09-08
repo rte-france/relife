@@ -5,8 +5,7 @@ Before fitting a parametric distribution, it's often useful to estimate the surv
 hazard function directly from the data, without assuming any particular shape. ReLife
 provides two censoring-aware estimators for this, Kaplan-Meier and Nelson-Aalen. Both take the ``event`` and
 ``entry`` arguments and therefore account for right censoring and left truncation (see
-:doc:`censoring_and_truncation`), which matters here: on ``load_circuit_breaker``, only
-~5% of the 4204 units were actually observed failing.
+:doc:`censoring_and_truncation`).
 
 >>> from relife.datasets import load_circuit_breaker
 >>> dataset = load_circuit_breaker()
@@ -98,42 +97,6 @@ hazard rate: a steepening curve means the units are wearing out.
 >>> na = NelsonAalen(dataset["time"], event=dataset["event"], entry=dataset["entry"])
 >>> round(na.chf().values[-1], 6)
 np.float64(1.482638)
-
-Comparing the two estimators
-----------------------------------------------------------
-
-Survival and cumulative hazard are related by :math:`S(t) = e^{-H(t)}`, so the two
-estimators should roughly agree:
-
->>> import numpy as np
->>> round(np.exp(-na.chf().values[-1]), 6)
-np.float64(0.227038)
-
-The two values (0.192 from Kaplan-Meier, 0.227 from :math:`e^{-\hat{H}}`) are close but not
-identical, which is expected, since they're two distinct nonparametric estimators of related but
-different quantities, not two ways of computing the same number. Plotted on the same axes,
-the gap between them stays small and only opens up in the tail, where both estimates rest on
-the fewest units at risk:
-
-.. plot::
-    :context: close-figs
-
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
-    >>> from relife.datasets import load_circuit_breaker
-    >>> from relife.lifetime_models import KaplanMeier, NelsonAalen
-    >>> dataset = load_circuit_breaker()
-    >>> km = KaplanMeier(dataset["time"], event=dataset["event"], entry=dataset["entry"])
-    >>> na = NelsonAalen(dataset["time"], event=dataset["event"], entry=dataset["entry"])
-    >>> chf = na.chf()
-    >>> _ = km.plot("sf", ci=False, label="Kaplan-Meier")
-    >>> _ = plt.step(
-    ...     chf.timeline, np.exp(-chf.values), where="post", label="exp(-Nelson-Aalen)"
-    ... )
-    >>> _ = plt.xlabel("Time")
-    >>> _ = plt.ylabel("Estimated survival function")
-    >>> _ = plt.legend()
-    >>> plt.show()
 
 These estimators are a good sanity check before committing to a parametric shape (see
 :doc:`distributions`): if a fitted distribution's survival curve strays far
