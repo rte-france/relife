@@ -38,7 +38,7 @@ An observation is **right-censored** when the actual failure time is unknown: th
 was still working the last time it was observed, so all we know is that its lifetime is
 *at least* ``time``. This is flagged with ``event=False``.
 
-The ``load_power_transformer`` dataset (see :doc:`../../datasets`) has both kinds of rows:
+The ``load_power_transformer`` dataset (see :doc:`datasets`) has both kinds of rows:
 
 >>> from relife.datasets import load_power_transformer
 >>> dataset = load_power_transformer()

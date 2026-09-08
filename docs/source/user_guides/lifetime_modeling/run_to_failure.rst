@@ -30,7 +30,8 @@ policy is compared against.
 
 Under the hood, this wraps the fitted lifetime model in a :doc:`renewal process
 <renewal_theory>` where every renewal costs ``cf``, i.e. a constant reward
-:math:`Y = c_f` (see :doc:`reward_framework`). The long-run expected cost per unit of time
+:math:`Y = c_f` (see :doc:`../background/reward_framework`). The long-run expected cost per
+unit of time
 follows directly from that: undiscounted, the renewal reward theorem gives the expected cost
 of one cycle divided by its expected duration,
 

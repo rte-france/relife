@@ -1,8 +1,10 @@
 The reward and discounting framework
 =======================================
 
-:doc:`run_to_failure` and :doc:`preventive_age_replacement` both reduce to the same question:
-attach a cost to each renewal of the :doc:`renewal process <renewal_theory>`, and work out
+:doc:`../lifetime_modeling/run_to_failure` and
+:doc:`../lifetime_modeling/preventive_age_replacement` both reduce to the same question:
+attach a cost to each renewal of the
+:doc:`renewal process <../lifetime_modeling/renewal_theory>`, and work out
 what that comes to per unit of time. 
 
 ``RenewalRewardProcess`` is where that happens; the
@@ -118,14 +120,15 @@ moves later:
 >>> round(float(ar_star), 2)
 61.14
 
-61.1 against the 47.4 obtained undiscounted in :doc:`preventive_age_replacement`.
+61.1 against the 47.4 obtained undiscounted in
+:doc:`../lifetime_modeling/preventive_age_replacement`.
 
 Two ways of expressing total costs
 ----------------------------------
 
 The **total reward** is what has been spent since time 0, discounted back to today: a
 cumulative curve, growing with the horizon. It is obtained by solving the renewal equation 
-of :doc:`renewal_theory`, except that a renewal now contributes its discounted cost instead 
+of :doc:`../lifetime_modeling/renewal_theory`, except that a renewal now contributes its discounted cost instead 
 of a unit count. With a final time and a number of points, it returns the timeline 
 together with the values:
 

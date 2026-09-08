@@ -10,7 +10,9 @@ Three levels of sampling are available:
 - ``rvs`` on a lifetime model, which draws independent lifetimes;
 - ``sample_lifetimes_from_renewal_process``, which draws *observations* as they would be
   collected in the field, that is with censoring and truncation;
-- ``sample_process``, which draws whole trajectories of a stochastic process.
+- ``sample_process``, which draws whole trajectories of a stochastic process. Only renewal
+  processes are covered here; see :doc:`../counting_processes/sampling` and
+  :doc:`../deterioration_processes/sampling` for the other processes.
 
 Everything below is deterministic given a ``seed``.
 
@@ -32,7 +34,7 @@ Conditioning the drawn lifetimes
 
 ``apply_condition`` returns a new model conditioned by an initial age ``a0`` (the asset is
 already ``a0`` years old and has survived so far, see
-:doc:`background/lifetime_modeling/censoring_and_truncation`) or by an age of replacement ``ar``
+:doc:`censoring_and_truncation`) or by an age of replacement ``ar``
 (the asset is preventively replaced at ``ar`` if it has not failed before).
 
 ``a0`` and ``ar`` must be broadcastable with the ``rvs`` size. Here two initial ages are given
@@ -197,82 +199,4 @@ realization, whose average estimates the renewal function:
 The grey staircases are ten individual realizations, the red line their mean over the 100
 realizations and the shaded band one standard deviation. The mean stays flat until the first
 failures occur and then grows linearly with slope ``1 / weibull.mean()``, as
-:doc:`background/maintenance_policies/renewal_theory` predicts.
-
-Non-homogeneous Poisson process
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Same call, with an age of replacement passed through ``ar``. A repair is minimal here: it does
-not reset the asset, so failures pile up much faster and the timeline is far denser than for a
-renewal process. Only the preventive replacements at ``ar = 30`` bring the asset back to a new
-state, which shows up as the plateaus at ``t = 30``, ``60`` and ``90``:
-
-.. plot::
-    :context: close-figs
-
-    >>> from relife.stochastic_processes import NonHomogeneousPoissonProcess
-    >>> nhpp = NonHomogeneousPoissonProcess(weibull)
-    >>> sample = sample_process(nhpp, 100, (0, 100), ar=30, seed=10)
-    >>> sample.events.shape
-    (100, 5203)
-    >>> fig, ax = plt.subplots(figsize=(8, 6))
-    >>> cumulative_events = sample.events.cumsum(axis=1)
-    >>> for sample_id in range(10):
-    ...     _ = ax.plot(sample.timeline, cumulative_events[sample_id], alpha=0.3, color="gray")
-    >>> mean = cumulative_events.mean(axis=0)
-    >>> std = cumulative_events.std(axis=0)
-    >>> _ = ax.plot(sample.timeline, mean, color="red")
-    >>> _ = ax.fill_between(sample.timeline, mean - std, mean + std, color="red", alpha=0.2)
-    >>> _ = ax.set_xlabel("Time")
-    >>> _ = ax.set_ylabel("Cumulative number of failures")
-    >>> plt.show()
-
-Kijima processes
-~~~~~~~~~~~~~~~~~~
-
-Kijima processes sit between the two extremes above: a repair removes part of the accumulated
-damage, controlled by the rejuvenation parameter ``q``. Kijima 1 applies ``q`` to the last
-increment of virtual age only:
-
-.. plot::
-    :context: close-figs
-
-    >>> from relife.stochastic_processes import Kijima1Process
-    >>> kijima_1 = Kijima1Process(weibull, q=0.7)
-    >>> sample = sample_process(kijima_1, 100, (0, 100), ar=25, seed=10)
-    >>> sample.events.shape
-    (100, 663)
-    >>> fig, ax = plt.subplots(figsize=(8, 6))
-    >>> cumulative_events = sample.events.cumsum(axis=1)
-    >>> for sample_id in range(10):
-    ...     _ = ax.plot(sample.timeline, cumulative_events[sample_id], alpha=0.3, color="gray")
-    >>> mean = cumulative_events.mean(axis=0)
-    >>> std = cumulative_events.std(axis=0)
-    >>> _ = ax.plot(sample.timeline, mean, color="red")
-    >>> _ = ax.fill_between(sample.timeline, mean - std, mean + std, color="red", alpha=0.2)
-    >>> _ = ax.set_xlabel("Time")
-    >>> _ = ax.set_ylabel("Cumulative number of failures")
-    >>> plt.show()
-
-Kijima 2 applies ``q`` to the whole virtual age, so the asset is rejuvenated more aggressively
-and fewer events accumulate over the same window:
-
-.. plot::
-    :context: close-figs
-
-    >>> from relife.stochastic_processes import Kijima2Process
-    >>> kijima_2 = Kijima2Process(weibull, q=0.7)
-    >>> sample = sample_process(kijima_2, 100, (0, 100), ar=25, seed=10)
-    >>> sample.events.shape
-    (100, 622)
-    >>> fig, ax = plt.subplots(figsize=(8, 6))
-    >>> cumulative_events = sample.events.cumsum(axis=1)
-    >>> for sample_id in range(10):
-    ...     _ = ax.plot(sample.timeline, cumulative_events[sample_id], alpha=0.3, color="gray")
-    >>> mean = cumulative_events.mean(axis=0)
-    >>> std = cumulative_events.std(axis=0)
-    >>> _ = ax.plot(sample.timeline, mean, color="red")
-    >>> _ = ax.fill_between(sample.timeline, mean - std, mean + std, color="red", alpha=0.2)
-    >>> _ = ax.set_xlabel("Time")
-    >>> _ = ax.set_ylabel("Cumulative number of failures")
-    >>> plt.show()
+:doc:`renewal_theory` predicts.

@@ -37,8 +37,8 @@ asset, one failure, one replacement. It is the most common case, not the only on
 ------------------
 
 ReLife ships example datasets so you can get started without your own data (see
-:doc:`user_guides/datasets`). Here we use the *power transformer* dataset. If you're not
-familiar with the asset, see `the Wikipedia page
+:doc:`user_guides/lifetime_modeling/datasets`). Here we use the *power transformer*
+dataset. If you're not familiar with the asset, see `the Wikipedia page
 <https://en.wikipedia.org/wiki/Transformer>`_.
 
 >>> from relife.datasets import load_power_transformer
@@ -64,7 +64,7 @@ array([34., 44., 52.])
 
 Censoring and truncation are not details to be cleaned away. They carry information, and
 most ReLife estimator accounts for them. See
-:doc:`user_guides/background/lifetime_modeling/censoring_and_truncation`.
+:doc:`user_guides/lifetime_modeling/censoring_and_truncation`.
 
 .. note::
 
@@ -152,7 +152,7 @@ the parametric shape you chose is compatible with what the data shows on its own
     are built either unparametrized or with known parameter values, ``fit`` estimates the
     parameters from data by maximum likelihood, and ``get_params`` / ``set_params`` read and
     write them as a flat vector. That interface is not specific to distributions: a regression
-    (:doc:`user_guides/background/lifetime_modeling/regressions`) is the same object with one
+    (:doc:`user_guides/lifetime_modeling/regressions`) is the same object with one
     extra coefficient per covariate, and a
     :py:class:`~relife.stochastic_processes.NonHomogeneousPoissonProcess` is parametrized by the
     lifetime model that defines its intensity, so it is fitted from repair histories in the same
@@ -205,7 +205,7 @@ np.float64(0.035023)
 np.float64(0.039082)
 
 Replacing at age ``ar_star`` (about 59 years) is roughly 10 % cheaper per year than running
-the assets to failure. :doc:`user_guides/background/maintenance_policies/preventive_age_replacement`
+the assets to failure. :doc:`user_guides/lifetime_modeling/preventive_age_replacement`
 explains where these numbers come from.
 
 .. note::
@@ -218,7 +218,7 @@ explains where these numbers come from.
     non-homogeneous Poisson process rather than on a lifetime model. Each policy also comes in
     a *renewal* variant, for planning a fleet over the long run, and a *one-cycle* variant, for
     a decision about the asset currently in service. See
-    :doc:`user_guides/background/maintenance_policies/from_process_to_policy`.
+    :doc:`user_guides/background/from_process_to_policy`.
 
 4. Projection of consequences
 -----------------------------
@@ -226,7 +226,7 @@ explains where these numbers come from.
 Finally, project what the policy implies for a real fleet. We take 1000 assets whose current
 ages are drawn from a binomial distribution, and ask for the expected number of replacements
 over the next 170 years. ReLife answers by solving **the renewal equation** (see
-:doc:`user_guides/background/maintenance_policies/renewal_theory`).
+:doc:`user_guides/lifetime_modeling/renewal_theory`).
 
 >>> import numpy as np
 >>> rng = np.random.default_rng(42)

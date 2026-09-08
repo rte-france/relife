@@ -4,7 +4,8 @@ From process to policy
 A policy is what turns the :doc:`renewal reward process <reward_framework>` into a
 maintenance decision: it fixes the reward shape, gives the methods maintenance names, and
 adds whatever is specific to the decision at hand. This page describes what the policies have
-in common; :doc:`run_to_failure` and :doc:`preventive_age_replacement` describe each of them
+in common; :doc:`../lifetime_modeling/run_to_failure` and
+:doc:`../lifetime_modeling/preventive_age_replacement` describe each of them
 in turn.
 
 Two options for every policy

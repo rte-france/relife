@@ -1,12 +1,11 @@
 Background
 ==========
 
-Core concepts behind ReLife: the NumPy conventions it relies on, how it models asset
-lifetimes from failure data, and how it turns those models into maintenance decisions.
+Concepts shared by several of the modeling approaches above: the reward and discounting
+framework used to attach costs to events, and the interface every maintenance policy exposes.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
-    numpy_basics
-    lifetime_modeling/index
-    maintenance_policies/index
+    reward_framework
+    from_process_to_policy

@@ -4,7 +4,7 @@ Regressions: adding covariates
 A distribution alone can't account for the fact that different assets operate under
 different conditions. Regressions extend a baseline distribution with covariates: for
 instance, an insulator string's lifetime plausibly depends on the acid concentrations it's
-exposed to (see :doc:`../../datasets`).
+exposed to (see :doc:`datasets`).
 
 ReLife offers two parametric ways of letting a covariate vector :math:`x` act on a baseline
 cumulative hazard :math:`H_0`. Proportional hazard scales the hazard,
