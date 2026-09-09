@@ -20,8 +20,8 @@ state, which shows up as the plateaus at ``t = 30``, ``60`` and ``90``:
     >>> weibull = Weibull(7, 0.05)
     >>> nhpp = NonHomogeneousPoissonProcess(weibull)
     >>> sample = sample_process(nhpp, 100, (0, 100), ar=30, seed=10)
-    >>> sample.events.shape
-    (100, 5203)
+    >>> int(sample.events.sum())
+    5182
     >>> fig, ax = plt.subplots(figsize=(8, 6))
     >>> cumulative_events = sample.events.cumsum(axis=1)
     >>> for sample_id in range(10):

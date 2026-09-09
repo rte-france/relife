@@ -21,8 +21,8 @@ of virtual age only:
     >>> weibull = Weibull(7, 0.05)
     >>> kijima_1 = Kijima1Process(weibull, q=0.7)
     >>> sample = sample_process(kijima_1, 100, (0, 100), ar=25, seed=10)
-    >>> sample.events.shape
-    (100, 663)
+    >>> int(sample.events.sum())
+    653
     >>> fig, ax = plt.subplots(figsize=(8, 6))
     >>> cumulative_events = sample.events.cumsum(axis=1)
     >>> for sample_id in range(10):
@@ -44,8 +44,8 @@ and fewer events accumulate over the same window:
     >>> from relife.stochastic_processes import Kijima2Process
     >>> kijima_2 = Kijima2Process(weibull, q=0.7)
     >>> sample = sample_process(kijima_2, 100, (0, 100), ar=25, seed=10)
-    >>> sample.events.shape
-    (100, 622)
+    >>> int(sample.events.sum())
+    612
     >>> fig, ax = plt.subplots(figsize=(8, 6))
     >>> cumulative_events = sample.events.cumsum(axis=1)
     >>> for sample_id in range(10):
