@@ -24,10 +24,6 @@ jobs:
         run: |
           python -m pip install . --group dev
 
-      - name: Extra installs
-        # pandoc is required by sphinx extensions
-        run: sudo apt-get update && sudo apt-get install -y pandoc
-      
       - name: Build Sphinx Doc
         run: |
           # prefer sphinx-build rather than make build (it allows more control)

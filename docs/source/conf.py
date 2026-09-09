@@ -28,11 +28,16 @@ extensions = [
     # (see : https://www.sphinx-doc.org/en/master/usage/extensions/githubpages.html
     # and https://stackoverflow.com/questions/62626125/github-pages-with-sphinx-generated-documentation-not-displaying-html-correctly)
     "sphinx_copybutton",  # copy button in code block
-    "nbsphinx",  # to insert notebook
     "sphinx_design",  # advanced design tools
+    "sphinx.ext.doctest",  # user guide code blocks double as doctests, run via pytest
+    "matplotlib.sphinxext.plot_directive",  # render plots from doctest-style code blocks
 ]
 
 myst_enable_extensions = ["colon_fence"]  # required by sphinx design with myst-parser
+
+# plot_directive links: keep "Source code" and offer a single vector download instead of
+# the default png / hires.png / pdf trio (the first format is also the one displayed)
+plot_formats = ["svg"]
 
 autodoc_typehints = "none"
 # autosummary_generate = True
@@ -65,7 +70,6 @@ templates_path = ["_templates"]
 exclude_patterns = [
     "_*",
     "user_guides/_*",
-    "user_guides/.ipynb_checkpoints/*",
     "api/_*",
 ]  # note to be parsed by compiler
 
@@ -89,7 +93,7 @@ html_theme_options = {
     "navigation_with_keys": False,
     "navbar_align": "left",  # align to the left header bar sections
     "header_links_before_dropdown": 5,  # control the number of section displayed in the header bar
-    "show_prev_next": False,  # hide previous and next button
+    "show_prev_next": True,  # previous / next buttons at the bottom of each page
     "show_nav_level": 2,  # unfold nav section by 2 levels
     "icon_links": [
         {

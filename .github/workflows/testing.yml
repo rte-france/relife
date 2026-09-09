@@ -27,3 +27,8 @@ jobs:
 
       - name: Running pytest
         run: pytest
+
+      - name: Running doctests
+        run: |
+          pytest --doctest-glob="*.rst" docs/source/getting_started.rst docs/source/user_guides
+          pytest --doctest-modules src/relife/datasets/load.py

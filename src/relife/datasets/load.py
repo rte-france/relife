@@ -10,7 +10,7 @@ def load_power_transformer() -> NDArray[np.void]:
 
     Examples
     --------
-    >>> from relife.data import load_power_transformer
+    >>> from relife.datasets import load_power_transformer
     >>> data = load_power_transformer()
     >>> print(data["time"])
     [34.3 45.1 53.2 ... 30.  30.  30. ]
@@ -47,7 +47,7 @@ def load_insulator_string() -> NDArray[np.void]:
 
     Examples
     --------
-    >>> from relife.data import load_insulator_string
+    >>> from relife.datasets import load_insulator_string
     >>> data = load_insulator_string()
     >>> print(data["time"])
     [70.  30.  45.  ...  8.8  7.6 53. ]
@@ -57,7 +57,7 @@ def load_insulator_string() -> NDArray[np.void]:
     Returns
     -------
     structured array
-        A numpy structured array of 3 fields :
+        A numpy structured array of 6 fields :
 
         - time (``np.float64``) : observed lifetime values
         - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)
@@ -103,7 +103,7 @@ def load_circuit_breaker() -> NDArray[np.void]:
 
     Examples
     --------
-    >>> from relife.data import load_circuit_breaker
+    >>> from relife.datasets import load_circuit_breaker
     >>> data = load_circuit_breaker()
     >>> print(data["time"])
     [34. 28. 12. ... 42. 42. 37.]

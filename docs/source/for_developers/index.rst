@@ -6,7 +6,7 @@ For developers
     The content of this section is under continuous improvement as the project gathers
     more contributors. It is highly inspired by `Scikit-Learn <https://scikit-learn.org/dev/developers/contributing.html#ways-to-contribute>`_ 
     and `Scipy <https://scipy.github.io/devdocs/dev/index.html>`_ contributing
-    documentation. We highly encourage new comers to read these documentations if ours
+    documentation. We highly encourage newcomers to read these documentations if ours
     do not answer their questions.
 
 Local set up
@@ -16,8 +16,8 @@ Local set up
 
 First, you need to `create an account <https://github.com/join>`_ on GitHub
 (if you do not already have one) and fork the project repository by clicking on the
-‘Fork’ button near the top of the page. This creates a copy of the code under your 
-Github account. For more details on how to fork a repository see 
+‘Fork’ button near the top of the page. This creates a copy of the code under your
+GitHub account. For more details on how to fork a repository see
 `this guide <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_.
 It explains how to set up a local clone of your forked git repository.
 
@@ -97,7 +97,7 @@ Ruff is a powerful all-in-one tool for code linting and formatting.
 Static type checking
 --------------------
 
-Additionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_.
+Additionally, `static type checkers <https://en.wikipedia.org/wiki/Type_system#Type_checking>`_
 have been installed:
 
 - `basedpyright <https://github.com/detachhead/basedpyright>`_.
@@ -107,7 +107,7 @@ have been installed:
   Once you feel comfortable, gradually enhance your type annotations by removing ``#pyright: basic``
   and enabling strict mode in basedpyright configurations.
 - After successfully passing all Pyright analyses, use `mypy <https://github.com/python/mypy>`_
-  to validate or supplement the diagnostics provided by basedyright.
+  to validate or supplement the diagnostics provided by basedpyright.
 
 .. _development_workflow:
 
@@ -182,8 +182,8 @@ or the `Git documentation itself (Basic Merge Conflicts) <https://git-scm.com/bo
 
 .. note::
 
-   One very helping tool to manage git command is `Lazygit <https://github.com/jesseduffield/lazygit>`_.
-   It comes with a very user-friendly TUI and preconfigured set of usefull commands to manage
+   One very helpful tool to manage git commands is `Lazygit <https://github.com/jesseduffield/lazygit>`_.
+   It comes with a very user-friendly TUI and preconfigured set of useful commands to manage
    commits and branches.
 
 .. _commit_markers:
@@ -229,12 +229,12 @@ merged so it should summarize your contribution for posterity. In some
 cases "Fix <ISSUE TITLE>" is enough. "Fix #<ISSUE NUMBER>" is never a
 good title.
 
-2. **Do not include unecessary/unjustified commits** that don't have direct relations
-with the issue. Do not include unecessary lines rewrittings or modifications of code style
+2. **Do not include unnecessary/unjustified commits** that don't have direct relations
+with the issue. Do not include unnecessary line rewritings or modifications of code style
 unless it is clearly motivated. Also, remove personal comments in your code.
 
 3. **Make sure to address the whole issue**. Don't propose code that resolves the issue partly.
-If case you have any doubt, discuss it directly in the corresponding issue post.
+In case you have any doubt, discuss it directly in the corresponding issue post.
 
 4. **Make sure your code passes the tests**. The whole test suite can be run
 with ``pytest``, but it is usually not recommended since it takes a long
@@ -249,13 +249,13 @@ running the following commands will usually be enough:
 sure the documentation renders properly**. To build the documentation locally, please
 refer to :ref:`build_the_doc`.
 
-6. Typing your code is not necessary at first, but make sure it is logic. The typing can be handled by
+6. Typing your code is not necessary at first, but make sure it is logical. The typing can be handled by
 the core team of ReLife. It is still a work in progress.
 
 About conception
 ----------------
 
-If you want to adress conception problem, you're welcome.
+If you want to address a conception problem, you're welcome.
 **But these issues must be carefully motivated and well justified**. More precisely, we
 won't accept any modifications that would be too subjective, 
 e.g. *only because you think it is more readable*.
@@ -275,14 +275,35 @@ e.g. *only because you think it is more readable*.
 Build the documentation
 -----------------------
 
-Before being able to build the documentation, you need to install `Pandoc <https://pandoc.org/index.html>`_ 
-which is a powerful file converter between many different formats.
-
 To build the documentation locally run the following commands :
 
 .. code-block::
 
     $ make html -C docs
+
+``make`` is not always available on Windows. Either use the ``make.bat`` shipped in ``docs``
+or call ``sphinx-build`` directly, which works the same on every platform :
+
+.. code-block::
+
+    $ cd docs && .\make.bat html      # Windows, from the docs directory
+    $ sphinx-build -b html docs/source docs/build/html
+
+For **uv** users, prefix the command with ``uv run`` so it runs inside the project
+environment :
+
+.. code-block::
+
+    $ uv run sphinx-build -b html docs/source docs/build/html
+
+Sphinx only rebuilds what changed. If the output looks stale (moved pages, renamed
+references, cached plots), force a full rebuild by deleting ``docs/build`` or adding the
+``-E`` flag. Use ``-W`` to turn warnings into errors, which is a good final check before
+opening a pull request :
+
+.. code-block::
+
+    $ sphinx-build -E -W -b html docs/source docs/build/html
 
 To run a local documentation server and read your built documentation :
 
@@ -290,26 +311,98 @@ To run a local documentation server and read your built documentation :
 
     $ python -m http.server -d docs/build/html/
 
-Then go to `http://localhost:8000 <http://localhost:8000>`_
+Then go to `http://localhost:8000 <http://localhost:8000>`_. Add ``-p 8001`` if the default
+port is already taken. The server does not watch the source files : rebuild and refresh the
+page to see your changes.
 
 .. warning::
 
     Using Sphinx for the first time is frustrating. It is easy to get tons of errors as
-    they are cumulative. Read the Sphinx documentation and **be carefull** about
+    they are cumulative. Read the Sphinx documentation and **be careful** about
     unwanted blank lines or missing spaces in reST directives.
 
 The documentation is built with `PyData Sphinx Theme <https://pydata-sphinx-theme.readthedocs.io/en/stable/>`_ and uses the
 NumPy documentation style. Here are important points to have in mind if you want to **contribute to the documentation** :
 
 * Read the `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_
-* Classes documentation .rst files are generated using `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ template engine.The template is written in ``class_template.rst`` of the ``doc/source/_templates``. A guide to Jinja2 templating is given in `Sphinx autosummary documentation <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_. Basically, one can catch usefull variables like ``methods`` and create nice autosummary tables inside an ``autoclass``. We chose this style because it creates very clean and comprehension interface documentation of the class.
-* Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are **inherited**. One must reference them manually in the object class under the `Attributes` field of the docstring. As it is mentionned in `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`__, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug... ignore or disable it at the statement level.
+* Classes documentation .rst files are generated using `Jinja2 <https://jinja.palletsprojects.com/en/stable/>`_ template engine. The template is written in ``class_template.rst`` of the ``docs/source/_templates``. A guide to Jinja2 templating is given in `Sphinx autosummary documentation <https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html>`_. Basically, one can catch useful variables like ``methods`` and create nice autosummary tables inside an ``autoclass``. We chose this style because it creates very clean and comprehensible interface documentation of the class.
+* Take a special care to attributes class documentation. Sphinx does not handle attribute instances easily, especially when they are **inherited**. One must reference them manually in the object class under the `Attributes` field of the docstring. As it is mentioned in `NumPy documentation style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`__, property methods (getter and/or setter) can be listed there. Their attached docstring will be loaded automatically. One more thing, some IDE (like PyCharm) may raise warnings about unreferenced variables. It is a bug... ignore or disable it at the statement level.
+
+Doctests
+--------
+
+Code blocks in the user guide (``docs/source/getting_started.rst`` and
+``docs/source/user_guides/``) are written as real doctests, not illustrative snippets: every
+``>>>`` block is executed and its output checked. Run them with:
+
+.. code-block::
+
+    $ pytest --doctest-glob="*.rst" docs/source/getting_started.rst docs/source/user_guides
+
+For **uv** users:
+
+.. code-block::
+
+    $ uv run pytest --doctest-glob="*.rst" docs/source/getting_started.rst docs/source/user_guides
+
+``--doctest-glob="*.rst"`` is what makes pytest collect the reST files ; without it they are
+ignored. Every ``>>>`` block of a collected file is run, including the ones nested in a
+``plot`` directive. ``docs/conftest.py`` forces the matplotlib ``Agg`` backend so no window
+is opened during collection. Run the doctests **before every documentation pull request** :
+a renamed argument or a changed default silently breaks them, and the Sphinx build itself
+does not check outputs.
+
+When an example's output depends on an iterative solver that isn't bit-exact run to run
+(e.g. ``SemiParametricProportionalHazard``), round the printed value to a stable precision
+rather than asserting on full-precision output.
+
+Plots
+-----
+
+Plots are not committed as image files : they are generated at build time by matplotlib's
+`plot directive <https://matplotlib.org/stable/api/sphinxext_plot_directive_api.html>`_
+(``matplotlib.sphinxext.plot_directive``, enabled in ``docs/source/conf.py``). Write the
+plotting code in doctest format inside the directive so it is checked by the doctest run
+too :
+
+.. code-block:: rst
+
+    .. plot::
+        :context: close-figs
+
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> from relife.datasets import load_power_transformer
+        >>> from relife.lifetime_models import Weibull
+        >>> dataset = load_power_transformer()
+        >>> weibull = Weibull().fit(dataset["time"], event=dataset["event"])
+        >>> timeline = np.arange(0, 145)
+        >>> _ = weibull.plot("sf", timeline, label="Weibull")
+        >>> _ = plt.xlabel("Time")
+        >>> _ = plt.legend()
+        >>> plt.show()
+
+Conventions used across the documentation :
+
+* ``:context: close-figs`` keeps the interpreter state between blocks of the same page while
+  starting each block with a fresh figure. Without ``close-figs``, curves accumulate on the
+  same axes.
+* Each block repeats its own imports and data loading. A page must stay readable for someone
+  landing in the middle of it, and a self-contained block also survives being reordered.
+* Assign the return value of the plotting calls to ``_`` (``>>> _ = plt.xlabel("Time")``).
+  Otherwise the repr of the matplotlib artist is printed and the doctest fails.
+* End with ``plt.show()``. The ``Agg`` backend emits a harmless ``UserWarning`` under pytest.
+
+Useful options of the directive : ``:include-source: False`` to render only the image,
+``:alt:`` for the alternative text, and ``:nofigs:`` for a block that only prepares state.
+Generated images land in ``docs/build/html/_images`` and are cached, so delete ``docs/build``
+if a figure does not seem to update.
 
 
 Typing
 ------
 
-Most of ReLife methods are Numpy compatible. For typing, we use `optype <https://github.com/jorenham/optype>`__. It offers more functionnalities to type Numpy code and it is compatible with ``scipy-stubs``, the official typing of Scipy.
+Most of ReLife methods are Numpy compatible. For typing, we use `optype <https://github.com/jorenham/optype>`__. It offers more functionalities to type Numpy code and it is compatible with ``scipy-stubs``, the official typing of Scipy.
 
 By default, many methods use either:
 
@@ -337,7 +430,7 @@ Additionally, when it makes sense, the shape of arrays are specified with e.g. `
     ``freeze`` methods don't accept ``ArrayND[NumpyST]`` as input like other
     methods. Inputs are narrowed to ``Array[AtMost2D, NumpyST]`` because frozen
     models are meant to be used in stochastic processes or policies where
-    additionnal args can't have more than 2 dimensions. That's why ``freeze``
+    additional args can't have more than 2 dimensions. That's why ``freeze``
     is not part of ``ParametricLifetimeModel`` interface by default but is
     specific to derived classes.
 
