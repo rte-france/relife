@@ -27,8 +27,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -37,10 +37,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
@@ -487,7 +487,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;pHCl&quot;</span><span class="p">])</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"pHCl"</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -513,8 +513,8 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">regression</span> <span class="o">=</span> <span class="n">ParametricProportionalHazard</span><span class="p">(</span><span class="n">Gompertz</span><span class="p">())</span>
-<span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">z3</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;pHCl&quot;</span><span class="p">],</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;pH2SO4&quot;</span><span class="p">],</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;HNO3&quot;</span><span class="p">]</span>
-<span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">covar</span><span class="o">=</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">z3</span><span class="p">),</span> <span class="n">event</span><span class="o">=</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">],</span> <span class="n">entry</span><span class="o">=</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;entry&quot;</span><span class="p">])</span>
+<span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">z3</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">"pHCl"</span><span class="p">],</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">"pH2SO4"</span><span class="p">],</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">"HNO3"</span><span class="p">]</span>
+<span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"time"</span><span class="p">],</span> <span class="n">covar</span><span class="o">=</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">z3</span><span class="p">),</span> <span class="n">event</span><span class="o">=</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"event"</span><span class="p">],</span> <span class="n">entry</span><span class="o">=</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"entry"</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -554,9 +554,9 @@ ParametricProportionalHazard(Gompertz(shape=0.21810962041584048, rate=0.02945802
 <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1073</span><span class="p">,</span> <span class="mi">7999</span>
 
 <span class="n">timeline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
-<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset&quot;</span><span class="p">)</span>
-<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset&quot;</span><span class="p">)</span>
-<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">&quot;hf&quot;</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset&quot;</span><span class="p">)</span>
+<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">"hf"</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset"</span><span class="p">)</span>
+<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">"hf"</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset"</span><span class="p">)</span>
+<span class="n">regression</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">"hf"</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">z1</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">z2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">z3</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"hf of the </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">-th asset"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -607,8 +607,8 @@ ParametricProportionalHazard(Gompertz(shape=0.21810962041584048, rate=0.02945802
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -642,7 +642,7 @@ ParametricProportionalHazard(Gompertz(shape=0.21810962041584048, rate=0.02945802
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

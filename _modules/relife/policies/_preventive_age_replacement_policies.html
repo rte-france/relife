@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -35,10 +35,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -415,7 +415,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.policies._preventive_age_replacement_policies</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Preventive age replacement policies.&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Preventive age replacement policies."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -440,23 +440,23 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseAgeReplacementPolicy</span><span class="p">,</span> <span class="n">OneCycleExpectedCosts</span>
 
-<span class="n">R</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
-<span class="n">P</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">)</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"R"</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">"P"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">check_impossible_replacements</span><span class="p">(</span>
     <span class="n">ar</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
     <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Warn when replacement ages are lower than initial ages.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Warn when replacement ages are lower than initial ages."""</span>
     <span class="c1"># check ar is greater than a0 if a0 is provided</span>
     <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">ar</span> <span class="o">&lt;</span> <span class="n">a0</span><span class="p">):</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">"""</span>
 <span class="sd">                Some ages of replacement are inferior to assets ages.</span>
 <span class="sd">                You may change ages of replacement.</span>
-<span class="sd">                &quot;&quot;&quot;</span>
+<span class="sd">                """</span>
             <span class="p">),</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
@@ -465,11 +465,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">get_cf_cp</span><span class="p">(</span>
     <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Float64_1D</span><span class="p">,</span> <span class="n">Float64_1D</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract failure and preventive replacement costs.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Extract failure and preventive replacement costs."""</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">costs</span><span class="p">[</span><span class="s2">&quot;cf&quot;</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">costs</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">costs</span><span class="p">[</span><span class="s2">"cf"</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">costs</span><span class="p">[</span><span class="s2">"cp"</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Missing cf and cp values&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Missing cf and cp values"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
 
 <div class="viewcode-block" id="OneCycleAgeReplacementPolicy">
@@ -477,7 +477,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">OneCycleAgeReplacementPolicy</span><span class="p">(</span>
     <span class="n">BaseAgeReplacementPolicy</span><span class="p">[</span><span class="n">ParametricLifetimeModel</span><span class="p">[()]]</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-cycle age replacement policy.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""One-cycle age replacement policy.</span>
 
 <span class="sd">    Asset is replaced at age :math:`a_r` with cost :math:`c_p`, or upon failure</span>
 <span class="sd">    with cost :math:`c_f`. Only one replacement cycle is considered.</span>
@@ -493,7 +493,7 @@
 <span class="sd">        criteria for age replacement. Proceedings of the Institution of</span>
 <span class="sd">        Mechanical Engineers, Part O: Journal of Risk and Reliability,</span>
 <span class="sd">        220(1), 21-29</span>
-<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+<span class="sd">    """</span>  <span class="c1"># noqa: E501</span>
 
     <span class="n">period_before_discounting</span><span class="p">:</span> <span class="nb">float</span>
 
@@ -622,7 +622,7 @@
 <div class="viewcode-block" id="AgeReplacementPolicy">
 <a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AgeReplacementPolicy</span><span class="p">(</span><span class="n">BaseAgeReplacementPolicy</span><span class="p">[</span><span class="n">ParametricLifetimeModel</span><span class="p">[()]]):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement renewal policy.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Age replacement renewal policy.</span>
 
 <span class="sd">    Asset is replaced at age :math:`a_r` with cost :math:`c_p`, or upon failure</span>
 <span class="sd">    with cost :math:`c_f`.</span>
@@ -637,7 +637,7 @@
 <span class="sd">    .. [1] Mazzuchi, T. A., Van Noortwijk, J. M., &amp; Kallen, M. J. (2007).</span>
 <span class="sd">        Maintenance optimization. Encyclopedia of Statistics in Quality and</span>
 <span class="sd">        Reliability, 1000-1008.</span>
-<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+<span class="sd">    """</span>  <span class="c1"># noqa: E501</span>
 
 <div class="viewcode-block" id="AgeReplacementPolicy.expected_net_present_value">
 <a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.AgeReplacementPolicy.html#relife.policies.AgeReplacementPolicy.expected_net_present_value">[docs]</a>
@@ -726,7 +726,7 @@
         <span class="n">ar</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The expected annual number of replacements.</span>
 
 <span class="sd">        Parameters</span>
@@ -742,7 +742,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        out : tuple of np.ndarray</span>
 <span class="sd">            Timeline and corresponding values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">check_impossible_replacements</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
         <span class="n">timeline</span><span class="p">,</span> <span class="n">nb_renewals</span> <span class="o">=</span> <span class="n">RenewalProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span><span class="o">.</span><span class="n">renewal_function</span><span class="p">(</span>
@@ -760,7 +760,7 @@
         <span class="n">ar</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
         <span class="n">a0</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The expected annual number of replacements upon failure.</span>
 
 <span class="sd">        Parameters</span>
@@ -776,7 +776,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        out : tuple of np.ndarray</span>
 <span class="sd">            Timeline and corresponding values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">check_impossible_replacements</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">a0</span><span class="p">)</span>
         <span class="n">timeline</span><span class="p">,</span> <span class="n">nb_events</span> <span class="o">=</span> <span class="n">RenewalProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span><span class="o">.</span><span class="n">expected_number_of_events</span><span class="p">(</span>
@@ -836,11 +836,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">get_cr_cp</span><span class="p">(</span>
     <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CoercibleFloat64_1D</span><span class="p">,</span> <span class="n">CoercibleFloat64_1D</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract replacement and preventive replacement costs.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Extract replacement and preventive replacement costs."""</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;cr&quot;</span><span class="p">],</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">costs</span><span class="p">[</span><span class="s2">"cr"</span><span class="p">],</span> <span class="n">costs</span><span class="p">[</span><span class="s2">"cp"</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Missing cr and cp values&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Missing cr and cp values"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy">
@@ -848,13 +848,13 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">NonHomogeneousPoissonAgeReplacementPolicy</span><span class="p">(</span>
     <span class="n">BaseAgeReplacementPolicy</span><span class="p">[</span><span class="n">NonHomogeneousPoissonProcess</span><span class="p">[()]]</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Age replacement policy for non-homogeneous Poisson processes.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Age replacement policy for non-homogeneous Poisson processes.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    baseline : NonHomogeneousPoissonProcess</span>
 <span class="sd">        Underlying non-homogeneous Poisson process.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value">
 <a class="viewcode-back" href="../../../api/maintenance_policies/relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.html#relife.policies.NonHomogeneousPoissonAgeReplacementPolicy.expected_net_present_value">[docs]</a>
@@ -869,7 +869,7 @@
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;implementation will come in a future release&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"implementation will come in a future release"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_net_present_value">
@@ -883,7 +883,7 @@
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Float64_1D</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;implementation will come in a future release&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"implementation will come in a future release"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.expected_equivalent_annual_cost">
@@ -899,7 +899,7 @@
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Timeline</span><span class="p">,</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;implementation will come in a future release&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"implementation will come in a future release"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NonHomogeneousPoissonAgeReplacementPolicy.asymptotic_expected_equivalent_annual_cost">
@@ -916,7 +916,7 @@
         <span class="n">cr</span><span class="p">,</span> <span class="n">cp</span> <span class="o">=</span> <span class="n">get_cr_cp</span><span class="p">(</span><span class="o">**</span><span class="n">costs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">a0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;NHPP policies with initial ages will be covered in a future release&quot;</span>
+                <span class="s2">"NHPP policies with initial ages will be covered in a future release"</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">discounting_rate</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -952,7 +952,7 @@
         <span class="n">discounting_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">costs</span><span class="p">:</span> <span class="n">CoercibleFloat64_1D</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Compute the optimal ages of replacement.</span>
 
 <span class="sd">        Parameters</span>
@@ -966,7 +966,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        ar : float or np.ndarray</span>
 <span class="sd">            Optimal ages of replacement.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">cr</span><span class="p">,</span> <span class="n">cp</span> <span class="o">=</span> <span class="n">get_cr_cp</span><span class="p">(</span><span class="o">**</span><span class="n">costs</span><span class="p">)</span>
 
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="o">.</span><span class="n">lifetime_model</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
@@ -1021,8 +1021,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1056,7 +1056,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

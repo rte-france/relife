@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -35,10 +35,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -415,7 +415,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for relife.base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Parametric models base class and fitting utilities.&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Parametric models base class and fitting utilities."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -438,18 +438,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">approx_fprime</span><span class="p">,</span> <span class="n">minimize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ParametricModel&quot;</span><span class="p">,</span> <span class="s2">&quot;MaximumLikelihoodOptimizer&quot;</span><span class="p">,</span> <span class="s2">&quot;FitConfig&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"ParametricModel"</span><span class="p">,</span> <span class="s2">"MaximumLikelihoodOptimizer"</span><span class="p">,</span> <span class="s2">"FitConfig"</span><span class="p">]</span>
 
 
 <span class="nd">@final</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Parameters</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Tree-structured dictionary-like container for model parameters.</span>
 
 <span class="sd">    A ``ParametricModel`` owns one ``_Parameters`` instance. Nested parametric</span>
 <span class="sd">    components are stored as leaves so their values can be flattened, updated,</span>
 <span class="sd">    and restored as a single parameter vector.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_leaves</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Parameters</span><span class="p">]</span>
     <span class="n">_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
@@ -465,22 +465,22 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">all_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flatten all parameter values in tree order.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Flatten all parameter values in tree order."""</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_values</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of parameters in the tree.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Number of parameters in the tree."""</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">leaf</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_leaf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">leaf</span><span class="p">:</span> <span class="n">Self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set or replace a parameter subtree.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Set or replace a parameter subtree."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">[</span><span class="n">leaf_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_all_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set values of the whole parameter tree.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Set values of the whole parameter tree."""</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> values but got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> values but got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -498,7 +498,7 @@
 <div class="viewcode-block" id="ParametricModel">
 <a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParametricModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Base class for ReLife models with parameters.</span>
 
 <span class="sd">    The class stores parameters in a tree structure, exposes them as a flat</span>
@@ -517,7 +517,7 @@
 <span class="sd">    &gt;&gt;&gt; model_b = ModelB(model_a)</span>
 <span class="sd">    &gt;&gt;&gt; model_b.get_params()</span>
 <span class="sd">    array([1, 2])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_params</span><span class="p">:</span> <span class="n">_Parameters</span>
     <span class="n">fitting_results</span><span class="p">:</span> <span class="n">FittingResults</span> <span class="o">|</span> <span class="kc">None</span>
@@ -529,21 +529,21 @@
 <div class="viewcode-block" id="ParametricModel.is_parametrized">
 <a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel.is_parametrized">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_parametrized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether at least one parameter value is set.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Whether at least one parameter value is set."""</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">())))</span></div>
 
 
 <div class="viewcode-block" id="ParametricModel.is_fitted">
 <a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel.is_fitted">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether fitting results are set.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Whether fitting results are set."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitting_results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="ParametricModel.get_params">
 <a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel.get_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the parameters of this model.</span>
 
 <span class="sd">        Returns</span>
@@ -554,14 +554,14 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        If parameter values are not set, they default to ``np.nan`` values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">all_values</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ParametricModel.set_params">
 <a class="viewcode-back" href="../../api/base_class/relife.base.ParametricModel.html#relife.base.ParametricModel.set_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_params</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">ToFloat1D</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Set the parameters of this model.</span>
 
 <span class="sd">        Parameters</span>
@@ -574,9 +574,9 @@
 <span class="sd">        ``set_params`` definition expects an array-like of floats. At runtime,</span>
 <span class="sd">        complex parameters might be setted temporarily to approximate fitted</span>
 <span class="sd">        parameters covariance. This is contradictory to the given typing. At</span>
-<span class="sd">        the moment, we don&#39;t see a better solution and we believe that this is</span>
+<span class="sd">        the moment, we don't see a better solution and we believe that this is</span>
 <span class="sd">        actually a limitation of what can be expressed in the static typesystem.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># not @params.setter to allow a different type for the values to set</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">new_params</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">new_params</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>
@@ -589,18 +589,18 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ParametricModel</span><span class="p">):</span>
             <span class="c1"># a reference of component._params is kept in the _Parameters tree</span>
             <span class="c1"># thus changing model params will affect each component params</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">set_leaf</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.params&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">_params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">set_leaf</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.params"</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">_params</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
 
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FittingResults</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Results returned by parametric model fitting.</span>
+<span class="w">    </span><span class="sd">"""Results returned by parametric model fitting.</span>
 
 <span class="sd">    The object stores optimizer status, optimal parameter values, information</span>
 <span class="sd">    criteria, and optional covariance estimates.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">nb_observations</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1">#: Number of observations (samples)</span>
     <span class="n">optimal_params</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>  <span class="c1">#: Optimal parameter values</span>
@@ -646,10 +646,10 @@
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;fitted params&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimal_params</span><span class="p">,</span>
-            <span class="s2">&quot;AIC&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aic</span><span class="p">,</span>
-            <span class="s2">&quot;AICc&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aicc</span><span class="p">,</span>
-            <span class="s2">&quot;BIC&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span>
+            <span class="s2">"fitted params"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimal_params</span><span class="p">,</span>
+            <span class="s2">"AIC"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aic</span><span class="p">,</span>
+            <span class="s2">"AICc"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aicc</span><span class="p">,</span>
+            <span class="s2">"BIC"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="c1"># Find the maximum field name length for alignment</span>
         <span class="n">max_name_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
@@ -657,40 +657,40 @@
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="c1"># Format arrays to be more compact</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                <span class="n">value_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.6g</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">value_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.6g</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]"</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">value_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">max_name_length</span><span class="si">}}</span><span class="s2"> : </span><span class="si">{</span><span class="n">value_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+                <span class="n">value_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">max_name_length</span><span class="si">}}</span><span class="s2"> : </span><span class="si">{</span><span class="n">value_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
 
-<span class="n">M</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">ParametricModel</span><span class="p">)</span>
-<span class="n">D</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;D&quot;</span><span class="p">)</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"M"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">ParametricModel</span><span class="p">)</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"D"</span><span class="p">)</span>
 
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FitConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for maximum-likelihood fitting.</span>
+<span class="w">    </span><span class="sd">"""Configuration for maximum-likelihood fitting.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x0 : float or 1d array-like of float</span>
-<span class="sd">        Initial parameter value or vector passed to SciPy&#39;s optimizer.</span>
+<span class="sd">        Initial parameter value or vector passed to SciPy's optimizer.</span>
 <span class="sd">    scipy_minimize_options : dict, optional</span>
 <span class="sd">        Keyword arguments forwarded to ``scipy.optimize.minimize``.</span>
-<span class="sd">    covariance_method : {&quot;cs&quot;, &quot;2point&quot;, &quot;exact&quot;, False}, default=False</span>
+<span class="sd">    covariance_method : {"cs", "2point", "exact", False}, default=False</span>
 <span class="sd">        Method used to estimate the covariance matrix, or ``False`` to skip it.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">x0</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">ToFloat</span> <span class="o">|</span> <span class="n">onp</span><span class="o">.</span><span class="n">ToFloat1D</span>
     <span class="n">scipy_minimize_options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="n">covariance_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cs&quot;</span><span class="p">,</span> <span class="s2">&quot;2point&quot;</span><span class="p">,</span> <span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">covariance_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"cs"</span><span class="p">,</span> <span class="s2">"2point"</span><span class="p">,</span> <span class="s2">"exact"</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="MaximumLikelihoodOptimizer">
 <a class="viewcode-back" href="../../api/base_class/relife.base.MaximumLikelihoodOptimizer.html#relife.base.MaximumLikelihoodOptimizer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MaximumLikelihoodOptimizer</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">M</span><span class="p">,</span> <span class="n">D</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Abstract generic class for maximum-likelihood estimation.</span>
 
 <span class="sd">    Subclasses provide the data-specific negative log-likelihood. This class</span>
@@ -700,13 +700,13 @@
 <span class="sd">    -----</span>
 <span class="sd">    Jacobian and hessian are not required but they can be implemented in</span>
 <span class="sd">    concrete likelihoods. To use the jacobian or hessian implementations in the</span>
-<span class="sd">    likelihood, pass them into ``self.config[&quot;scipy_minimize_options&quot;]``.</span>
+<span class="sd">    likelihood, pass them into ``self.config["scipy_minimize_options"]``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    nb_observations : int</span>
 <span class="sd">        The number of observations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">M</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">D</span>
@@ -720,7 +720,7 @@
 <a class="viewcode-back" href="../../api/base_class/relife.base.MaximumLikelihoodOptimizer.html#relife.base.MaximumLikelihoodOptimizer.negative_log">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">negative_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Negative log likelihood.</span>
 
 <span class="sd">        Parameters</span>
@@ -732,13 +732,13 @@
 <span class="sd">        -------</span>
 <span class="sd">        out : float</span>
 <span class="sd">            Negative log likelihood value.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="MaximumLikelihoodOptimizer.optimize">
 <a class="viewcode-back" href="../../api/base_class/relife.base.MaximumLikelihoodOptimizer.html#relife.base.MaximumLikelihoodOptimizer.optimize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FittingResults</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Search parameter values that maximize the likelihood given data.</span>
 
 <span class="sd">        Returns</span>
@@ -746,7 +746,7 @@
 <span class="sd">        out : FittingResults</span>
 <span class="sd">            An object that encapsulates optimal parameters and fitting</span>
 <span class="sd">            information (AIC, variance, etc.).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">negative_log</span><span class="p">,</span>
@@ -763,22 +763,22 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">fitting_results</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The negative log-likelihood minimization did not exited successfully.&quot;</span><span class="p">,</span>
+                <span class="s2">"The negative log-likelihood minimization did not exited successfully."</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">fitting_results</span>
 
-        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jac&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">hess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hess&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="o">!=</span> <span class="s2">&quot;exact&quot;</span><span class="p">:</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jac"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">hess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scipy_minimize_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hess"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="o">!=</span> <span class="s2">"exact"</span><span class="p">:</span>
             <span class="n">fitting_results</span><span class="o">.</span><span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">_approx_parameters_covariance</span><span class="p">(</span>
                 <span class="n">fitting_results</span><span class="o">.</span><span class="n">optimal_params</span><span class="p">,</span>
                 <span class="n">jac</span><span class="p">,</span>
                 <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">hess</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="o">==</span> <span class="s2">&quot;exact&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hess</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">covariance_method</span> <span class="o">==</span> <span class="s2">"exact"</span><span class="p">:</span>
             <span class="n">fitting_results</span><span class="o">.</span><span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span>
                 <span class="n">hess</span><span class="p">(</span><span class="n">fitting_results</span><span class="o">.</span><span class="n">optimal_params</span><span class="p">)</span>
             <span class="p">)</span>
@@ -790,9 +790,9 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_approx_parameters_covariance</span><span class="p">(</span>
     <span class="n">params</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">jac_negative_log</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]],</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">]],</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;2point&quot;</span><span class="p">,</span> <span class="s2">&quot;cs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"2point"</span><span class="p">,</span> <span class="s2">"cs"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"cs"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array2D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Approximate the covariance matrix of fitted parameters.</span>
 
 <span class="sd">    Parameters</span>
@@ -801,16 +801,16 @@
 <span class="sd">        The parameter values.</span>
 <span class="sd">    jac_negative_log : Callable</span>
 <span class="sd">        A function taking 1d array of floats and returning 1d array of floats.</span>
-<span class="sd">    method : &quot;2point&quot; or &quot;cs&quot;, default to &quot;cs&quot;</span>
+<span class="sd">    method : "2point" or "cs", default to "cs"</span>
 <span class="sd">        The approximation method to use.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">size</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">size</span>
     <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-6</span>
     <span class="n">hess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="c1"># hessian 2 point</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;2point&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"2point"</span><span class="p">:</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">jac_param_i</span><span class="p">(</span><span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">onp</span><span class="o">.</span><span class="n">Array1D</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
@@ -838,13 +838,13 @@
         <span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">hess</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+            <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">            Failed to compute parameters covariance due to non-invertible</span>
 <span class="s2">            hessian matrix. Numpy pseudo-inversion algorithm returned : </span><span class="si">{</span><span class="n">err</span><span class="si">}</span>
 
 <span class="s2">            You can skip parameters covariance computation by setting</span>
 <span class="s2">            covariance_method to False. </span>
-<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
+<span class="s2">            """</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -872,8 +872,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -907,7 +907,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

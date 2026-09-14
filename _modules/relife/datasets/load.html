@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -35,10 +35,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=a8af75d9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -424,14 +424,14 @@
 <div class="viewcode-block" id="load_power_transformer">
 <a class="viewcode-back" href="../../../api/datasets/relife.datasets.load_power_transformer.html#relife.datasets.load_power_transformer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_power_transformer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Load example dataset of power transformers lifetimes.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from relife.data import load_power_transformer</span>
 <span class="sd">    &gt;&gt;&gt; data = load_power_transformer()</span>
-<span class="sd">    &gt;&gt;&gt; print(data[&quot;time&quot;])</span>
+<span class="sd">    &gt;&gt;&gt; print(data["time"])</span>
 <span class="sd">    [34.3 45.1 53.2 ... 30.  30.  30. ]</span>
 
 <span class="sd">    Returns</span>
@@ -443,19 +443,19 @@
 <span class="sd">        - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)</span>
 <span class="sd">        - entry (``np.float64``) : left truncation values</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span>
-        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;csv/power_transformer.csv&quot;</span><span class="p">),</span>
-        <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"csv/power_transformer.csv"</span><span class="p">),</span>
+        <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">,</span>
         <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-            <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
+            <span class="p">[(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="c1"># for some reason, numpy can&#39;t cast 1.0/0.0 to np.bool_</span>
+    <span class="c1"># for some reason, numpy can't cast 1.0/0.0 to np.bool_</span>
     <span class="n">new_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
+        <span class="p">[(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span> <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">new_dtype</span><span class="p">)</span></div>
 
@@ -464,16 +464,16 @@
 <div class="viewcode-block" id="load_insulator_string">
 <a class="viewcode-back" href="../../../api/datasets/relife.datasets.load_insulator_string.html#relife.datasets.load_insulator_string">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_insulator_string</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Load example dataset of insulator string lifetimes with covariates.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from relife.data import load_insulator_string</span>
 <span class="sd">    &gt;&gt;&gt; data = load_insulator_string()</span>
-<span class="sd">    &gt;&gt;&gt; print(data[&quot;time&quot;])</span>
+<span class="sd">    &gt;&gt;&gt; print(data["time"])</span>
 <span class="sd">    [70.  30.  45.  ...  8.8  7.6 53. ]</span>
-<span class="sd">    &gt;&gt;&gt; print(data[&quot;pHCl&quot;])</span>
+<span class="sd">    &gt;&gt;&gt; print(data["pHCl"])</span>
 <span class="sd">    [0.49 0.76 0.43 ... 1.12 1.19 0.35]</span>
 
 <span class="sd">    Returns</span>
@@ -488,32 +488,32 @@
 <span class="sd">        - pH2SO4 (``np.float64``) : quantitative covariate values (concentration of pH2SO4)</span>
 <span class="sd">        - HNO3 (``np.float64``) : quantitative covariate values (concentration of HNO3)</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span>
-        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;csv/insulator_string.csv&quot;</span><span class="p">),</span>
-        <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"csv/insulator_string.csv"</span><span class="p">),</span>
+        <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">,</span>
         <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">&quot;pHCl&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">&quot;pH2SO4&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">&quot;HNO3&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"pHCl"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"pH2SO4"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"HNO3"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
             <span class="p">]</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="c1"># for some reason, numpy can&#39;t cast 1.0/0.0 to np.bool_</span>
+    <span class="c1"># for some reason, numpy can't cast 1.0/0.0 to np.bool_</span>
     <span class="n">new_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;pHCl&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;pH2SO4&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;HNO3&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"pHCl"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"pH2SO4"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"HNO3"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
         <span class="p">]</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">new_dtype</span><span class="p">)</span></div>
@@ -523,14 +523,14 @@
 <div class="viewcode-block" id="load_circuit_breaker">
 <a class="viewcode-back" href="../../../api/datasets/relife.datasets.load_circuit_breaker.html#relife.datasets.load_circuit_breaker">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_circuit_breaker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">void</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Load example dataset of circuit breaker lifetimes.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from relife.data import load_circuit_breaker</span>
 <span class="sd">    &gt;&gt;&gt; data = load_circuit_breaker()</span>
-<span class="sd">    &gt;&gt;&gt; print(data[&quot;time&quot;])</span>
+<span class="sd">    &gt;&gt;&gt; print(data["time"])</span>
 <span class="sd">    [34. 28. 12. ... 42. 42. 37.]</span>
 
 <span class="sd">    Returns</span>
@@ -541,36 +541,36 @@
 <span class="sd">        - time (``np.float64``) : observed lifetime values</span>
 <span class="sd">        - event (``np.bool_``) : boolean flag indicated if the event has been observed or not (if False, the observed lifetimes are right censored)</span>
 <span class="sd">        - entry (``np.float64``) : left truncation values</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span>
-        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;csv/circuit_breaker.csv&quot;</span><span class="p">),</span>
-        <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"csv/circuit_breaker.csv"</span><span class="p">),</span>
+        <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">,</span>
         <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-            <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
+            <span class="p">[(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="c1"># for some reason, numpy can&#39;t cast 1.0/0.0 to np.bool_</span>
+    <span class="c1"># for some reason, numpy can't cast 1.0/0.0 to np.bool_</span>
     <span class="n">new_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
-        <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
+        <span class="p">[(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span> <span class="p">(</span><span class="s2">"entry"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)]</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">new_dtype</span><span class="p">)</span></div>
 
 
 
 <span class="c1"># def load_input_turnbull() -&gt; NDArray[np.void]:</span>
-<span class="c1">#     &quot;&quot;&quot;_summary_</span>
+<span class="c1">#     """_summary_</span>
 <span class="c1">#</span>
 <span class="c1">#     Returns:</span>
 <span class="c1">#         np.ndarray: _description_</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     """</span>
 <span class="c1">#     data = np.loadtxt(</span>
-<span class="c1">#         Path(Path(__file__).parents[0], &quot;csv/input_turnbull.csv&quot;),</span>
-<span class="c1">#         delimiter=&quot;,&quot;,</span>
+<span class="c1">#         Path(Path(__file__).parents[0], "csv/input_turnbull.csv"),</span>
+<span class="c1">#         delimiter=",",</span>
 <span class="c1">#         skiprows=1,</span>
 <span class="c1">#     )</span>
-<span class="c1">#     data[&quot;event&quot;] = data[&quot;event&quot;].astype(np.bool_)</span>
+<span class="c1">#     data["event"] = data["event"].astype(np.bool_)</span>
 <span class="c1">#     return data</span>
 </pre></div>
 
@@ -595,8 +595,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -630,7 +630,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
