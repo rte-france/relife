@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is no longer being used and has been archived. Consider using [AssetLife](https://github.com/assetlife-project/assetlife) instead.
+
 <h1 align="center">
   <img src="docs/source/_static/small_relife.gif" />
 </h1></br>
@@ -7,11 +10,6 @@ An open-source Python library for optimizing large-scale infrastructure investme
 - **Documentation:** http://opensource.rte-france.com/relife/
 - **Contributing:** http://opensource.rte-france.com/relife/developper/index.html
 - **Bug reports:** https://github.com/rte-france/relife/issues
-
-
-> [!WARNING]
-> Releases started from `1.0.0` version but the package API is still changing a lot.
-
 
 ## Installation
 
